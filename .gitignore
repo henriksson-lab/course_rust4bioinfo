@@ -1,0 +1,7 @@
+# Rust / cargo build artefacts (any crate, any depth)
+target/
+Cargo.lock
+
+# Quarto output and cache (at repo root)
+/_site/
+/.quarto/

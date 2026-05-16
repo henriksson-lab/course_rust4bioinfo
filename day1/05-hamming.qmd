@@ -1,0 +1,114 @@
+---
+title: "Day 1 — Exercise: Hamming distance"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `hamming_distance(a: &[u8], b: &[u8]) -> usize` — the number of positions at which two equal-length sequences differ. Panic if the two sequences have different lengths.
+
+## Background
+
+The Hamming distance is the simplest "how different are these two sequences" measurement. It is the right tool when the sequences are already aligned and of equal length — for example, comparing two reads of the same length to each other, or two assembly contigs of the same length, or a read to a reference window. When the sequences can differ in length because of insertions or deletions, you want a different distance (edit distance or full sequence alignment); we will not cover those this week.
+
+## Why we are panicking on length mismatch
+
+This is the first exercise that takes **two** sequence arguments. In Python you might just `zip` them and pretend the shorter one is all that matters — your function would silently give the wrong answer on mismatched inputs. Rust makes this awkward on purpose: you have to take an explicit position on what to do when the precondition is violated.
+
+For today, panicking is the right call: the function's contract is "two equal-length sequences", and a violation of that contract is a programmer error. On day 3 we will rewrite the same function to return [`Option<usize>`](https://doc.rust-lang.org/std/option/enum.Option.html), so a length mismatch becomes a returnable value (`None`) rather than a crash — and the type system will then *force* every caller to handle that case before they can use the result.
+
+## The exercise
+
+```bash
+cd day1/ex-hamming
+```
+
+Make all five tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ACGT AAGT          # expected: 1
+cargo run -- ACGT TGCA          # expected: 4
+cargo run -- AC ACG             # expected: panic with a clear message
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — checking the precondition"}
+The very first thing your function should do is compare lengths and bail out if they differ. Slices have a [`.len()`](https://doc.rust-lang.org/std/primitive.slice.html#method.len) method that returns a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html):
+
+```rust
+if a.len() != b.len() {
+    panic!("hamming_distance: lengths differ ({} vs {})", a.len(), b.len());
+}
+```
+
+After this check, you can assume the two slices have the same length for the rest of the function.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — iterating by index"}
+A [range expression](https://doc.rust-lang.org/reference/expressions/range-expr.html) like `0..a.len()` lets you iterate over the valid positions of the slice. Inside the loop, [index](https://doc.rust-lang.org/std/primitive.slice.html#method.index) the slice with `a[i]` and `b[i]`:
+
+```rust
+for i in 0..a.len() {
+    if a[i] != b[i] {
+        // count this position
+    }
+}
+```
+
+On day 3 we will replace this with [`.iter().zip()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.zip), which is more idiomatic and harder to get wrong — but the indexed version is fine for today.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — accumulating the count"}
+Declare a mutable counter outside the loop, increment it inside, and return it at the end:
+
+```rust
+let mut d: usize = 0;
+for i in 0..a.len() {
+    if a[i] != b[i] {
+        d += 1;
+    }
+}
+d
+```
+
+Note the bare `d` at the end with no `;` — that is the function's return value.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn hamming_distance(a: &[u8], b: &[u8]) -> usize {
+    if a.len() != b.len() {
+        panic!(
+            "hamming_distance: sequences have different lengths ({} vs {})",
+            a.len(),
+            b.len(),
+        );
+    }
+    let mut d: usize = 0;
+    for i in 0..a.len() {
+        if a[i] != b[i] {
+            d += 1;
+        }
+    }
+    d
+}
+```
+
+Full reference implementation in `day1/ex-hamming-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 3**: rewrite the body as `a.iter().zip(b).filter(|(x, y)| x != y).count()` — same answer, no indexing, no mutable counter. Change the return type to [`Option<usize>`](https://doc.rust-lang.org/std/option/enum.Option.html) so length mismatches stop being panics and start being values.
+- **Day 5**: a real bioinformatics use of Hamming distance is comparing short barcodes (single-cell, sample multiplexing) to a whitelist. We will apply this at scale, in parallel across millions of reads, with [`rayon`](https://docs.rs/rayon/latest/rayon/).

@@ -1,0 +1,135 @@
+---
+title: "Day 1 — Exercise: GC content"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write your first Rust function: given a DNA sequence on the command line, compute and print its **GC content** as a percentage.
+
+By the time `cargo test` passes you will have used a typed function signature, byte slices (`&[u8]`), a `for` loop with `match`, integer-to-float conversion, and formatted printing — and you will have built and run a Rust binary with `cargo`.
+
+This is the first exercise in the course; if you have never used `cargo` before, do not skip the "How to run" section below.
+
+## Background
+
+GC content is the fraction of nucleotides in a sequence that are guanine (G) or cytosine (C):
+
+$$ \text{GC} = \frac{N_G + N_C}{N_{\text{total}}} $$
+
+It is one of the most basic quantities in bioinformatics. We will compute it many times this week, in many different ways.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-gc-content
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A function `gc_content(seq: &[u8]) -> f64` with a `// TODO` body
+- A `main` function that reads a DNA string from the command line and calls `gc_content`
+- A `#[cfg(test)] mod tests` block with four unit tests that pin down what the function should do
+
+Your job: replace the `TODO` body so that all four tests pass.
+
+You may **not** change the function signature, the tests, or `main`. You may add helper functions if you want.
+
+## How to run
+
+From inside `day1/ex-gc-content/`:
+
+```bash
+cargo build           # compile (you will see warnings about unused code — fine for now)
+cargo test            # run the tests — these should be failing at first
+cargo run -- ATGCATGC # run the program with a sample sequence
+```
+
+The `--` separates arguments to `cargo` from arguments to your program. Anything after `--` is forwarded to your binary.
+
+When all four tests pass, `cargo test` will print:
+
+```
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and your program should print:
+
+```
+$ cargo run -- ATGCATGC
+GC content: 50.00%
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — How do I look at one byte at a time?"}
+A [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html) is a slice of bytes, and you can iterate it with a [`for` loop](https://doc.rust-lang.org/book/ch03-05-control-flow.html#looping-through-a-collection-with-for):
+
+```rust
+for &b in seq {
+    // b is a u8 here
+}
+```
+
+The `&` in the pattern is important — without it you would get a `&u8` and have to dereference it on every comparison. (See the Rust Book on [patterns](https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html#destructuring-to-break-apart-values) if you want the formal reason.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — How do I compare a byte to a letter?"}
+[Byte literals](https://doc.rust-lang.org/reference/tokens.html#byte-literals) are written with a `b` prefix: `b'G'` is the `u8` value of the ASCII letter G. You can [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) on them just like any other integer, and combine alternatives with `|`:
+
+```rust
+match b {
+    b'G' | b'C' => { /* it is GC */ }
+    _ => { /* something else */ }
+}
+```
+
+The tests include a lowercase case, so remember to handle both `b'G' | b'C' | b'g' | b'c'`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Integer division gave me 0!"}
+If you write `gc / seq.len()` where both sides are [`usize`](https://doc.rust-lang.org/std/primitive.usize.html), you get integer division — `1 / 4 == 0`. Use an [`as` cast](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions) to convert at least one side to [`f64`](https://doc.rust-lang.org/std/primitive.f64.html) before dividing:
+
+```rust
+gc as f64 / seq.len() as f64
+```
+
+Also: what should you return when the input is empty? Look at the `empty_sequence` test, and at [`<[u8]>::is_empty`](https://doc.rust-lang.org/std/primitive.slice.html#method.is_empty) — it is more idiomatic than `seq.len() == 0`.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn gc_content(seq: &[u8]) -> f64 {
+    if seq.is_empty() {
+        return 0.0;
+    }
+    let mut gc: usize = 0;
+    for &b in seq {
+        match b {
+            b'G' | b'C' | b'g' | b'c' => gc += 1,
+            _ => {}
+        }
+    }
+    gc as f64 / seq.len() as f64
+}
+```
+
+The full reference implementation, including `main` and the test module, lives in `day1/ex-gc-content-solution/src/main.rs`. Try not to peek at it until you have your own version passing all four tests — the point of the exercise is the practice, not the final code.
+:::
+
+## Where this leads
+
+The pieces of the topic we deliberately leave for later, so you know they are coming:
+
+- **Handling `N` bases and other non-standard letters.** Real sequences contain `N`. We will define a proper `Nucleotide` enum on day 3 and decide there how `N` should affect aggregate statistics.
+- **Iterator style.** The same function written as `seq.iter().filter(...).count()` is more idiomatic and equally efficient. We will rewrite it that way on day 3, alongside `map`, `fold`, and friends.
+- **Reading sequences from FASTA files** (including gzip-compressed ones, and without loading the whole genome into RAM). We will do this with `noodles-fasta` on day 4.

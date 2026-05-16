@@ -1,0 +1,57 @@
+---
+title: "Rust for bioinformaticians"
+---
+
+An intensive course teaching Rust to 4th-year biology students who have already taken one introductory programming course (R, Python, or — at worst — MATLAB). The unit of design is the **concept ↔ biology pairing**: every Rust feature is introduced together with a biological problem that motivates it.
+
+## Where to start
+
+- [**Audience**](audience.md) — who this course is for, and what we can and cannot assume they already know.
+- [**Expected learning outcomes**](elo.md) — what students will be able to do at the end of each day.
+- [**Design principles**](designprinciples.md) — how exercises are structured, and what we deliberately do not do.
+
+## Exercises by day
+
+### Day 1 — Toolchain, scalars, control flow, functions
+
+1. [GC content](day1/01-gc-content.qmd)
+2. [Complement a single base](day1/02-complement.qmd)
+3. [Count A, C, G, T, and other](day1/03-base-counts.qmd)
+4. [Phred quality scores](day1/04-phred.qmd)
+5. [Hamming distance](day1/05-hamming.qmd)
+
+### Day 2 — Ownership, borrowing, strings, slices, bytes
+
+*(in preparation)*
+
+### Day 3 — Structs, enums, iterators, recursion, error handling
+
+*(in preparation)*
+
+### Day 4 — I/O, crates, modules, plotting, zip
+
+*(in preparation)*
+
+### Day 5 — Tests, `--release`, parallelism, ecosystem
+
+*(in preparation)*
+
+## Working with the exercises
+
+Each exercise pairs a short `.qmd` walkthrough with one or two real cargo projects:
+
+- The walkthrough holds the prose, the hints (as collapsible callouts), and a reference solution snippet.
+- The sibling `ex-<name>/` cargo project contains code that the Rust compiler will actually check, plus a `cargo test` spec that pins down the expected behaviour.
+- The `ex-<name>-solution/` cargo project contains the reference solution as runnable code.
+
+See the [design principles](designprinciples.md) for the full convention.
+
+## Building this site
+
+```bash
+make           # render the whole site to _site/
+make preview   # start a live-reload preview server
+make clean     # delete _site/ and run `cargo clean` in every exercise crate
+```
+
+You will need [Quarto](https://quarto.org/docs/get-started/) and a recent [Rust toolchain](https://rustup.rs/) installed.

@@ -1,0 +1,127 @@
+---
+title: "Day 1 — Exercise: Count A, C, G, T, and other"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write a function
+
+```rust
+fn base_counts(seq: &[u8]) -> (usize, usize, usize, usize, usize)
+```
+
+that returns `(a, c, g, t, other)` — the number of A, C, G, T, and "anything else" bases in a DNA sequence, treating upper and lower case as the same letter. "Other" counts every byte that is not A/C/G/T: `N`, ambiguity codes like `R`/`Y`/`S`, gap characters, and any garbage.
+
+## Background
+
+Per-base composition is the first thing every QC tool reports (FastQC, seqkit, NanoStat, ...). You are building a tiny version. By the end of the week your tool will handle gigabyte FASTQ files in seconds; for now we feed it a string on the command line.
+
+## A note on tuples
+
+This is the first exercise that returns more than one value. Rust has [tuples](https://doc.rust-lang.org/book/ch03-02-data-types.html#the-tuple-type) for bundling several values of (possibly different) types into one return value:
+
+```rust
+let (a, c, g, t, other) = base_counts(seq);
+```
+
+The pattern `(a, c, g, t, other)` on the left is [destructuring](https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html#destructuring-to-break-apart-values) — it pulls the five fields apart into separate local variables in one step.
+
+On day 3 we will replace the bare tuple with a proper `BaseCounts` struct so the fields have names. For now, the position-based tuple is enough.
+
+## The exercise
+
+```bash
+cd day1/ex-base-counts
+```
+
+Make all six tests pass without changing the signature, `main`, or the tests.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ACGTacgtNNX
+```
+
+Expected output for `ACGTacgtNNX`:
+
+```
+A: 2
+C: 2
+G: 2
+T: 2
+other: 3
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — five mutable counters"}
+You need five separate counters. Declare each with [`let mut`](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html), typed as [`usize`](https://doc.rust-lang.org/std/primitive.usize.html) (the natural integer type for counts and array indices):
+
+```rust
+let mut a: usize = 0;
+let mut c: usize = 0;
+// ...
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — match with alternative patterns"}
+You can combine alternatives in a single [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) arm with `|`:
+
+```rust
+match b {
+    b'A' | b'a' => a += 1,
+    // ...
+    _ => other += 1,
+}
+```
+
+`_` is the [wildcard pattern](https://doc.rust-lang.org/book/ch06-02-match.html#catch-all-patterns-and-the-_-placeholder) — it matches anything you have not already handled. Use it for the "other" arm.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — returning the five counts"}
+At the end of the function, write the tuple as the last expression (no `;`):
+
+```rust
+(a, c, g, t, other)
+```
+
+That is the function's return value.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn base_counts(seq: &[u8]) -> (usize, usize, usize, usize, usize) {
+    let mut a: usize = 0;
+    let mut c: usize = 0;
+    let mut g: usize = 0;
+    let mut t: usize = 0;
+    let mut other: usize = 0;
+    for &b in seq {
+        match b {
+            b'A' | b'a' => a += 1,
+            b'C' | b'c' => c += 1,
+            b'G' | b'g' => g += 1,
+            b'T' | b't' => t += 1,
+            _ => other += 1,
+        }
+    }
+    (a, c, g, t, other)
+}
+```
+
+Full reference implementation in `day1/ex-base-counts-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 3**: replace the five-tuple return with a named `BaseCounts` struct, rewrite the loop as an iterator [`fold`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.fold), and decide formally how to treat IUPAC ambiguity codes (R, Y, S, W, K, M, ...).
+- **Day 4**: apply this to every record of a real `.fastq.gz` streamed through [`noodles-fastq`](https://docs.rs/noodles-fastq/latest/noodles_fastq/).

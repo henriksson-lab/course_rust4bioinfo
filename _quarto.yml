@@ -1,0 +1,53 @@
+project:
+  type: website
+  output-dir: _site
+  render:
+    - "*.qmd"
+    - "*.md"
+    - "day*/*.qmd"
+    - "day*/*.md"
+    - "!**/target/**"
+
+website:
+  title: "Rust for bioinformaticians"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - text: "Course info"
+        menu:
+          - text: Audience
+            href: audience.md
+          - text: Learning outcomes
+            href: elo.md
+          - text: Design principles
+            href: designprinciples.md
+  sidebar:
+    style: docked
+    search: true
+    contents:
+      - text: Home
+        href: index.qmd
+      - section: "Course info"
+        contents:
+          - text: Audience
+            href: audience.md
+          - text: Learning outcomes
+            href: elo.md
+          - text: Design principles
+            href: designprinciples.md
+      - section: "Day 1 — toolchain & syntax"
+        contents:
+          - day1/01-gc-content.qmd
+          - day1/02-complement.qmd
+          - day1/03-base-counts.qmd
+          - day1/04-phred.qmd
+          - day1/05-hamming.qmd
+
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+    theme: cosmo

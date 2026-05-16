@@ -1,0 +1,109 @@
+---
+title: "Day 1 — Exercise: Complement a single base"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write a function `complement_base(base: u8) -> u8` that returns the Watson–Crick complement of a single DNA base. A pairs with T, C pairs with G, in both upper and lower case. `N`/`n` (unknown base) passes through unchanged. Any other byte should make the function panic with a clear message.
+
+This is a single [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) expression — your first Rust function whose entire body is one expression with no `;`.
+
+## Background
+
+DNA is double-stranded. Wherever one strand has an A, the complementary strand has a T at the same position; wherever one strand has a C, the other has a G. The function you write today is the inner workhorse of "reverse complement", which you will assemble on day 2.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-complement
+```
+
+`src/main.rs` contains:
+
+- A function `complement_base(base: u8) -> u8` with a `// TODO` body
+- A `main` that takes one character on the command line and prints its complement
+- Eight unit tests covering each base, lower case, the `N` passthrough, and the invalid-input panic
+
+Make all the tests pass. Do not change the function signature, `main`, or the tests.
+
+## How to run
+
+```bash
+cargo test                 # one passes, the rest fail
+cargo run -- A             # expected output: T
+cargo run -- g             # expected output: c
+cargo run -- N             # expected output: N
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `match` as the whole function body"}
+In Rust, [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) is an [expression](https://doc.rust-lang.org/reference/expressions.html), not a statement. The whole `match { ... }` evaluates to one value, and you can return it directly from a function — no `return`, no `;` at the end:
+
+```rust
+fn answer(x: u8) -> u8 {
+    match x {
+        1 => 10,
+        2 => 20,
+        _ => 0,
+    }
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — byte literals and the catch-all pattern"}
+[Byte literals](https://doc.rust-lang.org/reference/tokens.html#byte-literals) are written `b'A'` (a single ASCII byte as `u8`). To catch every value not listed explicitly, use a [name binding pattern](https://doc.rust-lang.org/book/ch18-03-pattern-syntax.html#-bindings) — the pattern `other` matches anything and binds the matched value to the name `other`:
+
+```rust
+match base {
+    b'A' => b'T',
+    // ... other arms ...
+    other => panic!("complement_base: unsupported base {:?}", other as char),
+}
+```
+
+You could also use `_` as the catch-all, but binding to a name lets you include the offending byte in the error message.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — how do I raise an error?"}
+Use the [`panic!`](https://doc.rust-lang.org/std/macro.panic.html) macro. It takes the same format string as [`println!`](https://doc.rust-lang.org/std/macro.println.html). For today, panicking is the right way to express "this input violates the function's contract"; on day 3 we will return a [`Result`](https://doc.rust-lang.org/std/result/enum.Result.html) instead, which gives the caller a chance to recover.
+
+The `{:?}` formatter prints values using their [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) form — useful when the value might be non-printable. `other as char` re-interprets a byte as its character (see [`as` cast expressions](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions)).
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn complement_base(base: u8) -> u8 {
+    match base {
+        b'A' => b'T',
+        b'T' => b'A',
+        b'C' => b'G',
+        b'G' => b'C',
+        b'a' => b't',
+        b't' => b'a',
+        b'c' => b'g',
+        b'g' => b'c',
+        b'N' => b'N',
+        b'n' => b'n',
+        other => panic!("complement_base: unsupported base {:?}", other as char),
+    }
+}
+```
+
+Full reference implementation lives in `day1/ex-complement-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 2**: lift this function to `reverse_complement(seq: &[u8]) -> Vec<u8>`, which reverses the sequence and complements each base. We will discuss whether to return a new `Vec<u8>` or write into a caller-provided buffer, and why both are useful.
+- **Day 3**: replace the panic with a [`Result`](https://doc.rust-lang.org/std/result/enum.Result.html) so the caller can handle invalid input without crashing.
