@@ -1,0 +1,363 @@
+---
+title: "Why Rust for bioinformatics?"
+subtitle: "Day 1, Lecture 1"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: simple
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## About this lecture
+
+::: {.incremental}
+- **Why** Rust matters in modern bioinformatics
+- **Where** it lives in the toolbox already
+- **What** it costs
+- **What** this course will and will not teach
+:::
+
+::: notes
+Welcome to day 1 of the course. This is the first of two short lectures today. Twelve lectures across the week, but most of the time you spend on the keyboard, not on me. Today I want to motivate the choice of language. If you finish the lecture not convinced Rust is interesting, the exercises will be harder.
+:::
+
+## Three numbers up front
+
+::: {style="font-size: 1.2em;"}
+- **10×–100×** — typical Rust speedup over Python on bioinformatics inner loops
+- **1 file** — a Rust binary's deployment dependency list
+- **0** — data races possible in safe Rust (enforced at compile time)
+:::
+
+::: notes
+I want to give the punchline before I give the argument, so you know where we are going. Three numbers. Performance, deployability, safety. Each of these will get its own slide.
+:::
+
+## A representative workload — counting k-mers
+
+```python
+# Python (CPython 3.12), single-threaded
+from collections import Counter
+
+def count_kmers(seq: str, k: int) -> Counter:
+    return Counter(seq[i:i + k] for i in range(len(seq) - k + 1))
+```
+
+::: notes
+Here is the kind of thing every bioinformatics tool does in its inner loop somewhere: count contiguous substrings of length k from a long DNA sequence. This is the Python version. Idiomatic, four lines, clear what it does. You could write it in 30 seconds.
+:::
+
+## Same algorithm in Rust
+
+```rust
+use std::collections::HashMap;
+
+fn count_kmers(seq: &[u8], k: usize) -> HashMap<Vec<u8>, usize> {
+    let mut counts: HashMap<Vec<u8>, usize> = HashMap::new();
+    for window in seq.windows(k) {
+        *counts.entry(window.to_vec()).or_insert(0) += 1;
+    }
+    counts
+}
+```
+
+::: notes
+The Rust version. Same algorithm. Slightly more types. You will write code that looks essentially like this on day 3 — this is from the day-3 kmer-counts exercise. The bytes are u8 instead of characters; the dictionary is a HashMap. Otherwise: same structure, same length.
+:::
+
+## The performance gap
+
+On a 10 megabase genome with k = 21, single-threaded:
+
+| Implementation | Wall-clock |
+|---|---|
+| Python (CPython 3.12) | ~ 44 s |
+| PyPy 3.10 | ~ 7 s |
+| **Rust `--release`** | **~ 0.8 s** |
+| Rust + `rayon`, 8 cores | ~ 0.1 s |
+
+::: notes
+When you actually run them, on a representative dataset, this is the typical gap. CPython is what you get with an idiomatic Python script. PyPy is faster but still nowhere close. Rust with the release flag is fifty times faster than CPython. Add rayon — which you will write on day 5, with a one-line change — and you get another factor of eight from your CPU cores.
+
+Numbers vary by hardware, by k, by how much of your hot loop is in NumPy versus pure Python. But the order of magnitude is reliable.
+:::
+
+## Why this matters in bioinformatics
+
+::: {.incremental}
+- Reads per sample: $10^8$
+- Samples per project: $10^2$ to $10^5$
+- Genome / transcriptome / pangenome sizes are growing **faster than CPU clock speeds**
+- Cloud bill scales linearly with wall-clock
+- Iteration speed scales **inversely** with wall-clock
+:::
+
+::: notes
+A 10× speedup is more important here than in business software because our workloads scale with biology, not with users. A 10x speedup turns an overnight job into a coffee break. That changes how you iterate. It changes which experiments you bother to run.
+
+And the clock speed gap matters: CPU cores stopped getting faster around 2005. Per-core performance has crept up by less than 2× since then. Sequencing throughput has gone up by something like 10^4 in the same period.
+:::
+
+## The deployment story — Python
+
+```bash
+$ ./run_analysis.sh
+ModuleNotFoundError: No module named 'pysam'
+
+$ pip install pysam
+ERROR: Building wheel for pysam failed (htslib not found)
+
+$ apt install libhts-dev
+E: Unable to locate package libhts-dev
+
+$ # ...one hour later...
+```
+
+::: notes
+Different angle. Suppose you give your colleague a Python tool. It depends on pysam, which depends on htslib, which depends on the right libc, which depends on the kernel version. Anybody who has done bioinformatics on an HPC cluster knows this conversation well.
+
+Containers help. Conda environments help. They are also one more thing the user has to set up correctly, every time, before your tool runs at all.
+:::
+
+## The deployment story — Rust
+
+```bash
+$ ldd my_rust_tool
+        not a dynamic executable
+
+$ ls -lah my_rust_tool
+        4.2M
+
+$ scp my_rust_tool server:~
+
+$ ssh server './my_rust_tool input.fa.gz'
+done.
+```
+
+::: notes
+A Rust binary built with the default profile typically has zero dynamic dependencies. ldd shows nothing. You can scp it, you can mail it, you can put it inside a Singularity container or a bare-metal HPC node. It just runs.
+
+This is one of the biggest practical advantages of Rust for our field. People you have never met can use your tool without first reproducing your environment.
+:::
+
+## Safety — what the word means here
+
+```rust
+let mut counts = vec![0; 100];
+let r = &counts[0];        // shared borrow of counts
+counts.push(42);           // try to mutate while borrowed
+println!("{}", r);
+```
+
+```
+error[E0502]: cannot borrow `counts` as mutable because it is also
+              borrowed as immutable
+  --> src/main.rs:3:5
+   |
+ 2 | let r = &counts[0];
+   |          ------ immutable borrow occurs here
+ 3 | counts.push(42);
+   | ^^^^^^^^^^^^^^^ mutable borrow occurs here
+ 4 | println!("{}", r);
+   |                - immutable borrow later used here
+```
+
+::: notes
+When I say Rust is safe, I mean the compiler catches at compile time the class of bug that crashes C and C++ programs at runtime: dangling pointers, use-after-free, data races, buffer overruns.
+
+This is not a runtime check. There is no garbage collector. It is the compiler refusing to compile broken code. The error message you see here is the actual output for the snippet above — and notice the message tells you what is wrong, where, and why. We will have more to say about borrow checker errors on day 2.
+:::
+
+## Safety in our context — parallel `count_kmers`
+
+```rust
+use rayon::prelude::*;
+
+let total: HashMap<Vec<u8>, usize> = sequences
+    .par_iter()                       // .iter() -> .par_iter()
+    .map(|seq| count_kmers(seq, 21))
+    .reduce(HashMap::new, merge);
+```
+
+::: notes
+The practical payoff of safety in bioinformatics: you can parallelise your inner loop across CPU cores by changing one method call, with zero mutex acquisition and zero risk of data corruption.
+
+Day 5 has an exercise built around exactly this. .iter() becomes .par_iter(). The compiler refuses to compile any version that would race. There is no equivalent in Python or R.
+:::
+
+## Rust in bioinformatics today
+
+::: {.columns}
+::: {.column width="50%"}
+**I/O and formats**
+
+- `noodles` — pure-Rust HTSlib
+- `rust-htslib` — htslib FFI
+- `needletail` — FASTA/FASTQ
+
+**Variant calling**
+
+- `varlociraptor`
+- `longshot`
+:::
+
+::: {.column width="50%"}
+**Single-cell**
+
+- `alevin-fry`
+
+**Long-read QC**
+
+- `chopper`
+- `nanoq`
+
+**General**
+
+- `rust-bio`
+- parts of `mash`, `kraken2`
+:::
+:::
+
+::: notes
+These are tools you have likely used or read papers about. The ecosystem is moving fast. Most of these projects either did not exist or were tiny three years ago. Noodles in particular is becoming the default I/O library in a lot of new Rust bioinformatics code.
+
+I should also say: a lot of well-known bioinformatics tools are still written in C++ — minimap2, samtools, bcftools — and those are not going anywhere. Rust is a complement, not a replacement.
+:::
+
+## You don't have to choose — PyO3
+
+```rust
+use pyo3::prelude::*;
+
+#[pyfunction]
+fn count_kmers(seq: &[u8], k: usize)
+    -> HashMap<Vec<u8>, usize>
+{
+    // ...same body as the Rust version above...
+}
+```
+
+```python
+# In your Jupyter notebook:
+import my_fast_lib
+counts = my_fast_lib.count_kmers(seq, 21)
+```
+
+::: notes
+A common worry: "I have a Python pipeline that works. I cannot rewrite it all."
+
+You don't have to. PyO3 lets you write a fast inner loop in Rust and expose it to Python as if it were a regular module. The Python user does not know — and does not need to know — that the function they are calling is implemented in Rust.
+
+This is how polars works. It is how pydantic-core works. It is how tokenizers works. PyO3 is out of scope for this course, but worth knowing it exists.
+:::
+
+## When **not** to use Rust
+
+::: {.incremental}
+- A one-off script you will throw away after this afternoon
+- Exploratory data analysis in a notebook
+- Wrapping a well-established Python or R pipeline
+- When your team does not know Rust and the performance does not matter
+- When the relevant library only exists in Python (yet)
+:::
+
+::: notes
+I am not selling snake oil. Rust is not the right tool for everything.
+
+If you are writing a one-off analysis script that will run once and never again, write it in Python. If you are doing exploratory ML or statistics, use Python or R. The honest rule: pick Rust when performance, deployability, or correctness actually matter for this project. Most projects do — but not all.
+:::
+
+## The cost
+
+::: {.incremental}
+- **Steeper learning curve**, especially ownership and borrowing (day 2)
+- **Slower compile times** than Python (which has none)
+- **Smaller bioinformatics ecosystem** than Python or R — but growing
+- **More verbose** than R or Python for some tasks
+- **Less interactive** than a notebook for exploration
+:::
+
+::: notes
+The costs are real. The borrow checker takes time to internalise — you will spend day 2 fighting it, and that is normal. cargo build takes seconds where python script.py takes none. Some libraries you want will not exist; you will write them or find a workaround.
+
+The trade is: a slower author, a faster program. For tools you will run thousands of times, or that other people will run, the trade is usually worth it.
+:::
+
+## What this course teaches
+
+| Day | Theme |
+|---|---|
+| 1 | Toolchain, scalars, control flow, functions |
+| 2 | Ownership, borrowing, strings, slices |
+| 3 | Structs, enums, iterators, recursion, error handling |
+| 4 | I/O, crates, modules, plotting, zip |
+| 5 | Tests, `--release`, parallelism, ecosystem |
+| 6 | Yew & WebAssembly — pure-Rust web apps |
+
+::: notes
+Six days. Each day has two short lectures and a stack of hands-on exercises. By Friday you will have written, tested, and benchmarked a small toolkit of real bioinformatics code: GC content, reverse complement, k-mer counting, phylogenetic-tree traversal, sequence alignment, FASTA and FASTQ parsing with noodles, a histogram plot, a parallel computation, and a web frontend.
+:::
+
+## What we **won't** cover
+
+::: {.incremental}
+- Async runtimes (one narrow exception on day 6)
+- Writing macros (using them is fine)
+- `unsafe` code
+- Explicit lifetime annotations beyond elision
+- Designing generic trait hierarchies
+- C FFI, embedded, GPU programming
+:::
+
+::: notes
+Deliberate omissions. Everything on this list is a real and useful part of Rust. None of them are needed to write effective bioinformatics tools. The Rust Book is there when you decide you want to go deeper, and it is excellent.
+:::
+
+## Today specifically
+
+By end of day 1 you will be able to:
+
+::: {.incremental}
+- Install Rust, scaffold and run a `cargo` project
+- Read and write Rust syntax for variables, control flow, functions
+- Use `match` expressions and `panic!`
+- Compute GC content, base counts, complement, Phred score, Hamming distance — five small programs, with tests
+:::
+
+::: notes
+Five exercises today, each fifteen to thirty minutes. Tests are provided; your job is to make them pass. By the end of today you have working Rust on disk and a feel for the toolchain. Tomorrow we go deeper into ownership.
+:::
+
+## One thing to remember
+
+::: {style="font-size: 1.8em; text-align: center; margin-top: 2em;"}
+*The compiler is on your side.*
+:::
+
+::: notes
+If you take only one thing from this lecture: trust the compiler. When it complains, it almost always has a reason, and it almost always tells you the fix in the suggestion at the end of the error message. The borrow checker has scary moments. The error messages are not one of them.
+
+Read the errors. Do not panic when you see a red wall. The wall is your friend.
+:::
+
+## Let's get coding
+
+- **Setup**: [`intro/install.qmd`](../intro/install.qmd)
+- **Reference**: [`day1/00-concepts.qmd`](00-concepts.qmd)
+- **First exercise**: [`day1/01-gc-content.qmd`](01-gc-content.qmd)
+
+::: notes
+Three links to start. Open the install page first if you have not yet installed Rust and VS Code. Skim the concepts page — it is a fifteen-minute reference companion to this lecture; you do not need to memorise it. Then go to exercise 1.
+
+I will see you in lecture 2 after lunch.
+:::
