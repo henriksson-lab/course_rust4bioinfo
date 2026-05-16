@@ -1,0 +1,259 @@
+---
+title: "Day 3 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-3 slides. Day 3 is where Rust starts to feel like Rust: structs and enums model biological data faithfully; `Option`, `Result`, and iterators replace exception handling and "loops with state" with composable, type-checked alternatives.
+
+## Structs
+
+```rust
+struct GenomicInterval {
+    chrom: String,
+    start: u64,
+    end: u64,
+}
+
+let iv = GenomicInterval {
+    chrom: "chr1".to_string(),
+    start: 1000,
+    end: 2000,
+};
+println!("{}-{}", iv.start, iv.end);
+```
+
+Field-by-field construction. Field privacy, derives, and tuple structs all in the → [Book chapter on structs](https://doc.rust-lang.org/book/ch05-00-structs.html).
+
+## Enums — sums of variants
+
+```rust
+enum Strand {
+    Plus,
+    Minus,
+}
+
+enum Variant {
+    Snp { pos: u64, alt: u8 },
+    Insertion { pos: u64, bases: Vec<u8> },
+    Deletion { pos: u64, len: u64 },
+}
+```
+
+Two flavours:
+
+- **C-style** (`Strand`): just tagged variants with no data. Compiles to a single small integer.
+- **Sum type** (`Variant`): each variant carries its own data. The enum is large enough to hold any of its variants, plus a tag.
+
+The compiler insists you match every variant — see "exhaustive matching" below.
+
+→ [Book: Defining an Enum](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html)
+
+## Methods — `impl` blocks
+
+```rust
+impl GenomicInterval {
+    fn new(chrom: String, start: u64, end: u64) -> Self {
+        Self { chrom, start, end }
+    }
+
+    fn length(&self) -> u64 {                // borrow self read-only
+        self.end - self.start
+    }
+
+    fn shift(&mut self, by: u64) {           // borrow self mutably
+        self.start += by;
+        self.end   += by;
+    }
+}
+```
+
+First parameter is `&self`, `&mut self`, or `self` (consuming). Methods are called with `iv.length()`. Associated functions (no `self`) like `new` are called with `GenomicInterval::new(...)`.
+
+→ [Book: Method Syntax](https://doc.rust-lang.org/book/ch05-03-method-syntax.html)
+
+## `#[derive(...)]`
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Strand { Plus, Minus }
+```
+
+The compiler writes trait implementations for you. The ones you will use this week:
+
+- **`Debug`** — enables `{:?}` formatting. Almost always.
+- **`Clone`** — `.clone()` deep-copies. Almost always.
+- **`Copy`** — assignment copies, no move. Only for types whose entire contents live on the stack (no `String`, no `Vec`).
+- **`PartialEq`** — `==` and `!=`. Add `Eq` if equality is reflexive (most types — but `f64` is famously not).
+
+## `Option<T>` — values that may be absent
+
+```rust
+enum Option<T> {
+    Some(T),
+    None,
+}
+
+fn first_g(seq: &[u8]) -> Option<usize> {
+    for (i, &b) in seq.iter().enumerate() {
+        if b == b'G' { return Some(i); }
+    }
+    None
+}
+```
+
+`Option<T>` replaces `null`. The compiler will not let you use the inner value without first checking which variant you have:
+
+```rust
+match opt {
+    Some(x) => use_it(x),
+    None => default(),
+}
+
+if let Some(x) = opt {           // shorthand when you only care about Some
+    use_it(x);
+}
+
+let x = opt.unwrap_or(0);         // value, or a default
+let x = opt.expect("must be Some by here");   // panic with message if None
+```
+
+→ [`Option` docs](https://doc.rust-lang.org/std/option/enum.Option.html)
+
+## `Result<T, E>` — operations that can fail
+
+```rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+`Result` is `Option`'s richer sibling: when something fails, the error gets its own value of type `E`. Use it for recoverable failures (bad input, missing files, parse errors).
+
+## The `?` operator
+
+`?` means *"if this is `Err`, return it from the enclosing function; otherwise unwrap and continue"*:
+
+```rust
+fn parse_region(s: &str) -> Result<(String, u64, u64), ParseError> {
+    let (chrom, rest) = s.split_once(':').ok_or(ParseError::MissingColon)?;
+    let (start_s, end_s) = rest.split_once('-').ok_or(ParseError::MissingDash)?;
+    let start: u64 = start_s.parse().map_err(|_| ParseError::InvalidStart)?;
+    let end:   u64 = end_s  .parse().map_err(|_| ParseError::InvalidEnd)?;
+    Ok((chrom.to_string(), start, end))
+}
+```
+
+The enclosing function must itself return `Result` (or `Option`) for `?` to be valid.
+
+→ [Book: ? Operator](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator)
+
+## Exhaustive matching
+
+The compiler refuses to compile a `match` that does not cover every possible input value. The wildcard `_` matches anything you have not listed:
+
+```rust
+match codon {
+    b"ATG" => Some(b'M'),
+    b"TAA" | b"TAG" | b"TGA" => Some(b'*'),
+    _ => None,
+}
+```
+
+This same mechanism catches *"I added a new enum variant and forgot to update X"* bugs at compile time.
+
+## Iterators
+
+Iterators are **lazy**. They produce values one at a time, only when asked. Adaptors (`map`, `filter`, `take`) build a chain; **consumers** (`collect`, `count`, `sum`, `fold`, `for`) drive it:
+
+```rust
+let gc_count = seq.iter()
+    .filter(|&&b| matches!(b, b'G' | b'C'))
+    .count();
+
+let upper: Vec<u8> = seq.iter()
+    .map(|&b| b.to_ascii_uppercase())
+    .collect();
+
+let mean_gc: f64 =
+    sequences.iter().map(|s| gc_content(s)).sum::<f64>() / sequences.len() as f64;
+```
+
+Iterator chains compile to the same machine code as a hand-written loop (zero-cost). Use them whenever the body is *"for each item, do X, produce a value"*.
+
+→ [Book: Iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html)
+
+## Useful slice and string methods
+
+```rust
+seq.windows(3)            // every consecutive 3-byte window
+seq.chunks(8)             // every 8-byte chunk (last may be shorter)
+seq.iter().rev()          // reverse iteration
+seq.iter().enumerate()    // (index, value) pairs
+
+s.split_once(':')         // returns Option<(&str, &str)>
+s.lines()                 // iterator over lines
+s.starts_with('>')        // bool
+s.parse::<u64>()          // returns Result<u64, _>
+```
+
+## Closures
+
+```rust
+let add5 = |x: i32| x + 5;
+let squares: Vec<i32> = (0..10).map(|i| i * i).collect();
+```
+
+Closures borrow or move values from the surrounding scope. The three closure traits — `Fn`, `FnMut`, `FnOnce` — describe *how* they relate to their captures. For day 3 you can ignore the distinction; iterator combinators accept any of them.
+
+→ [Book: Closures](https://doc.rust-lang.org/book/ch13-01-closures.html)
+
+## `HashMap` and the entry API
+
+```rust
+use std::collections::HashMap;
+
+let mut counts: HashMap<Vec<u8>, usize> = HashMap::new();
+for window in seq.windows(k) {
+    *counts.entry(window.to_vec()).or_insert(0) += 1;
+}
+```
+
+[`entry(key).or_insert(default)`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) returns a `&mut V` to either the existing value or a freshly-inserted default. Dereference and mutate in place. This is the canonical histogram-building pattern.
+
+→ [`HashMap` docs](https://doc.rust-lang.org/std/collections/struct.HashMap.html)
+
+## Recursive types
+
+```rust
+enum Node {
+    Leaf { name: String, branch_length: f64 },
+    Internal { branch_length: f64, children: Vec<Node> },
+}
+```
+
+A type that contains itself *directly* (`left: Node`) has unbounded size and the compiler refuses. The fix: indirection through a heap pointer. [`Box<Node>`](https://doc.rust-lang.org/std/boxed/struct.Box.html) is the most common choice. In our case, `Vec<Node>` already provides indirection — the children live on the heap, the enum itself is a fixed size.
+
+## Recursive functions
+
+```rust
+fn count_tips(node: &Node) -> usize {
+    match node {
+        Node::Leaf { .. } => 1,
+        Node::Internal { children, .. } => children.iter().map(count_tips).sum(),
+    }
+}
+```
+
+Rust does not guarantee tail-call optimisation, so very deep recursion can overflow the stack. For trees of biological depth this is fine; for sequences of length 10^9 it is not — use iteration there.
+
+## Dynamic programming as iterative recursion
+
+When a recursive formula visits the same subproblem many times, fill a table once instead. The recurrence becomes a nested `for` loop; each cell computed exactly once. The day-3 alignment exercise is the canonical example.
+
+→ [Wikipedia: Dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming)

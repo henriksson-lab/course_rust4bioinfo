@@ -1,0 +1,233 @@
+---
+title: "Day 6 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-6 slides. A whirlwind tour of the pieces that make day 6's pure-Rust web stack work. Read this once before exercise 1; come back to specific sections as the day unfolds.
+
+## WebAssembly in one paragraph
+
+WebAssembly (WASM) is a compact, sandboxed bytecode format that runs in every modern browser. Rust compiles to WASM the same way it compiles to native machine code — pick a target (`wasm32-unknown-unknown`) and `cargo build`. The resulting `.wasm` blob loads from a `<script>` tag in your HTML and runs in the page with about the same performance as native code, no JavaScript runtime cost.
+
+## The toolchain
+
+```bash
+rustup target add wasm32-unknown-unknown      # one-off: add the WASM target
+cargo install trunk                            # one-off: install trunk
+```
+
+[Trunk](https://trunkrs.dev) is a build-and-serve tool that:
+
+1. Compiles the frontend to WASM (`cargo build --target wasm32-unknown-unknown`).
+2. Runs [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) to generate a thin JavaScript shim.
+3. Bundles WASM + JS + your `index.html` into a static `dist/` directory.
+4. Serves it over HTTP with hot reload on save.
+
+## Workspaces
+
+A workspace is one Cargo project containing several crates:
+
+```toml
+# Cargo.toml at the workspace root
+[workspace]
+resolver = "2"
+members = ["shared", "backend", "frontend"]
+
+[workspace.dependencies]
+shared = { path = "shared" }
+serde  = { version = "1", features = ["derive"] }
+```
+
+Each member has its own `Cargo.toml` and `src/`. Common dependencies declared once in `[workspace.dependencies]` are referenced by members with `serde.workspace = true`. One `target/` at the workspace root is shared across crates.
+
+→ [Cargo Book: Workspaces](https://doc.rust-lang.org/cargo/reference/workspaces.html)
+
+## The shared-types pattern
+
+The `shared` crate holds types serialised over the wire:
+
+```rust
+// shared/src/lib.rs
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SampleRecord {
+    pub id: String,
+    pub name: String,
+    pub sequence: String,
+}
+```
+
+Both `backend` and `frontend` depend on `shared`. The frontend compiles `shared` to WASM; the backend compiles it natively. Because the *same* struct definition is used on both sides, the JSON wire format **cannot drift** — change a field name and both crates fail to compile until they agree again.
+
+This is the single most important architectural idea of day 6.
+
+## `serde`
+
+```rust
+#[derive(Serialize, Deserialize)]
+struct Sample { id: String, name: String }
+```
+
+[`serde`](https://serde.rs/) is a serialisation framework — `Serialize` and `Deserialize` are traits the `derive` macro implements for you. [`serde_json`](https://docs.rs/serde_json/) is the JSON adapter:
+
+```rust
+let json: String   = serde_json::to_string(&sample)?;
+let sample: Sample = serde_json::from_str(&json)?;
+```
+
+Most crates that handle JSON (`axum`, `gloo_net`, …) call `serde` for you.
+
+## `axum` — Rust HTTP server
+
+```rust
+use axum::{routing::get, Json, Router};
+
+async fn list_samples() -> Json<Vec<SampleSummary>> { /* ... */ }
+
+#[tokio::main]
+async fn main() -> std::io::Result<()> {
+    let app = Router::new().route("/api/samples", get(list_samples));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
+    axum::serve(listener, app).await
+}
+```
+
+[`axum`](https://docs.rs/axum/) routes HTTP requests to async functions. [`Json<T>`](https://docs.rs/axum/latest/axum/struct.Json.html) does serde encoding automatically. Path parameters appear as [`axum::extract::Path<T>`](https://docs.rs/axum/latest/axum/extract/struct.Path.html) arguments.
+
+## `async`/`await` — the minimum you need today
+
+An `async fn` returns a **future** — a description of work to do, not the result. The future only runs when *awaited*. Inside an `async` block, `.await` yields control until the awaited future is ready:
+
+```rust
+async fn fetch_sample() -> Result<SampleRecord, gloo_net::Error> {
+    let resp = Request::get("/api/samples/lambda").send().await?;
+    let data = resp.json::<SampleRecord>().await?;
+    Ok(data)
+}
+```
+
+In WASM (the browser), [`wasm_bindgen_futures::spawn_local`](https://docs.rs/wasm-bindgen-futures/latest/wasm_bindgen_futures/fn.spawn_local.html) runs an async block on the browser's event loop:
+
+```rust
+wasm_bindgen_futures::spawn_local(async move {
+    let r = fetch_sample().await;
+    // ...
+});
+```
+
+In axum (the server), the `#[tokio::main]` macro starts the [Tokio](https://tokio.rs) async runtime, which schedules futures across a thread pool.
+
+For day 6 you do not need to understand `Future` internals or runtime mechanics — treat `.await` as *"pause here until the work is done; let the runtime do other things in the meantime"*.
+
+## Yew — Rust UI framework
+
+Modelled on React. Write components as functions, store state in hooks, return HTML from a macro.
+
+### Function components
+
+```rust
+use yew::prelude::*;
+
+#[function_component(App)]
+fn app() -> Html {
+    html! { <h1>{ "Hello" }</h1> }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+```
+
+The function re-runs on every render. Hooks make state survive across renders.
+
+### Hooks
+
+- [`use_state(initial)`](https://docs.rs/yew/0.23.0/yew/functional/fn.use_state.html) — state that persists across renders. Returns a handle you dereference to read (`*state`) and call `.set(new)` on to write.
+- [`use_effect_with(deps, body)`](https://docs.rs/yew/0.23.0/yew/functional/fn.use_effect_with.html) — run a side effect when deps change. `deps = ()` means "once on mount".
+
+### Callbacks
+
+```rust
+let on_click = Callback::from(move |_event| {
+    // runs on click
+});
+
+html! { <button onclick={on_click}>{ "Click me" }</button> }
+```
+
+[`Callback::from`](https://docs.rs/yew/0.23.0/yew/callback/struct.Callback.html) wraps a closure so Yew can attach it to a DOM event. Clone before moving into nested closures.
+
+### The `html!` macro
+
+JSX-like syntax compiled into Rust at macro-expansion time:
+
+- Every tag must be closed (`<br/>`, not `<br>`).
+- Text content goes inside `{ }`: `<p>{ "hi" }</p>`.
+- Any expression inside `{ }`: `<p>{ 1 + 1 }</p>` renders "2".
+- `{ for iter }` renders an iterator of `Html` nodes.
+- SVG elements work alongside HTML.
+
+→ [Yew docs](https://yew.rs/)
+
+## `gloo_net` — fetch from WASM
+
+The WASM-side HTTP client:
+
+```rust
+use gloo_net::http::Request;
+
+let resp = Request::get("/api/samples").send().await?;
+let data: Vec<SampleSummary> = resp.json().await?;
+```
+
+Two `await`s: one for the response headers, one for the body. [`gloo_net`](https://docs.rs/gloo-net/) wraps the browser's native `fetch()` API.
+
+## The Trunk dev proxy
+
+When trunk serves the frontend on `:8080` and axum runs on `:3000`, the frontend's `fetch('/api/...')` would go to trunk, not the backend. The fix is one block in `Trunk.toml`:
+
+```toml
+[[proxy]]
+rewrite = "/api/"
+backend = "http://127.0.0.1:3000/api/"
+```
+
+Trunk forwards anything matching `/api/...` to axum. The frontend stays same-origin and CORS never comes up.
+
+## SVG in `html!`
+
+Yew's `html!` macro accepts SVG elements alongside HTML ones:
+
+```rust
+html! {
+    <svg width="600" height="80" viewBox="0 0 600 80">
+        <polyline points="0,40 100,30 200,50" fill="none" stroke="#2266aa" />
+    </svg>
+}
+```
+
+SVG uses screen-style coordinates (Y=0 at the top). Numeric attributes must be strings — `width={n.to_string()}` if `n` is a `u32`.
+
+## What we deliberately leave out
+
+The day-6 scope:
+
+- **In**: function components + `use_state`/`use_effect_with`; `Callback::from`; one `async fn` + `spawn_local`; `gloo_net::Request`; serde wire format; axum routes + handlers; Trunk + the dev proxy; inline SVG.
+- **Out**: trait objects vs generics for `Future`, executors, pinning; routers with state extractors and middleware in axum; the full Yew agents/component-lifecycle/portals API; `wasm-bindgen` deep magic.
+
+The thing you have built by the end of day 6 is structurally identical to a real Rust full-stack application. The "out" items are real, useful, and learnable — but they will not stop you from shipping.
+
+## Next steps if you keep going
+
+- [**Leptos**](https://leptos.dev) — newer Yew alternative based on fine-grained reactivity (signals instead of virtual DOM diffing). Smaller WASM bundles.
+- [**Dioxus**](https://dioxuslabs.com) — same UI code targets web, desktop, mobile, all from Rust.
+- [**Tauri**](https://tauri.app) — Rust backend + web frontend bundled as a native desktop app.
+- [**sqlx**](https://docs.rs/sqlx/) / [**SeaORM**](https://www.sea-ql.org/SeaORM/) — type-safe SQL from Rust; pairs cleanly with axum.
+
+Outside the course but worth knowing the names of.

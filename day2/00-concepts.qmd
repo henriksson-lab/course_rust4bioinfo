@@ -1,0 +1,149 @@
+---
+title: "Day 2 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-2 slides. Day 2 is when Rust starts to feel different from other languages: the ownership and borrowing rules are the core of what lets Rust be both fast and safe without a garbage collector.
+
+## Ownership in one minute
+
+Every value in Rust has exactly one **owner**. When the owner goes out of scope, the value is dropped (memory freed). Assignment **moves** the value — the old binding is no longer valid:
+
+```rust
+let a = String::from("hello");
+let b = a;            // value moves from a to b
+// println!("{}", a); // compile error: a no longer owns anything
+println!("{}", b);    // ok
+```
+
+Primitive types like `u8`, `i32`, `f64`, `bool` implement the [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html) trait. Assignment of a `Copy` value duplicates it instead of moving — so integers behave the way you would intuitively expect.
+
+→ [Book: What Is Ownership?](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html)
+
+## References — `&` and `&mut`
+
+To use a value without taking ownership, **borrow** it via a reference:
+
+```rust
+fn length(s: &String) -> usize { s.len() }
+
+let s = String::from("hello");
+let n = length(&s);     // s is borrowed; still owns the string after the call
+```
+
+Two flavours:
+
+- **`&T`** — *shared* (immutable) reference. Multiple readers allowed, no writers. Cheap to pass (one pointer).
+- **`&mut T`** — *unique* mutable reference. Exactly one writer, no other readers — not even a `&T`.
+
+The rule *"many readers OR one writer, never both at the same time"* is checked at **compile time** by the borrow checker. This is why data races are impossible in safe Rust.
+
+→ [Book: References and Borrowing](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html)
+
+## `Vec<T>` — owned, growable heap array
+
+```rust
+let mut v: Vec<u8> = Vec::new();           // empty, no allocation yet
+let mut v = Vec::with_capacity(100);        // empty, but pre-allocated for 100
+v.push(b'A');                               // append
+v.clear();                                  // length -> 0, allocation kept
+v.reserve(50);                              // ensure capacity for 50 more
+let n = v.len();                            // current length
+```
+
+`Vec<T>` owns its heap buffer. Returning a `Vec` from a function transfers that ownership to the caller — no copying, just a move of three pointers (data, length, capacity).
+
+→ [`Vec` docs](https://doc.rust-lang.org/std/vec/struct.Vec.html)
+
+## Slices — `&[T]` and `&mut [T]`
+
+A slice is a **view** into part of a `Vec`, an array, or another slice. Two pieces: a pointer and a length. No allocation.
+
+```rust
+let v = vec![1, 2, 3, 4, 5];
+let s: &[i32] = &v[1..4];        // view of indices 1, 2, 3 (length 3)
+```
+
+A slice borrows from its source: while the slice exists, the source cannot be mutated or dropped. The compiler enforces this.
+
+In bioinformatics, `&[u8]` is the canonical "DNA sequence" type. The same `fn gc_content(seq: &[u8]) -> f64` works on a byte string literal `b"ACGT"`, on a chunk loaded from a FASTA, or on a slice of a 200-megabase chromosome — without copying a single byte.
+
+→ [Slice methods](https://doc.rust-lang.org/std/primitive.slice.html)
+
+## `String` vs `&str`
+
+`String` is the heap-owned, growable string. `&str` is an immutable view (slice) of UTF-8 bytes. Same relationship as `Vec<u8>` to `&[u8]`, with the extra invariant that the bytes are valid UTF-8.
+
+```rust
+let owned: String = String::from("hello");
+let view: &str = &owned;
+let literal: &str = "hello";    // string literals have type `&'static str`
+```
+
+For DNA we prefer `&[u8]` because (a) not every plausible byte sequence is valid UTF-8, (b) `&str` cannot be indexed in O(1), and (c) byte literals (`b'A'`) drop straight into match patterns and table lookups.
+
+## Writing into a buffer the caller owns
+
+When the same operation runs in a hot loop, allocating a fresh `Vec` per call is wasteful. The idiomatic Rust shape is to take a `&mut Vec<T>` and *write into* it:
+
+```rust
+fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
+    out.clear();                       // length = 0, allocation kept
+    out.reserve(seq.len());            // grow if needed (no-op if already big)
+    for i in (0..seq.len()).rev() {
+        out.push(complement_base(seq[i]));
+    }
+}
+```
+
+Across millions of calls, the underlying allocation is reused. This is the pattern every high-performance bioinformatics crate uses in its inner loop.
+
+## Range bounds and indexed loops
+
+```rust
+0..n               // half-open: 0, 1, ..., n-1
+0..=n              // inclusive: 0, 1, ..., n
+(0..n).rev()       // reversed
+&seq[a..b]         // slice from a (inclusive) to b (exclusive)
+&seq[..k]          // first k bytes
+&seq[a..]          // from a to the end
+```
+
+Out-of-bounds slicing **panics at runtime**. The compiler does not catch it statically because the length is not known at compile time. → [Range expressions](https://doc.rust-lang.org/reference/expressions/range-expr.html).
+
+## `while` loops
+
+```rust
+let mut start = 0;
+while start < qual.len() && qual[start] < threshold {
+    start += 1;
+}
+```
+
+Reach for `while` when the iteration end is conditional on state, not a fixed range. The `&&` is *short-circuit*: `qual[start]` is only evaluated when `start < qual.len()`, which keeps the indexing safe.
+
+## Lifetime elision
+
+The compiler infers most lifetimes for you. The rule that matters today:
+
+> If a function takes **one** reference parameter and returns a reference, the output's lifetime is tied to that input.
+
+```rust
+fn quality_trim(qual: &[u8], min_q: u8) -> &[u8] { /* ... */ }
+//                              borrows from qual ^^^^^
+```
+
+No explicit `<'a>` annotations needed. When there are *two* input references and you want to return one of them, the compiler does require an explicit annotation — that comes up later.
+
+→ [Book: Lifetimes](https://doc.rust-lang.org/book/ch10-03-lifetime-syntax.html)
+
+## Where to look things up
+
+- [Book chapter 4: Understanding Ownership](https://doc.rust-lang.org/book/ch04-00-understanding-ownership.html) — read this once carefully; it is the conceptual heart of Rust.
+- [Rust error codes](https://doc.rust-lang.org/error_codes/error-index.html) — every `E0XXX` compile error has its own explainer page.
+- The borrow checker's error messages are good — they almost always include the fix in the suggestion at the end.

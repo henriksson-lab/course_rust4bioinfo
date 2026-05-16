@@ -2,8 +2,11 @@
 
 Build a **pure-Rust web application**: a Yew frontend (compiled to WebAssembly), an axum backend, and a shared crate of types that compiles to both targets. The four exercises walk you through one workspace, starting from a "Hello, world!" page and ending with a real interactive sequence inspector.
 
+Start with [**00 — Concepts**](00-concepts.qmd) for a reference overview of WebAssembly, workspaces, Yew, axum, async, and serde (companion to the slides).
+
 | # | Topic | New concept |
 |---|---|---|
+| 0 | [**Concepts**](00-concepts.qmd) | WASM, workspaces, shared types, Yew hooks, `async`/`await`, serde wire format |
 | 1 | [Hello Yew](01-hello-yew.qmd) | trunk, the two-terminal dev loop, `html!`, hot reload |
 | 2 | [Reactive sequence statistics](02-reactive-stats.qmd) | `use_state`, controlled inputs, computing on every render |
 | 3 | [Fetch from the backend](03-fetch-from-backend.qmd) | `use_effect_with`, `spawn_local`, `gloo_net::Request`, async/await |

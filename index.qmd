@@ -27,6 +27,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 2 — Ownership, borrowing, strings, slices, bytes
 
+0. [Concepts — reference companion to the slides](day2/00-concepts.qmd)
 1. [Reverse complement](day2/01-reverse-complement.qmd)
 2. [Reverse complement into a buffer](day2/02-revcomp-buf.qmd)
 3. [k-mers as slice views](day2/03-kmers.qmd)
@@ -34,6 +35,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 3 — Structs, enums, iterators, recursion, error handling
 
+0. [Concepts — reference companion to the slides](day3/00-concepts.qmd)
 1. [Genomic interval](day3/01-genomic-interval.qmd)
 2. [Parsing a region string with `Result`](day3/02-parse-region.qmd)
 3. [A codon table with `Option`](day3/03-codon-table.qmd)
@@ -43,6 +45,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 4 — I/O, crates, modules, plotting, zip
 
+0. [Concepts — reference companion to the slides](day4/00-concepts.qmd)
 1. [Parsing BED by hand](day4/01-bed-parse.qmd)
 2. [Per-contig stats with `noodles-fasta`](day4/02-fasta-stats.qmd)
 3. [Filter FASTQ with `noodles-fastq`](day4/03-fastq-filter.qmd)
@@ -51,6 +54,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 5 — Tests, `--release`, parallelism, ecosystem
 
+0. [Concepts — reference companion to the slides](day5/00-concepts.qmd)
 1. [Use tests to find the bug](day5/01-find-the-bug.qmd)
 2. [`--release` is a 50× free lunch](day5/02-release-mode.qmd)
 3. [Parallel GC content with `rayon`](day5/03-parallel-gc.qmd)
@@ -59,6 +63,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 A pure-Rust web app: Yew frontend (compiled to WebAssembly), axum backend, shared types crate — all in one cargo workspace.
 
+0. [Concepts — reference companion to the slides](day6/00-concepts.qmd)
 1. [Hello Yew](day6/01-hello-yew.qmd)
 2. [Reactive sequence statistics](day6/02-reactive-stats.qmd)
 3. [Fetch from the backend](day6/03-fetch-from-backend.qmd)

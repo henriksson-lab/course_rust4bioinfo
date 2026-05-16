@@ -1,0 +1,164 @@
+---
+title: "Day 5 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-5 slides. Tests, build profiles, and parallelism — the three things that separate a working Rust prototype from a deployable bioinformatics tool.
+
+## Tests
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(reverse_complement(b"ACGT"), b"ACGT");
+    }
+
+    #[test]
+    #[should_panic]
+    fn bad_input_panics() {
+        complement_base(b'X');
+    }
+}
+```
+
+- [`#[cfg(test)]`](https://doc.rust-lang.org/reference/conditional-compilation.html#the-test-configuration-option) — module only compiled for `cargo test`.
+- [`#[test]`](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) — marks a function as a test.
+- [`assert!`](https://doc.rust-lang.org/std/macro.assert.html), [`assert_eq!`](https://doc.rust-lang.org/std/macro.assert_eq.html), [`assert_ne!`](https://doc.rust-lang.org/std/macro.assert_ne.html) — the actual checks.
+- [`#[should_panic]`](https://doc.rust-lang.org/book/ch11-01-writing-tests.html#checking-for-panics-with-should_panic) — the test *expects* a panic; passes if one occurs.
+- `cargo test` compiles and runs every test in the crate, in parallel by default.
+
+→ [Book: Writing Tests](https://doc.rust-lang.org/book/ch11-01-writing-tests.html)
+
+## Property-style tests
+
+*"For many inputs, some invariant holds."* Hand-rolled today:
+
+```rust
+#[test]
+fn revcomp_round_trip() {
+    for seq in [b"A".as_slice(), b"ACGT", b"NACGTN", b""] {
+        let twice = reverse_complement(&reverse_complement(seq));
+        assert_eq!(&twice[..], seq);
+    }
+}
+```
+
+For randomly generated inputs with automatic shrinking, look at [`proptest`](https://docs.rs/proptest/) and [`quickcheck`](https://docs.rs/quickcheck/) (out of scope today).
+
+## Integration tests
+
+A sibling `tests/` directory next to `src/`:
+
+```
+my-crate/
+├── src/main.rs
+├── tests/
+│   └── end_to_end.rs
+```
+
+Each file in `tests/` is compiled as a separate crate that uses your library the way an external user would. `cargo test` runs them alongside the unit tests.
+
+→ [Book: Test Organisation](https://doc.rust-lang.org/book/ch11-03-test-organization.html)
+
+## Build profiles
+
+| Profile | Flag | Optimisation | Bounds checks | Speed |
+|---|---|---|---|---|
+| **dev** (default) | none | minimal | enabled | slow |
+| **release** | `--release` | full LLVM | enabled | 10×–100× faster |
+
+```bash
+cargo build              # target/debug/<crate>
+cargo build --release    # target/release/<crate>
+cargo run --release      # always release for benchmarking
+```
+
+The `--release` flag is the single most important Rust-specific knob for performance. **Always** use it when measuring speed or shipping a binary. Reports that "Rust is slow on this benchmark" are almost always running the debug binary.
+
+→ [Cargo Book: Profiles](https://doc.rust-lang.org/cargo/reference/profiles.html)
+
+## Measuring runtime — `Instant`
+
+```rust
+use std::time::Instant;
+
+let start = Instant::now();
+do_work();
+let elapsed = start.elapsed();
+println!("elapsed: {:.3?}", elapsed);
+```
+
+For order-of-magnitude comparisons, this is all you need. For statistically rigorous benchmarks (means, standard deviations, outlier detection) use [`criterion`](https://docs.rs/criterion/) — out of scope today.
+
+## Detecting the build profile at compile time
+
+```rust
+let profile = if cfg!(debug_assertions) { "debug" } else { "release" };
+```
+
+[`cfg!(debug_assertions)`](https://doc.rust-lang.org/reference/conditional-compilation.html#debug_assertions) is a compile-time boolean — `true` in debug builds, `false` in release. Useful for labelling benchmark output.
+
+## Rayon — data parallelism in three letters
+
+```rust
+use rayon::prelude::*;
+
+let gcs: Vec<f64> = sequences.par_iter()
+    .map(|seq| gc_content(seq))
+    .collect();
+```
+
+[`.par_iter()`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefIterator.html#tymethod.par_iter) instead of `.iter()` is usually the only change needed. [Rayon](https://docs.rs/rayon/) distributes work across a thread pool using [work-stealing](https://en.wikipedia.org/wiki/Work_stealing). The compiler statically refuses any code that would race on shared mutable data — there is no way to write a data race in safe Rust + rayon.
+
+Other useful tools in the same crate:
+
+- [`rayon::join(a, b)`](https://docs.rs/rayon/latest/rayon/fn.join.html) — run two arbitrary closures in parallel.
+- [`par_iter_mut`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefMutIterator.html#tymethod.par_iter_mut) — mutable parallel iteration.
+- [`par_bridge`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html) — parallelise an arbitrary sequential `Iterator`.
+
+## When parallelism helps
+
+- **Yes** — many independent items (millions of reads), each with non-trivial work (>a few microseconds).
+- **No** — a few items with very fast work; thread-pool overhead dominates.
+- **Watch out** — parallel `.sum::<f64>()` is non-deterministic at the last-bit level because float addition is not associative. Per-item `.collect()` (as in the example above) *is* deterministic, because each item is computed independently.
+
+## `Send` and `Sync` in two sentences
+
+Types that are safe to *move* between threads implement [`Send`](https://doc.rust-lang.org/std/marker/trait.Send.html); types that are safe to *share* between threads (via `&T`) implement [`Sync`](https://doc.rust-lang.org/std/marker/trait.Sync.html). Almost every type in safe Rust gets both automatically; the few that do not (like `Rc<T>` or `Cell<T>`) are the ones rayon refuses to parallelise — that refusal is the compile-time guarantee against data races.
+
+## Allocation as a performance bug
+
+A common pattern in slow Rust code:
+
+```rust
+for record in records {
+    let trimmed: String = record.sequence.to_string();  // allocates per record
+    process(&trimmed);
+}
+```
+
+Fix one or more of:
+
+- Take a `&[u8]` instead of `&String`.
+- Reuse a buffer with `clear()` + `reserve()` (the [day-2 buffer-reuse pattern](../day2/02-revcomp-buf.qmd)).
+- Use `iter().filter(...)` directly instead of building an intermediate `Vec`.
+
+Profile first — the right place to optimise is usually not where you guessed.
+
+## Profiling and beyond (pointers, not required reading)
+
+- [`cargo flamegraph`](https://github.com/flamegraph-rs/flamegraph) — Linux-only, one command, produces an SVG flamegraph.
+- [`perf` + `hotspot`](https://github.com/KDAB/hotspot) — the standard Linux profiler with a GUI.
+- [`samply`](https://github.com/mstange/samply) — cross-platform sampling profiler that integrates with the Firefox profiler UI.
+- [`cargo asm`](https://github.com/pacak/cargo-show-asm) — see the actual assembly Rust generates for a function.
+
+You will not need any of these for the course, but they are good to know exist.

@@ -1,0 +1,230 @@
+---
+title: "Day 4 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-4 slides. The day you stop writing every byte of every algorithm and start using the bioinformatics ecosystem. Day 4 is about the standard library's I/O traits, adding external crates via Cargo, and reading other people's documentation.
+
+## Adding a crate
+
+Edit `Cargo.toml`:
+
+```toml
+[dependencies]
+noodles-fasta = "0.50"
+serde = { version = "1", features = ["derive"] }
+```
+
+Then `use` it in `src/main.rs`:
+
+```rust
+use noodles_fasta as fasta;
+```
+
+`cargo build` fetches the crate (and its transitive dependencies) from [crates.io](https://crates.io), compiles them once, and caches the result. The exact resolved versions end up in `Cargo.lock`.
+
+Version syntax: `"0.50"` means "any 0.50.x". `"1"` means "any 1.x.y". The [Cargo Book](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html) has the full spec.
+
+## Reading docs.rs
+
+Every crate published to crates.io is automatically documented at `docs.rs/<crate-name>`. The pages are generated from `///` doc comments — they are guaranteed to match the version of the crate you depend on.
+
+For day 4:
+
+- [`noodles-fasta`](https://docs.rs/noodles-fasta/)
+- [`noodles-fastq`](https://docs.rs/noodles-fastq/)
+- [`plotters`](https://docs.rs/plotters/)
+- [`zip`](https://docs.rs/zip/0.6/zip/)
+
+In your own project: `cargo doc --open` builds and opens the documentation for every dependency in your browser, offline.
+
+## Modules
+
+Split a crate across multiple files:
+
+```rust
+// src/main.rs
+mod cli;
+mod io;
+mod seq;
+
+fn main() { cli::run(); }
+```
+
+```rust
+// src/cli.rs
+pub fn run() { /* ... */ }
+```
+
+`mod cli;` tells the compiler "look for `cli.rs` or `cli/mod.rs`". `pub` makes an item visible outside its module.
+
+→ [Book: Modules](https://doc.rust-lang.org/book/ch07-00-managing-growing-projects-with-packages-crates-and-modules.html)
+
+## I/O traits
+
+[`std::io`](https://doc.rust-lang.org/std/io/) defines a small set of traits that every readable/writable thing implements:
+
+| Trait | What it gives you | Common implementors |
+|---|---|---|
+| [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html) | `read(buf) -> Result<usize>` | `File`, `TcpStream`, `&[u8]`, `Cursor<...>` |
+| [`Write`](https://doc.rust-lang.org/std/io/trait.Write.html) | `write(buf) -> Result<usize>` | `File`, `Vec<u8>`, `Stdout` |
+| [`BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html) | line-buffered reading | `BufReader<R: Read>`, `Cursor<&[u8]>` |
+| [`Seek`](https://doc.rust-lang.org/std/io/trait.Seek.html) | jump to a position | `File`, `Cursor<...>` |
+
+By writing functions that take `R: BufRead` instead of `&File`, you can pass any source — a real file, a gzipped stream, or a `Cursor` over a byte literal in tests. This is how `noodles` and most other crates are designed.
+
+## Files
+
+```rust
+use std::fs::File;
+use std::io::{BufReader, BufWriter, BufRead, Write};
+
+let file = File::open("input.fa")?;
+let reader = BufReader::new(file);
+
+let out = File::create("output.txt")?;
+let mut writer = BufWriter::new(out);
+writeln!(writer, "hello")?;
+```
+
+[`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html) wraps a `Read` and makes large reads efficient by buffering. [`BufWriter`](https://doc.rust-lang.org/std/io/struct.BufWriter.html) does the same for writes.
+
+## Paths
+
+```rust
+use std::path::{Path, PathBuf};
+
+let p: &Path = Path::new("data/sample.fa");
+let owned: PathBuf = PathBuf::from("data/sample.fa");
+```
+
+[`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) and [`PathBuf`](https://doc.rust-lang.org/std/path/struct.PathBuf.html) are to filesystem paths what `&str` and `String` are to text — borrowed view and owned counterpart. Most std functions accept `&Path` (or anything that converts to it via `AsRef<Path>`).
+
+## `Result<(), Box<dyn Error>>` at the application boundary
+
+A `main` function that propagates errors:
+
+```rust
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let file = File::open("input.fa")?;
+    // ...
+    Ok(())
+}
+```
+
+[`Box<dyn Error>`](https://doc.rust-lang.org/std/error/trait.Error.html) means *"any type that implements the `Error` trait"*. Perfect for `main` and one-off scripts. Library code usually picks a specific error type instead. The [`anyhow`](https://docs.rs/anyhow/) crate is a nicer ergonomic wrapper around the same idea.
+
+## Generic function signatures
+
+```rust
+fn fasta_stats<R: BufRead>(reader: R) -> std::io::Result<Vec<ContigStat>> { /* ... */ }
+```
+
+`<R: BufRead>` is generic: the function accepts any type that implements `BufRead`, and the compiler generates a specialised version for each concrete type you actually call it with. Just as fast as a hand-written non-generic version (zero cost).
+
+For simple cases you can write `reader: impl BufRead` instead — same meaning, less syntax.
+
+→ [Book: Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html)
+
+## Streaming iteration over records
+
+`noodles` and most bioinformatics crates follow the same pattern:
+
+```rust
+let mut reader = fasta::io::Reader::new(buf_read);
+for result in reader.records() {
+    let record = result?;
+    // process record...
+}
+```
+
+The iterator yields `Result<Record, io::Error>` so you can `?` on every record. Memory stays at "one record" — a 3 GB FASTA streams in O(1) RAM, not O(file size).
+
+## Compressed vs archived
+
+A common point of confusion:
+
+| Format | What it is | Crate |
+|---|---|---|
+| `.gz` / `.bgz` / `.bgzf` | **One** compressed byte stream | [`flate2`](https://docs.rs/flate2/), [`noodles-bgzf`](https://docs.rs/noodles-bgzf/) |
+| `.zip` | An **archive** of named entries, each compressed | [`zip`](https://docs.rs/zip/0.6/zip/) |
+| `.tar.gz` | Many files concatenated, then gzipped | [`tar`](https://docs.rs/tar/) + `flate2` |
+
+`.fa.gz`, `.fastq.gz`, `.vcf.gz` are all gzip streams, **not** zip archives. `noodles` handles them transparently when you wrap the file in a `flate2::read::GzDecoder` (or, for `.bgz`, a `bgzf::Reader`).
+
+## `clap` — command-line arguments with one derive
+
+```rust
+use clap::Parser;
+
+#[derive(Parser)]
+struct Args {
+    /// Path to the input FASTA
+    input: PathBuf,
+
+    /// Minimum sequence length
+    #[arg(long, default_value_t = 0)]
+    min_len: usize,
+}
+
+let args = Args::parse();
+```
+
+[`clap`](https://docs.rs/clap/) generates help text, error messages, and parsing from a struct definition. Used by most production Rust CLI tools.
+
+## `serde` — serialisation framework
+
+```rust
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+struct Sample { id: String, name: String }
+```
+
+The `derive` macros generate code that converts your struct to/from JSON, YAML, TOML, MessagePack, … via adapter crates. Day 4 just uses [`serde_json`](https://docs.rs/serde_json/); day 6 uses the same machinery to send data over HTTP.
+
+## Plotting with `plotters`
+
+```rust
+use plotters::prelude::*;
+
+let root = BitMapBackend::new(path, (800, 600)).into_drawing_area();
+root.fill(&WHITE)?;
+let mut chart = ChartBuilder::on(&root)
+    .caption("title", ("sans-serif", 30))
+    .x_label_area_size(40)
+    .y_label_area_size(40)
+    .build_cartesian_2d(0u32..100, 0u32..100)?;
+chart.configure_mesh().draw()?;
+chart.draw_series(/* iterator of Rectangle/Circle/PathElement */)?;
+root.present()?;
+```
+
+[`plotters`](https://docs.rs/plotters/) is an imperative builder API — closer in spirit to matplotlib than to ggplot's layered grammar, but the conceptual pieces (drawing area, axes/scales, series) are the same.
+
+## Zip archives
+
+```rust
+let mut zw = zip::ZipWriter::new(writer);
+let options = zip::write::FileOptions::default();
+zw.start_file("summary.txt", options)?;
+zw.write_all(body)?;
+zw.finish()?;
+```
+
+[`zip`](https://docs.rs/zip/0.6/zip/) handles the directory-of-files archive format. Pair with `plotters` output + a TSV to ship a per-sample QC bundle.
+
+## How to learn a new crate
+
+1. Open `docs.rs/<crate-name>/<version>/`.
+2. Read the crate-root docs (the long description on the home page).
+3. Skim the type list in the sidebar.
+4. Look at the `Examples` sections of the most prominently documented type.
+5. Find a small working example (the README on GitHub usually has one) and modify from there.
+
+Crate docs follow a strict convention — once you have learned to read one, the rest of the ecosystem feels familiar.
