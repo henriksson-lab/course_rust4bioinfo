@@ -10,6 +10,10 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 - [**Expected learning outcomes**](elo.md) — what students will be able to do at the end of each day.
 - [**Design principles**](designprinciples.md) — how exercises are structured, and what we deliberately do not do.
 
+## Before you start
+
+- [**Install Rust, VS Code, and the plugins you need**](intro/install.qmd) — about 15 minutes on a fresh machine. Do this once, before day 1.
+
 ## Exercises by day
 
 ### Day 1 — Toolchain, scalars, control flow, functions

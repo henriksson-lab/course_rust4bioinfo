@@ -1,0 +1,146 @@
+---
+title: "Installing Rust, VS Code, and the plugins you need"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Before day 1 you will need three things in place: the **Rust toolchain**, the **VS Code** editor, and a couple of **VS Code plugins** that turn it into a real Rust IDE.
+
+If you already have these set up, skim *Verify everything works* at the bottom and skip to [day 1](../day1/01-gc-content.qmd).
+
+Total time on a fresh machine: about 15 minutes.
+
+## 1. Install Rust
+
+Use [`rustup`](https://rustup.rs/), the official Rust installer. It also manages multiple Rust versions and updates with one command. **Do not** install Rust from your OS package manager (`apt`, `brew`, `winget`, ...) — those versions are usually months out of date and will not match the rest of the class.
+
+### macOS / Linux / WSL
+
+In a terminal:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Press *Enter* at the prompt to accept the defaults. When it finishes, open a **new** terminal window — or run `source $HOME/.cargo/env` in your current one — so that `cargo` and `rustc` end up on your `PATH`.
+
+### Windows (native)
+
+1. Download `rustup-init.exe` from [rustup.rs](https://rustup.rs/).
+2. Run it.
+3. It may ask you to install the Visual Studio C++ Build Tools first. Accept and let it install — Rust needs them on native Windows.
+4. Open a new PowerShell window once it finishes.
+
+If you have **WSL2** (Windows Subsystem for Linux), strongly prefer that: follow the Linux instructions above inside your WSL distribution, and treat WSL as your dev environment for the whole course. Almost all bioinformatics tooling targets Linux first, and the Rust ecosystem itself is best supported there. See the [WSL install guide](https://learn.microsoft.com/en-us/windows/wsl/install) if you do not have it yet.
+
+### Verify
+
+```bash
+rustc --version
+cargo --version
+```
+
+You should see something like:
+
+```
+rustc 1.85.0 (or newer)
+cargo 1.85.0 (or newer)
+```
+
+**Anything older than 1.85 will not compile this course's exercises** — they all use the [Rust 2024 edition](https://doc.rust-lang.org/edition-guide/rust-2024/index.html), which requires 1.85+. The latest stable is always fine; just keep up to date with:
+
+```bash
+rustup update
+```
+
+## 2. Install VS Code
+
+Download from [code.visualstudio.com](https://code.visualstudio.com/) and install — it is a normal application for your OS. Free, open source, cross-platform.
+
+If you have a strong preference for another editor (Neovim, Helix, RustRover, Emacs, …), you are welcome to use it: every plugin we install is also available as a standalone language server. We standardise on VS Code in class because the workflow is the same on every machine and the floor for day-1 is very low. The rest of this page assumes VS Code.
+
+## 3. Install the VS Code Rust plugins
+
+Open VS Code. Click the **Extensions** icon in the left sidebar (four squares) or press `Ctrl+Shift+X` (`Cmd+Shift+X` on macOS).
+
+Install all four of these:
+
+| Extension | What it gives you | Marketplace ID |
+|---|---|---|
+| **rust-analyzer** | The Rust language server — inline type hints, autocompletion, jump-to-definition, real-time compiler errors as you type. The single most important extension. | `rust-lang.rust-analyzer` |
+| **CodeLLDB** | Debugger for Rust (and C/C++). Lets you set breakpoints inside `.rs` files and step through your code. | `vadimcn.vscode-lldb` |
+| **Even Better TOML** | Syntax highlighting and validation for `Cargo.toml`. | `tamasfe.even-better-toml` |
+| **Quarto** | Renders `.qmd` files (this course's exercise walkthroughs) directly in VS Code, with a live HTML preview. | `quarto.quarto` |
+
+To install one: paste its marketplace ID into the Extensions search box, click **Install** on the matching result.
+
+**Do not install** the older `rust-lang.rust` extension (sometimes still listed as just "Rust") — it has been deprecated in favour of `rust-analyzer`.
+
+### Suggested settings
+
+Open VS Code's settings (`Ctrl+,` / `Cmd+,`) and turn these on:
+
+- **Editor: Format On Save** → `true`. Runs `cargo fmt` for you on every save. No more debates about whitespace.
+- **Rust-analyzer › Check › Command** → `clippy`. Runs the [Clippy](https://github.com/rust-lang/rust-clippy) linter every time you save. Clippy catches a long tail of common mistakes that the compiler itself does not flag, and is one of the best ways to learn idiomatic Rust as you write.
+
+## 4. Verify everything works
+
+From a terminal, create a throwaway project somewhere outside the course directory and run it:
+
+```bash
+cd /tmp
+cargo new hello-rust
+cd hello-rust
+cargo run
+```
+
+Expected output:
+
+```
+   Compiling hello-rust v0.1.0 (...)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.2s
+     Running `target/debug/hello-rust`
+Hello, world!
+```
+
+If that works, open the same directory in VS Code:
+
+```bash
+code .
+```
+
+Open `src/main.rs`. You should see:
+
+- The keyword `fn` highlighted as a Rust keyword.
+- Hovering on `main` shows its inferred type (`fn()`).
+- Deliberately breaking the code (delete a semicolon, change `"Hello, world!"` to `Hello`) puts a red underline under the offending bit within a couple of seconds.
+
+If all three of those work, you are ready for [day 1](../day1/01-gc-content.qmd).
+
+## Troubleshooting
+
+::: {.callout-tip collapse="true" title="`rustc --version` says command not found"}
+Open a fresh terminal window — the installer modifies your shell config, but only new shells see the change. On macOS/Linux you can also run `source $HOME/.cargo/env` in the current shell.
+:::
+
+::: {.callout-tip collapse="true" title="rust-analyzer does not seem to be doing anything in VS Code"}
+On first open it downloads its own copy of the language server and indexes the project. That takes about 30 seconds for a fresh `cargo new` project, but can take several minutes the first time you open a directory containing many cargo crates (like this course repo, which has ~30). Watch the status bar at the bottom — once it stops saying "rust-analyzer: indexing..." everything is alive.
+
+If it stays stuck, open the Output panel (`View → Output`) and choose "Rust Analyzer Language Server" from the dropdown — most real errors show up there.
+:::
+
+::: {.callout-tip collapse="true" title="I am on native Windows and everything feels slow / has strange path errors"}
+A known sore point with native Windows + Rust + bioinformatics tooling. The reliable fix is to switch to **WSL2** ([install guide](https://learn.microsoft.com/en-us/windows/wsl/install)) and do everything inside the Linux distribution: install Rust there, clone the course there, open it with VS Code's [WSL remote extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl). You will not regret it.
+:::
+
+::: {.callout-tip collapse="true" title="Disk space is tight — how much will all this take?"}
+- Rust toolchain (`~/.rustup` + `~/.cargo`): ~2 GB.
+- VS Code: ~400 MB.
+- This course repo, fully built (`make` plus `cargo build` for every exercise): ~1 GB. `make clean` brings it back down to under 10 MB.
+
+Plan for ~4 GB free disk space.
+:::

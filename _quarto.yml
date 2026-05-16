@@ -4,6 +4,8 @@ project:
   render:
     - "*.qmd"
     - "*.md"
+    - "intro/*.qmd"
+    - "intro/*.md"
     - "day*/*.qmd"
     - "day*/*.md"
     - "!**/target/**"
@@ -36,6 +38,9 @@ website:
             href: elo.md
           - text: Design principles
             href: designprinciples.md
+      - section: "Before you start"
+        contents:
+          - intro/install.qmd
       - section: "Day 1 — toolchain & syntax"
         contents:
           - day1/01-gc-content.qmd
