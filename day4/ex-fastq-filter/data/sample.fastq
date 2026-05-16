@@ -1,0 +1,16 @@
+@read1 long enough
+ACGTACGTACGT
++
+IIIIIIIIIIII
+@read2 short
+AC
++
+!!
+@read3 long enough
+GGGGCCCCGGGG
++
+IIIIIIIIIIII
+@read4 short
+A
++
+!

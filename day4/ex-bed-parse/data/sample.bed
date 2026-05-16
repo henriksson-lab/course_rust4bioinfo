@@ -1,0 +1,5 @@
+# a few tiny intervals
+chr1	100	200	gene_a	0	+
+chr1	500	750	gene_b	0	-
+chr2	1000	1200	gene_c	0	+
+chrX	42	42	insertion_point	0	+

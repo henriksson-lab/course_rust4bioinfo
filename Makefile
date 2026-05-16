@@ -29,5 +29,6 @@ help:
 gitaddall:
 	git add day*/*qmd
 	git add day*/*/Cargo.toml
+	git add day*/*/data/*
 	git add day*/*/*/*rs
 	git add day*/README.md
