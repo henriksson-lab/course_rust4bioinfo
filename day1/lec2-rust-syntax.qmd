@@ -1,0 +1,368 @@
+---
+title: "Rust syntax — the parts you need today"
+subtitle: "Day 1, Lecture 2"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: simple
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+::: {.incremental}
+- A guided tour of the Rust syntax used in today's five exercises
+- One concept per slide, illustrated with DNA
+- Companion reference: [day 1 — Concepts](00-concepts.qmd)
+- After this, you start writing code
+:::
+
+::: notes
+This is the working subset of Rust you need to do today's exercises. Not all of Rust — there is a lot we will add tomorrow and through the rest of the week. Treat each slide as introducing one piece of vocabulary that you will recognise when you see it in the starter code.
+
+Keep the concepts page open in a tab. It is the written companion to this lecture. After this lecture, every minute is exercises until lecture 3 tomorrow.
+:::
+
+## Cargo, in one slide
+
+```bash
+cargo new my-project        # create a new project at ./my-project/
+cd my-project
+cargo build                 # compile
+cargo run                   # compile and run
+cargo run -- ATGC           # pass arguments to your program
+cargo test                  # compile and run tests
+```
+
+::: notes
+Every Rust project is a directory with a Cargo.toml and a src/main.rs. `cargo` is the build tool. You will type these five commands many times this week.
+
+Note the double-dash in `cargo run -- ATGC`: the part before the `--` is for cargo, the part after is forwarded to your program. So if you write a main that reads command-line args, `cargo run -- ATGC` passes "ATGC" to your program as args[1].
+:::
+
+## Variables — immutable by default
+
+```rust
+let length = 1000;         // can be read; cannot be reassigned
+let mut count = 0;         // mut means "I will reassign this"
+count += 1;
+count = 42;                // OK because of `mut`
+```
+
+::: notes
+When you write `let x = 5`, you cannot later say `x = 6` — the compiler refuses. If you want a variable you can reassign, write `let mut x`.
+
+Most variables in idiomatic Rust are immutable. The compiler nudges you toward `let` over `let mut` because it is easier to reason about code where things do not change unexpectedly. This is one of the small ways Rust steers you toward correct code by default.
+:::
+
+## Why so many integer types?
+
+```rust
+let base:   u8     = b'A';     // one byte (0..=255)     — DNA character
+let length: usize  = 1000;     // pointer-sized unsigned — sequence length
+let score:  i32    = -3;       // signed 32-bit          — alignment score
+let gc:     f64    = 0.42;     // 64-bit float           — fraction
+let strand: bool   = true;     // boolean                — flag
+```
+
+::: notes
+Rust gives you exact control over numeric width. In our domain, the rule of thumb is:
+
+- **u8** for a single byte. DNA bases, FASTQ quality bytes, anything ASCII.
+- **usize** for sizes, lengths, indices. Always.
+- **i32 / i64** for things that can be negative — alignment scores, log ratios.
+- **f64** for any fraction. Default float type — there is also f32 if you need to save memory.
+
+Every type takes a fixed number of bytes; the compiler will not let you mix them in arithmetic without an explicit cast. That sounds annoying. In practice it catches bugs.
+:::
+
+## Casting between numeric types
+
+```rust
+let count: usize = 42;
+let total: usize = 100;
+let frac:  f64   = count as f64 / total as f64;     // integer / integer == 0
+```
+
+::: notes
+Numeric types never convert implicitly. Mix a `usize` and an `f64` in arithmetic and the compiler refuses to compile. Use `as` to convert.
+
+The reason the conversion is explicit: it forces you to think about what `42 / 100` should produce. Integer division gives 0. Float division gives 0.42. Rust makes you say which one you mean.
+
+The cost of `as`: one CPU instruction in release mode, usually free.
+:::
+
+## Functions — typed in, typed out
+
+```rust
+fn gc_content(seq: &[u8]) -> f64 {
+    let gc = seq.iter()
+        .filter(|&&b| b == b'G' || b == b'C')
+        .count();
+    gc as f64 / seq.len() as f64
+}
+```
+
+::: notes
+Function signatures are types you write down. Parameter list: each parameter is `name: Type`, separated by commas. Return type after `->`. Functions returning nothing return the unit type, written `()`, and you can omit it.
+
+The body is a block. The last expression with no semicolon is the function's return value. Use the word `return` only for early exits — the trailing expression is the idiomatic shape.
+
+This `gc_content` is essentially the function you will write in exercise 1.
+:::
+
+## `if`/`else` is an expression
+
+```rust
+let label = if gc > 0.6 {
+    "GC-rich"
+} else if gc > 0.4 {
+    "balanced"
+} else {
+    "AT-rich"
+};
+```
+
+::: notes
+`if` in Rust evaluates to a value. You can use the whole if/else chain on the right-hand side of a `let`, or as a function's return value.
+
+All branches must produce the same type — here, every branch is a `&str`. If one branch returned a number and another a string, that would be a compile error.
+
+This is one of the most "Rusty" pieces of syntax. JavaScript and C++ have ternary expressions; Rust just uses `if` for the job.
+:::
+
+## `for` loops
+
+```rust
+for i in 0..seq.len() {            // 0, 1, ..., seq.len() - 1
+    println!("{}: {}", i, seq[i] as char);
+}
+
+for i in (0..seq.len()).rev() {    // reversed: seq.len() - 1, ..., 0
+    // useful for reverse complement on day 2
+}
+
+for &b in seq {                    // iterate the slice; b is u8
+    if b == b'G' || b == b'C' { /* ... */ }
+}
+```
+
+::: notes
+Three forms you will see all week.
+
+`0..n` is a half-open range — includes 0, excludes n. The most common loop shape.
+
+`.rev()` reverses any range or iterator. Comes up on day 2 in reverse complement.
+
+The last form — `for &b in seq` — iterates a `&[u8]` slice. The pattern `&b` destructures the `&u8` yielded by the iterator down to the inner `u8`, so the body works with `b` directly. Less typing.
+:::
+
+## `while` for state-driven loops
+
+```rust
+let mut start = 0;
+while start < qual.len() && qual[start] < threshold {
+    start += 1;
+}
+```
+
+::: notes
+Reach for `while` when the end of the loop depends on running state, not a fixed range. You will use this exact shape on day 2 to trim low-quality bases from the start of a FASTQ read.
+
+Two subtleties on this slide:
+
+The `&&` is short-circuit — `qual[start]` is only evaluated when `start < qual.len()`. Without that guard, indexing past the end of the slice would panic at runtime.
+
+There is also `loop { ... break; }` for "loop until something breaks". Used less often in this course.
+:::
+
+## `match` — the workhorse
+
+```rust
+match base {
+    b'A' => 1,
+    b'C' => 2,
+    b'G' => 3,
+    b'T' => 4,
+    _    => 0,            // catch-all: anything not listed
+}
+```
+
+::: notes
+`match` looks like the `switch` statement in C — but it is more powerful, and it is an expression. Each arm: a pattern, the `=>` fat arrow, a value. The whole match evaluates to one value.
+
+The `_` is the wildcard pattern — matches anything you have not listed. Use it for "I do not care about the rest".
+:::
+
+## Byte literals and pattern alternatives
+
+```rust
+match base {
+    b'A' | b'a'  =>  /* adenine */,
+    b'C' | b'c'  =>  /* cytosine */,
+    b'G' | b'g'  =>  /* guanine */,
+    b'T' | b't'  =>  /* thymine */,
+    other        =>  panic!("unknown base {}", other as char),
+}
+```
+
+::: notes
+Two new bits.
+
+Byte literals — `b'A'` — are u8 values with the ASCII numeric value of the character. So `b'A'` is 65. You will type many of these today.
+
+The `|` in a pattern matches any of several alternatives on the same arm. Used here to handle upper and lower case in one line.
+
+The last arm uses a name (`other`) as the catch-all pattern. That binds the matched value to a variable you can use in the arm body — handy for error messages.
+:::
+
+## Exhaustiveness — the safety net
+
+```rust
+match strand {
+    Strand::Plus  =>  1,
+    Strand::Minus => -1,
+    // Forgot a variant? Compile error.
+}
+```
+
+::: notes
+The compiler refuses to compile a match that does not cover every possible value of the input type. If `Strand` has a third variant `Unknown` and you forgot to handle it, the compiler tells you exactly which match to update.
+
+This is the same mechanism that catches "I added a new feature and forgot to update X" bugs in large code bases — turn the case into an enum, lean on match exhaustiveness, the compiler tells you every site that needs updating.
+
+The wildcard `_` defeats this check. Use it when you mean "any other"; do not use it to silence compiler errors.
+:::
+
+## DNA is `&[u8]`, not `&str`
+
+```rust
+let dna: &[u8] = b"ACGTACGT";   // byte slice — no UTF-8 invariant
+let length     = dna.len();      // O(1)
+let third      = dna[2];         // O(1) — same as in C
+```
+
+::: notes
+Two reasons we use byte slices for DNA instead of strings.
+
+First: `&str` in Rust is UTF-8. Most plausible byte sequences are not valid UTF-8. DNA is ASCII, so the UTF-8 invariant is wasted on us. Worse, indexing into a `&str` is O(n) because a single character may take multiple bytes — that is unacceptable for tight inner loops.
+
+Second: `&[u8]` indexing maps directly to a CPU memory access. Byte literals drop straight into match patterns. Codon table lookups become array indexing. Everything is faster and simpler.
+
+So in this course, DNA function signatures look like `fn f(seq: &[u8]) -> T`. We will get into the deeper reasons — and a longer treatment of `&[u8]` versus `Vec<u8>` — on day 2.
+:::
+
+## Printing
+
+```rust
+println!("hello {}", name);          // {}   = Display format
+println!("{:?}", record);            // {:?} = Debug format
+println!("{:.2}%", gc * 100.0);      // float with 2 decimals
+eprintln!("error: {}", msg);         // writes to stderr
+```
+
+::: notes
+`println!` is a macro — note the `!`. It checks the format string against the arguments at compile time. Wrong number of `{}` is a compile error, not a runtime crash.
+
+Use `{}` for human-readable output, `{:?}` for debug output. Floats accept precision specifiers — `{:.2}` formats with two decimal places.
+
+`eprintln!` writes to standard error. Use it for diagnostics and error messages so they do not contaminate your real output stream.
+:::
+
+## `panic!` — when the input is wrong
+
+```rust
+fn complement(base: u8) -> u8 {
+    match base {
+        b'A' => b'T',
+        b'T' => b'A',
+        b'C' => b'G',
+        b'G' => b'C',
+        other => panic!("unsupported base: {}", other as char),
+    }
+}
+```
+
+::: notes
+When the caller violates your function's contract — here, passing something other than A/C/G/T — `panic!` aborts the program with a message. Same format syntax as `println!`.
+
+`panic!` is the right tool for "programmer error": broken preconditions, situations that should never happen if the rest of the code is correct.
+
+For recoverable errors — bad user input, missing files, malformed records — day 3 introduces `Result`. Today, panic is enough.
+:::
+
+## Tests in 5 minutes
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gc_of_acgt() {
+        assert_eq!(gc_content(b"ACGT"), 0.5);
+    }
+
+    #[test]
+    fn gc_of_empty() {
+        assert_eq!(gc_content(b""), 0.0);
+    }
+}
+```
+
+::: notes
+Tests live in a special module marked `#[cfg(test)]` — that means "only compile this when running tests, not in production builds". Inside, each function tagged `#[test]` is a test.
+
+`assert_eq!` compares its two arguments. If they differ, the test fails and prints both values. There is also plain `assert!(bool)` for boolean checks.
+
+Run with `cargo test`. Today every exercise ships with the tests pre-written. Your job is to make them pass. You start writing your own tests on day 5.
+:::
+
+## What we did NOT cover today
+
+::: {.incremental}
+- **Ownership and the borrow checker** — day 2
+- **`Option` / `Result` and the `?` operator** — day 3
+- **Iterators with `map`, `filter`, `fold`** — day 3
+- **`struct`s and `enum`s with data** — day 3
+- **Reading files** — day 4
+:::
+
+::: notes
+This lecture is deliberately a working subset. Some of Rust's biggest ideas — ownership, iterators, structs and enums, error handling — are missing on purpose. We will add them in the right order through the rest of the week.
+
+For today, the syntax I have just shown you is enough to write the five exercise programs. Tomorrow we layer on ownership and borrowing, which is where the compiler starts to push back on you in interesting ways.
+:::
+
+## To the exercises
+
+- Keep open: [day 1 — Concepts](00-concepts.qmd) (the reference companion to this lecture)
+- Start here: [Exercise 1 — GC content](01-gc-content.qmd)
+- In a terminal:
+
+```bash
+cd day1/ex-gc-content
+cargo test
+```
+
+::: {.fragment .fade-in style="margin-top: 1em;"}
+*Make the failing tests pass. Move to exercise 2.*
+:::
+
+::: notes
+Three things to open. The concepts page in one browser tab as a quick reference. Exercise 1 in another tab. A terminal with cargo test running.
+
+Three tests will fail at first. Edit the function body until they all pass. Run cargo test again. When green, move on to exercise 2.
+
+I will see you in lecture 3 tomorrow.
+:::

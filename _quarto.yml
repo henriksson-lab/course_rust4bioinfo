@@ -49,6 +49,7 @@ website:
         contents:
           - day1/00-concepts.qmd
           - day1/lec1-why-rust.qmd
+          - day1/lec2-rust-syntax.qmd
           - day1/01-gc-content.qmd
           - day1/02-complement.qmd
           - day1/03-base-counts.qmd
