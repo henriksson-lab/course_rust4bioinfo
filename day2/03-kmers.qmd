@@ -1,0 +1,120 @@
+---
+title: "Day 2 — Exercise: k-mers as slice views"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `kmers(seq: &[u8], k: usize) -> Vec<&[u8]>`: return every contiguous window of length `k` in `seq`, in order, as a vector of slice views into `seq`.
+
+Crucially, **the returned slices borrow from the input** — no copying. If the input is 1 GB, this function still only allocates a small `Vec` of slice metadata.
+
+## Background
+
+A k-mer is a contiguous subsequence of length k. k-mers are the working currency of much of modern bioinformatics: alignment-free comparison, sequence indexing, error correction, de Bruijn graph assembly, classifier features. Counting k-mers efficiently — without copying the underlying bytes — is fundamental.
+
+In ACGTA with k=3, the k-mers are:
+
+```
+A C G T A
+| | |
++-+-+        ACG
+  | | |
+  +-+-+      CGT
+    | | |
+    +-+-+    GTA
+```
+
+So `kmers(b"ACGTA", 3)` should return `[b"ACG", b"CGT", b"GTA"]` — three slice views, no allocated bytes.
+
+## Why slice views, not `Vec<Vec<u8>>`?
+
+If we returned `Vec<Vec<u8>>`, every k-mer would be a separate heap allocation containing a copy of those bytes. For a 100 Mb genome and k=21, that is ~100 million 21-byte allocations and ~2 GB of duplicated data. Returning `Vec<&[u8]>` instead returns ~100 million 16-byte pointer+length pairs (~1.5 GB) without duplicating a single base. On day 3 we will see how iterators avoid even *that* allocation.
+
+The lifetime of the returned slices is tied to `seq`. Rust elides the annotation because there is only one input reference, so the compiler infers that the output must borrow from it. (You will see explicit lifetime annotations later in the week.)
+
+## The exercise
+
+```bash
+cd day2/ex-kmers
+```
+
+Make all six tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ACGTA 3   # expected: ACG CGT GTA
+cargo run -- ACGT 4    # expected: ACGT
+cargo run -- AC 3      # expected: (no k-mers; k is larger than the sequence)
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — handle the edge cases first"}
+What should the function return when:
+
+- `k == 0`?
+- `k > seq.len()`?
+- `seq` is empty?
+
+In all three cases there are no k-mers. Return an empty [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) early so the rest of the function can assume `1 <= k <= seq.len()`:
+
+```rust
+if k == 0 || k > seq.len() {
+    return Vec::new();
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — the loop bounds"}
+The first k-mer starts at index 0; the last starts at index `seq.len() - k` (inclusive). So the loop runs over `0..=seq.len() - k`:
+
+```rust
+for i in 0..=seq.len() - k {
+    // window is &seq[i..i + k]
+}
+```
+
+The [inclusive range](https://doc.rust-lang.org/reference/expressions/range-expr.html) `..=` includes the upper bound. With `seq = "ACGTA"` (len 5) and `k = 3`, this gives `i = 0, 1, 2`, which produces three k-mers — correct.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — taking a slice view"}
+[Slicing](https://doc.rust-lang.org/std/primitive.slice.html#method.index) with `&seq[i..i + k]` produces a [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html) of length `k` borrowing from `seq`. Push it onto the output vector:
+
+```rust
+out.push(&seq[i..i + k]);
+```
+
+No bytes are copied — `&seq[i..i + k]` is just a pointer plus a length.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn kmers(seq: &[u8], k: usize) -> Vec<&[u8]> {
+    if k == 0 || k > seq.len() {
+        return Vec::new();
+    }
+    let mut out: Vec<&[u8]> = Vec::with_capacity(seq.len() - k + 1);
+    for i in 0..=seq.len() - k {
+        out.push(&seq[i..i + k]);
+    }
+    out
+}
+```
+
+Full reference in `day2/ex-kmers-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 3**: rewrite using the built-in [`<[T]>::windows`](https://doc.rust-lang.org/std/primitive.slice.html#method.windows) iterator, which yields exactly the same slices without the explicit loop, *and* without even allocating the outer `Vec` if you consume the iterator directly. We will also use this to build a [`HashMap<Vec<u8>, usize>`](https://doc.rust-lang.org/std/collections/struct.HashMap.html) k-mer counter.
+- **Day 5**: parallelise k-mer counting across many sequences with [`rayon`](https://docs.rs/rayon/).

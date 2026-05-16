@@ -1,0 +1,103 @@
+---
+title: "Day 4 — Exercise: Bundling outputs into a `.zip`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write a function that bundles several named blobs into a single `.zip` archive:
+
+```rust
+fn write_zip_bundle(output_path: &Path, entries: &[(&str, &[u8])]) -> Result<(), Box<dyn std::error::Error>>
+```
+
+The function should also support reading entries back, via a sibling function `read_zip_bundle`. This is how you would hand a collaborator a complete per-sample QC report: one TSV of stats, one histogram PNG, one summary text file, all in one downloadable file.
+
+## Gzip vs zip — the one rule
+
+The two compressed formats biologists use look superficially similar but are not the same thing:
+
+| Format | What it is | Tool |
+|--------|----------|------|
+| `.gz` / `.bgz` / `.bgzf` | **one** compressed byte stream | [`flate2`](https://docs.rs/flate2/), [`noodles-bgzf`](https://docs.rs/noodles-bgzf/) |
+| `.zip` | **archive** of named entries, each compressed | [`zip`](https://docs.rs/zip/) |
+
+`.fa.gz`, `.fastq.gz`, `.vcf.gz` are all the first kind: a single sequence file with one compressed body. A `.zip` is the second kind: a directory's worth of separate files. This exercise is about the second kind.
+
+## The crate
+
+```toml
+[dependencies]
+zip = "0.6"
+```
+
+You need:
+
+- [`zip::ZipWriter::new(Write)`](https://docs.rs/zip/0.6/zip/write/struct.ZipWriter.html#method.new) to start an archive
+- [`zip::write::FileOptions::default()`](https://docs.rs/zip/0.6/zip/write/struct.FileOptions.html) — default compression settings
+- [`zw.start_file(name, options)`](https://docs.rs/zip/0.6/zip/write/struct.ZipWriter.html#method.start_file) to begin a new entry
+- [`std::io::Write::write_all`](https://doc.rust-lang.org/std/io/trait.Write.html#method.write_all) to write the entry's bytes
+- [`zw.finish()`](https://docs.rs/zip/0.6/zip/write/struct.ZipWriter.html#method.finish) to close the archive
+
+For reading:
+
+- [`zip::ZipArchive::new(Read + Seek)`](https://docs.rs/zip/0.6/zip/read/struct.ZipArchive.html#method.new) to open an archive
+- [`archive.by_index(i)`](https://docs.rs/zip/0.6/zip/read/struct.ZipArchive.html#method.by_index) to access entry `i`
+- The returned `ZipFile` implements [`Read`](https://doc.rust-lang.org/std/io/trait.Read.html), so `read_to_end` etc. work on it.
+
+## The exercise
+
+```bash
+cd day4/ex-zip-bundle
+```
+
+Implement both `write_zip_bundle` and `read_zip_bundle`. Make all three tests pass — they round-trip a few small entries through an in-memory `Cursor`, then through a real temp file on disk.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — write side"}
+```rust
+let mut zw = zip::ZipWriter::new(file_or_cursor);
+let options = zip::write::FileOptions::default();
+for (name, body) in entries {
+    zw.start_file(*name, options)?;
+    zw.write_all(body)?;
+}
+zw.finish()?;
+```
+
+`start_file` takes the entry name as `&str` and the options struct.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — read side"}
+```rust
+let mut archive = zip::ZipArchive::new(reader)?;
+let mut out: Vec<(String, Vec<u8>)> = Vec::with_capacity(archive.len());
+for i in 0..archive.len() {
+    let mut entry = archive.by_index(i)?;
+    let name = entry.name().to_string();
+    let mut body = Vec::new();
+    entry.read_to_end(&mut body)?;
+    out.push((name, body));
+}
+Ok(out)
+```
+
+`archive.len()` is the number of entries. `by_index` returns one entry at a time (you cannot hold two at once because reading the archive moves an internal cursor).
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day4/ex-zip-bundle-solution/src/main.rs` for the full reference.
+:::
+
+## Where this leads
+
+- Real production reports often use [`tar` + gzip](https://docs.rs/tar/) instead of zip — same idea, different file format. Pick whichever your downstream tooling expects.
+- This is the natural endpoint for a day-4 capstone: stream FASTQ records with [`noodles-fastq`](https://docs.rs/noodles-fastq/), compute QC stats, render a histogram with [`plotters`](https://docs.rs/plotters/), and bundle the TSV + PNG into one `.zip` for handover.

@@ -1,0 +1,129 @@
+---
+title: "Day 3 — Exercise: Parsing a region string with `Result`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `parse_region(s: &str) -> Result<(String, u64, u64), ParseRegionError>`: parse a region string like `"chr1:1000-2000"` into a chromosome name and a half-open coordinate pair. Define a custom error enum `ParseRegionError` so each failure mode is its own value, not a string message.
+
+This is your first encounter with **fallible parsing as a value**: `Result` represents "this might fail, here is how" without throwing exceptions and without dropping you out of the function.
+
+## Background
+
+Region strings of the form `chrom:start-end` appear everywhere — `samtools view`, `bcftools view`, `tabix`, IGV. Five things can go wrong:
+
+1. No colon separating the chromosome from the coordinates.
+2. No dash separating start from end.
+3. The start is not a valid number.
+4. The end is not a valid number.
+5. The end is less than the start.
+
+Each failure deserves its own variant in a [`ParseRegionError`](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) enum, so the caller can decide what to do.
+
+## The exercise
+
+```bash
+cd day3/ex-parse-region
+```
+
+Define `ParseRegionError` and `parse_region`. Make all eight tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- chr1:1000-2000    # OK: chr1 from 1000 to 2000 (length 1000)
+cargo run -- bogus             # error: MissingColon
+cargo run -- chr1:abc-2000     # error: InvalidStart
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — defining the error enum"}
+A C-style [`enum`](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) listing all five failure modes. Derive `Debug`, `Clone`, `PartialEq`:
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ParseRegionError {
+    MissingColon,
+    MissingDash,
+    InvalidStart,
+    InvalidEnd,
+    EndBeforeStart,
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — splitting the string"}
+[`str::split_once`](https://doc.rust-lang.org/std/primitive.str.html#method.split_once) returns an [`Option<(&str, &str)>`](https://doc.rust-lang.org/std/option/enum.Option.html) — `Some` if the delimiter was found, `None` otherwise. Combine with [`Option::ok_or`](https://doc.rust-lang.org/std/option/enum.Option.html#method.ok_or) to convert "no delimiter" into a `Result` failure, then propagate with the [`?` operator](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator):
+
+```rust
+let (chrom, rest) = s.split_once(':').ok_or(ParseRegionError::MissingColon)?;
+let (start_s, end_s) = rest.split_once('-').ok_or(ParseRegionError::MissingDash)?;
+```
+
+`?` is a shortcut for "if it is `Err`, return it from the enclosing function; otherwise unwrap to the inner value and continue".
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — parsing the numbers"}
+[`str::parse`](https://doc.rust-lang.org/std/primitive.str.html#method.parse) returns a `Result` whose error type is decided by the destination type. Convert that error to our error enum with [`Result::map_err`](https://doc.rust-lang.org/std/result/enum.Result.html#method.map_err), then `?` it:
+
+```rust
+let start: u64 = start_s.parse().map_err(|_| ParseRegionError::InvalidStart)?;
+let end:   u64 = end_s  .parse().map_err(|_| ParseRegionError::InvalidEnd)?;
+```
+
+The `|_|` is a [closure](https://doc.rust-lang.org/book/ch13-01-closures.html) that ignores the inner parse error — we only care that parsing failed, not why.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — the final check"}
+Once `start` and `end` are real numbers, verify the order. Return `Err` explicitly here (no `?`):
+
+```rust
+if end < start {
+    return Err(ParseRegionError::EndBeforeStart);
+}
+Ok((chrom.to_string(), start, end))
+```
+
+[`Ok`](https://doc.rust-lang.org/std/result/enum.Result.html#variant.Ok) wraps the success value. Note `chrom.to_string()` — `chrom` is a `&str` borrowing from the input, but the returned `String` needs to be owned so it can outlive the parse.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ParseRegionError {
+    MissingColon,
+    MissingDash,
+    InvalidStart,
+    InvalidEnd,
+    EndBeforeStart,
+}
+
+fn parse_region(s: &str) -> Result<(String, u64, u64), ParseRegionError> {
+    let (chrom, rest) = s.split_once(':').ok_or(ParseRegionError::MissingColon)?;
+    let (start_s, end_s) = rest.split_once('-').ok_or(ParseRegionError::MissingDash)?;
+    let start: u64 = start_s.parse().map_err(|_| ParseRegionError::InvalidStart)?;
+    let end:   u64 = end_s  .parse().map_err(|_| ParseRegionError::InvalidEnd)?;
+    if end < start {
+        return Err(ParseRegionError::EndBeforeStart);
+    }
+    Ok((chrom.to_string(), start, end))
+}
+```
+
+Full reference in `day3/ex-parse-region-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 4**: parse a whole BED file line-by-line using this pattern. Errors will accumulate in a `Vec<ParseRegionError>` or short-circuit on the first one — *you* will decide, because `Result` makes it explicit.
+- Many real Rust libraries use `thiserror` to derive `std::error::Error` and `Display` impls for custom error enums like this one. We will mention it on day 4 but not require it.

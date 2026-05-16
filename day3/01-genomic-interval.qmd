@@ -1,0 +1,137 @@
+---
+title: "Day 3 — Exercise: A genomic interval struct"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Define your first Rust [`struct`](https://doc.rust-lang.org/book/ch05-01-defining-structs.html) and [`enum`](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html):
+
+```rust
+enum Strand { Plus, Minus }
+
+struct GenomicInterval {
+    chrom: String,
+    start: u64,
+    end: u64,
+    strand: Strand,
+}
+```
+
+Then implement two methods on the struct:
+
+- `length(&self) -> u64` — the size of the interval in base pairs.
+- `overlaps(&self, other: &GenomicInterval) -> bool` — whether two intervals overlap, treating coordinates as half-open and respecting chromosome.
+
+## Background
+
+A genomic interval is the most basic spatial data type in bioinformatics. Every BED record, every gene annotation, every variant call ultimately resolves to "chromosome X, position a to position b, on this strand". Coordinates are **half-open**: an interval `[100, 200)` covers 100 base pairs and starts at position 100, but does *not* include position 200. The interval `[200, 300)` starts where the previous one ends and they do **not** overlap.
+
+We will build BED parsing on top of this struct on day 4.
+
+## The exercise
+
+```bash
+cd day3/ex-genomic-interval
+```
+
+Define `Strand`, `GenomicInterval`, and the two methods. Make all six tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- chr1 1000 2000 +    # prints length and a self-overlap check
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — defining the enum"}
+A C-style [`enum`](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) lists its variants with no associated data. Derive [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html), [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html), [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html), and [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html) so it can be printed, copied, and compared:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Strand {
+    Plus,
+    Minus,
+}
+```
+
+`Copy` is appropriate here because `Strand` is a single byte tag — copying it is free. Larger types should usually be `Clone` only. (See [the Rust Book on `Copy` vs `Clone`](https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html#stack-only-data-copy).)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — defining the struct"}
+A [`struct`](https://doc.rust-lang.org/book/ch05-01-defining-structs.html) bundles named fields. Derive `Debug`, `Clone`, and `PartialEq` (but **not** `Copy` — `String` is not `Copy`):
+
+```rust
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GenomicInterval {
+    chrom: String,
+    start: u64,
+    end: u64,
+    strand: Strand,
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — implementing methods"}
+Methods live inside an [`impl`](https://doc.rust-lang.org/book/ch05-03-method-syntax.html) block. The first argument is one of `self`, `&self`, or `&mut self` depending on whether the method consumes, reads, or modifies the value:
+
+```rust
+impl GenomicInterval {
+    fn length(&self) -> u64 {
+        self.end - self.start
+    }
+
+    fn overlaps(&self, other: &GenomicInterval) -> bool {
+        // TODO
+    }
+}
+```
+
+The half-open overlap rule: two intervals `[a, b)` and `[c, d)` overlap iff `a < d && c < b`. (Adjacency — where `b == c` — is *not* overlap.) And of course they must be on the same chromosome.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Strand {
+    Plus,
+    Minus,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct GenomicInterval {
+    chrom: String,
+    start: u64,
+    end: u64,
+    strand: Strand,
+}
+
+impl GenomicInterval {
+    fn length(&self) -> u64 {
+        self.end - self.start
+    }
+
+    fn overlaps(&self, other: &GenomicInterval) -> bool {
+        self.chrom == other.chrom
+            && self.start < other.end
+            && other.start < self.end
+    }
+}
+```
+
+Full reference in `day3/ex-genomic-interval-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Next exercise (02)**: parse strings like `"chr1:1000-2000"` into the bare components of an interval, with a custom error type for malformed input.
+- **Day 4**: read a real BED file (one interval per line) into a `Vec<GenomicInterval>`, find overlaps, and write the result back out.

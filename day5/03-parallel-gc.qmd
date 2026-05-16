@@ -1,0 +1,94 @@
+---
+title: "Day 5 — Exercise: Parallel GC content with `rayon`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Take a sequential function that computes per-sequence GC content over many sequences:
+
+```rust
+fn per_seq_gc_sequential(sequences: &[Vec<u8>]) -> Vec<f64>
+```
+
+…and write the [`rayon`](https://docs.rs/rayon/)-parallel version:
+
+```rust
+fn per_seq_gc_parallel(sequences: &[Vec<u8>]) -> Vec<f64>
+```
+
+Both must return the **same result**. The tests assert this; what changes is wall-clock time.
+
+## Background
+
+[`rayon`](https://docs.rs/rayon/) is the standard data-parallelism crate for Rust. The big idea: if your computation is expressible as `.iter()...collect()`, you can usually make it parallel by changing `.iter()` to [`.par_iter()`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefIterator.html#tymethod.par_iter), with zero other changes. The pieces are independent (one per sequence in our case), so `rayon` schedules them across CPU threads using a [work-stealing](https://en.wikipedia.org/wiki/Work_stealing) thread pool.
+
+You do not have to think about threads, mutexes, or locks. The compiler does.
+
+## Why this is safe
+
+`rayon` requires that the closure run on each element is `Send` (movable to another thread) and that any captured references are `Sync` (safe to share between threads). For our exercise — every element is computed independently from an immutable input slice — the compiler accepts this without a fuss. If you tried to share a mutable counter across the threads, the compiler would refuse to compile (this is the famous "fearless concurrency" pitch).
+
+## The crate
+
+```toml
+[dependencies]
+rayon = "1"
+```
+
+Import the parallel iterator traits:
+
+```rust
+use rayon::prelude::*;
+```
+
+## The exercise
+
+```bash
+cd day5/ex-parallel-gc
+```
+
+Implement `per_seq_gc_parallel`. Make all three tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run --release -- 10000   # 10000 sequences, both versions, with timings
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — the change is literally three letters"}
+Wherever the sequential version writes `.iter()`, the parallel version writes `.par_iter()`:
+
+```rust
+sequences.par_iter().map(|seq| gc_content(seq)).collect()
+```
+
+Everything else — `.map`, `.collect`, the inner closure — stays identical. The result is a `Vec<f64>` in the same order as the input.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — when does rayon actually help?"}
+For very small inputs the parallel version may be **slower** than the sequential one because of the thread-pool overhead. As a rough rule, parallelism is worth it once the total work is at least a few microseconds per item and there are at least thousands of items. Real bioinformatics workloads (millions of reads) blow past these thresholds.
+
+You will see the speedup most clearly with `--release`, large `N`, and a machine with several CPU cores. Compare `cargo run --release -- 100000` between the sequential and parallel paths in the same run.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day5/ex-parallel-gc-solution/src/main.rs` for the reference. The parallel function body is one line.
+:::
+
+## Where this leads
+
+- [`par_iter_mut`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefMutIterator.html#tymethod.par_iter_mut) for mutable parallelism over a slice.
+- [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html) to run two arbitrary closures in parallel — handy for divide-and-conquer (e.g. parallel quicksort, parallel tree traversal of the phylogenetic tree from [day 3 exercise 5](../day3/05-phylo-tree.qmd)).
+- The same `.par_iter()` trick applied to a [`HashMap`](https://docs.rs/rayon/latest/rayon/collections/hash_map/index.html) parallelises k-mer counting across reads, with each thread producing a partial `HashMap` and rayon merging them.
+- **A note on numerical reproducibility:** for sums over floats, parallel reductions may produce slightly different last-bit results than sequential ones, because floating-point addition is not associative. Our per-sequence-then-collect pattern is deterministic; a parallel `.sum()` over many floats would not be.

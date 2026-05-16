@@ -1,0 +1,172 @@
+---
+title: "Day 3 — Exercise: A phylogenetic tree with recursion"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Define a recursive enum that represents a phylogenetic tree, and write three recursive functions over it:
+
+```rust
+enum Node {
+    Leaf { name: String, branch_length: f64 },
+    Internal { branch_length: f64, children: Vec<Node> },
+}
+
+fn count_tips(node: &Node) -> usize;
+fn max_depth(node: &Node) -> f64;
+fn total_branch_length(node: &Node) -> f64;
+```
+
+This is your first encounter with **recursive data** and **recursive functions** in Rust — the natural shape for tree-structured biology (phylogenies, taxonomies, gene trees, lineage trees in single-cell, ...).
+
+## Background
+
+A phylogenetic tree is hierarchical: every node has a parent (except the root) and zero or more children. A node with no children is a **tip** (or leaf) and is labelled with a taxon name. Every edge has a numeric **branch length**, typically expected substitutions per site.
+
+The most natural Rust representation uses an [`enum`](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) with one variant per kind of node. Children of an internal node live in a [`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html), which already provides heap indirection — so we do **not** need [`Box<Node>`](https://doc.rust-lang.org/std/boxed/struct.Box.html) here, even though `Node` is recursive. (We would need `Box` if a field were a bare `Node` rather than `Vec<Node>`, because a `Node` whose own fields include another `Node` would have unknown size on the stack.)
+
+## A worked example
+
+The tree `((A:0.1, B:0.2):0.3, C:0.5);` (Newick notation) has:
+
+- Three tips: A, B, C
+- Root has two children: an internal node (branch 0.3, parents of A and B) and the tip C (branch 0.5)
+- `count_tips` = 3
+- `max_depth` (from root to farthest tip) = 0.3 + 0.2 = 0.5 (or 0.5 via the C branch — same value here, coincidentally)
+- `total_branch_length` = 0.1 + 0.2 + 0.3 + 0.5 = 1.1
+
+## The exercise
+
+```bash
+cd day3/ex-phylo-tree
+```
+
+Implement `Node`, `count_tips`, `max_depth`, and `total_branch_length`. Make all eight tests pass.
+
+The starter file already defines two small helpers — `leaf(name, bl)` and `internal(bl, children)` — used by the tests to build trees concisely. Do not change them.
+
+## How to run
+
+```bash
+cargo test
+cargo run    # prints stats for a built-in sample tree
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — defining the recursive enum"}
+The enum has two variants with named fields. Derive `Debug` and `Clone`:
+
+```rust
+#[derive(Debug, Clone)]
+enum Node {
+    Leaf {
+        name: String,
+        branch_length: f64,
+    },
+    Internal {
+        branch_length: f64,
+        children: Vec<Node>,
+    },
+}
+```
+
+Why no `Box`? Because `Vec<Node>` already stores the children on the heap. The `Internal` variant's size on the stack is just three pointers (the `Vec` header) plus an `f64` plus the enum tag — fixed and known.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — pattern matching with named fields"}
+Inside [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) you destructure each variant's fields. Use `..` to ignore the fields you do not care about:
+
+```rust
+match node {
+    Node::Leaf { .. } => 1,
+    Node::Internal { children, .. } => {
+        // children: &Vec<Node>
+    }
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — `count_tips`"}
+A leaf is one tip; an internal node has as many tips as the sum of its children. The function is recursive:
+
+```rust
+fn count_tips(node: &Node) -> usize {
+    match node {
+        Node::Leaf { .. } => 1,
+        Node::Internal { children, .. } => {
+            let mut total = 0;
+            for child in children {
+                total += count_tips(child);
+            }
+            total
+        }
+    }
+}
+```
+
+(On a later pass you can replace the inner loop with `children.iter().map(count_tips).sum()`, which uses [`Iterator::sum`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.sum) — same answer, more idiomatic.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — `max_depth`"}
+Depth from this node to the farthest descendant. For a leaf, that is just its own branch length. For an internal node, it is its own branch length plus the maximum of the children's depths:
+
+```rust
+fn max_depth(node: &Node) -> f64 {
+    match node {
+        Node::Leaf { branch_length, .. } => *branch_length,
+        Node::Internal { branch_length, children } => {
+            let mut deepest: f64 = 0.0;
+            for child in children {
+                let d = max_depth(child);
+                if d > deepest {
+                    deepest = d;
+                }
+            }
+            branch_length + deepest
+        }
+    }
+}
+```
+
+Note `*branch_length` to dereference the `&f64` we get from pattern-matching on `&Node`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 5 — `total_branch_length`"}
+Sum every branch length in the tree:
+
+```rust
+fn total_branch_length(node: &Node) -> f64 {
+    match node {
+        Node::Leaf { branch_length, .. } => *branch_length,
+        Node::Internal { branch_length, children } => {
+            let mut total = *branch_length;
+            for child in children {
+                total += total_branch_length(child);
+            }
+            total
+        }
+    }
+}
+```
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day3/ex-phylo-tree-solution/src/main.rs` for the complete reference, including the `leaf` and `internal` helpers used by the tests.
+
+The three function bodies are exactly the ones in the hints above.
+:::
+
+## Where this leads
+
+- **Day 4** (optional): parse a real [Newick string](https://en.wikipedia.org/wiki/Newick_format) into a `Node` tree. Newick parsing has subtleties (nested parentheses, quoting) but is a fun puzzle.
+- The most recent common ancestor of two tips — a classic recursive tree operation — would be the natural next function. We will leave it as a homework challenge for students who finish early.
+- For production phylogenetics work in Rust, the [`light_phylogeny`](https://crates.io/crates/light_phylogeny) crate exists; the larger ecosystem is still maturing.

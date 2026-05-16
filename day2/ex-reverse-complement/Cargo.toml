@@ -1,0 +1,6 @@
+[package]
+name = "ex-reverse-complement"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]

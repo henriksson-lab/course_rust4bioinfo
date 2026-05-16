@@ -1,0 +1,91 @@
+---
+title: "Day 2 — Exercise: Reverse complement into a caller-owned buffer"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Rewrite reverse complement so the function does **not** allocate. Instead, the caller passes in a buffer that the function fills:
+
+```rust
+fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>)
+```
+
+The function takes a [shared reference](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) to the input and a [mutable reference](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html#mutable-references) to the output buffer.
+
+## Why this matters
+
+In the previous exercise, `reverse_complement` allocated a fresh `Vec<u8>` on every call. That is fine for one-off use, but it is very wasteful in a hot loop — e.g. when processing 100 million reads. Real bioinformatics tools take a buffer once and reuse it across millions of calls.
+
+This is also your first real encounter with `&mut`: a *unique* reference that lets the callee modify the caller's data, while Rust's [borrow checker](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) guarantees nobody else can touch that data at the same time.
+
+## The exercise
+
+```bash
+cd day2/ex-revcomp-buf
+```
+
+Make all six tests pass. One of the tests calls the function twice with the same buffer to verify that the buffer is reused (cleared) on each call.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ATGCATGC    # expected: GCATGCAT
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — clear the buffer first"}
+The caller may pass in a buffer that already contains data from a previous call. Your first job is to empty it. [`Vec::clear`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.clear) sets the length to zero **without freeing the allocation** — that is the whole point: the caller keeps the underlying memory and you avoid reallocating:
+
+```rust
+out.clear();
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — make sure the capacity is sufficient"}
+After `clear()`, the vector has length 0 but may still have plenty of capacity from before. [`Vec::reserve`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.reserve) tops it up if it is not big enough; if it is already big enough, this is a no-op:
+
+```rust
+out.reserve(seq.len());
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the loop is the same as before"}
+The body is the same indexed reverse loop from exercise 1:
+
+```rust
+for i in (0..seq.len()).rev() {
+    out.push(complement_base(seq[i]));
+}
+```
+
+Note that there is no `return` and no final expression — the function returns `()` (the [unit type](https://doc.rust-lang.org/std/primitive.unit.html)).
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
+    out.clear();
+    out.reserve(seq.len());
+    for i in (0..seq.len()).rev() {
+        out.push(complement_base(seq[i]));
+    }
+}
+```
+
+Full reference in `day2/ex-revcomp-buf-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- This is the API shape that crates like [`noodles`](https://docs.rs/noodles/) and [`rust-htslib`](https://docs.rs/rust-htslib/) use throughout their inner loops. You will see it again on day 4.
+- **Day 5** will measure how much faster the buffer-reusing version is on a real workload of millions of reads.

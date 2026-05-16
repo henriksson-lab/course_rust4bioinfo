@@ -1,0 +1,91 @@
+---
+title: "Day 2 — Exercise: Reverse complement"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `reverse_complement(seq: &[u8]) -> Vec<u8>`: given a DNA sequence as a byte slice, return a newly-allocated [`Vec<u8>`](https://doc.rust-lang.org/std/vec/struct.Vec.html) containing the complement of each base in reverse order.
+
+This is the first exercise where the function **owns** the data it returns. The caller is given a fresh `Vec<u8>` they can mutate, store, or drop as they wish — the function keeps nothing.
+
+## Background
+
+The reverse complement is one of the most common operations in bioinformatics. To compute it, complement each base (A↔T, C↔G) and reverse the order. Aliasing on day 1: `ATGCATGC` → complemented `TACGTACG` → reversed `GCATGCAT`. We will reuse the [`complement_base`](../day1/02-complement.qmd) function from day 1.
+
+## The exercise
+
+```bash
+cd day2/ex-reverse-complement
+```
+
+Make all seven tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ATGCATGC    # expected: GCATGCAT
+cargo run -- AAAA        # expected: TTTT
+cargo run -- ACGT        # expected: ACGT  (this DNA sequence is a palindrome)
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — allocate the right-sized Vec up front"}
+[`Vec::with_capacity(n)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) creates an empty vector that has already reserved space for `n` items. Compared to [`Vec::new()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.new), this avoids the vector having to grow (and reallocate) as you push into it:
+
+```rust
+let mut out: Vec<u8> = Vec::with_capacity(seq.len());
+```
+
+You know exactly how big the result will be — same length as the input — so allocate exactly that much.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — iterating from the end"}
+A [range](https://doc.rust-lang.org/reference/expressions/range-expr.html) like `0..seq.len()` walks indices forward. To walk them backward, call [`.rev()`](https://doc.rust-lang.org/std/iter/trait.DoubleEndedIterator.html#method.rev) on it:
+
+```rust
+for i in (0..seq.len()).rev() {
+    // i goes from seq.len()-1 down to 0
+}
+```
+
+On day 3 we will write the same loop more compactly with [`seq.iter().rev().map(...).collect()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.rev), but the indexed loop is fine for today and easier to read while learning.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — pushing onto the buffer"}
+[`Vec::push`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push) appends a single element:
+
+```rust
+out.push(complement_base(seq[i]));
+```
+
+When the loop ends, the bare name `out` (no `;`) is your return value.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn reverse_complement(seq: &[u8]) -> Vec<u8> {
+    let mut out: Vec<u8> = Vec::with_capacity(seq.len());
+    for i in (0..seq.len()).rev() {
+        out.push(complement_base(seq[i]));
+    }
+    out
+}
+```
+
+Full reference in `day2/ex-reverse-complement-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Next exercise (02)**: rewrite this so the caller passes in a buffer to fill, instead of allocating a fresh `Vec` on every call. That is how every fast bioinformatics tool actually does it in its inner loop.
+- **Day 3**: rewrite the body as one iterator chain — `seq.iter().rev().map(|&b| complement_base(b)).collect()`.

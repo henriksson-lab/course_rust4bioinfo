@@ -1,0 +1,107 @@
+---
+title: "Day 3 — Exercise: Counting k-mers with a `HashMap`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `kmer_counts(seq: &[u8], k: usize) -> HashMap<Vec<u8>, usize>`: return a map from every distinct k-mer in `seq` to the number of times it appears.
+
+This combines three things that are new today: the standard library's [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html), the slice [`windows`](https://doc.rust-lang.org/std/primitive.slice.html#method.windows) iterator, and the [`Entry` API](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) for "increment-or-insert".
+
+## Background
+
+K-mer counting is a foundational operation in bioinformatics. Spectrum-based assembly (de Bruijn graphs), classifier features, sequence sketches, error correction, contamination screening — they all start with a k-mer histogram. Doing this well requires the right data structure: a hash map keyed by the k-mer itself.
+
+On day 2 you wrote `kmers(seq, k) -> Vec<&[u8]>` which produced the k-mers as slice views. That is great if you want to *iterate* k-mers without copying, but it does not group duplicates — and a hash map cannot key on a borrowed `&[u8]` whose lifetime is tied to the input sequence (the entries need to outlive the map, which would outlive the sequence). So we promote each k-mer to a `Vec<u8>` (an owned copy) when we insert it.
+
+## The exercise
+
+```bash
+cd day3/ex-kmer-counts
+```
+
+Make all five tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ATGATG 3
+# Expected output (order may differ — HashMaps do not preserve insertion order):
+#   ATG: 2
+#   TGA: 1
+#   GAT: 1
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `HashMap` is in `std::collections`"}
+The [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html) type is not in the prelude — you have to bring it into scope:
+
+```rust
+use std::collections::HashMap;
+```
+
+Then construct an empty one with [`HashMap::new`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.new):
+
+```rust
+let mut counts: HashMap<Vec<u8>, usize> = HashMap::new();
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — `<[T]>::windows` does the sliding loop for free"}
+[`<[T]>::windows(k)`](https://doc.rust-lang.org/std/primitive.slice.html#method.windows) returns an iterator over every contiguous window of length `k` — exactly the loop you wrote by hand on day 2, but as one method call:
+
+```rust
+for window in seq.windows(k) {
+    // window: &[u8] of length k
+}
+```
+
+Edge cases are already handled: if `k > seq.len()` the iterator simply yields nothing. (If `k == 0` it panics; check for that explicitly.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the `Entry` API for increment-or-insert"}
+You want: "if this key is already in the map, increment its count; otherwise, insert it with count 1". Doing this with two lookups (`contains_key` then `get_mut`) would work but is wasteful. The [`Entry` API](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.entry) does it in one lookup:
+
+```rust
+*counts.entry(window.to_vec()).or_insert(0) += 1;
+```
+
+Read that line as: *get the entry for this key, insert 0 if it isn't there, dereference the resulting `&mut usize`, and add 1.* It is the idiomatic Rust pattern for histogram building.
+
+[`<[T]>::to_vec`](https://doc.rust-lang.org/std/primitive.slice.html#method.to_vec) copies the slice into a new `Vec`. This is the one allocation per insertion; for a k-mer counter on a real genome you would normally key on packed integers instead (each base in 2 bits), but for today the simple `Vec<u8>` keys are fine.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+use std::collections::HashMap;
+
+fn kmer_counts(seq: &[u8], k: usize) -> HashMap<Vec<u8>, usize> {
+    let mut counts: HashMap<Vec<u8>, usize> = HashMap::new();
+    if k == 0 {
+        return counts;
+    }
+    for window in seq.windows(k) {
+        *counts.entry(window.to_vec()).or_insert(0) += 1;
+    }
+    counts
+}
+```
+
+Full reference in `day3/ex-kmer-counts-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Day 4**: stream a whole `.fa.gz` with [`noodles-fasta`](https://docs.rs/noodles-fasta/) and accumulate k-mer counts across millions of records.
+- **Day 5**: parallelise the same computation with [`rayon`](https://docs.rs/rayon/) — each chunk of records contributes its own local `HashMap`, then we merge them at the end.
+- For real production k-mer counting, look at crates like [`needletail`](https://docs.rs/needletail/) (FASTA/FASTQ) and the literature on minimisers and 2-bit packing. Outside the scope of this course.

@@ -1,0 +1,101 @@
+---
+title: "Day 5 — Exercise: Use tests to find the bug"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+You are given a `reverse_complement` function that *looks* correct. Your job:
+
+1. Write a thorough unit-test module for it.
+2. Watch at least one of your tests fail.
+3. Fix the function until every test passes.
+
+This flips the usual exercise pattern on its head: today **the function is the puzzle** and your tests are the diagnostic tool. Writing tests to find bugs is most of the job in real bioinformatics — you almost never get to write green-field code without inheriting somebody else's nearly-correct subroutine.
+
+## The exercise
+
+```bash
+cd day5/ex-find-the-bug
+```
+
+The starter contains:
+
+- A `reverse_complement(seq: &[u8]) -> Vec<u8>` that compiles and runs but **has a subtle bug**.
+- An empty `#[cfg(test)] mod tests { ... }` block.
+
+Write at least the following six tests, then run `cargo test`:
+
+1. **Empty input** — `reverse_complement(b"")` should be `b""`.
+2. **Palindrome** — `reverse_complement(b"ACGT")` should be `b"ACGT"`.
+3. **Single base** — `reverse_complement(b"A")` should be `b"T"`.
+4. **Known answer** — `reverse_complement(b"ATGCATGC")` should be `b"GCATGCAT"`.
+5. **N passthrough** — `reverse_complement(b"NACG")` should be `b"CGTN"`.
+6. **Round-trip property** — for several inputs, `reverse_complement(reverse_complement(seq))` should equal `seq`.
+
+At least one of these should fail. Read the failure, find the bug in the function body, fix it, and re-run.
+
+## How to run
+
+```bash
+cargo test         # expect at least one failure at first
+# ... write tests, then fix the function ...
+cargo test         # green
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — anatomy of a test"}
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn empty_input() {
+        assert_eq!(reverse_complement(b""), Vec::<u8>::new());
+    }
+}
+```
+
+`#[cfg(test)]` means this module is only compiled when running `cargo test`. `use super::*` imports everything from the surrounding file. `#[test]` marks a function to be discovered by the test harness. See [the Rust Book on writing tests](https://doc.rust-lang.org/book/ch11-01-writing-tests.html).
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — property-style round-trip"}
+A property-based test asserts a relationship that should hold for many inputs, not just one specific one. The classic one for reverse complement is "doing it twice gets you back to the start":
+
+```rust
+#[test]
+fn round_trip_identity() {
+    for seq in [b"A".as_slice(), b"ACGT", b"ATGCATGC", b"NACGTN", b""] {
+        let rc = reverse_complement(seq);
+        let rc2 = reverse_complement(&rc);
+        assert_eq!(rc2, seq.to_vec(), "round-trip failed for {:?}", seq);
+    }
+}
+```
+
+If the round-trip test fails, the bug is asymmetric — the function maps some base to the wrong thing. Compare specific cases to narrow it down.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the bug"}
+The bug is small. Read the function carefully and watch what it does to N. Look at how `b'N'` and `b'n'` are handled compared to the four real bases.
+
+(Solution: there is a subtle off-by-one where the function passes `seq[i]` to a helper that is *almost* a normal complementer, but maps `b'N'` to `b'Z'`. The round-trip test catches it: `revcomp(b"NA") = b"ZT"` and `revcomp(b"ZT") = ???` — the helper would now panic on `b'Z'`.)
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day5/ex-find-the-bug-solution/src/main.rs` for the fixed function and the full test module.
+:::
+
+## Where this leads
+
+- Property-based testing tools like [`proptest`](https://docs.rs/proptest/) and [`quickcheck`](https://docs.rs/quickcheck/) generate random inputs automatically and shrink failures down to the smallest reproducing case. They are excellent for bioinformatics code where the input space is enormous.
+- Integration tests live in `tests/` (a sibling of `src/`) and exercise your crate from the outside as a real consumer would. See [the Rust Book on integration tests](https://doc.rust-lang.org/book/ch11-03-test-organization.html#integration-tests).

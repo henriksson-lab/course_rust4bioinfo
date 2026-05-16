@@ -1,0 +1,173 @@
+---
+title: "Day 3 — Exercise: Sequence alignment with dynamic programming"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement [Needleman–Wunsch global alignment](https://en.wikipedia.org/wiki/Needleman%E2%80%93Wunsch_algorithm) for two DNA sequences:
+
+```rust
+fn align(a: &[u8], b: &[u8]) -> Alignment
+```
+
+`Alignment` is a struct containing the optimal score and the two aligned sequences (with `b'-'` representing a gap). Scoring is fixed: match `+1`, mismatch `-1`, gap `-1`.
+
+This is your first **dynamic programming** algorithm. It is also the conceptual backbone of every pairwise alignment tool (BLAST seeds, minimap2, exonerate, ...).
+
+## Background
+
+Suppose you want to align two sequences. The naive recursive definition writes itself:
+
+```
+align(a, b) = max(
+    align(a[:-1], b[:-1]) + score(a[-1], b[-1]),   // match or mismatch
+    align(a[:-1], b)      + gap,                    // gap in b
+    align(a,      b[:-1]) + gap                     // gap in a
+)
+```
+
+That recursion has exponential running time because it visits the same subproblem many times. **Dynamic programming** is exactly the trick of computing each subproblem once and storing the answer in a table — *memoised recursion, but iterative*. Build a `(n+1) × (m+1)` matrix where `score[i][j]` is the optimal alignment score for `a[..i]` against `b[..j]`. Fill it top-left to bottom-right; the answer is in `score[n][m]`.
+
+To recover the **alignment itself** (not just the score) we also keep a *traceback* matrix that records, for every cell, which of the three neighbours we came from. Walking back from `score[n][m]` to `score[0][0]` reads the aligned sequences out in reverse.
+
+## A worked example
+
+`a = "ACGT"`, `b = "AGGT"`. The optimal alignment uses no gaps — three matches and one mismatch (C vs G) — for a score of `1 + 1 + 1 + 1 - 1 - 1 = 2`. The aligned sequences are just the inputs themselves: `ACGT` over `AGGT`.
+
+For `a = "ACGT"`, `b = "ACT"` the optimal score is `2` (three matches and one gap), with an alignment like
+
+```
+A C G T
+A C - T
+```
+
+## The exercise
+
+```bash
+cd day3/ex-alignment
+```
+
+The starter defines `Direction` (an enum tracking which neighbour each cell came from), `Alignment` (the result struct), and a function shell `align(...)` with three `TODO` blocks: **initialise**, **fill**, **traceback**.
+
+Make all seven tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- ACGT AGGT   # score 2, ACGT / AGGT (no gaps needed)
+cargo run -- ACGT ACT    # score 2, ACGT / AC-T (one gap)
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — allocate two matrices"}
+You need a `(n+1) × (m+1)` matrix for scores and a same-sized matrix for traceback directions. Two-dimensional vectors are written `Vec<Vec<...>>`. Use the [`vec!`](https://doc.rust-lang.org/std/macro.vec.html) macro to create them filled with a default value:
+
+```rust
+let n = a.len();
+let m = b.len();
+let mut score: Vec<Vec<i32>>       = vec![vec![0; m + 1]; n + 1];
+let mut from:  Vec<Vec<Direction>> = vec![vec![Direction::End; m + 1]; n + 1];
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — initialise the first row and column"}
+The cell `score[i][0]` represents aligning `a[..i]` against an empty `b` — that means inserting `i` gaps into `b`, so its score is `i * GAP`. Symmetrically for the first row:
+
+```rust
+for i in 1..=n {
+    score[i][0] = (i as i32) * GAP;
+    from[i][0]  = Direction::Up;   // we came from row i-1
+}
+for j in 1..=m {
+    score[0][j] = (j as i32) * GAP;
+    from[0][j]  = Direction::Left; // we came from column j-1
+}
+```
+
+`score[0][0]` is left as 0, `from[0][0]` as `End` — the traceback's stopping condition.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — fill the rest with the recurrence"}
+For each interior cell, take the max of the three options. Remember that `a` and `b` are zero-indexed but our matrix is one-indexed (so cell `(i, j)` looks at `a[i-1]` and `b[j-1]`):
+
+```rust
+for i in 1..=n {
+    for j in 1..=m {
+        let s = if a[i - 1] == b[j - 1] { MATCH } else { MISMATCH };
+        let diag = score[i - 1][j - 1] + s;
+        let up   = score[i - 1][j]     + GAP;
+        let left = score[i]    [j - 1] + GAP;
+
+        // pick the maximum, remembering where it came from
+        if diag >= up && diag >= left {
+            score[i][j] = diag;
+            from[i][j]  = Direction::Diag;
+        } else if up >= left {
+            score[i][j] = up;
+            from[i][j]  = Direction::Up;
+        } else {
+            score[i][j] = left;
+            from[i][j]  = Direction::Left;
+        }
+    }
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — traceback from (n, m) to (0, 0)"}
+Walk back through the `from` matrix, pushing characters onto two output vectors. Each step writes one column of the alignment:
+
+```rust
+let mut aligned_a: Vec<u8> = Vec::new();
+let mut aligned_b: Vec<u8> = Vec::new();
+let (mut i, mut j) = (n, m);
+while i > 0 || j > 0 {
+    match from[i][j] {
+        Direction::Diag => {
+            aligned_a.push(a[i - 1]);
+            aligned_b.push(b[j - 1]);
+            i -= 1;
+            j -= 1;
+        }
+        Direction::Up => {
+            aligned_a.push(a[i - 1]);
+            aligned_b.push(b'-');
+            i -= 1;
+        }
+        Direction::Left => {
+            aligned_a.push(b'-');
+            aligned_b.push(b[j - 1]);
+            j -= 1;
+        }
+        Direction::End => break,
+    }
+}
+aligned_a.reverse();   // we built them back-to-front
+aligned_b.reverse();
+```
+
+[`<[T]>::reverse`](https://doc.rust-lang.org/std/primitive.slice.html#method.reverse) reverses a slice in place — the cheapest way to fix the order.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference solution combines all four hints into a single `align` function — see `day3/ex-alignment-solution/src/main.rs`.
+
+The three phases (init → fill → traceback) are independent enough that you can develop and verify them one at a time. The tests are deliberately permissive about which optimal alignment is returned when there are several — they check the score precisely, but for the aligned sequences they verify *properties* (length, gap-removal recovers input) rather than exact bytes wherever ambiguity exists.
+:::
+
+## Where this leads
+
+- Local alignment ([Smith–Waterman](https://en.wikipedia.org/wiki/Smith%E2%80%93Waterman_algorithm)) is the same algorithm with two tiny changes: any cell can be reset to `0`, and the traceback starts at the maximum cell anywhere in the matrix.
+- Affine gap penalties (different cost for opening vs extending a gap) require two extra matrices. Standard, but more bookkeeping.
+- For production alignment use [`rust-bio`](https://docs.rs/bio/) (`bio::alignment`) or [`block-aligner`](https://docs.rs/block-aligner/) — both ship optimised SIMD implementations.
+- **Day 5**: measure how much the `--release` flag changes the running time of this implementation on a slightly larger input.

@@ -1,0 +1,108 @@
+---
+title: "Day 4 — Exercise: Per-contig stats with `noodles-fasta`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Add the [`noodles-fasta`](https://docs.rs/noodles-fasta/) crate as a dependency, then write a function that streams records from a [`BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html) source and produces per-contig statistics:
+
+```rust
+struct ContigStat { name: String, length: usize, gc: f64 }
+fn fasta_stats<R: std::io::BufRead>(reader: R) -> std::io::Result<Vec<ContigStat>>
+```
+
+This is your first exercise with a **real external crate** doing the heavy lifting. Compare the body of your function with the hand-rolled FASTA stretch goal from [day 1](../day1/01-gc-content.qmd).
+
+## The crate
+
+Open `Cargo.toml` and confirm the dependency block reads:
+
+```toml
+[dependencies]
+noodles-fasta = "0.50"
+```
+
+Then in code:
+
+```rust
+use noodles_fasta as fasta;
+```
+
+The [crate docs](https://docs.rs/noodles-fasta/) are your reference. You will need:
+
+- [`fasta::io::Reader::new`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html#method.new) to wrap any `BufRead`
+- [`reader.records()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html#method.records) to get an iterator over `Result<Record>`
+- [`record.name()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/record/struct.Record.html#method.name) for the record's name as bytes
+- [`record.sequence().as_ref()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/record/struct.Record.html#method.sequence) for the raw sequence as `&[u8]`
+
+## The exercise
+
+```bash
+cd day4/ex-fasta-stats
+```
+
+Implement `fasta_stats`. Make all four tests pass — they use [`std::io::Cursor`](https://doc.rust-lang.org/std/io/struct.Cursor.html) to feed in-memory byte strings to the function without touching the filesystem.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- data/sample.fa
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — wrap the reader"}
+`noodles-fasta` expects a `BufRead`. Any `BufRead` will do — a `BufReader<File>`, a `Cursor<&[u8]>`, anything implementing the trait. Construct the FASTA reader once at the top of the function:
+
+```rust
+let mut reader = fasta::io::Reader::new(reader);
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — iterate records and propagate errors"}
+[`records()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html#method.records) returns an iterator yielding `std::io::Result<Record>`. Use a `for` loop and the [`?` operator](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator) to short-circuit on the first error:
+
+```rust
+let mut out = Vec::new();
+for result in reader.records() {
+    let record = result?;
+    // ... process record ...
+    out.push(stat);
+}
+Ok(out)
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — name and sequence"}
+The record's name (the first whitespace-delimited token after `>`) and sequence are accessed via methods:
+
+```rust
+let name = std::str::from_utf8(record.name())
+    .map_err(|_| std::io::Error::other("non-UTF-8 record name"))?
+    .to_string();
+let seq: &[u8] = record.sequence().as_ref();
+let length = seq.len();
+let gc_count = seq.iter().filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c')).count();
+let gc = if length == 0 { 0.0 } else { gc_count as f64 / length as f64 };
+```
+
+Note `matches!`: a [macro](https://doc.rust-lang.org/std/macro.matches.html) that is shorthand for `match x { pat => true, _ => false }`. Very handy in iterator filters.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day4/ex-fasta-stats-solution/src/main.rs` for the full reference. The function is around 15 lines — almost all of it is the GC arithmetic. `noodles-fasta` does every byte of parsing for you.
+:::
+
+## Where this leads
+
+- Replace `BufReader<File>` with a `BufReader<flate2::read::GzDecoder<File>>` and your tool works on `.fa.gz` with no other changes. `noodles-fasta` does **not** care: it just wants a `BufRead`.
+- **Exercise 03**: same pattern, for FASTQ — but now you also write filtered records back out.

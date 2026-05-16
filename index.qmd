@@ -22,19 +22,33 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 2 — Ownership, borrowing, strings, slices, bytes
 
-*(in preparation)*
+1. [Reverse complement](day2/01-reverse-complement.qmd)
+2. [Reverse complement into a buffer](day2/02-revcomp-buf.qmd)
+3. [k-mers as slice views](day2/03-kmers.qmd)
+4. [Quality trimming as a slice view](day2/04-quality-trim.qmd)
 
 ### Day 3 — Structs, enums, iterators, recursion, error handling
 
-*(in preparation)*
+1. [Genomic interval](day3/01-genomic-interval.qmd)
+2. [Parsing a region string with `Result`](day3/02-parse-region.qmd)
+3. [A codon table with `Option`](day3/03-codon-table.qmd)
+4. [Counting k-mers with a `HashMap`](day3/04-kmer-counts.qmd)
+5. [A phylogenetic tree with recursion](day3/05-phylo-tree.qmd)
+6. [Sequence alignment with dynamic programming](day3/06-alignment.qmd)
 
 ### Day 4 — I/O, crates, modules, plotting, zip
 
-*(in preparation)*
+1. [Parsing BED by hand](day4/01-bed-parse.qmd)
+2. [Per-contig stats with `noodles-fasta`](day4/02-fasta-stats.qmd)
+3. [Filter FASTQ with `noodles-fastq`](day4/03-fastq-filter.qmd)
+4. [Read-length histogram with `plotters`](day4/04-plot-readlen.qmd)
+5. [Bundling outputs into a `.zip`](day4/05-zip-bundle.qmd)
 
 ### Day 5 — Tests, `--release`, parallelism, ecosystem
 
-*(in preparation)*
+1. [Use tests to find the bug](day5/01-find-the-bug.qmd)
+2. [`--release` is a 50× free lunch](day5/02-release-mode.qmd)
+3. [Parallel GC content with `rayon`](day5/03-parallel-gc.qmd)
 
 ## Working with the exercises
 

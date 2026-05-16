@@ -1,0 +1,101 @@
+---
+title: "Day 4 — Exercise: Parsing BED by hand"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `parse_bed_line(line: &str) -> Result<BedRecord, BedError>`: parse one line of a [BED file](https://samtools.github.io/hts-specs/BEDv1.pdf) (chromosome, start, end — the three mandatory fields) into a struct. Then use it from `main` to parse a whole file.
+
+This is the day's warm-up: we get a real bioinformatics format flowing through Rust **using only the standard library** before we reach for external crates. On day 4 exercise 2 we will let [`noodles`](https://docs.rs/noodles/) do the same thing for FASTA, and you will see what the crate is buying us.
+
+## Background
+
+BED is tab-separated text, one interval per line. The first three columns are always:
+
+```
+chrom   start   end
+```
+
+`start` and `end` are half-open zero-based coordinates, as on [day 3 exercise 1](../day3/01-genomic-interval.qmd). Many real BED files have more columns (name, score, strand, ...); we will ignore them today and just take the first three.
+
+## The exercise
+
+```bash
+cd day4/ex-bed-parse
+```
+
+Implement `parse_bed_line`. Make all six unit tests pass. The starter also includes a `main` that reads a file path from the CLI and prints a summary; once your function works, run it on the bundled `data/sample.bed`.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- data/sample.bed   # summary of intervals
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — splitting on tabs"}
+[`str::split`](https://doc.rust-lang.org/std/primitive.str.html#method.split) takes a delimiter and returns an iterator. Collect the first three pieces:
+
+```rust
+let mut parts = line.split('\t');
+let chrom = parts.next().ok_or(BedError::TooFewFields)?;
+let start_s = parts.next().ok_or(BedError::TooFewFields)?;
+let end_s = parts.next().ok_or(BedError::TooFewFields)?;
+```
+
+Any extra columns are simply ignored — call `parts.next()` only as many times as you need.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — parsing the numbers"}
+Same pattern as day 3's `parse_region`: use [`str::parse`](https://doc.rust-lang.org/std/primitive.str.html#method.parse) and [`Result::map_err`](https://doc.rust-lang.org/std/result/enum.Result.html#method.map_err) to convert the parse error into our domain enum:
+
+```rust
+let start: u64 = start_s.parse().map_err(|_| BedError::InvalidStart)?;
+let end:   u64 = end_s  .parse().map_err(|_| BedError::InvalidEnd)?;
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the order check"}
+BED allows `end == start` (a zero-length interval, sometimes used as an insertion point), but `end < start` is malformed:
+
+```rust
+if end < start {
+    return Err(BedError::EndBeforeStart);
+}
+Ok(BedRecord { chrom: chrom.to_string(), start, end })
+```
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn parse_bed_line(line: &str) -> Result<BedRecord, BedError> {
+    let mut parts = line.split('\t');
+    let chrom = parts.next().ok_or(BedError::TooFewFields)?;
+    let start_s = parts.next().ok_or(BedError::TooFewFields)?;
+    let end_s = parts.next().ok_or(BedError::TooFewFields)?;
+    let start: u64 = start_s.parse().map_err(|_| BedError::InvalidStart)?;
+    let end:   u64 = end_s  .parse().map_err(|_| BedError::InvalidEnd)?;
+    if end < start {
+        return Err(BedError::EndBeforeStart);
+    }
+    Ok(BedRecord { chrom: chrom.to_string(), start, end })
+}
+```
+
+Full reference in `day4/ex-bed-parse-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Exercise 02**: same pattern, but for FASTA, with [`noodles-fasta`](https://docs.rs/noodles-fasta/) handling the parsing. Notice how much less code is yours and how much comes from the crate.
+- A real BED parser would also accept `noodles-bed`, support BED12 (12-column variant), and parse strand. We leave those as natural extensions.

@@ -1,0 +1,7 @@
+[package]
+name = "ex-zip-bundle"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zip = "0.6"

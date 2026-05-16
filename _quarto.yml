@@ -43,6 +43,32 @@ website:
           - day1/03-base-counts.qmd
           - day1/04-phred.qmd
           - day1/05-hamming.qmd
+      - section: "Day 2 — ownership & slices"
+        contents:
+          - day2/01-reverse-complement.qmd
+          - day2/02-revcomp-buf.qmd
+          - day2/03-kmers.qmd
+          - day2/04-quality-trim.qmd
+      - section: "Day 3 — structs, enums, recursion"
+        contents:
+          - day3/01-genomic-interval.qmd
+          - day3/02-parse-region.qmd
+          - day3/03-codon-table.qmd
+          - day3/04-kmer-counts.qmd
+          - day3/05-phylo-tree.qmd
+          - day3/06-alignment.qmd
+      - section: "Day 4 — I/O & ecosystem"
+        contents:
+          - day4/01-bed-parse.qmd
+          - day4/02-fasta-stats.qmd
+          - day4/03-fastq-filter.qmd
+          - day4/04-plot-readlen.qmd
+          - day4/05-zip-bundle.qmd
+      - section: "Day 5 — tests, release, parallel"
+        contents:
+          - day5/01-find-the-bug.qmd
+          - day5/02-release-mode.qmd
+          - day5/03-parallel-gc.qmd
 
 format:
   html:

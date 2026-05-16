@@ -1,0 +1,95 @@
+---
+title: "Day 4 — Exercise: Filter FASTQ with `noodles-fastq`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Use [`noodles-fastq`](https://docs.rs/noodles-fastq/) to read FASTQ records, drop those shorter than a minimum length, and write the survivors back out:
+
+```rust
+fn filter_fastq<R: BufRead, W: Write>(
+    reader: R,
+    writer: W,
+    min_len: usize,
+) -> std::io::Result<(usize, usize)>
+```
+
+Return value: `(kept, total)` — how many records survived and how many we saw.
+
+This is the first exercise that **writes** a bioinformatics file format as well as reading one.
+
+## The crate
+
+```toml
+[dependencies]
+noodles-fastq = "0.20"
+```
+
+You need:
+
+- [`fastq::io::Reader::new(BufRead)`](https://docs.rs/noodles-fastq/latest/noodles_fastq/io/struct.Reader.html#method.new) and its [`.records()`](https://docs.rs/noodles-fastq/latest/noodles_fastq/io/struct.Reader.html#method.records) iterator
+- [`fastq::io::Writer::new(Write)`](https://docs.rs/noodles-fastq/latest/noodles_fastq/io/struct.Writer.html#method.new) and its [`.write_record(&record)`](https://docs.rs/noodles-fastq/latest/noodles_fastq/io/struct.Writer.html#method.write_record)
+- [`record.sequence()`](https://docs.rs/noodles-fastq/latest/noodles_fastq/record/struct.Record.html#method.sequence): the returned value has its own `.len()` method — call it directly. (`record.sequence().as_ref()` also works if you first bind it as `let seq: &[u8] = ...` so the compiler can pick the right `AsRef` impl.)
+
+## The exercise
+
+```bash
+cd day4/ex-fastq-filter
+```
+
+Make all three tests pass. They use `Cursor<&[u8]>` for input and `Vec<u8>` for output, so no temp files.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- data/sample.fastq /tmp/filtered.fastq 5
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — the basic shape"}
+```rust
+let mut reader = fastq::io::Reader::new(reader);
+let mut writer = fastq::io::Writer::new(writer);
+let mut total = 0;
+let mut kept = 0;
+for result in reader.records() {
+    let record = result?;
+    total += 1;
+    if record.sequence().len() >= min_len {
+        writer.write_record(&record)?;
+        kept += 1;
+    }
+}
+Ok((kept, total))
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — why `<W: Write>` and not `W = File`"}
+By taking any `Write`, we can:
+- write to a file in `main` (via `File::create`),
+- write to a `Vec<u8>` in tests,
+- write to stdout (`std::io::stdout()`),
+- gzip-encode the output by wrapping in `flate2::write::GzEncoder`,
+- all without changing the function.
+
+This is the same trade we made on day 4 exercise 2 for the reader: a tiny bit of generic syntax buys total composability.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day4/ex-fastq-filter-solution/src/main.rs` for the full reference. About 15 lines.
+:::
+
+## Where this leads
+
+- **Day 4 exercise 5**: bundle the filtered output, the stats from exercise 2, and a plot from exercise 4 into a single `.zip` report.
+- **Day 5**: parallelise filtering across many input files with [`rayon`](https://docs.rs/rayon/).
