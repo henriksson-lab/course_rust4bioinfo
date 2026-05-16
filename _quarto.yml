@@ -43,6 +43,7 @@ website:
           - intro/install.qmd
       - section: "Day 1 — toolchain & syntax"
         contents:
+          - day1/00-concepts.qmd
           - day1/01-gc-content.qmd
           - day1/02-complement.qmd
           - day1/03-base-counts.qmd
@@ -74,6 +75,12 @@ website:
           - day5/01-find-the-bug.qmd
           - day5/02-release-mode.qmd
           - day5/03-parallel-gc.qmd
+      - section: "Day 6 — Yew & WebAssembly"
+        contents:
+          - day6/01-hello-yew.qmd
+          - day6/02-reactive-stats.qmd
+          - day6/03-fetch-from-backend.qmd
+          - day6/04-sequence-inspector.qmd
 
 format:
   html:

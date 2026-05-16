@@ -1,9 +1,10 @@
 # Day 1 — Exercises
 
-Work through these in order. Each `.qmd` is a self-contained walkthrough with hints (collapsible) and a reference solution; each `ex-<name>/` directory is a real cargo project that the compiler will check. Make `cargo test` pass before moving on.
+Start with [**00 — Concepts**](00-concepts.qmd) for a 15-minute reference overview of every Rust feature you will use today (companion to the slides). Then work through the exercises in order. Each `.qmd` is a self-contained walkthrough with hints (collapsible) and a reference solution; each `ex-<name>/` directory is a real cargo project that the compiler will check. Make `cargo test` pass before moving on.
 
 | # | Topic | Rust concepts | Crate |
 |---|---|---|---|
+| 0 | [**Concepts**](00-concepts.qmd) | brief reference covering everything below | — |
 | 1 | [GC content](01-gc-content.qmd) | `for` loops, `match` on bytes, integer-to-float casts, formatted printing | [`ex-gc-content/`](ex-gc-content/) |
 | 2 | [Complement a single base](02-complement.qmd) | `match` as an expression, byte literals, `panic!` on invalid input | [`ex-complement/`](ex-complement/) |
 | 3 | [Count A, C, G, T, and other](03-base-counts.qmd) | mutable counters, tuple return values, alternative `match` arms | [`ex-base-counts/`](ex-base-counts/) |

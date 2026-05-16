@@ -1,0 +1,255 @@
+---
+title: "Day 6 — Exercise: Reactive sequence statistics"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Make the page interactive. Add a `<textarea>` where the user can paste DNA, and display the live **length**, **GC content**, and **per-base counts** as they type. Every statistic should update on every keystroke.
+
+The entire computation runs **in the browser**, in WebAssembly compiled from the same `gc_content` and `base_counts` functions you wrote on days 1 and 2. No server round-trip per keystroke. This is exactly what makes a Rust WASM frontend interesting in bioinformatics: you ship one binary and the heavy lifting happens on the user's machine.
+
+## Background
+
+Yew is built around two ideas that React users will recognise immediately:
+
+- **Function components**: a Rust function decorated with `#[function_component(Name)]` that returns `Html`. Re-runs from scratch on every render.
+- **Hooks**: functions called inside a component to *persist* state across renders. The one we need today is [`use_state`](https://docs.rs/yew/0.23.0/yew/functional/fn.use_state.html), which returns a handle that the component can read **and** that you can write to via `set(...)`.
+
+The pattern for a controlled input — a textarea whose content lives in component state — is the textbook example for both.
+
+## The exercise
+
+```bash
+cd day6/ex-sequence-inspector
+```
+
+You will edit `frontend/src/main.rs`. Trunk is presumably still running from [exercise 1](01-hello-yew.qmd) (otherwise: `trunk serve` in `frontend/`). Save after each step and watch the browser.
+
+When you are done, pasting `ACGTACGT` into the textarea should produce:
+
+| length | 8 |
+| GC content | 50.00% |
+| A | 2 |
+| C | 2 |
+| G | 2 |
+| T | 2 |
+| other | 0 |
+
+## Step by step
+
+### Step 1 — add the pure functions
+
+Above the `#[function_component(App)]` line, add the two functions from days 1 and 2:
+
+```rust
+fn gc_content(seq: &[u8]) -> f64 {
+    if seq.is_empty() {
+        return 0.0;
+    }
+    let gc = seq
+        .iter()
+        .filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c'))
+        .count();
+    gc as f64 / seq.len() as f64
+}
+
+fn base_counts(seq: &[u8]) -> (usize, usize, usize, usize, usize) {
+    let mut a = 0usize;
+    let mut c = 0usize;
+    let mut g = 0usize;
+    let mut t = 0usize;
+    let mut other = 0usize;
+    for &b in seq {
+        match b {
+            b'A' | b'a' => a += 1,
+            b'C' | b'c' => c += 1,
+            b'G' | b'g' => g += 1,
+            b'T' | b't' => t += 1,
+            _ => other += 1,
+        }
+    }
+    (a, c, g, t, other)
+}
+```
+
+These are the exact functions from day 1 exercise 1 and day 1 exercise 3 — the WASM target compiles them the same way the native target does.
+
+### Step 2 — add the state
+
+Inside the `app()` function, before the `html!` macro, declare a piece of state for the textarea content:
+
+```rust
+let typed = use_state(String::new);
+```
+
+`use_state(String::new)` initialises the state to an empty `String` on first render. `typed` is now a [`UseStateHandle<String>`](https://docs.rs/yew/0.23.0/yew/functional/struct.UseStateHandle.html). You can dereference it with `*typed` to read the current `String`, and you can write to it with `typed.set(new_value)`.
+
+### Step 3 — add a textarea bound to the state
+
+We need two things: the textarea's `value` attribute reflects the state, and its `oninput` callback writes back to the state on every keystroke. Add a callback above the `html!` macro:
+
+```rust
+let on_input = {
+    let typed = typed.clone();
+    Callback::from(move |e: InputEvent| {
+        let target = e.target_unchecked_into::<web_sys::HtmlTextAreaElement>();
+        typed.set(target.value());
+    })
+};
+```
+
+Then in the `html!` block, replace the placeholder paragraphs with a textarea element:
+
+```rust
+<textarea
+    value={(*typed).clone()}
+    oninput={on_input}
+    placeholder="paste DNA here (ACGT)"
+/>
+```
+
+Save the file. Type something into the textarea — visually nothing else changes yet, but the state is now tracking your input.
+
+### Step 4 — display the statistics
+
+Still inside `app()`, just before the `html!` macro, compute everything that depends on the current text:
+
+```rust
+let seq_bytes = typed.as_bytes();
+let length = seq_bytes.len();
+let gc = gc_content(seq_bytes);
+let (a, c, g, t, other) = base_counts(seq_bytes);
+```
+
+Then add a table to the `html!` block, below the textarea:
+
+```rust
+<h2>{ "Statistics" }</h2>
+<table>
+    <tr><th>{ "length" }</th><td>{ length }</td></tr>
+    <tr><th>{ "GC content" }</th><td>{ format!("{:.2}%", gc * 100.0) }</td></tr>
+    <tr><th>{ "A" }</th><td>{ a }</td></tr>
+    <tr><th>{ "C" }</th><td>{ c }</td></tr>
+    <tr><th>{ "G" }</th><td>{ g }</td></tr>
+    <tr><th>{ "T" }</th><td>{ t }</td></tr>
+    <tr><th>{ "other" }</th><td>{ other }</td></tr>
+</table>
+```
+
+Save. Type into the textarea. The table should update on every keystroke.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `use_state` and why `.clone()` everywhere"}
+[`use_state`](https://docs.rs/yew/0.23.0/yew/functional/fn.use_state.html) returns a `UseStateHandle<T>`, which is essentially an [`Rc`](https://doc.rust-lang.org/std/rc/struct.Rc.html) (reference-counted pointer) under the hood. Cloning it is cheap — it bumps a counter, it does not copy the underlying `String`.
+
+You clone it before moving it into a closure because the closure outlives the function call (it gets stored inside Yew's runtime), so it cannot borrow `typed` from the surrounding scope. The clone is the closure's *own* handle to the same shared state.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — `target_unchecked_into` and `web-sys`"}
+[`web-sys`](https://docs.rs/web-sys/) exposes every DOM type as a Rust struct: `HtmlTextAreaElement`, `HtmlInputElement`, `Document`, and so on. The features in `frontend/Cargo.toml` decide which types you can use without a compile error — we have enabled `HtmlTextAreaElement` and `HtmlInputElement`.
+
+[`e.target_unchecked_into::<T>()`](https://yew.rs/docs/concepts/html/events#event-types) is a Yew helper that does what JavaScript's `event.target as HTMLTextAreaElement` does: down-cast the event's target to a specific DOM type without a runtime check. We promise the compiler the textarea really is a textarea; if we lied, the browser would throw at runtime. For controlled inputs this is always safe.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — embedding Rust expressions in `html!`"}
+Every `{ ... }` inside `html!` is one Rust expression that must produce something Yew can render. That means:
+
+- Numbers (`{ length }`) work because `usize` implements [`ToHtml`](https://docs.rs/yew/0.23.0/yew/html/trait.ToHtml.html).
+- `String` and `&str` also work.
+- A formatted string is just an expression: `{ format!("{:.2}%", gc * 100.0) }`.
+- If you have a `Vec<Html>` you can render it with `{ for vec.into_iter() }` — we will use this in exercise 3.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="The full `frontend/src/main.rs` at the end of this exercise"}
+```rust
+use yew::prelude::*;
+
+fn gc_content(seq: &[u8]) -> f64 {
+    if seq.is_empty() {
+        return 0.0;
+    }
+    let gc = seq
+        .iter()
+        .filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c'))
+        .count();
+    gc as f64 / seq.len() as f64
+}
+
+fn base_counts(seq: &[u8]) -> (usize, usize, usize, usize, usize) {
+    let mut a = 0usize;
+    let mut c = 0usize;
+    let mut g = 0usize;
+    let mut t = 0usize;
+    let mut other = 0usize;
+    for &b in seq {
+        match b {
+            b'A' | b'a' => a += 1,
+            b'C' | b'c' => c += 1,
+            b'G' | b'g' => g += 1,
+            b'T' | b't' => t += 1,
+            _ => other += 1,
+        }
+    }
+    (a, c, g, t, other)
+}
+
+#[function_component(App)]
+fn app() -> Html {
+    let typed = use_state(String::new);
+
+    let on_input = {
+        let typed = typed.clone();
+        Callback::from(move |e: InputEvent| {
+            let target = e.target_unchecked_into::<web_sys::HtmlTextAreaElement>();
+            typed.set(target.value());
+        })
+    };
+
+    let seq_bytes = typed.as_bytes();
+    let length = seq_bytes.len();
+    let gc = gc_content(seq_bytes);
+    let (a, c, g, t, other) = base_counts(seq_bytes);
+
+    html! {
+        <div>
+            <h1>{ "Sequence inspector" }</h1>
+
+            <textarea
+                value={(*typed).clone()}
+                oninput={on_input}
+                placeholder="paste DNA here (ACGT)"
+            />
+
+            <h2>{ "Statistics" }</h2>
+            <table>
+                <tr><th>{ "length" }</th><td>{ length }</td></tr>
+                <tr><th>{ "GC content" }</th><td>{ format!("{:.2}%", gc * 100.0) }</td></tr>
+                <tr><th>{ "A" }</th><td>{ a }</td></tr>
+                <tr><th>{ "C" }</th><td>{ c }</td></tr>
+                <tr><th>{ "G" }</th><td>{ g }</td></tr>
+                <tr><th>{ "T" }</th><td>{ t }</td></tr>
+                <tr><th>{ "other" }</th><td>{ other }</td></tr>
+            </table>
+        </div>
+    }
+}
+
+fn main() {
+    yew::Renderer::<App>::new().render();
+}
+```
+:::
+
+## Where this leads
+
+- [Exercise 3](03-fetch-from-backend.qmd) — add a list of sample sequences fetched from the backend with `gloo_net::http::Request`. This is where `async`/`await` enters the picture.
+- The capstone in [exercise 4](04-sequence-inspector.qmd) — combine everything plus an inline SVG visualisation of GC content over a sliding window.

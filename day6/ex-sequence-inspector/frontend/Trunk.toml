@@ -1,0 +1,10 @@
+[build]
+target = "index.html"
+
+# In development, trunk serves the frontend on :8080 and our axum backend
+# runs on :3000. Forward every request the frontend makes to `/api/...`
+# to the backend so the frontend can use a same-origin URL like
+# `/api/samples` and we never have to deal with CORS.
+[[proxy]]
+rewrite = "/api/"
+backend = "http://127.0.0.1:3000/api/"

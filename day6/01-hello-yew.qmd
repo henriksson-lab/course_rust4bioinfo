@@ -1,0 +1,149 @@
+---
+title: "Day 6 — Exercise: Hello Yew"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Get the day-6 template running on your machine: a Yew frontend served by [trunk](https://trunkrs.dev) on `http://127.0.0.1:8080`, talking to an axum backend on `http://127.0.0.1:3000`. Then make a small change to the frontend and watch trunk hot-reload the browser.
+
+By the end of this exercise you will have **seen WebAssembly in action**: the very same `*.rs` files we have been writing all week, compiled to `.wasm`, running directly in your browser tab.
+
+## Background
+
+A Yew app is a Rust program that compiles to the `wasm32-unknown-unknown` target instead of native machine code. The browser loads the resulting `.wasm` blob (alongside a tiny JavaScript shim that `wasm-bindgen` generates) and runs it inside the same sandbox as any other web page.
+
+[Trunk](https://trunkrs.dev) is the build tool that ties this together: one command (`trunk serve`) compiles the Rust to WASM, generates the JavaScript glue, bundles them with the `index.html`, serves the result over HTTP, **and** watches your source files so it rebuilds and reloads the page whenever you save.
+
+The other half of the story lives in `backend/`: a normal native [axum](https://docs.rs/axum/) HTTP server that we will fetch data from in [exercise 3](03-fetch-from-backend.qmd). Today we just confirm it runs.
+
+## One-off setup
+
+If you have not already:
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install trunk
+```
+
+Both take a few minutes the first time and only need to run once on your machine. `wasm-bindgen-cli` will be auto-downloaded by trunk on the first build.
+
+## The exercise
+
+```bash
+cd day6/ex-sequence-inspector
+```
+
+You will need **two terminal windows** open at the same time.
+
+### Terminal 1 — start the backend
+
+```bash
+cargo run -p backend
+```
+
+After a minute or so of compiling axum & friends, you should see:
+
+```
+backend listening on http://127.0.0.1:3000
+```
+
+Leave this running. Open a browser to <http://127.0.0.1:3000/api/samples>. You should see a JSON list of sample records — five entries, with `id` and `name` fields but no sequence.
+
+### Terminal 2 — start the frontend
+
+```bash
+cd frontend
+trunk serve
+```
+
+First run: takes a couple of minutes (it is compiling Yew, gloo, and a few hundred small crates to WebAssembly). Subsequent runs are much faster. Watch for:
+
+```
+server listening at http://127.0.0.1:8080
+```
+
+Open <http://127.0.0.1:8080>. You should see:
+
+> # Sequence inspector
+>
+> Hello from Yew and WebAssembly!
+>
+> Edit frontend/src/main.rs and save — trunk reloads the page for you.
+
+If that worked, **the rest of day 6 is downhill**. The big "is my toolchain alive" question is settled.
+
+### Make your first change
+
+Open `frontend/src/main.rs`. Find the `html!` block:
+
+```rust
+html! {
+    <div>
+        <h1>{ "Sequence inspector" }</h1>
+        <p>{ "Hello from Yew and WebAssembly!" }</p>
+        <p>{ "Edit frontend/src/main.rs and save — trunk reloads the page for you." }</p>
+    </div>
+}
+```
+
+Make any small change — replace the heading with your name, add a third `<p>` element, anything. **Save the file**. Watch your browser tab.
+
+You should see trunk re-build in the terminal (a few seconds for an incremental change), then the page reloads automatically and shows your edit.
+
+That feedback loop is what you will use for the rest of the week. Keep both terminals open and just edit code.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — anatomy of the `html!` macro"}
+The [`html!`](https://docs.rs/yew/0.23.0/yew/macro.html.html) macro lets you write HTML-like syntax with [Rust expressions embedded in `{ }`](https://yew.rs/docs/concepts/html). A few rules:
+
+- Every tag must be closed (`<br/>`, not `<br>`).
+- Text content goes inside `{ }`. Bare text like `<p>Hi</p>` will not compile — write `<p>{ "Hi" }</p>`.
+- You can put any Rust expression inside `{ }`: `<p>{ 1 + 1 }</p>` renders "2"; `<p>{ format!("Hello {}", name) }</p>` renders an interpolated string.
+- Multiple top-level elements need to be wrapped in a fragment (`<></>`) or a parent element (`<div></div>`).
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — trunk did not reload the page"}
+Make sure you actually saved the file (`Ctrl+S` / `Cmd+S`). Some editors with autosave will save when the window loses focus, but VS Code's default is to save explicitly.
+
+If trunk shows a compile error in its terminal, the page will not reload until you fix it. The error is the same Rust compiler error you would get from `cargo build` — read it the same way.
+
+Hard refresh the browser tab (`Ctrl+Shift+R` / `Cmd+Shift+R`) if you suspect something stuck.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — port already in use"}
+If trunk fails with `address already in use (os error 98)`, either:
+
+- You already have trunk running in another terminal — keep one, close the other.
+- Something else is on port 8080. Stop it, or start trunk on a different port: `trunk serve --port 8081`.
+
+Same story for the backend on 3000.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="A worked example diff"}
+There is no single "right" change for this exercise — anything that gets reflected in the browser counts. As an example, the heading could become:
+
+```rust
+html! {
+    <div>
+        <h1>{ "Sequence inspector — by Alice" }</h1>
+        <p>{ "Compiled to WebAssembly from Rust." }</p>
+    </div>
+}
+```
+
+If trunk recompiled and the browser shows your change, you have hit every learning outcome for today.
+:::
+
+## Where this leads
+
+- [Exercise 2](02-reactive-stats.qmd) — make the page interactive: paste a DNA sequence into a `<textarea>` and watch the GC content update on every keystroke. No server required yet.
+- The backend's `/api/samples` endpoint will not be used until [exercise 3](03-fetch-from-backend.qmd). It is already running in your other terminal because we want you to see, today, that the two halves are independent processes — and that the frontend can talk to the backend via the `/api/...` proxy configured in `frontend/Trunk.toml`.

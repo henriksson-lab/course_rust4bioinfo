@@ -1,0 +1,210 @@
+---
+title: "Day 1 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-1 slides. Skim it before the first lecture, keep it open while you work through the exercises, and follow the links when you want more depth. About 15 minutes cover to cover.
+
+## The cargo workflow
+
+A Rust project is a directory with a `Cargo.toml` manifest and a `src/` folder. Cargo handles compilation, dependencies, tests, and running:
+
+```bash
+cargo new my-project          # scaffold a new project ./my-project/
+cd my-project
+cargo build                   # compile (debug profile)
+cargo run                     # compile and run
+cargo run -- foo bar          # run with arguments after the `--`
+cargo test                    # run unit and integration tests
+cargo build --release         # optimised build (day 5)
+```
+
+`cargo new` writes a `Cargo.toml` and a `src/main.rs` with a `fn main()` that prints "Hello, world!". Everything in this course starts from that shape. → [Cargo Book](https://doc.rust-lang.org/cargo/getting-started/first-steps.html).
+
+## `main` and command-line arguments
+
+```rust
+use std::env;
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    println!("got {} args", args.len());
+    if args.len() >= 2 {
+        println!("first user arg: {}", args[1]);
+    }
+}
+```
+
+`args[0]` is the program name; `args[1..]` are what the user passed. → [Book: command-line projects](https://doc.rust-lang.org/book/ch12-00-an-io-project.html).
+
+## Variables — immutable by default
+
+```rust
+let x = 42;           // immutable: cannot be reassigned
+let mut y = 0;        // mut means "I will reassign this"
+y = y + 1;
+let z: u64 = 100;     // optional explicit type annotation
+```
+
+You can shadow a name with a fresh `let` (this is *not* mutation — it creates a new variable that happens to reuse the name). → [Book: Variables & Mutability](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html).
+
+## Scalar types and casts
+
+Integer types are named by signedness and width: `i8`, `i16`, `i32`, `i64`, `i128`, and the unsigned `u8`, `u16`, `u32`, `u64`, `u128`. There are also `isize`/`usize`, sized to the machine word (64 bits on every machine you will use this week).
+
+What you will actually see in this course:
+
+| Type | Used for |
+|---|---|
+| [`u8`](https://doc.rust-lang.org/std/primitive.u8.html) | A single byte. DNA base inside `&[u8]`. Phred-encoded quality byte. |
+| [`usize`](https://doc.rust-lang.org/std/primitive.usize.html) | Lengths, slice indices, counters. |
+| [`i32`](https://doc.rust-lang.org/std/primitive.i32.html) / [`i64`](https://doc.rust-lang.org/std/primitive.i64.html) | Scoring values, anything that can be negative. |
+| [`f64`](https://doc.rust-lang.org/std/primitive.f64.html) | GC content, alignment scores, anything fractional. |
+| [`bool`](https://doc.rust-lang.org/std/primitive.bool.html) | `true` / `false`. |
+| [`char`](https://doc.rust-lang.org/std/primitive.char.html) | A single Unicode codepoint (4 bytes!). Rarely the right type for DNA — prefer `u8`. |
+
+Numeric types never convert implicitly. Use the [`as`](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions) keyword:
+
+```rust
+let count: usize = 42;
+let frac: f64 = count as f64 / 100.0;
+```
+
+→ [Book: Data Types](https://doc.rust-lang.org/book/ch03-02-data-types.html).
+
+## DNA is `&[u8]`, not `&str`
+
+```rust
+b'A'                  // byte literal: u8 with value 65
+b"ACGT"               // &[u8; 4]    — fixed-size byte array reference
+b"ACGT".as_slice()    // &[u8]       — byte slice (length not known at compile time)
+```
+
+`&str` is UTF-8 and cannot be indexed in O(1). `&[u8]` is just bytes — exactly right for ASCII DNA, fast, indexable. Day 2 has a deeper exercise on this; for day 1 it is enough to know that DNA function signatures look like `fn gc_content(seq: &[u8]) -> f64`.
+
+## Functions
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b        // last expression with no `;` is the return value
+}
+
+fn shout(text: &str) {       // returns () (the unit type)
+    println!("{}!", text);
+}
+```
+
+Parameters are typed `name: Type`; return type comes after `->`. Use `return` only for early exits — the last expression of the body is the normal return. → [Book: Functions](https://doc.rust-lang.org/book/ch03-03-how-functions-work.html).
+
+## Control flow
+
+```rust
+if x > 0 {
+    println!("positive");
+} else if x == 0 {
+    println!("zero");
+} else {
+    println!("negative");
+}
+
+for i in 0..10 { /* i = 0, 1, ..., 9 */ }     // exclusive range
+for i in 0..=9 { /* same as above */ }         // inclusive range with ..=
+for i in (0..10).rev() { /* 9, 8, ..., 0 */ }  // reverse
+
+for &b in seq { /* b is u8, not &u8 */ }       // iterate &[u8]
+
+while x > 0 { x -= 1; }
+
+loop {                         // infinite loop; break to exit
+    if done() { break; }
+}
+```
+
+→ [Book: Control Flow](https://doc.rust-lang.org/book/ch03-05-control-flow.html).
+
+## `if` and `match` are *expressions*
+
+This is the most "Rusty" piece of syntax in the language. `if`, `match`, and `{ ... }` blocks all *evaluate to a value*:
+
+```rust
+let abs = if x < 0 { -x } else { x };
+
+let strand = match base {
+    b'A' | b'T' => "weak",
+    b'C' | b'G' => "strong",
+    _ => "other",
+};
+```
+
+All arms must produce the same type. Remove the `;` from the value you want returned — that is how Rust knows it is an expression and not a statement.
+
+## `match` patterns
+
+```rust
+match b {
+    b'A'              => 1,                                    // single value
+    b'C' | b'G'       => 2,                                    // alternatives
+    b'a'..=b'z'       => 3,                                    // inclusive range
+    other             => panic!("unknown base {}", other),     // catch-all + binding
+    _                 => 0,                                    // catch-all, value ignored
+}
+```
+
+The compiler checks that your patterns are **exhaustive** — every possible input value must match some arm, or it is a compile error. This is the same mechanism that catches "I forgot a case" bugs at compile time. → [Book: `match`](https://doc.rust-lang.org/book/ch06-02-match.html).
+
+## Printing
+
+```rust
+println!("hello {}", name);            // {} = Display formatter
+println!("{:?}", record);              // {:?} = Debug formatter
+println!("{:.2}%", gc * 100.0);        // f64 with 2 decimal places
+println!("{:>5}", n);                  // right-aligned in 5 columns
+eprintln!("error: {}", msg);           // writes to stderr
+```
+
+`println!` is a macro (note the `!`). It type-checks the format string against the arguments at compile time — a mismatched `{}` is a compile error, not a runtime crash. → [`std::fmt` docs](https://doc.rust-lang.org/std/fmt/).
+
+## `panic!` — unrecoverable errors
+
+```rust
+if seq.is_empty() {
+    panic!("seq cannot be empty");
+}
+```
+
+`panic!` prints the message and exits the program. Reserve it for **programmer errors** (broken preconditions, code paths that "can't happen"). For input errors and recoverable failures, day 3 introduces [`Result`](https://doc.rust-lang.org/std/result/enum.Result.html). → [Book: Unrecoverable Errors](https://doc.rust-lang.org/book/ch09-01-unrecoverable-errors-with-panic.html).
+
+## Tests are just functions
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+```
+
+- [`#[cfg(test)]`](https://doc.rust-lang.org/reference/conditional-compilation.html#the-test-configuration-option) means "only compile this when running tests".
+- [`#[test]`](https://doc.rust-lang.org/std/prelude/v1/macro.test.html) marks a function for the test runner.
+- [`assert_eq!`](https://doc.rust-lang.org/std/macro.assert_eq.html), [`assert!`](https://doc.rust-lang.org/std/macro.assert.html), [`#[should_panic]`](https://doc.rust-lang.org/book/ch11-01-writing-tests.html#checking-for-panics-with-should_panic) do the actual checking.
+
+Run with `cargo test`. Day 1 exercises all ship with a `mod tests` block — your job is to make the tests pass; you do not write the tests yourself until day 5. → [Book: Tests](https://doc.rust-lang.org/book/ch11-01-writing-tests.html).
+
+## Where to look things up
+
+- [**The Rust Book**](https://doc.rust-lang.org/book/) — the canonical introduction. The chapters linked above are 30 to 60 pages total.
+- [**The standard library docs**](https://doc.rust-lang.org/std/) — every built-in type and function with examples.
+- [**Rust by Example**](https://doc.rust-lang.org/rust-by-example/) — short runnable snippets organised by topic.
+- [**docs.rs**](https://docs.rs) — the same documentation, for every external crate.
+- `cargo doc --open` in a project opens its dependencies' docs in your browser, offline.
+
+**Compiler errors in Rust are unusually good** — they almost always include the fix. Read them. The borrow checker has scary moments; the messages are not one of them.

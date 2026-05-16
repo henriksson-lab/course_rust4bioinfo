@@ -1,0 +1,214 @@
+---
+title: "Day 6 — Exercise (capstone): GC sliding window as inline SVG"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Cap the week off with an inline visualisation: an SVG line plot of GC content along the sequence, computed over a sliding window and re-rendered on every keystroke. No JavaScript chart library, no extra Rust crate — just SVG elements emitted by the `html!` macro and a few lines of Rust to turn data into coordinates.
+
+By the end of this exercise you will have a working, deployable, pure-Rust web application that takes a DNA sequence and shows you what it looks like.
+
+## Background
+
+SVG is a [first-class subtree of HTML](https://developer.mozilla.org/en-US/docs/Web/SVG). Anywhere you can put a `<div>`, you can put an `<svg>`. Yew's [`html!`](https://docs.rs/yew/0.23.0/yew/macro.html.html) macro understands SVG elements the same way it understands HTML — the only difference is that some SVG attributes are camelCase (`viewBox`, `strokeWidth`) where most HTML attributes are lowercase. Yew accepts both forms.
+
+A polyline plot is the simplest possible chart: a single SVG `<polyline>` element with a `points` attribute listing `x,y` pairs separated by spaces:
+
+```html
+<polyline points="0,40 10,35 20,42 30,30 ..." fill="none" stroke="#2266aa" />
+```
+
+If we can produce the right string of `x,y` pairs from our `Vec<f64>` of GC fractions, the browser draws the plot for us.
+
+## The exercise
+
+```bash
+cd day6/ex-sequence-inspector
+```
+
+Still editing the same `frontend/src/main.rs`. The plot should show up automatically for both pasted sequences and sequences loaded via the buttons from [exercise 3](03-fetch-from-backend.qmd), because both paths write to the same `typed` state.
+
+Window size is fixed at 20 bp for today. Sequences shorter than 20 bp should display a friendly "sequence must be at least 20 bp" message instead of an empty plot.
+
+## Step by step
+
+### Step 1 — add the plot constants
+
+Near the top of the file, after the `use` statements, add:
+
+```rust
+const PLOT_WIDTH: u32 = 600;
+const PLOT_HEIGHT: u32 = 80;
+const WINDOW: usize = 20;
+```
+
+We will use them in a few places below.
+
+### Step 2 — sliding-window GC
+
+Add a helper alongside the existing `gc_content` and `base_counts` functions:
+
+```rust
+fn sliding_window_gc(seq: &[u8], window: usize) -> Vec<f64> {
+    if window == 0 || seq.len() < window {
+        return Vec::new();
+    }
+    seq.windows(window).map(gc_content).collect()
+}
+```
+
+This is exactly the `<[T]>::windows` pattern from [day 3 exercise 4](../day3/04-kmer-counts.qmd) — except instead of counting k-mers we compute one GC fraction per window. The result has `seq.len() - window + 1` entries.
+
+### Step 3 — points-string helper
+
+Convert a `Vec<f64>` of GC values into a `<polyline points>` string. X is the position (spread across the plot width); Y is `height - gc * height` so that high GC sits at the top of the plot:
+
+```rust
+fn polyline_points(gcs: &[f64], width: u32, height: u32) -> String {
+    let n = gcs.len();
+    if n == 0 {
+        return String::new();
+    }
+    let mut points = String::with_capacity(n * 12);
+    let denom = if n == 1 { 1.0 } else { (n - 1) as f64 };
+    for (i, &gc) in gcs.iter().enumerate() {
+        let x = (i as f64 / denom) * width as f64;
+        let y = height as f64 - gc * height as f64;
+        if i > 0 {
+            points.push(' ');
+        }
+        points.push_str(&format!("{:.1},{:.1}", x, y));
+    }
+    points
+}
+```
+
+The `denom` dance is just to avoid dividing by zero when there is a single window. `{:.1}` keeps the SVG attribute compact and readable.
+
+### Step 4 — compute the sliding-window series
+
+In `app()`, after the existing `let seq_bytes = typed.as_bytes();` line and friends, add:
+
+```rust
+let window_gcs = sliding_window_gc(seq_bytes, WINDOW);
+```
+
+`window_gcs` is now a `Vec<f64>` that updates on every render. If the sequence is shorter than `WINDOW`, the vector is empty.
+
+### Step 5 — draw the plot
+
+In the `html!` block, **between** the statistics table and the "Loaded: …" panel, add a conditional block that draws the SVG only when there is data to draw:
+
+```rust
+{
+    if !window_gcs.is_empty() {
+        let points = polyline_points(&window_gcs, PLOT_WIDTH, PLOT_HEIGHT);
+        html! {
+            <>
+                <h2>{ format!("GC sliding window (w = {})", WINDOW) }</h2>
+                <svg
+                    width={PLOT_WIDTH.to_string()}
+                    height={PLOT_HEIGHT.to_string()}
+                    viewBox={format!("0 0 {} {}", PLOT_WIDTH, PLOT_HEIGHT)}
+                    style="border: 1px solid #ccc; background: white;"
+                >
+                    <line
+                        x1="0"
+                        y1={(PLOT_HEIGHT / 2).to_string()}
+                        x2={PLOT_WIDTH.to_string()}
+                        y2={(PLOT_HEIGHT / 2).to_string()}
+                        stroke="#eee"
+                        stroke-width="1"
+                        stroke-dasharray="2,2"
+                    />
+                    <polyline
+                        points={points}
+                        fill="none"
+                        stroke="#2266aa"
+                        stroke-width="1.5"
+                    />
+                </svg>
+            </>
+        }
+    } else {
+        html! {
+            <p style="color: #888;">
+                { format!("(sequence must be at least {} bp for the sliding-window plot)", WINDOW) }
+            </p>
+        }
+    }
+}
+```
+
+A few things to notice:
+
+- SVG numeric attributes are strings: `width={PLOT_WIDTH.to_string()}`. Yew does not auto-stringify integers for HTML attributes.
+- `viewBox` is camelCase (one of those SVG quirks). It defines the *internal* coordinate system of the SVG; we make it match the pixel dimensions so 1 unit = 1 pixel.
+- The dashed `<line>` is a 50% reference. It is purely decorative.
+- The polyline `stroke` colour is hard-coded; in a "real" tool you might colour by some other property of the sequence.
+
+Save. Click one of the sample buttons (the lambda fragment is a good one). You should see the table update *and* a polyline appear above the "Loaded:" panel. Type into the textarea — the plot updates live.
+
+## What you have built
+
+A real Rust web app: structurally and architecturally identical to what a team would deploy in production. To recap what is happening when you click a sample button:
+
+1. The click triggers `on_pick`. It calls `spawn_local`, which hands the async block to the browser.
+2. `gloo_net` sends an HTTP GET to `/api/samples/lambda-fragment`. Trunk's dev proxy forwards it to `http://127.0.0.1:3000/api/samples/lambda-fragment`.
+3. axum routes the request to `get_sample`. Serde encodes the matching `SampleRecord` as JSON. axum sends the response.
+4. Back in the browser, `resp.json::<SampleRecord>().await` calls serde to decode the bytes into the same struct.
+5. The frontend writes the sequence into `typed`. Yew schedules a re-render.
+6. The re-render computes `gc_content`, `base_counts`, and `sliding_window_gc` on the new sequence. All in WASM, in the browser, no server round-trip.
+7. The virtual DOM diffs against the previous render and the browser updates only the changed nodes.
+
+Steps 3, 4, and 6 all use the *same* `SampleRecord` definition from `shared/src/lib.rs`. The compiler enforces that on both sides.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — \"Type mismatch: expected `String`, found `u32`\""}
+Yew expects every HTML/SVG attribute to be a string. `PLOT_WIDTH` is a `u32`, so it does not coerce automatically — call `.to_string()` on it. Same trick for `(PLOT_HEIGHT / 2).to_string()`.
+
+For string-typed attributes that you want to interpolate into, use `format!`: `viewBox={format!("0 0 {} {}", PLOT_WIDTH, PLOT_HEIGHT)}`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — the plot renders but looks wrong"}
+Two common gotchas:
+
+- **Y is inverted in SVG.** Y=0 is at the top of the plot, Y=height is at the bottom. The expression `height - gc * height` puts GC=1.0 at the top and GC=0.0 at the bottom, which is what we want.
+- **`viewBox` controls the coordinate system.** If you set `width=600` but `viewBox="0 0 100 80"`, the browser will scale your 0..100 X axis to fill 600 pixels. That is sometimes what you want; here we keep them in sync to avoid surprises.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — what if I want to plot something other than GC?"}
+This whole exercise is parametric in "function from `&[u8]` to `f64`". Swap `gc_content` for any other per-base or per-window statistic — Shannon entropy, GC skew, codon bias, average Phred score (for FASTQ) — and the rest of the plotting code is unchanged. The pattern "compute a `Vec<f64>` per window, render as a polyline" is the bottom of a huge family of genomic visualisations.
+:::
+
+## Solution
+
+The complete `frontend/src/main.rs` is in `day6/ex-sequence-inspector-solution/frontend/src/main.rs`. Run it the same way as the starter:
+
+```bash
+cd day6/ex-sequence-inspector-solution
+# terminal 1
+cargo run -p backend
+# terminal 2
+cd frontend && trunk serve
+```
+
+…and open <http://127.0.0.1:8080>. (You may need to change the trunk port if the starter is still running.)
+
+## Where this leads
+
+This is the end of the planned course. Things you now have the tools to build, if you keep going:
+
+- **Deploy the frontend to GitHub Pages.** `trunk build --release` produces a static `dist/` directory you can publish. The backend has to live somewhere else (a small VM, [fly.io](https://fly.io), [shuttle](https://www.shuttle.rs)) — or you can bundle the sample data into the frontend at build time and skip the backend entirely.
+- **Plug in your day-3 alignment**. The whole inspector would become a pairwise comparator — two textareas, an "Align" button, an SVG visualisation that colours matches/mismatches/gaps.
+- **Replace the in-memory samples with a real database.** axum + [sqlx](https://docs.rs/sqlx/) or [SeaORM](https://www.sea-ql.org/SeaORM/) gives you a SQL-typed backend in Rust. The `SampleRecord` API surface and the frontend stay unchanged.
+- **Add WebSocket support** for streaming updates (long alignment progress, large-file ingestion). axum and gloo-net both speak it; the rest of the architecture survives.
+
+Outside the scope of the course but worth knowing the names of: [Leptos](https://leptos.dev) (signals-based reactivity, smaller WASM bundle, server functions), [Dioxus](https://dioxuslabs.com) (cross-platform — web, desktop, mobile, all in Rust), and [tauri](https://tauri.app) (Rust + web frontend as a desktop app). The patterns we used today translate.

@@ -18,6 +18,7 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 
 ### Day 1 — Toolchain, scalars, control flow, functions
 
+0. [Concepts — reference companion to the slides](day1/00-concepts.qmd)
 1. [GC content](day1/01-gc-content.qmd)
 2. [Complement a single base](day1/02-complement.qmd)
 3. [Count A, C, G, T, and other](day1/03-base-counts.qmd)
@@ -53,6 +54,15 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 1. [Use tests to find the bug](day5/01-find-the-bug.qmd)
 2. [`--release` is a 50× free lunch](day5/02-release-mode.qmd)
 3. [Parallel GC content with `rayon`](day5/03-parallel-gc.qmd)
+
+### Day 6 — Yew & WebAssembly
+
+A pure-Rust web app: Yew frontend (compiled to WebAssembly), axum backend, shared types crate — all in one cargo workspace.
+
+1. [Hello Yew](day6/01-hello-yew.qmd)
+2. [Reactive sequence statistics](day6/02-reactive-stats.qmd)
+3. [Fetch from the backend](day6/03-fetch-from-backend.qmd)
+4. [Capstone — GC sliding window](day6/04-sequence-inspector.qmd)
 
 ## Working with the exercises
 
