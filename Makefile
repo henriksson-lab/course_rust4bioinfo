@@ -27,6 +27,7 @@ help:
 	@echo "                 in every exercise crate"
 
 gitaddall:
+	git add intro/*qmd
 	git add day*/*qmd
 	git add day*/README.md
 	git add day*/*/Cargo.toml

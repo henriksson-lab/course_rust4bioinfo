@@ -1,0 +1,110 @@
+---
+title: "Installing SQLite"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Before [day 7](../day7/01-sqlite-cli.qmd) you will need the **`sqlite3`** command-line tool on your `PATH`. It is the standard interactive shell for SQLite databases — you type SQL, it shows you the rows. The whole first half of the day happens inside it.
+
+You do **not** need to install a separate "database server". SQLite is just a file: one `.db` file is one entire database, with no daemon to start and nothing to configure. The `sqlite3` binary is around 1 MB.
+
+The second half of day 7 also uses the [`rusqlite`](https://docs.rs/rusqlite/) crate from Rust. With the `bundled` feature (which our exercises use) Cargo compiles SQLite into your binary — there is nothing extra to install on the Rust side. The CLI is only needed for the first half and for inspecting `.db` files by hand.
+
+## macOS
+
+`sqlite3` ships with macOS — try it first:
+
+```bash
+sqlite3 --version
+```
+
+If you see a version line (`3.43.2 ...`), you are done. If not, install via [Homebrew](https://brew.sh/):
+
+```bash
+brew install sqlite
+```
+
+## Linux / WSL
+
+On Debian, Ubuntu, and WSL2 Ubuntu:
+
+```bash
+sudo apt update
+sudo apt install sqlite3
+```
+
+On Fedora / RHEL:
+
+```bash
+sudo dnf install sqlite
+```
+
+On Arch:
+
+```bash
+sudo pacman -S sqlite
+```
+
+Verify:
+
+```bash
+sqlite3 --version
+```
+
+## Windows (native)
+
+If you are using **WSL2** (recommended for this course — see the main [install page](install.qmd)), follow the Linux instructions above inside your WSL distribution.
+
+For native Windows:
+
+1. Open [sqlite.org/download.html](https://www.sqlite.org/download.html).
+2. Under *Precompiled Binaries for Windows*, download `sqlite-tools-win-x64-<version>.zip`.
+3. Extract `sqlite3.exe` into a folder you control, e.g. `C:\sqlite\`.
+4. Add `C:\sqlite\` to your `PATH` (Start menu → *Edit the system environment variables* → *Environment Variables…* → *Path* → *New*).
+5. Open a **new** PowerShell window and run `sqlite3 --version`.
+
+## Verify
+
+A working install gives you an interactive prompt:
+
+```bash
+$ sqlite3
+SQLite version 3.43.2 ...
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite>
+```
+
+Type `.quit` (with the leading dot) and Enter to exit. The leading-dot commands are *meta-commands* handled by the CLI itself, not SQL — you will use a few more on day 7 (`.tables`, `.schema`, `.mode`, `.headers`, `.read`).
+
+## Optional: a GUI viewer
+
+The CLI is enough for everything on day 7, but many people find a graphical viewer useful for browsing real-world databases — clicking through tables, sorting columns, exporting CSV.
+
+[**DB Browser for SQLite**](https://sqlitebrowser.org/) is free, open source, and cross-platform. Install it the same way you would install any other desktop app: `.dmg` on macOS, `.deb`/snap on Linux, `.msi` on Windows. The course never requires it; mention it to your colleagues who like buttons.
+
+## Troubleshooting
+
+::: {.callout-tip collapse="true" title="`sqlite3 --version` says command not found"}
+Open a fresh terminal — `apt`, `brew`, and the Windows PATH change only affect new shells. If it still fails, check that the install actually succeeded (`brew list sqlite`, `dpkg -l | grep sqlite3`, or look in `C:\sqlite\` on Windows).
+:::
+
+::: {.callout-tip collapse="true" title="Rust says it can't find `sqlite3.h` when I `cargo build`"}
+You are missing the `bundled` feature on `rusqlite`. Day 7's exercise crates already declare it:
+
+```toml
+[dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+```
+
+With that flag, Cargo compiles SQLite from source as part of your binary, so the system `sqlite3` headers are not needed. The first build with `bundled` adds about 30 seconds (it is a one-shot C compile, cached afterwards).
+:::
+
+::: {.callout-tip collapse="true" title="My `sqlite3` is from 2014 — does the version matter?"}
+For day 7, no. We only use features that have been in SQLite for over a decade. Anything 3.8+ is fine. The `bundled` rusqlite always uses a recent version regardless of what is on your system.
+:::

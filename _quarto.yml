@@ -45,6 +45,7 @@ website:
       - section: "Before you start"
         contents:
           - intro/install.qmd
+          - intro/install-sqlite.qmd
       - section: "Day 1 — toolchain & syntax"
         contents:
           - day1/00-concepts.qmd
@@ -92,6 +93,14 @@ website:
           - day6/02-reactive-stats.qmd
           - day6/03-fetch-from-backend.qmd
           - day6/04-sequence-inspector.qmd
+      - section: "Day 7 — SQL & SQLite"
+        contents:
+          - day7/00-concepts.qmd
+          - day7/01-sqlite-cli.qmd
+          - day7/02-natural-join.qmd
+          - day7/03-read-from-rust.qmd
+          - day7/04-write-from-rust.qmd
+          - day7/05-query-from-rust.qmd
 
 format:
   html:

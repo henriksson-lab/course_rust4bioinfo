@@ -1,0 +1,11 @@
+strain_id,strain_name,species,isolation_source,year_isolated
+1,K-12 MG1655,Escherichia coli,human gut,1922
+2,DH5alpha,Escherichia coli,lab derivative,1980
+3,BL21(DE3),Escherichia coli,lab derivative,1986
+4,Newman,Staphylococcus aureus,clinical isolate,1952
+5,USA300,Staphylococcus aureus,community MRSA,2000
+6,168,Bacillus subtilis,soil,1947
+7,UA159,Streptococcus mutans,oral isolate,1980
+8,PAO1,Pseudomonas aeruginosa,wound,1955
+9,SL1344,Salmonella enterica,calf,1980
+10,W3110,Escherichia coli,lab derivative,1966

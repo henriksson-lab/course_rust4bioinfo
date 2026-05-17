@@ -1,0 +1,189 @@
+---
+title: "Day 7 — Exercise: Writing a SQLite database from Rust"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Build the `strain` table from scratch out of a TSV file: open an empty `.db`, [`CREATE TABLE`](https://www.sqlite.org/lang_createtable.html), then bulk-insert every row inside one transaction.
+
+```rust
+fn create_schema(conn: &Connection) -> Result<()>;
+fn parse_tsv<R: BufRead>(reader: R) -> std::io::Result<Vec<StrainInput>>;
+fn insert_strains(conn: &mut Connection, strains: &[StrainInput]) -> Result<usize>;
+```
+
+By the end you will have used [`Connection::execute_batch`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.execute_batch), [`Connection::transaction`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.transaction), a [prepared `INSERT`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) inside a loop, the [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro, and `Option<T>` parameter binding (for the nullable columns).
+
+This is the part where SQL stops being "those queries the analyst types in the CLI" and becomes "the storage format our pipeline emits". It is short, but it is the most-used pattern in the whole day.
+
+## The exercise
+
+```bash
+cd day7/ex-strain-write
+```
+
+The starter contains:
+
+- `Cargo.toml` with `rusqlite = { version = "0.31", features = ["bundled"] }`.
+- `src/main.rs` with the three function signatures, a `main` that wires them together, and a `mod tests` block that exercises both the parser and the database layer.
+- `data/strains.tsv` — the same 10 strains as the previous exercises, but as TSV with a header line. **No** pre-built `.db` file — you are about to build it.
+
+Implement all three functions until five tests pass.
+
+## How to run
+
+```bash
+cargo test
+cargo run -- data/strains.tsv data/strains.db
+```
+
+Expected output:
+
+```
+inserted 10 strains into data/strains.db
+```
+
+Verify what you wrote with the `sqlite3` CLI you used yesterday:
+
+```bash
+sqlite3 data/strains.db 'SELECT species, COUNT(*) FROM strain GROUP BY species'
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `create_schema` is one method call"}
+[`Connection::execute_batch`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.execute_batch) runs a string that may contain several semicolon-separated SQL statements. Perfect for `CREATE TABLE`:
+
+```rust
+conn.execute_batch(
+    "CREATE TABLE strain (
+        strain_id        INTEGER PRIMARY KEY,
+        strain_name      TEXT    NOT NULL,
+        species          TEXT    NOT NULL,
+        isolation_source TEXT,
+        year_isolated    INTEGER
+    );"
+)
+```
+
+You can add the `assay` schema in the same call if you want — the solution does.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — parsing TSV by hand"}
+Same shape as the day-4 BED parser. Skip the header line, split each remaining line on `'\t'`, and convert empty strings to `None`:
+
+```rust
+for (i, line) in reader.lines().enumerate() {
+    let line = line?;
+    if i == 0 || line.is_empty() { continue; }
+    let mut parts = line.split('\t');
+    let strain_name = parts.next().unwrap_or("").trim().to_string();
+    // ... three more fields, last two are Option ...
+}
+```
+
+For the year, parse the string into `i64` and wrap the parse error into a [`std::io::Error::new`](https://doc.rust-lang.org/std/io/struct.Error.html#method.new). You do **not** need a fancy error type today.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the transaction"}
+[`Connection::transaction`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.transaction) needs `&mut Connection` (which is why the function takes `&mut`). Prepare the `INSERT` once, reuse it in the loop, then drop the prepared statement before `commit()`:
+
+```rust
+let tx = conn.transaction()?;
+{
+    let mut stmt = tx.prepare(
+        "INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
+         VALUES (?1, ?2, ?3, ?4)",
+    )?;
+    for s in strains {
+        stmt.execute(rusqlite::params![
+            s.strain_name,
+            s.species,
+            s.isolation_source,
+            s.year_isolated,
+        ])?;
+    }
+}
+tx.commit()?;
+```
+
+The braces around the prepare/loop are a Rust-only quirk: `stmt` borrows from `tx`, and `tx.commit()` consumes `tx`, so `stmt` has to be dropped first. The inner scope makes that obvious.
+
+Without a transaction, every `INSERT` would `fsync()` to disk separately — about 1000× slower for a bulk load. Always wrap bulk writes.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — passing `Option<T>` as a parameter"}
+`rusqlite` knows how to bind `None` as SQL `NULL` and `Some(x)` as `x` for every primitive. So:
+
+```rust
+stmt.execute(params![
+    s.strain_name,        // String -> TEXT
+    s.species,            // String -> TEXT
+    s.isolation_source,   // Option<String> -> TEXT or NULL
+    s.year_isolated,      // Option<i64>    -> INTEGER or NULL
+])?;
+```
+
+That is the entire reason the column types in the schema are `TEXT` and `INTEGER` rather than `TEXT NOT NULL` and `INTEGER NOT NULL`. The test `insert_handles_null_year` checks exactly this round-trip.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference lives in `day7/ex-strain-write-solution/src/main.rs`. Key pieces:
+
+```rust
+pub fn create_schema(conn: &Connection) -> Result<()> {
+    conn.execute_batch(
+        "CREATE TABLE strain (
+            strain_id        INTEGER PRIMARY KEY,
+            strain_name      TEXT    NOT NULL,
+            species          TEXT    NOT NULL,
+            isolation_source TEXT,
+            year_isolated    INTEGER
+        );
+        CREATE TABLE assay (
+            assay_id       INTEGER PRIMARY KEY,
+            strain_id      INTEGER NOT NULL REFERENCES strain(strain_id),
+            medium         TEXT    NOT NULL,
+            od600_24h      REAL,
+            date_measured  TEXT
+        );",
+    )
+}
+
+pub fn insert_strains(conn: &mut Connection, strains: &[StrainInput]) -> Result<usize> {
+    let tx = conn.transaction()?;
+    let mut n = 0;
+    {
+        let mut stmt = tx.prepare(
+            "INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
+             VALUES (?1, ?2, ?3, ?4)",
+        )?;
+        for s in strains {
+            stmt.execute(params![
+                s.strain_name,
+                s.species,
+                s.isolation_source,
+                s.year_isolated,
+            ])?;
+            n += 1;
+        }
+    }
+    tx.commit()?;
+    Ok(n)
+}
+```
+:::
+
+## Where this leads
+
+- [**Exercise 05**](05-query-from-rust.qmd) — read both tables back, join them, produce a per-strain summary. Read + write together.
+- In a real pipeline the inserter would also handle **upserts** ([`INSERT ... ON CONFLICT(...) DO UPDATE`](https://www.sqlite.org/lang_upsert.html)) and **batching** (one transaction per 10 000 rows, not per file). Out of scope today; same shape of code.
+- Stream-friendly inserts: instead of materialising the whole `Vec<StrainInput>` first, you can call `stmt.execute(...)` directly from the parser's `for` loop. Drops peak memory from O(file) to O(1). Worth doing once you have a TSV bigger than RAM.

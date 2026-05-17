@@ -1,0 +1,201 @@
+---
+title: "Day 7 — Exercise: A second table and a join"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Add a second table — `assay`, holding growth-rate measurements — and link it to the `strain` table from [exercise 01](01-sqlite-cli.qmd) with a **foreign key**. Then combine the two with [`NATURAL JOIN`](https://www.sqlite.org/syntax/join-operator.html) and [`INNER JOIN`](https://www.sqlite.org/syntax/join-operator.html) so you can ask questions like *"what is the mean OD₆₀₀ at 24 h for each species, in LB?"*.
+
+After this exercise the first-half SQL material is done — the rest of day 7 is the same database, but driven from Rust.
+
+## Background
+
+We have measurements of optical density at 600 nm (OD₆₀₀) at 24 h of growth for each strain in our collection, across a few different media. Some strains have been measured multiple times, in different media or on different days. One row per *measurement*:
+
+| Column | Type | Notes |
+|---|---|---|
+| `assay_id` | INTEGER | primary key |
+| `strain_id` | INTEGER | **foreign key** → `strain(strain_id)` |
+| `medium` | TEXT | LB / M9-glucose / TSB / BHI |
+| `od600_24h` | REAL | optical density reading |
+| `date_measured` | TEXT | ISO `YYYY-MM-DD` |
+
+24 rows ship in [`data/assays.csv`](ex-sqlite-strains/data/assays.csv). Each `assay.strain_id` points to a row in `strain.strain_id`. That is what makes the data *relational* — one strain can have many assays, but every assay belongs to exactly one strain.
+
+## The exercise
+
+Reset to a clean state, then re-open. The seed file rebuilds the schema and inserts both tables:
+
+```bash
+cd day7/ex-sqlite-strains
+rm -f strains.db
+sqlite3 strains.db < data/seed.sql
+sqlite3 strains.db
+```
+
+At the `sqlite>` prompt:
+
+```sql
+.headers on
+.mode column
+.tables             -- should show: strain   assay
+.schema assay       -- inspect the new table
+SELECT COUNT(*) FROM assay;   -- expect 24
+```
+
+### Step 1 — explicit `INNER JOIN`
+
+Combine each assay with its strain by matching `assay.strain_id` to `strain.strain_id`:
+
+```sql
+SELECT s.strain_name, s.species, a.medium, a.od600_24h
+FROM strain AS s
+INNER JOIN assay AS a ON a.strain_id = s.strain_id
+LIMIT 5;
+```
+
+- `AS s` and `AS a` are short aliases.
+- `ON a.strain_id = s.strain_id` is the join condition.
+- `INNER JOIN` (or just `JOIN`) keeps only rows where the condition matches on both sides.
+
+### Step 2 — the same thing as `NATURAL JOIN`
+
+Both tables have a column literally called `strain_id` and **only** that column matches across the two schemas. So you can write:
+
+```sql
+SELECT strain_name, species, medium, od600_24h
+FROM strain NATURAL JOIN assay
+LIMIT 5;
+```
+
+[`NATURAL JOIN`](https://www.sqlite.org/syntax/join-operator.html) joins on every same-named column automatically. Output is identical to Step 1. Convenient when your schema is designed with that in mind; rarely seen in real production code, because adding a column later can silently change the join. Use it once today; reach for `JOIN … ON` from then on.
+
+### Step 3 — filter then join
+
+Find every LB measurement for *E. coli* strains:
+
+```sql
+SELECT s.strain_name, a.medium, a.od600_24h, a.date_measured
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+WHERE s.species = 'Escherichia coli'
+  AND a.medium  = 'LB'
+ORDER BY a.date_measured, s.strain_name;
+```
+
+The `WHERE` clause can mention columns from either table — the join happens conceptually first.
+
+### Step 4 — aggregate after the join
+
+Mean OD per species, restricted to LB:
+
+```sql
+SELECT s.species,
+       COUNT(*)             AS n_measurements,
+       ROUND(AVG(a.od600_24h), 2) AS mean_od
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+WHERE a.medium = 'LB'
+GROUP BY s.species
+ORDER BY mean_od DESC;
+```
+
+[`AVG`](https://www.sqlite.org/lang_aggfunc.html#avg) and [`COUNT`](https://www.sqlite.org/lang_aggfunc.html#count) are *aggregate functions* — they reduce a group of rows to a single value. The output is one row per species; the grouping is what `GROUP BY` does.
+
+### Step 5 — your turn
+
+Write SQL to answer each of these. Try before peeking.
+
+**(a)** For each strain, how many assays have been recorded?
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+SELECT s.strain_name, COUNT(a.assay_id) AS n
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+GROUP BY s.strain_name
+ORDER BY n DESC, s.strain_name;
+```
+:::
+
+**(b)** Which strain has the highest single OD₆₀₀ measurement, and in what medium?
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+SELECT s.strain_name, a.medium, a.od600_24h
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+ORDER BY a.od600_24h DESC
+LIMIT 1;
+```
+
+`PAO1` in `LB`, OD = 1.97.
+:::
+
+**(c)** Across all media, what is the mean OD₆₀₀ for each *(species, medium)* pair? (Two grouping columns, not one.)
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+SELECT s.species, a.medium,
+       COUNT(*)              AS n,
+       ROUND(AVG(a.od600_24h), 2) AS mean_od
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+GROUP BY s.species, a.medium
+ORDER BY s.species, a.medium;
+```
+:::
+
+### Step 6 — a strain with no assays
+
+To see why `INNER JOIN` is sometimes the wrong tool, insert a strain that has zero measurements:
+
+```sql
+INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
+VALUES ('JM109', 'Escherichia coli', 'lab derivative', 1985);
+
+SELECT s.strain_name, COUNT(a.assay_id) AS n
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+GROUP BY s.strain_name;
+```
+
+`JM109` does **not** appear — `INNER JOIN` dropped it because there is no matching `assay` row.
+
+Swap the join type:
+
+```sql
+SELECT s.strain_name, COUNT(a.assay_id) AS n
+FROM strain AS s
+LEFT JOIN assay AS a ON a.strain_id = s.strain_id
+GROUP BY s.strain_name
+ORDER BY n, s.strain_name;
+```
+
+[`LEFT JOIN`](https://www.sqlite.org/syntax/join-operator.html) keeps every row from the left table (`strain`), filling `NULL`s where there is no match on the right. Now `JM109` shows up with `n = 0`. *This is one of the most common SQL bugs in practice* — a missing strain disappears because someone reached for `INNER JOIN` by reflex.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint — what columns are even in `assay`?"}
+`.schema assay` always shows you. If you forget the table name, `.schema` with no argument shows every table's `CREATE` statement.
+:::
+
+::: {.callout-tip collapse="true" title="Hint — 'ambiguous column name: strain_id'"}
+You wrote `SELECT strain_id` in a query that joins two tables both having a `strain_id`. Either qualify the column (`s.strain_id`) or, in `NATURAL JOIN`, leave it unqualified — `NATURAL JOIN` merges the two into one. Mixing the two patterns is what triggers the error.
+:::
+
+::: {.callout-tip collapse="true" title="Hint — `GROUP BY` and `SELECT` rules"}
+Every non-aggregate column in `SELECT` should also be in `GROUP BY`. SQLite is forgiving and will pick *some* value for an unlisted column, but PostgreSQL and most other databases reject it as a hard error. Get into the habit early.
+:::
+
+## Where this leads
+
+- [**Exercise 03**](03-read-from-rust.qmd) — open `strains.db` from Rust and read the rows out.
+- Joins on three or more tables (a *transitive* join across `strain` → `assay` → `medium_metadata`) work the same way: chain more `JOIN ... ON ...` clauses.
+- `JOIN` operations are the part of SQL that pays for indexes. Once a table has tens of millions of rows, an [`INDEX`](https://www.sqlite.org/lang_createindex.html) on the join column turns a 10-second query into a 1-millisecond one. Out of scope today; worth Googling once you hit it in real work.

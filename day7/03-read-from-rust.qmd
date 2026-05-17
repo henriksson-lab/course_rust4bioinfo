@@ -1,0 +1,159 @@
+---
+title: "Day 7 — Exercise: Reading a SQLite database from Rust"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Open the same `strains.db` you built in [exercises 01–02](01-sqlite-cli.qmd) from a Rust program using the [`rusqlite`](https://docs.rs/rusqlite/) crate, and implement two functions:
+
+```rust
+fn list_strains(conn: &Connection) -> Result<Vec<Strain>>;
+fn strains_of_species(conn: &Connection, species: &str) -> Result<Vec<Strain>>;
+```
+
+By the end you will have used [`Connection::open`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.open), [`Connection::prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare), [`Statement::query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map), [`Row::get`](https://docs.rs/rusqlite/latest/rusqlite/struct.Row.html#method.get), and the [`?1` parameter](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) placeholder — the core of every `rusqlite` read path.
+
+## The exercise
+
+```bash
+cd day7/ex-strain-read
+```
+
+The starter ships with:
+
+- `Cargo.toml` declaring `rusqlite = { version = "0.31", features = ["bundled"] }`. The `bundled` feature compiles SQLite from source so you do not need a system library.
+- `src/main.rs` with the `Strain` struct, both function signatures, a `main` that calls them, and a `mod tests` that seeds an in-memory database from `data/seed.sql` and verifies your code.
+- `data/seed.sql` — the same schema + 10 strains + 24 assays as the previous exercises.
+
+Your job: implement `list_strains` and `strains_of_species` so all five tests pass.
+
+## How to run
+
+The tests use an in-memory database, so they need nothing on disk. The `main` binary needs a real `.db` file — build one once:
+
+```bash
+rm -f data/strains.db
+sqlite3 data/strains.db < data/seed.sql
+
+cargo test                                    # run unit tests
+cargo run -- data/strains.db                  # print every strain
+cargo run -- data/strains.db "Escherichia coli"  # filter by species
+```
+
+Expected output (truncated):
+
+```
+10 strain(s)
+  [ 1] K-12 MG1655    Escherichia coli          Some("human gut") (Some(1922))
+  [ 2] DH5alpha       Escherichia coli          Some("lab derivative") (Some(1980))
+  ...
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — the shape of a `rusqlite` read"}
+Every `SELECT` in `rusqlite` follows the same three-step shape:
+
+```rust
+let mut stmt = conn.prepare("SELECT col1, col2 FROM tbl WHERE k = ?1")?;
+let rows = stmt.query_map([key], |row| {
+    Ok(MyRow { a: row.get(0)?, b: row.get(1)? })
+})?;
+rows.collect()
+```
+
+- [`Connection::prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) compiles the SQL once.
+- [`Statement::query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map) binds parameters and turns each result row into your type via a closure.
+- Since `query_map` yields `Result<MyRow>`, [`collect::<Result<Vec<_>, _>>()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect) short-circuits on the first row that fails.
+
+For `list_strains`, the parameter list is empty: `query_map([], |row| { ... })`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — reading columns into the struct"}
+[`Row::get(i)`](https://docs.rs/rusqlite/latest/rusqlite/struct.Row.html#method.get) returns `Result<T>` where `T` is inferred from where you assign it. So:
+
+```rust
+Ok(Strain {
+    strain_id:        row.get(0)?,   // i64
+    strain_name:      row.get(1)?,   // String
+    species:          row.get(2)?,   // String
+    isolation_source: row.get(3)?,   // Option<String> — column is nullable
+    year_isolated:    row.get(4)?,   // Option<i64>    — column is nullable
+})
+```
+
+Columns marked `NOT NULL` map to `T` directly. Nullable columns map to `Option<T>`. Getting that wrong is one of the few rusqlite errors that bites at runtime; the test `first_row_is_k12` will catch it for you.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — binding `?1` parameters"}
+For `strains_of_species`, the parameter is a string:
+
+```rust
+let rows = stmt.query_map([species], |row| { ... })?;
+```
+
+A `&str` (or `String`, `i64`, `f64`, ...) can be passed in a single-element array. For mixed types use the [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro:
+
+```rust
+stmt.query_map(rusqlite::params![species, year], |row| { ... })?;
+```
+
+**Never** build SQL with `format!` — see the *SQL injection* section of the [concepts page](00-concepts.qmd).
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+pub fn list_strains(conn: &Connection) -> Result<Vec<Strain>> {
+    let mut stmt = conn.prepare(
+        "SELECT strain_id, strain_name, species, isolation_source, year_isolated
+         FROM strain
+         ORDER BY strain_id",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(Strain {
+            strain_id:        row.get(0)?,
+            strain_name:      row.get(1)?,
+            species:          row.get(2)?,
+            isolation_source: row.get(3)?,
+            year_isolated:    row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn strains_of_species(conn: &Connection, species: &str) -> Result<Vec<Strain>> {
+    let mut stmt = conn.prepare(
+        "SELECT strain_id, strain_name, species, isolation_source, year_isolated
+         FROM strain
+         WHERE species = ?1
+         ORDER BY strain_id",
+    )?;
+    let rows = stmt.query_map([species], |row| {
+        Ok(Strain {
+            strain_id:        row.get(0)?,
+            strain_name:      row.get(1)?,
+            species:          row.get(2)?,
+            isolation_source: row.get(3)?,
+            year_isolated:    row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+```
+
+Full reference: `day7/ex-strain-read-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- [**Exercise 04**](04-write-from-rust.qmd) — write *into* the database from Rust, using prepared inserts and a transaction.
+- [**Exercise 05**](05-query-from-rust.qmd) — the capstone: a CLI tool that joins `strain` and `assay` to produce a per-strain summary.
+- The same `query_map` shape applies to every SQL backend in Rust: [`sqlx`](https://docs.rs/sqlx/), [`tokio-postgres`](https://docs.rs/tokio-postgres/), [`SeaORM`](https://www.sea-ql.org/SeaORM/). The async ones replace `?` with `.await?`; everything else looks the same.

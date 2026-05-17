@@ -1,0 +1,278 @@
+---
+title: "Day 7 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-7 slides. Read this once before exercise 1 — most of you have never written SQL before, so the first half of the day starts from zero. Come back to the **Rust** sections of this page before exercises 3–5.
+
+## Why SQL at all?
+
+Once a project produces more than "a few" records — strains, samples, runs, reads, intervals, variants — you stop wanting them in one giant TSV. You want to:
+
+- ask "give me all strains of *E. coli* isolated after 1980" without re-reading the whole file,
+- join them against another table (e.g. growth measurements) without writing a custom merge in Python,
+- guarantee that every measurement references a real strain (a *foreign key*),
+- let multiple programs read the same data without inventing a file format.
+
+A **relational database** is the standard answer. **SQL** (*Structured Query Language*) is the language you talk to it in. Both have been around since the 1970s and are not going anywhere.
+
+## SQLite in one paragraph
+
+[SQLite](https://www.sqlite.org/) is a tiny relational database engine. There is no server, no daemon, no configuration: **one `.db` file is one entire database**. The `sqlite3` CLI talks to that file; your Rust program can talk to the same file at the same time. It is the most-deployed database in the world — every Android app, every iPhone, every browser, most desktop software ships with one. For bioinformatics workflows it is perfect when one analyst (or one pipeline) is producing and querying data. For multi-user web traffic you would reach for PostgreSQL instead; the SQL you learn here transfers directly.
+
+## Tables, rows, columns, types
+
+A **table** is a 2D grid:
+
+```
+strain
+┌───────────┬──────────────┬───────────────────────┬───────────────────┬──────────────┐
+│ strain_id │ strain_name  │ species               │ isolation_source  │ year_isolated│
+├───────────┼──────────────┼───────────────────────┼───────────────────┼──────────────┤
+│ 1         │ K-12 MG1655  │ Escherichia coli      │ human gut         │ 1922         │
+│ 2         │ DH5α         │ Escherichia coli      │ lab derivative    │ 1980         │
+│ 3         │ BL21(DE3)    │ Escherichia coli      │ lab derivative    │ 1986         │
+└───────────┴──────────────┴───────────────────────┴───────────────────┴──────────────┘
+```
+
+Each **row** is one record. Each **column** has a fixed name and a *suggested* type. SQLite's [type affinity rules](https://www.sqlite.org/datatype3.html) are unusually loose — the type is a hint, not a contract — but in practice you use:
+
+| Declared type | Used for |
+|---|---|
+| `INTEGER` | counts, IDs, years |
+| `REAL` | floating-point numbers (OD readings, fractions) |
+| `TEXT` | strings (names, free text) |
+| `BLOB` | raw bytes |
+| `INTEGER PRIMARY KEY` | the row's auto-incrementing unique ID |
+
+## `CREATE TABLE` — define the schema
+
+```sql
+CREATE TABLE strain (
+    strain_id        INTEGER PRIMARY KEY,
+    strain_name      TEXT    NOT NULL,
+    species          TEXT    NOT NULL,
+    isolation_source TEXT,
+    year_isolated    INTEGER
+);
+```
+
+- [`PRIMARY KEY`](https://www.sqlite.org/lang_createtable.html#primkeyconst) — this column uniquely identifies a row. `INTEGER PRIMARY KEY` also means *"if I `INSERT` without supplying a value, assign the next free integer"*.
+- [`NOT NULL`](https://www.sqlite.org/lang_createtable.html#notnullconst) — the column may not be missing. Without it, SQLite silently accepts `NULL`s.
+- Statements end with `;`. Newlines and indentation are ignored.
+
+## `INSERT` — add rows
+
+```sql
+INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
+VALUES ('K-12 MG1655', 'Escherichia coli', 'human gut', 1922);
+```
+
+Strings are wrapped in **single** quotes. (Double quotes mean *identifier*, like the column name itself — a tiny SQL footgun.) You can skip the column list and supply values for every column in declaration order, but explicit is safer.
+
+→ [SQLite `INSERT` reference](https://www.sqlite.org/lang_insert.html).
+
+## `SELECT` — read rows
+
+```sql
+SELECT strain_name, species FROM strain;
+
+SELECT * FROM strain WHERE species = 'Escherichia coli';
+
+SELECT * FROM strain
+WHERE year_isolated >= 1980
+ORDER BY year_isolated DESC
+LIMIT 5;
+
+SELECT species, COUNT(*) FROM strain GROUP BY species;
+```
+
+Mental model: `FROM` picks the table, `WHERE` filters rows, `GROUP BY` buckets them, [`SELECT`](https://www.sqlite.org/lang_select.html) projects columns, `ORDER BY` sorts, `LIMIT` cuts the top.
+
+## Foreign keys and joins
+
+A second table refers to the first by storing its primary-key value:
+
+```sql
+CREATE TABLE assay (
+    assay_id       INTEGER PRIMARY KEY,
+    strain_id      INTEGER NOT NULL REFERENCES strain(strain_id),
+    medium         TEXT    NOT NULL,
+    od600_24h      REAL,
+    date_measured  TEXT
+);
+```
+
+`strain_id INTEGER REFERENCES strain(strain_id)` declares a [foreign key](https://www.sqlite.org/foreignkeys.html). To combine the two tables in a query, use [`JOIN`](https://www.sqlite.org/lang_select.html#tablename):
+
+```sql
+SELECT s.strain_name, a.medium, a.od600_24h
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+WHERE s.species = 'Escherichia coli';
+```
+
+`AS s` and `AS a` are **aliases** so you do not have to type the full table names. `JOIN` here is short for `INNER JOIN` — rows from `strain` only appear if they have at least one matching `assay`.
+
+### `NATURAL JOIN`
+
+If both tables have a column with the **same name** (and you intend to join on it), SQL has a shortcut:
+
+```sql
+SELECT strain_name, medium, od600_24h
+FROM strain NATURAL JOIN assay;
+```
+
+[`NATURAL JOIN`](https://www.sqlite.org/syntax/join-operator.html) joins on every same-named column. With our schema only `strain_id` matches, so this is equivalent to the explicit `ON a.strain_id = s.strain_id` above. Convenient when you name your foreign keys carefully; dangerous if you later add another column with a name that accidentally matches. Use it for the warm-up; reach for explicit `JOIN ... ON` in real code.
+
+## The `sqlite3` CLI
+
+The interactive shell lets you run SQL against a file:
+
+```bash
+sqlite3 strains.db                 # open (creates if missing)
+sqlite> CREATE TABLE strain (...); -- SQL ends with ';'
+sqlite> .tables                    -- meta-command: list tables
+sqlite> .schema strain             -- meta-command: show CREATE TABLE
+sqlite> .headers on                -- show column names in SELECT
+sqlite> .mode column               -- align output as a table
+sqlite> .read seed.sql             -- run SQL from a file
+sqlite> .quit
+```
+
+**Dot-commands** (`.tables`, `.schema`, `.read`, `.quit`, ...) are CLI features, not SQL — they do not end with `;` and cannot run from a Rust program. → [`sqlite3` CLI docs](https://www.sqlite.org/cli.html).
+
+Loading a CSV is one meta-command:
+
+```
+sqlite> .mode csv
+sqlite> .import data/strains.csv strain
+```
+
+## Transactions
+
+Multiple statements grouped together so they either all happen or none do:
+
+```sql
+BEGIN;
+INSERT INTO strain (...) VALUES (...);
+INSERT INTO assay  (...) VALUES (...);
+COMMIT;
+```
+
+Beyond correctness, transactions are also the **performance** lever. A bare `INSERT` outside a transaction commits to disk immediately — fine for one row, painfully slow for ten thousand. Wrap a bulk import in one `BEGIN` … `COMMIT` and it becomes thousands of times faster. From Rust this is [`Connection::transaction`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.transaction).
+
+## Talking to SQLite from Rust — `rusqlite`
+
+[`rusqlite`](https://docs.rs/rusqlite/) is a thin Rust binding to the C SQLite library. Add it to `Cargo.toml`:
+
+```toml
+[dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+```
+
+The [`bundled`](https://docs.rs/rusqlite/latest/rusqlite/#features) feature compiles SQLite from source into your binary, so no system library is required. Costs ~30 s on the first build, then it is cached.
+
+### Open a connection
+
+```rust
+use rusqlite::Connection;
+
+let conn = Connection::open("strains.db")?;
+```
+
+[`Connection::open`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.open) opens a file (creating it if missing). [`Connection::open_in_memory`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.open_in_memory) gives you a throwaway DB that lives in RAM — perfect for unit tests.
+
+### Run a one-off statement
+
+```rust
+conn.execute(
+    "INSERT INTO strain (strain_name, species, year_isolated)
+     VALUES (?1, ?2, ?3)",
+    rusqlite::params!["K-12 MG1655", "Escherichia coli", 1922],
+)?;
+```
+
+[`Connection::execute`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.execute) runs one statement that returns no rows; it returns the number of rows affected. The `?1`, `?2`, `?3` placeholders are filled by the [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro — **never** glue strings together with `format!` into SQL (see *SQL injection*, below).
+
+### Prepare + iterate
+
+```rust
+let mut stmt = conn.prepare(
+    "SELECT strain_id, strain_name, species
+     FROM strain
+     WHERE species = ?1"
+)?;
+
+let rows = stmt.query_map(["Escherichia coli"], |row| {
+    Ok(Strain {
+        strain_id:   row.get(0)?,
+        strain_name: row.get(1)?,
+        species:     row.get(2)?,
+    })
+})?;
+
+for strain in rows {
+    println!("{:?}", strain?);
+}
+```
+
+[`Connection::prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) compiles the SQL once (cheap to reuse). [`Statement::query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map) runs it and turns each row into a `Result<T>` via the closure. [`Row::get`](https://docs.rs/rusqlite/latest/rusqlite/struct.Row.html#method.get) extracts column values by position (or by name with `row.get("strain_name")`).
+
+### Transactions
+
+```rust
+let tx = conn.transaction()?;
+{
+    let mut stmt = tx.prepare("INSERT INTO strain VALUES (?1, ?2, ?3)")?;
+    for s in strains {
+        stmt.execute(rusqlite::params![s.id, &s.name, &s.species])?;
+    }
+}
+tx.commit()?;
+```
+
+[`Connection::transaction`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.transaction) starts one and [`Transaction::commit`](https://docs.rs/rusqlite/latest/rusqlite/struct.Transaction.html#method.commit) finalises it. If `tx` is dropped without `commit()`, the transaction rolls back — a Rust-shaped safety net for "I forgot the error path".
+
+## SQL injection — the one rule
+
+```rust
+// NEVER do this:
+let species = user_input;
+conn.execute(
+    &format!("SELECT * FROM strain WHERE species = '{}'", species),
+    [],
+)?;
+```
+
+If `user_input` is `"x'; DROP TABLE strain; --"`, you just deleted the table. Always pass user data through parameters:
+
+```rust
+conn.execute(
+    "SELECT * FROM strain WHERE species = ?1",
+    rusqlite::params![species],
+)?;
+```
+
+`rusqlite` (and every other SQL library) escapes the value safely. This rule is **non-negotiable** in any code that touches data you did not write yourself.
+
+## What we deliberately leave out
+
+The day-7 scope:
+
+- **In**: `CREATE TABLE`, `INSERT`, `SELECT … WHERE … ORDER BY … LIMIT`, `GROUP BY` + `COUNT(*)`, `JOIN`/`NATURAL JOIN`; the `sqlite3` CLI, dot-commands, `.import`; `rusqlite` open/execute/prepare/query_map/transaction; parameter binding.
+- **Out**: `UPDATE`/`DELETE`/`ALTER TABLE`; window functions, CTEs (`WITH ...`), recursive queries; indexes and `EXPLAIN QUERY PLAN`; `JSON1`; the async ecosystem ([`sqlx`](https://docs.rs/sqlx/), [`SeaORM`](https://www.sea-ql.org/SeaORM/)); migrations.
+
+You will recognise the names if they come up later. The skills below — schema design, prepared statements, transactions, joins — transfer 1:1 to PostgreSQL or MySQL when you outgrow SQLite.
+
+## Where to look things up
+
+- [**SQLite documentation**](https://www.sqlite.org/docs.html) — concise and complete; the syntax diagrams are gold.
+- [**`rusqlite` docs**](https://docs.rs/rusqlite/) — every type with examples.
+- [**Use The Index, Luke!**](https://use-the-index-luke.com/) — once you start caring about performance.
+- [**Designing Data-Intensive Applications**](https://dataintensive.net/) — the long-form sequel to today.

@@ -1,0 +1,178 @@
+---
+title: "Day 7 — Exercise: Joining two tables from Rust"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Take the full `strain` + `assay` database and answer two real questions from a Rust binary — one filtered, one aggregated:
+
+```rust
+fn assays_for_species(conn: &Connection, species: &str) -> Result<Vec<AssayRow>>;
+fn species_summary(conn:  &Connection)                  -> Result<Vec<SpeciesSummary>>;
+```
+
+This is the day-7 capstone. It pulls together everything: a [`JOIN`](https://www.sqlite.org/syntax/join-operator.html) across two tables (exercise 02), [`Connection::prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) + [`query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map) (exercise 03), and the `LEFT JOIN` + [`GROUP BY`](https://www.sqlite.org/lang_select.html#groupby) shape you need so that species with zero recorded assays still appear.
+
+## The exercise
+
+```bash
+cd day7/ex-strain-query
+```
+
+Starter contents:
+
+- `Cargo.toml` with `rusqlite = { version = "0.31", features = ["bundled"] }`.
+- `src/main.rs` with the two `Result`-returning functions, two output structs, a `main` that dispatches based on whether a species was given on the CLI, and five tests in `mod tests`.
+- `data/seed.sql` — same as exercises 02 and 03.
+
+Implement both functions until five tests pass.
+
+## How to run
+
+```bash
+rm -f data/strains.db
+sqlite3 data/strains.db < data/seed.sql
+
+cargo test
+
+cargo run -- data/strains.db                          # one row per species
+cargo run -- data/strains.db "Escherichia coli"       # every E. coli assay
+```
+
+Expected (truncated):
+
+```
+species                      n_strains n_assays  mean_od
+Bacillus subtilis                    1        2     1.38
+Escherichia coli                     4       11     1.42
+Pseudomonas aeruginosa               1        2     1.41
+Salmonella enterica                  1        2     1.25
+Staphylococcus aureus                2        5     1.44
+Streptococcus mutans                 1        2     1.20
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `assays_for_species` is exercise 03 + a JOIN"}
+The shape is exactly the same as `strains_of_species` from yesterday, but the SELECT pulls columns from two tables:
+
+```sql
+SELECT s.strain_name, s.species, a.medium, a.od600_24h, a.date_measured
+FROM strain AS s
+JOIN assay  AS a ON a.strain_id = s.strain_id
+WHERE s.species = ?1
+ORDER BY s.strain_name, a.date_measured
+```
+
+The Rust side is identical to exercise 03 — five [`row.get(i)`](https://docs.rs/rusqlite/latest/rusqlite/struct.Row.html#method.get) calls in order. The first three columns are `NOT NULL` (`String`); the last two are nullable (`Option<f64>`, `Option<String>`).
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — `species_summary` needs `LEFT JOIN`"}
+If you use `INNER JOIN`, species that have zero recorded assays *vanish from the output*. The test `summary_handles_species_with_no_assays` is exactly that case — it inserts a Vibrio strain with no assays and checks it still appears with `n_assays = 0` and `mean_od = None`.
+
+`LEFT JOIN` keeps every row from the left table (`strain`), filling `NULL` on the right where there is no match. [`AVG`](https://www.sqlite.org/lang_aggfunc.html#avg) over zero non-NULL values returns SQL `NULL`, which `rusqlite` reads into `Option<f64>::None`. So your SQL is:
+
+```sql
+SELECT s.species,
+       COUNT(DISTINCT s.strain_id) AS n_strains,
+       COUNT(a.assay_id)           AS n_assays,
+       AVG(a.od600_24h)            AS mean_od
+FROM strain AS s
+LEFT JOIN assay AS a ON a.strain_id = s.strain_id
+GROUP BY s.species
+ORDER BY s.species
+```
+
+Note `COUNT(a.assay_id)` rather than `COUNT(*)` — [`COUNT`](https://www.sqlite.org/lang_aggfunc.html#count) of a column ignores NULLs, which is what makes a species with no assays come out as `n_assays = 0` instead of `1`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — mapping the summary row"}
+```rust
+Ok(SpeciesSummary {
+    species:   row.get(0)?,   // String
+    n_strains: row.get(1)?,   // i64
+    n_assays:  row.get(2)?,   // i64
+    mean_od:   row.get(3)?,   // Option<f64>  — AVG can be NULL
+})
+```
+
+The single most common mistake here is declaring `mean_od: f64`. The first species with no assays will crash at runtime with `InvalidColumnType`. The test catches it.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+pub fn assays_for_species(conn: &Connection, species: &str) -> Result<Vec<AssayRow>> {
+    let mut stmt = conn.prepare(
+        "SELECT s.strain_name, s.species, a.medium, a.od600_24h, a.date_measured
+         FROM strain AS s
+         JOIN assay  AS a ON a.strain_id = s.strain_id
+         WHERE s.species = ?1
+         ORDER BY s.strain_name, a.date_measured",
+    )?;
+    let rows = stmt.query_map([species], |row| {
+        Ok(AssayRow {
+            strain_name:   row.get(0)?,
+            species:       row.get(1)?,
+            medium:        row.get(2)?,
+            od600_24h:     row.get(3)?,
+            date_measured: row.get(4)?,
+        })
+    })?;
+    rows.collect()
+}
+
+pub fn species_summary(conn: &Connection) -> Result<Vec<SpeciesSummary>> {
+    let mut stmt = conn.prepare(
+        "SELECT s.species,
+                COUNT(DISTINCT s.strain_id) AS n_strains,
+                COUNT(a.assay_id)           AS n_assays,
+                AVG(a.od600_24h)            AS mean_od
+         FROM strain AS s
+         LEFT JOIN assay AS a ON a.strain_id = s.strain_id
+         GROUP BY s.species
+         ORDER BY s.species",
+    )?;
+    let rows = stmt.query_map([], |row| {
+        Ok(SpeciesSummary {
+            species:   row.get(0)?,
+            n_strains: row.get(1)?,
+            n_assays:  row.get(2)?,
+            mean_od:   row.get(3)?,
+        })
+    })?;
+    rows.collect()
+}
+```
+
+Full reference: `day7/ex-strain-query-solution/src/main.rs`.
+:::
+
+## Where day 7 ends
+
+You can now:
+
+- Design a small relational schema with a primary key, a foreign key, and the right `NOT NULL` constraints.
+- Drive it from the `sqlite3` CLI for one-off exploration.
+- Read and write the same file from Rust without ever leaving the type system.
+- Distinguish `INNER` from `LEFT` joins — and know why the choice matters.
+
+That covers the 80% of database work that actually fills a working day. The 20% you have not seen — indexes, transactions across HTTP calls, schema migrations, the async ecosystem — all build on these same primitives.
+
+## What we never had time for
+
+A small reading list, in increasing order of "you might need this":
+
+- [**`UPDATE`** and **`DELETE`**](https://www.sqlite.org/lang.html) — modify existing rows. Same `?1` parameter pattern as `INSERT`.
+- [**Indexes**](https://www.sqlite.org/lang_createindex.html) — `CREATE INDEX ix_strain_species ON strain(species);` turns a `WHERE species = ?` filter from O(n) to O(log n). You will notice the moment one table has 10⁶ rows.
+- [**`EXPLAIN QUERY PLAN`**](https://www.sqlite.org/eqp.html) — paste it in front of any `SELECT` to see which indexes SQLite is using.
+- [**Migrations**](https://docs.rs/refinery/) (`refinery`, `sqlx-cli`) — version-controlled `ALTER TABLE` so a schema change rolls forward in production safely.
+- [**`sqlx`**](https://docs.rs/sqlx/), [**`SeaORM`**](https://www.sea-ql.org/SeaORM/) — async SQL on top of Tokio. Same model you saw on day 6 with `axum`. SQLite, PostgreSQL, MySQL — pick at compile time.
+- [**Designing Data-Intensive Applications**](https://dataintensive.net/) — the long-form sequel to today.
