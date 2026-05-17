@@ -47,6 +47,10 @@ A C G T
 A C - T
 ```
 
+The filled matrix for that pair, with one interior cell expanded to show where its value came from:
+
+![Needleman–Wunsch matrix for `ACGT` vs `ACT`. Each interior cell is the maximum over three neighbours — diagonal (match/mismatch), up (gap in *b*), or left (gap in *a*). The arrow into the highlighted cell records which neighbour won, and walking those arrows back from the bottom-right corner reconstructs the alignment.](images/dp-matrix.svg){#fig-dp-matrix fig-alt="A 5x4 dynamic-programming matrix with row labels ε,A,C,G,T and column labels ε,A,C,T. The cell at row G, column C is highlighted in yellow and has three incoming arrows from its top-left, top, and left neighbours. The top arrow is drawn in green to mark it as the chosen predecessor. A panel to the right shows score[3][2] = max(0+(-1), 2+(-1), -1+(-1)) = 1."}
+
 ## The exercise
 
 ```bash

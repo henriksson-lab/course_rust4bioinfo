@@ -33,7 +33,9 @@ gitaddall:
 	git add day*/*/Cargo.toml
 	git add day*/*/data/*
 	git add day*/*/*/*rs
+	git add day*/images/*svg
 
 	git add day*/*/README.md
 	git add day*/*/*/Cargo.toml
 	git add day*/*/*/*/*rs
+
