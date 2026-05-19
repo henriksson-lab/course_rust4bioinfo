@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Client/server database vs. embedded SQLite
+  </text>
+
+  <!-- Vertical divider -->
+  <line x1="450" y1="60" x2="450" y2="490" stroke="#ddd" stroke-dasharray="6 4"/>
+
+  <!-- ==================== LEFT PANEL: client/server ==================== -->
+  <text x="225" y="76" text-anchor="middle" font-size="17" font-weight="700" fill="#c62828">
+    Client / server (PostgreSQL)
+  </text>
+
+  <!-- Your-code process box -->
+  <rect x="40" y="100" width="170" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="125" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    Process A — your code
+  </text>
+  <text x="125" y="148" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace">
+    cargo run
+  </text>
+  <text x="125" y="170" text-anchor="middle" font-size="11" fill="#555">
+    Postgres client library
+  </text>
+  <text x="125" y="186" text-anchor="middle" font-size="11" fill="#555">
+    opens a socket
+  </text>
+  <text x="125" y="208" text-anchor="middle" font-size="11" fill="#888">
+    your machine
+  </text>
+
+  <!-- Server box -->
+  <rect x="240" y="100" width="180" height="120" fill="#fce4ec"
+        stroke="#c2185b" stroke-width="1.5" rx="4"/>
+  <text x="330" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#c2185b">
+    Process B — postgres
+  </text>
+  <text x="330" y="148" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace">
+    postgres -D /var/lib
+  </text>
+  <text x="330" y="170" text-anchor="middle" font-size="11" fill="#555">
+    listens on port 5432
+  </text>
+  <text x="330" y="186" text-anchor="middle" font-size="11" fill="#555">
+    long-running daemon
+  </text>
+  <text x="330" y="208" text-anchor="middle" font-size="11" fill="#888">
+    same host or remote
+  </text>
+
+  <!-- Network/socket arrow between them -->
+  <line x1="210" y1="160" x2="240" y2="160" stroke="#555" stroke-width="2"
+        marker-end="url(#ar)"/>
+  <line x1="240" y1="170" x2="210" y2="170" stroke="#555" stroke-width="2"
+        marker-end="url(#ar)"/>
+  <text x="225" y="148" text-anchor="middle" font-size="10" fill="#888">TCP</text>
+
+  <!-- Database files (right) -->
+  <rect x="240" y="250" width="180" height="80" fill="#fafafa"
+        stroke="#888" stroke-width="1.5" rx="4"/>
+  <text x="330" y="274" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    /var/lib/postgresql/
+  </text>
+  <text x="330" y="294" text-anchor="middle" font-size="11" fill="#555">
+    many files, WAL, locks
+  </text>
+  <text x="330" y="312" text-anchor="middle" font-size="11" fill="#555">
+    managed by the server
+  </text>
+  <line x1="330" y1="220" x2="330" y2="248" stroke="#888" stroke-width="1.5"/>
+
+  <!-- LEFT panel summary list -->
+  <text x="225" y="360" text-anchor="middle" font-size="13" font-weight="700" fill="#c62828">
+    cost of admission:
+  </text>
+  <text x="60" y="385" font-size="12" fill="#555">install + configure server daemon</text>
+  <text x="60" y="403" font-size="12" fill="#555">create user, create database, set password</text>
+  <text x="60" y="421" font-size="12" fill="#555">open and authenticate a TCP connection</text>
+  <text x="60" y="439" font-size="12" fill="#555">network latency on every query</text>
+  <text x="60" y="463" font-size="12" fill="#888" font-style="italic">justified at multi-user web scale</text>
+
+  <!-- ==================== RIGHT PANEL: SQLite ==================== -->
+  <text x="675" y="76" text-anchor="middle" font-size="17" font-weight="700" fill="#2e7d32">
+    Embedded (SQLite)
+  </text>
+
+  <!-- One process box that contains the SQLite library -->
+  <rect x="490" y="100" width="370" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="675" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    Process — your code, with SQLite linked in
+  </text>
+  <text x="675" y="148" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace">
+    cargo run
+  </text>
+
+  <!-- Nested SQLite library box -->
+  <rect x="520" y="160" width="310" height="50" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5" rx="4"/>
+  <text x="675" y="180" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">
+    rusqlite + libsqlite3
+  </text>
+  <text x="675" y="199" text-anchor="middle" font-size="11" fill="#555">
+    function calls inside your process (no network)
+  </text>
+
+  <!-- Database file on the right -->
+  <rect x="600" y="250" width="160" height="80" fill="#fafafa"
+        stroke="#888" stroke-width="1.5" rx="4"/>
+  <text x="680" y="274" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    strains.db
+  </text>
+  <text x="680" y="294" text-anchor="middle" font-size="11" fill="#555">
+    one file — schema + data
+  </text>
+  <text x="680" y="312" text-anchor="middle" font-size="11" fill="#555">
+    opened directly via fs
+  </text>
+  <!-- Connection arrow from SQLite lib box to the file -->
+  <line x1="680" y1="220" x2="680" y2="248" stroke="#555" stroke-width="1.5"
+        marker-end="url(#ar)"/>
+  <text x="700" y="240" font-size="10" fill="#888">read() / write()</text>
+
+  <!-- RIGHT panel summary list -->
+  <text x="675" y="360" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32">
+    cost of admission:
+  </text>
+  <text x="510" y="385" font-size="12" fill="#555">cargo add rusqlite — that is it</text>
+  <text x="510" y="403" font-size="12" fill="#555">no server to start, no user to create</text>
+  <text x="510" y="421" font-size="12" fill="#555">no network, no socket, no auth</text>
+  <text x="510" y="439" font-size="12" fill="#555">one .db file you can email to a colleague</text>
+  <text x="510" y="463" font-size="12" fill="#888" font-style="italic">justified at "one analyst, one pipeline"</text>
+
+  <!-- Bottom caption spanning both -->
+  <text x="450" y="500" text-anchor="middle" font-size="13" fill="#333">
+    SQLite is a
+    <tspan font-weight="700" fill="#2e7d32">library</tspan>, not a server. The most-deployed database in the world.
+  </text>
+
+</svg>

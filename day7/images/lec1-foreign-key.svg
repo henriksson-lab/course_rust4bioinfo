@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="fk-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Foreign key — one strain, many assays
+  </text>
+
+  <!-- =================== strain table (left) =================== -->
+  <text x="180" y="80" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">strain</text>
+
+  <!-- Outer card -->
+  <rect x="40" y="90" width="280" height="206" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <!-- Header band (taller to fit the PK badge below the column name) -->
+  <rect x="40" y="90" width="280" height="56" fill="#e3f2fd" stroke="#888"/>
+  <!-- strain_id col tinted as PK -->
+  <rect x="40" y="90" width="120" height="56" fill="#e8f5e9" stroke="#888"/>
+
+  <text x="100" y="110" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">strain_id</text>
+  <text x="240" y="110" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+
+  <!-- PK badge under header inside strain_id column -->
+  <rect x="48" y="120" width="104" height="18" rx="4" ry="4"
+        fill="white" stroke="#2e7d32" stroke-width="1"/>
+  <text x="100" y="134" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">PRIMARY KEY</text>
+
+  <!-- Column divider -->
+  <line x1="160" y1="90" x2="160" y2="296" stroke="#bbb"/>
+
+  <!-- Row 1: id=1 (blue) -->
+  <rect x="40" y="146" width="280" height="50" fill="#e3f2fd" stroke="#bbb"/>
+  <rect x="40" y="146" width="120" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="100" y="178" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">1</text>
+  <text x="240" y="178" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+
+  <!-- Row 2: id=2 (magenta) -->
+  <rect x="40" y="196" width="280" height="50" fill="#fce4ec" stroke="#bbb"/>
+  <rect x="40" y="196" width="120" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="100" y="228" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c2185b">2</text>
+  <text x="240" y="228" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+
+  <!-- Row 3: id=3 (orange) -->
+  <rect x="40" y="246" width="280" height="50" fill="#fff3e0" stroke="#bbb"/>
+  <rect x="40" y="246" width="120" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="100" y="278" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#f57c00">3</text>
+  <text x="240" y="278" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">168</text>
+
+  <!-- =================== assay table (right) =================== -->
+  <text x="720" y="80" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">assay</text>
+
+  <rect x="540" y="90" width="320" height="206" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <!-- Header band (taller to fit FK badge) -->
+  <rect x="540" y="90" width="320" height="56" fill="#e3f2fd" stroke="#888"/>
+  <!-- strain_id col tinted as FK -->
+  <rect x="630" y="90" width="100" height="56" fill="#e8f5e9" stroke="#888"/>
+
+  <text x="585" y="110" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">assay_id</text>
+  <text x="680" y="110" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">strain_id</text>
+  <text x="795" y="110" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">od600_24h</text>
+
+  <!-- FK badge inside strain_id column -->
+  <rect x="638" y="120" width="84" height="18" rx="4" ry="4"
+        fill="white" stroke="#d97706" stroke-width="1"/>
+  <text x="680" y="134" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#d97706" font-family="ui-monospace, monospace">FOREIGN KEY</text>
+
+  <!-- Column dividers -->
+  <line x1="630" y1="90" x2="630" y2="296" stroke="#bbb"/>
+  <line x1="730" y1="90" x2="730" y2="296" stroke="#bbb"/>
+
+  <!-- Row 1: assay 101 -> strain 1 (blue) -->
+  <rect x="540" y="146" width="320" height="50" fill="#e3f2fd" stroke="#bbb"/>
+  <rect x="630" y="146" width="100" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="585" y="178" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">101</text>
+  <text x="680" y="178" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">1</text>
+  <text x="795" y="178" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.85</text>
+
+  <!-- Row 2: assay 102 -> strain 3 (orange) -->
+  <rect x="540" y="196" width="320" height="50" fill="#fff3e0" stroke="#bbb"/>
+  <rect x="630" y="196" width="100" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="585" y="228" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">102</text>
+  <text x="680" y="228" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#f57c00">3</text>
+  <text x="795" y="228" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1.10</text>
+
+  <!-- Row 3: assay 103 -> strain 1 (blue) -->
+  <rect x="540" y="246" width="320" height="50" fill="#e3f2fd" stroke="#bbb"/>
+  <rect x="630" y="246" width="100" height="50" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="585" y="278" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">103</text>
+  <text x="680" y="278" text-anchor="middle" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">1</text>
+  <text x="795" y="278" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.42</text>
+
+  <!-- =================== Foreign-key arrow (header to header) =================== -->
+  <path d="M 680 80 C 680 50, 100 50, 100 80"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#fk-arrow)"/>
+  <text x="390" y="44" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706"
+        font-family="ui-monospace, monospace">
+    REFERENCES strain(strain_id)
+  </text>
+
+  <!-- =================== Row-matching connector lines =================== -->
+  <!-- assay row 1 (mid y=171) -> strain row 1 (mid y=171): blue -->
+  <path d="M 540 171 C 480 171, 380 171, 320 171"
+        fill="none" stroke="#1976d2" stroke-width="2"/>
+  <!-- assay row 2 (y=221) -> strain row 3 (y=271): orange -->
+  <path d="M 540 221 C 430 221, 430 271, 320 271"
+        fill="none" stroke="#f57c00" stroke-width="2"/>
+  <!-- assay row 3 (y=271) -> strain row 1 (y=171): blue -->
+  <path d="M 540 271 C 430 271, 430 171, 320 171"
+        fill="none" stroke="#1976d2" stroke-width="2"/>
+
+  <!-- =================== Caption =================== -->
+  <rect x="40" y="340" width="820" height="130" fill="#fafafa" stroke="#bbb" rx="4"/>
+  <text x="450" y="364" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    One strain can have many assays; every assay belongs to exactly one strain
+  </text>
+  <text x="60" y="392" font-size="13" fill="#555">
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#1976d2">strain 1</tspan>
+    has two assays (101, 103);
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#f57c00">strain 3</tspan>
+    has one (102);
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#c2185b">strain 2</tspan>
+    has zero so far.
+  </text>
+  <text x="60" y="414" font-size="13" fill="#555">
+    The
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#d97706">foreign key</tspan>
+    on
+    <tspan font-family="ui-monospace, monospace">assay.strain_id</tspan>
+    points at the
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#2e7d32">primary key</tspan>
+    on
+    <tspan font-family="ui-monospace, monospace">strain.strain_id</tspan>.
+  </text>
+  <text x="60" y="436" font-size="13" fill="#555">
+    The database
+    <tspan font-weight="700">enforces</tspan>
+    this — you cannot insert an assay whose strain_id has no matching strain row.
+  </text>
+  <text x="60" y="458" font-size="12" fill="#888" font-style="italic">
+    This is what "relational" means: data lives in many tables, joined by shared keys.
+  </text>
+
+</svg>

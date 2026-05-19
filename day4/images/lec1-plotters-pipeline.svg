@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-plot" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    plotters: data to image
+  </text>
+
+  <!-- ===== Stage 1: Vec<u64> input ===== -->
+  <rect x="20" y="80" width="180" height="200" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="110" y="103" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    Vec&lt;u64&gt;
+  </text>
+  <text x="110" y="121" text-anchor="middle" font-size="11" fill="#555">
+    read lengths
+  </text>
+
+  <g font-family="ui-monospace, monospace" font-size="13" fill="#333">
+    <rect x="40" y="135" width="140" height="22" fill="white" stroke="#5b9bd5"/>
+    <text x="50" y="151">  98</text>
+    <rect x="40" y="159" width="140" height="22" fill="white" stroke="#5b9bd5"/>
+    <text x="50" y="175"> 102</text>
+    <rect x="40" y="183" width="140" height="22" fill="white" stroke="#5b9bd5"/>
+    <text x="50" y="199">  97</text>
+    <rect x="40" y="207" width="140" height="22" fill="white" stroke="#5b9bd5"/>
+    <text x="50" y="223"> 150</text>
+    <rect x="40" y="231" width="140" height="22" fill="white" stroke="#5b9bd5"/>
+    <text x="50" y="247"> 101</text>
+  </g>
+  <text x="110" y="272" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    ... 1M reads
+  </text>
+
+  <!-- arrow 1 -->
+  <line x1="205" y1="180" x2="278" y2="180"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-plot)"/>
+  <text x="241" y="170" text-anchor="middle" font-size="11" font-weight="600" fill="#2e7d32">
+    bin
+  </text>
+
+  <!-- ===== Stage 2: binning ===== -->
+  <rect x="280" y="80" width="180" height="200" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.8"/>
+  <text x="370" y="103" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    counts: [u32; N]
+  </text>
+  <text x="370" y="121" text-anchor="middle" font-size="11" fill="#555">
+    one count per bin
+  </text>
+
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#333">
+    <text x="295" y="148">bin 0  (0-49):     12</text>
+    <text x="295" y="168">bin 1  (50-99):  3201</text>
+    <text x="295" y="188">bin 2  (100-149): 7842</text>
+    <text x="295" y="208">bin 3  (150-199):  411</text>
+    <text x="295" y="228">bin 4  (200-249):   38</text>
+    <text x="295" y="248">bin 5  (250-299):    5</text>
+  </g>
+
+  <!-- arrow 2 -->
+  <line x1="465" y1="180" x2="538" y2="180"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-plot)"/>
+  <text x="501" y="170" text-anchor="middle" font-size="11" font-weight="600" fill="#2e7d32">
+    draw
+  </text>
+
+  <!-- ===== Stage 3: chart builder ===== -->
+  <rect x="540" y="80" width="180" height="200" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="630" y="103" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    ChartBuilder
+  </text>
+  <text x="630" y="121" text-anchor="middle" font-size="11" fill="#555">
+    axes + Rectangle bars
+  </text>
+
+  <!-- mini chart inside -->
+  <line x1="560" y1="250" x2="710" y2="250" stroke="#1b5e20" stroke-width="1.4"/>
+  <line x1="560" y1="140" x2="560" y2="250" stroke="#1b5e20" stroke-width="1.4"/>
+  <!-- bars -->
+  <rect x="570" y="240" width="18" height="10" fill="#5b9bd5"/>
+  <rect x="590" y="195" width="18" height="55" fill="#5b9bd5"/>
+  <rect x="610" y="155" width="18" height="95" fill="#5b9bd5"/>
+  <rect x="630" y="225" width="18" height="25" fill="#5b9bd5"/>
+  <rect x="650" y="244" width="18" height="6" fill="#5b9bd5"/>
+  <rect x="670" y="248" width="18" height="2" fill="#5b9bd5"/>
+  <text x="635" y="268" text-anchor="middle" font-size="10" fill="#555">
+    read length
+  </text>
+
+  <!-- arrow 3 -->
+  <line x1="725" y1="180" x2="798" y2="180"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-plot)"/>
+  <text x="761" y="170" text-anchor="middle" font-size="11" font-weight="600" fill="#2e7d32">
+    present()
+  </text>
+
+  <!-- ===== Stage 4: SVG output ===== -->
+  <rect x="800" y="80" width="80" height="200" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.5"/>
+  <text x="840" y="103" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#444">
+    .svg
+  </text>
+  <text x="840" y="120" text-anchor="middle" font-size="10" fill="#555">
+    (or .png)
+  </text>
+
+  <!-- mini chart preview -->
+  <line x1="810" y1="255" x2="870" y2="255" stroke="#333" stroke-width="1"/>
+  <line x1="810" y1="180" x2="810" y2="255" stroke="#333" stroke-width="1"/>
+  <rect x="815" y="245" width="8" height="10" fill="#5b9bd5"/>
+  <rect x="825" y="220" width="8" height="35" fill="#5b9bd5"/>
+  <rect x="835" y="200" width="8" height="55" fill="#5b9bd5"/>
+  <rect x="845" y="235" width="8" height="20" fill="#5b9bd5"/>
+  <rect x="855" y="252" width="8" height="3" fill="#5b9bd5"/>
+
+  <!-- ===== Bottom: code skeleton ===== -->
+  <rect x="20" y="310" width="860" height="170" rx="8" ry="8"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="450" y="332" text-anchor="middle" font-size="13" font-weight="700" fill="#444">
+    The five lines that turn binned data into an SVG
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#222">
+    <text x="40" y="358">let root = SVGBackend::new(path, (800, 600)).into_drawing_area();</text>
+    <text x="40" y="378">root.fill(&amp;WHITE)?;</text>
+    <text x="40" y="398">let mut chart = ChartBuilder::on(&amp;root)</text>
+    <text x="40" y="416">    .build_cartesian_2d(0u32..n_bins, 0u32..max_count)?;</text>
+    <text x="40" y="434">chart.draw_series(counts.iter().enumerate().map(|(b, &amp;c)|</text>
+    <text x="40" y="452">    Rectangle::new([(b, 0), (b + 1, c)], BLUE.filled())))?;</text>
+    <text x="40" y="470">root.present()?;</text>
+  </g>
+
+</svg>

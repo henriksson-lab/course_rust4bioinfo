@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-rw" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="arr-set" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    use_state — a handle to a value that survives re-renders
+  </text>
+
+  <!-- ===== Component body box ===== -->
+  <rect x="40" y="60" width="820" height="170" rx="8" ry="8"
+        fill="#fafafa" stroke="#888" stroke-dasharray="6,4" stroke-width="1.5"/>
+  <text x="60" y="84" font-size="14" font-weight="600" fill="#333">
+    inside #[function_component(App)]
+  </text>
+
+  <!-- declaration line -->
+  <rect x="60" y="100" width="760" height="36" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="78" y="124" font-size="15"
+        font-family="ui-monospace, monospace" fill="#333">let count = use_state(|| 0);</text>
+  <text x="490" y="124" font-size="12" fill="#888" font-style="italic">
+    closure called once, on first render
+  </text>
+
+  <!-- read line -->
+  <rect x="60" y="146" width="370" height="36" rx="4" ry="4"
+        fill="white" stroke="#888" stroke-width="1.5"/>
+  <text x="78" y="170" font-size="15"
+        font-family="ui-monospace, monospace" fill="#333">let n: i32 = *count;</text>
+  <text x="240" y="170" font-size="12" fill="#888" font-style="italic">read</text>
+
+  <!-- write line -->
+  <rect x="450" y="146" width="370" height="36" rx="4" ry="4"
+        fill="white" stroke="#888" stroke-width="1.5"/>
+  <text x="468" y="170" font-size="15"
+        font-family="ui-monospace, monospace" fill="#333">count.set(n + 1);</text>
+  <text x="660" y="170" font-size="12" fill="#888" font-style="italic">write (triggers rerender)</text>
+
+  <!-- handle line -->
+  <text x="60" y="208" font-size="13" fill="#555">
+    <tspan font-family="ui-monospace, monospace" fill="#1565c0">count</tspan> is a
+    <tspan font-family="ui-monospace, monospace" fill="#1565c0">UseStateHandle&lt;i32&gt;</tspan>
+    — a small reference-counted handle the framework owns.
+  </text>
+
+  <!-- ===== Handle visual (left) ===== -->
+  <rect x="60" y="270" width="220" height="120" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="170" y="294" text-anchor="middle" font-size="14" font-weight="600" fill="#1565c0">
+    UseStateHandle&lt;i32&gt;
+  </text>
+  <text x="170" y="318" text-anchor="middle" font-size="12" fill="#555">
+    cheap to clone
+  </text>
+  <text x="170" y="334" text-anchor="middle" font-size="12" fill="#555">
+    (Rc-like under the hood)
+  </text>
+  <text x="170" y="360" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    *handle  → read
+  </text>
+  <text x="170" y="376" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    handle.set(x)  → write
+  </text>
+
+  <!-- arrow to storage -->
+  <line x1="282" y1="330" x2="345" y2="330" stroke="#1565c0" stroke-width="2"
+        marker-end="url(#arr-rw)"/>
+
+  <!-- ===== Storage owned by Yew ===== -->
+  <rect x="345" y="270" width="240" height="120" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="465" y="294" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">
+    storage owned by Yew
+  </text>
+  <text x="465" y="322" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">7</text>
+  <text x="465" y="358" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    keyed to this component instance,
+  </text>
+  <text x="465" y="374" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    persists across render calls
+  </text>
+
+  <!-- ===== Example click handler ===== -->
+  <rect x="610" y="270" width="250" height="120" rx="6" ry="6"
+        fill="white" stroke="#888" stroke-width="1.5"/>
+  <text x="735" y="292" text-anchor="middle" font-size="13" font-weight="600" fill="#333">
+    a click handler
+  </text>
+  <text x="625" y="318" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">Callback::from(move |_| {</text>
+  <text x="645" y="338" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">count.set(*count + 1);</text>
+  <text x="625" y="358" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">})</text>
+  <text x="735" y="380" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    .set triggers a fresh render
+  </text>
+
+  <!-- arrow from click handler down to set -->
+  <path d="M 735 392 C 735 420, 465 420, 465 392"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#arr-set)"/>
+  <text x="600" y="450" text-anchor="middle" font-size="13" fill="#b45309" font-weight="600">
+    .set writes new value → component fn re-runs → *count now reads the new number
+  </text>
+  <text x="450" y="478" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    The handle is the same on every render; only the value behind it changes.
+  </text>
+
+</svg>

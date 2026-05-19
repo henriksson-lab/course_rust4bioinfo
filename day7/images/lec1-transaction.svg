@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Transactions amortise the disk-sync cost
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="13" fill="#555">
+    Same six INSERTs, two completely different wall-clock times.
+  </text>
+
+  <!-- =================== TOP TIMELINE: no transaction =================== -->
+  <text x="40" y="92" font-size="14" font-weight="700" fill="#c62828">
+    Without a transaction — one fsync per INSERT
+  </text>
+  <text x="40" y="110" font-size="12" fill="#555" font-family="ui-monospace, monospace">
+    for s in strains { conn.execute("INSERT ...", params![...])?; }
+  </text>
+
+  <!-- Timeline axis -->
+  <line x1="40" y1="180" x2="860" y2="180" stroke="#888" stroke-width="1.5"/>
+  <text x="40" y="200" font-size="11" fill="#888">t = 0</text>
+
+  <!-- 6 INSERTs, each followed by an fsync. Each pair takes ~130px -->
+  <!-- INSERT bars are small (light), fsync bars are tall (dark red) -->
+
+  <g>
+    <!-- INSERT 1 -->
+    <rect x="50"  y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="60"  y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <!-- fsync 1 -->
+    <rect x="70"  y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="115" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+
+    <!-- INSERT 2 -->
+    <rect x="170" y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="180" y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <!-- fsync 2 -->
+    <rect x="190" y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="235" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+
+    <!-- INSERT 3 -->
+    <rect x="290" y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="300" y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="310" y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="355" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+
+    <!-- INSERT 4 -->
+    <rect x="410" y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="420" y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="430" y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="475" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+
+    <!-- INSERT 5 -->
+    <rect x="530" y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="540" y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="550" y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="595" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+
+    <!-- INSERT 6 -->
+    <rect x="650" y="148" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="660" y="142" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="670" y="120" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="715" y="156" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+  </g>
+
+  <!-- Total time bracket -->
+  <line x1="50"  y1="208" x2="760" y2="208" stroke="#c62828" stroke-width="2"/>
+  <line x1="50"  y1="208" x2="50"  y2="220" stroke="#c62828" stroke-width="2"/>
+  <line x1="760" y1="208" x2="760" y2="220" stroke="#c62828" stroke-width="2"/>
+  <text x="405" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#c62828">
+    total: ~6 × disk-sync (each fsync ≈ 5–10 ms on an SSD)
+  </text>
+
+  <!-- =================== BOTTOM TIMELINE: with transaction =================== -->
+  <text x="40" y="276" font-size="14" font-weight="700" fill="#2e7d32">
+    With a transaction — one fsync at COMMIT
+  </text>
+  <text x="40" y="294" font-size="12" fill="#555" font-family="ui-monospace, monospace">
+    let tx = conn.transaction()?; for s in strains { stmt.execute(...)?; } tx.commit()?;
+  </text>
+
+  <!-- Timeline axis -->
+  <line x1="40" y1="370" x2="860" y2="370" stroke="#888" stroke-width="1.5"/>
+  <text x="40" y="390" font-size="11" fill="#888">t = 0</text>
+
+  <!-- BEGIN, 6 small inserts, then big fsync at the end -->
+  <g>
+    <!-- BEGIN -->
+    <rect x="50" y="338" width="36" height="32" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+    <text x="68" y="358" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">BEGIN</text>
+
+    <!-- 6 inserts back to back, no fsync between -->
+    <rect x="90"  y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="100" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="115" y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="125" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="140" y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="150" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="165" y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="175" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="190" y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="200" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+    <rect x="215" y="338" width="20" height="32" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="225" y="332" text-anchor="middle" font-size="10" fill="#1565c0">INS</text>
+
+    <!-- COMMIT -->
+    <rect x="240" y="338" width="50" height="32" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+    <text x="265" y="358" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">COMMIT</text>
+
+    <!-- one fsync at the end -->
+    <rect x="290" y="310" width="90" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="1.2"/>
+    <text x="335" y="346" text-anchor="middle" font-size="11" font-weight="700" fill="#c2185b">fsync</text>
+  </g>
+
+  <!-- Total time bracket -->
+  <line x1="50"  y1="398" x2="380" y2="398" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="50"  y1="398" x2="50"  y2="410" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="380" y1="398" x2="380" y2="410" stroke="#2e7d32" stroke-width="2"/>
+  <text x="215" y="422" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32">
+    total: ~1 × disk-sync
+  </text>
+
+  <!-- =================== Footer caption =================== -->
+  <rect x="40" y="448" width="820" height="42" fill="#fafafa" stroke="#bbb" rx="4"/>
+  <text x="60" y="470" font-size="13" fill="#333">
+    For a 10 000-row bulk load this is roughly a
+    <tspan font-weight="700" fill="#2e7d32">1000×</tspan>
+    speedup. Always wrap bulk writes in
+    <tspan font-family="ui-monospace, monospace">BEGIN ... COMMIT</tspan>.
+  </text>
+  <text x="60" y="484" font-size="11" fill="#888">
+    In rusqlite: let tx = conn.transaction()?;  ...  tx.commit()?;  — drop without commit() rolls back.
+  </text>
+
+</svg>

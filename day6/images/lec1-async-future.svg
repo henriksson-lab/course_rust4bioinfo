@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-msg" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arr-ret" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    What .await does — a single round-trip
+  </text>
+
+  <!-- code box -->
+  <rect x="220" y="50" width="470" height="36" rx="4" ry="4"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <text x="455" y="74" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">
+    let resp = Request::get(url).send().await?;
+  </text>
+
+  <!-- Lifeline headers -->
+  <rect x="120" y="108" width="200" height="42" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="220" y="134" text-anchor="middle" font-size="14" font-weight="600" fill="#1565c0">
+    your async code
+  </text>
+
+  <rect x="600" y="108" width="200" height="42" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="700" y="134" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">
+    browser runtime
+  </text>
+
+  <!-- Lifelines -->
+  <line x1="220" y1="150" x2="220" y2="490" stroke="#888" stroke-width="1.2"
+        stroke-dasharray="4 4"/>
+  <line x1="700" y1="150" x2="700" y2="490" stroke="#888" stroke-width="1.2"
+        stroke-dasharray="4 4"/>
+
+  <!-- 1. call send -->
+  <line x1="225" y1="184" x2="695" y2="184" stroke="#444" stroke-width="1.8"
+        marker-end="url(#arr-msg)"/>
+  <text x="460" y="178" text-anchor="middle" font-size="12" fill="#333">
+    .send() returns a Future — hand it to the runtime
+  </text>
+
+  <!-- 2. .await yields -->
+  <rect x="40" y="200" width="170" height="50" rx="4" ry="4"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.2"/>
+  <text x="125" y="220" text-anchor="middle" font-size="12" fill="#b45309">
+    .await pauses
+  </text>
+  <text x="125" y="238" text-anchor="middle" font-size="11" fill="#b45309">
+    this task yields
+  </text>
+
+  <!-- runtime activation box -->
+  <rect x="695" y="190" width="10" height="220"
+        fill="#fff7e0" stroke="#d97706" stroke-width="1"/>
+
+  <!-- annotation between, on runtime side -->
+  <text x="780" y="240" font-size="11" fill="#555">runtime is free</text>
+  <text x="780" y="256" font-size="11" fill="#555">to run other tasks</text>
+  <text x="780" y="272" font-size="11" fill="#555">(rendering, other</text>
+  <text x="780" y="288" font-size="11" fill="#555">awaits, animations)</text>
+
+  <!-- 3. network completes (self-call) -->
+  <path d="M 710 320 Q 770 335, 710 350"
+        fill="none" stroke="#444" stroke-width="1.5"
+        marker-end="url(#arr-msg)"/>
+  <text x="780" y="340" font-size="11" fill="#555">network</text>
+  <text x="780" y="356" font-size="11" fill="#555">response arrives</text>
+
+  <!-- 4. resume -->
+  <line x1="695" y1="395" x2="225" y2="395" stroke="#444" stroke-width="1.8"
+        stroke-dasharray="6 4" marker-end="url(#arr-ret)"/>
+  <text x="460" y="388" text-anchor="middle" font-size="12" fill="#333">
+    runtime polls the future, sees it is ready, resumes your task
+  </text>
+
+  <!-- 5. resp bound -->
+  <rect x="40" y="412" width="170" height="50" rx="4" ry="4"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="125" y="432" text-anchor="middle" font-size="12" fill="#2e7d32">
+    resp bound, next
+  </text>
+  <text x="125" y="450" text-anchor="middle" font-size="12" fill="#2e7d32">
+    statement runs
+  </text>
+
+  <!-- time arrow -->
+  <text x="30" y="170" font-size="11" fill="#888">time</text>
+  <line x1="36" y1="180" x2="36" y2="460" stroke="#888" stroke-width="1"/>
+  <polygon points="32,455 40,455 36,465" fill="#888"/>
+
+  <!-- footer -->
+  <text x="450" y="510" text-anchor="middle" font-size="13" fill="#888">
+    No threads, no blocking — the function pauses at .await and resumes when the work is done.
+  </text>
+
+</svg>

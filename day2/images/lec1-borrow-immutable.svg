@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="bi-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="bi-arrow-own" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Shared borrows &#8212; many readers, no writers
+  </text>
+
+  <!-- Code -->
+  <text x="450" y="60" text-anchor="middle" font-size="15"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    let v = vec![b'A', b'C', b'G', b'T'];   let r = &amp;v;   let s = &amp;v;
+  </text>
+
+  <!-- ===== STACK ===== -->
+  <text x="180" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#333">
+    Stack
+  </text>
+  <rect x="40" y="112" width="280" height="320" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- v (owner) -->
+  <text x="60" y="140" font-size="14" font-family="ui-monospace, monospace" fill="#1565c0">
+    v: Vec&lt;u8&gt;  (owner)
+  </text>
+  <rect x="60" y="150" width="240" height="80" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="76" y="173" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    ptr / len / cap
+  </text>
+  <circle cx="280" cy="190" r="5" fill="#1565c0"/>
+
+  <!-- r (shared borrow) -->
+  <text x="60" y="265" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32">
+    r: &amp;Vec&lt;u8&gt;  (shared borrow)
+  </text>
+  <rect x="60" y="275" width="240" height="45" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <circle cx="280" cy="297" r="5" fill="#2e7d32"/>
+
+  <!-- s (shared borrow) -->
+  <text x="60" y="350" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32">
+    s: &amp;Vec&lt;u8&gt;  (shared borrow)
+  </text>
+  <rect x="60" y="360" width="240" height="45" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <circle cx="280" cy="382" r="5" fill="#2e7d32"/>
+
+  <!-- ===== HEAP ===== -->
+  <text x="630" y="98" text-anchor="middle" font-size="18" font-weight="700" fill="#333">
+    Heap
+  </text>
+  <rect x="400" y="112" width="460" height="320" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <g stroke="#888" stroke-width="1.2">
+    <rect x="450" y="245" width="80" height="80" fill="#fff3cd"/>
+    <rect x="530" y="245" width="80" height="80" fill="#fff3cd"/>
+    <rect x="610" y="245" width="80" height="80" fill="#fff3cd"/>
+    <rect x="690" y="245" width="80" height="80" fill="#fff3cd"/>
+  </g>
+  <text x="490" y="293" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">A</text>
+  <text x="570" y="293" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">C</text>
+  <text x="650" y="293" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">G</text>
+  <text x="730" y="293" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+
+  <text x="610" y="220" text-anchor="middle" font-size="14" fill="#d97706" font-weight="600">
+    the bytes (read-only while r, s exist)
+  </text>
+
+  <!-- Arrows: v.ptr -> heap (owning, blue) -->
+  <line x1="290" y1="190" x2="445" y2="270"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#bi-arrow-own)"/>
+
+  <!-- Arrow from r -->
+  <line x1="290" y1="297" x2="445" y2="285"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#bi-arrow)"/>
+
+  <!-- Arrow from s -->
+  <line x1="290" y1="382" x2="445" y2="300"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#bi-arrow)"/>
+
+  <!-- Footer -->
+  <text x="450" y="455" text-anchor="middle" font-size="14" fill="#333">
+    Any number of shared <tspan font-family="ui-monospace, monospace">&amp;T</tspan> borrows can coexist &#8212;
+    none of them can mutate, so they can't conflict.
+  </text>
+
+</svg>

@@ -89,8 +89,12 @@
         font-family="ui-monospace, monospace">label = "AT-rich"</text>
 
   <!-- Converge arrows from all three boxes to a single merge point at (530, 440) -->
-  <!-- from GC-rich box: down then right-merge -->
-  <line x1="530" y1="190" x2="530" y2="440"
+  <!-- from GC-rich box: down right of balanced box -->
+  <line x1="630" y1="190" x2="645" y2="190"
+        stroke="#555" stroke-width="1.5"/>
+  <line x1="645" y1="190" x2="645" y2="440"
+        stroke="#555" stroke-width="1.5"/>
+  <line x1="645" y1="440" x2="530" y2="440"
         stroke="#555" stroke-width="1.5"/>
   <!-- from balanced box: down to merge -->
   <line x1="530" y1="315" x2="530" y2="440"

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-green-buf" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-dark-buf" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    BufReader: a small window onto a large file
+  </text>
+
+  <!-- ===== Disk file (left) ===== -->
+  <text x="120" y="80" text-anchor="middle" font-size="16" font-weight="600" fill="#555">
+    On disk
+  </text>
+  <rect x="30" y="95" width="180" height="280" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.5"/>
+  <text x="120" y="118" text-anchor="middle" font-size="14" font-weight="600" fill="#333">
+    reads.fastq
+  </text>
+  <text x="120" y="136" text-anchor="middle" font-size="13" fill="#777" font-style="italic">
+    10 GB
+  </text>
+
+  <!-- file content lines: many @ / seq / + / qual lines stacked -->
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#333">
+    <text x="45" y="160">@read1</text>
+    <text x="45" y="175">ACGTACGTAC</text>
+    <text x="45" y="190">+</text>
+    <text x="45" y="205">!!!!!!!!!!</text>
+    <text x="45" y="220">@read2</text>
+    <text x="45" y="235">TTGCAATGCA</text>
+    <text x="45" y="250">+</text>
+    <text x="45" y="265">IIIIIIIIII</text>
+    <text x="45" y="280">@read3</text>
+    <text x="45" y="295">GGCATATGCC</text>
+    <text x="45" y="310">+</text>
+    <text x="45" y="325">JJJJJJJJJJ</text>
+    <text x="45" y="345" fill="#aaa">    ...</text>
+    <text x="45" y="365" fill="#aaa">(100M more)</text>
+  </g>
+
+  <!-- ===== Arrow: disk -> buffer ===== -->
+  <line x1="215" y1="220" x2="318" y2="220"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark-buf)"/>
+  <text x="266" y="208" text-anchor="middle" font-size="12" fill="#555">
+    64 KB at a time
+  </text>
+  <text x="266" y="240" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    one syscall per refill
+  </text>
+
+  <!-- ===== BufReader buffer (middle) ===== -->
+  <text x="430" y="80" text-anchor="middle" font-size="16" font-weight="600" fill="#1565c0">
+    In RAM
+  </text>
+  <rect x="320" y="95" width="220" height="280" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="430" y="120" text-anchor="middle" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    BufReader&lt;File&gt;
+  </text>
+  <text x="430" y="138" text-anchor="middle" font-size="12" fill="#555">
+    64 KB internal buffer
+  </text>
+
+  <!-- buffer cells -->
+  <rect x="335" y="160" width="190" height="170" rx="4" ry="4"
+        fill="white" stroke="#5b9bd5" stroke-width="1"/>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#333">
+    <text x="345" y="180">@read1</text>
+    <text x="345" y="195">ACGTACGTAC</text>
+    <text x="345" y="210">+</text>
+    <text x="345" y="225">!!!!!!!!!!</text>
+    <text x="345" y="240">@read2</text>
+    <text x="345" y="255">TTGCAATGCA</text>
+    <text x="345" y="270">+</text>
+    <text x="345" y="285">IIIIIIIIII</text>
+    <text x="345" y="305" fill="#aaa">(...up to 64 KB...)</text>
+  </g>
+  <text x="430" y="352" text-anchor="middle" font-size="11" fill="#666" font-style="italic">
+    refilled on demand
+  </text>
+
+  <!-- ===== Arrow: buffer -> lines iterator ===== -->
+  <line x1="545" y1="220" x2="648" y2="220"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-green-buf)"/>
+  <text x="596" y="208" text-anchor="middle" font-size="13" font-weight="600" fill="#2e7d32">
+    .lines()
+  </text>
+  <text x="596" y="240" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    one line at a time
+  </text>
+
+  <!-- ===== Lines iterator (right) ===== -->
+  <text x="765" y="80" text-anchor="middle" font-size="16" font-weight="600" fill="#2e7d32">
+    Your code
+  </text>
+  <rect x="650" y="95" width="230" height="280" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="765" y="120" text-anchor="middle" font-size="13" font-weight="600" fill="#1b5e20">
+    for line in reader.lines()
+  </text>
+
+  <!-- yielded lines as small boxes -->
+  <g font-family="ui-monospace, monospace" font-size="12">
+    <rect x="665" y="140" width="200" height="26" fill="white" stroke="#a5d6a7"/>
+    <text x="675" y="158" fill="#333">"@read1"</text>
+
+    <rect x="665" y="170" width="200" height="26" fill="white" stroke="#a5d6a7"/>
+    <text x="675" y="188" fill="#333">"ACGTACGTAC"</text>
+
+    <rect x="665" y="200" width="200" height="26" fill="white" stroke="#a5d6a7"/>
+    <text x="675" y="218" fill="#333">"+"</text>
+
+    <rect x="665" y="230" width="200" height="26" fill="white" stroke="#a5d6a7"/>
+    <text x="675" y="248" fill="#333">"!!!!!!!!!!"</text>
+  </g>
+  <text x="765" y="285" text-anchor="middle" font-size="12" fill="#1b5e20" font-weight="600">
+    process, drop, next
+  </text>
+  <text x="765" y="305" text-anchor="middle" font-size="11" fill="#555">
+    only one line lives at a time
+  </text>
+  <text x="765" y="350" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32">
+    O(1) memory
+  </text>
+
+  <!-- ===== Anti-pattern: read_to_string ===== -->
+  <rect x="30" y="400" width="840" height="100" rx="8" ry="8"
+        fill="#fdecea" stroke="#c62828" stroke-width="1.5"/>
+  <text x="450" y="425" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828">
+    The wrong way
+  </text>
+  <text x="60" y="450" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    let s = std::fs::read_to_string("reads.fastq")?;
+  </text>
+  <text x="60" y="473" font-size="13" fill="#555">
+    Loads the whole file into a single String before you touch it.
+  </text>
+  <text x="60" y="490" font-size="13" font-weight="700" fill="#c62828">
+    A 10 GB FASTQ will not fit in RAM. Your program is killed by the OS.
+  </text>
+
+</svg>

@@ -16,7 +16,7 @@
   <text x="380" y="26" text-anchor="middle" font-size="17" font-weight="600">
     Needleman–Wunsch matrix for a = "ACGT", b = "ACT"
   </text>
-  <text x="380" y="45" text-anchor="middle" font-size="12" fill="#555">
+  <text x="380" y="45" text-anchor="middle" font-size="14" fill="#555">
     match +1, mismatch −1, gap −1
   </text>
 
@@ -27,7 +27,7 @@
   <rect x="170" y="60" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
   <rect x="225" y="60" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
   <rect x="280" y="60" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
-  <text x="142.5" y="92" text-anchor="middle" font-size="13" fill="#555">ε</text>
+  <text x="142.5" y="92" text-anchor="middle" font-size="15" fill="#555">ε</text>
   <text x="197.5" y="92" text-anchor="middle" font-size="16" font-weight="700">A</text>
   <text x="252.5" y="92" text-anchor="middle" font-size="16" font-weight="700">C</text>
   <text x="307.5" y="92" text-anchor="middle" font-size="16" font-weight="700">T</text>
@@ -38,7 +38,7 @@
   <rect x="60" y="210" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
   <rect x="60" y="260" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
   <rect x="60" y="310" width="55" height="50" fill="#e3f2fd" stroke="#bbb"/>
-  <text x="87.5" y="142" text-anchor="middle" font-size="13" fill="#555">ε</text>
+  <text x="87.5" y="142" text-anchor="middle" font-size="15" fill="#555">ε</text>
   <text x="87.5" y="192" text-anchor="middle" font-size="16" font-weight="700">A</text>
   <text x="87.5" y="242" text-anchor="middle" font-size="16" font-weight="700">C</text>
   <text x="87.5" y="292" text-anchor="middle" font-size="16" font-weight="700">G</text>
@@ -119,35 +119,35 @@
         stroke="#888" stroke-width="2" marker-end="url(#arrow-other)"/>
 
   <!-- ===== Right-hand panel: recurrence calculation ===== -->
-  <text x="380" y="135" font-size="14" font-weight="600">
+  <text x="380" y="135" font-size="16" font-weight="600">
     Filling cell (G, C) — score[3][2]
   </text>
-  <text x="380" y="158" font-size="12" fill="#555">G ≠ C → mismatch (−1)</text>
+  <text x="380" y="158" font-size="14" fill="#555">G ≠ C → mismatch (−1)</text>
 
-  <text x="380" y="195" font-size="13" font-family="ui-monospace, monospace">
+  <text x="380" y="195" font-size="15" font-family="ui-monospace, monospace">
     score[3][2] = max(
   </text>
 
   <!-- diag line -->
-  <text x="410" y="220" font-size="13" font-family="ui-monospace, monospace" fill="#555">
+  <text x="410" y="220" font-size="15" font-family="ui-monospace, monospace" fill="#555">
     ↘  score[2][1] + s(G,C)  =   0 + (−1) = −1
   </text>
   <!-- up line — chosen, green and bold -->
-  <text x="410" y="245" font-size="13" font-family="ui-monospace, monospace"
+  <text x="410" y="245" font-size="15" font-family="ui-monospace, monospace"
         fill="#2e7d32" font-weight="700">
     ↓  score[2][2] + gap     =   2 + (−1) =  1
   </text>
-  <text x="700" y="245" font-size="12" fill="#2e7d32" font-weight="700">← chosen</text>
+  <text x="700" y="245" font-size="14" fill="#2e7d32" font-weight="700">← chosen</text>
   <!-- left line -->
-  <text x="410" y="270" font-size="13" font-family="ui-monospace, monospace" fill="#555">
+  <text x="410" y="270" font-size="15" font-family="ui-monospace, monospace" fill="#555">
     →  score[3][1] + gap     =  −1 + (−1) = −2
   </text>
-  <text x="380" y="295" font-size="13" font-family="ui-monospace, monospace">)</text>
+  <text x="380" y="295" font-size="15" font-family="ui-monospace, monospace">)</text>
 
-  <text x="380" y="335" font-size="14" font-weight="600">
+  <text x="380" y="335" font-size="16" font-weight="600">
     so score[3][2] = 1, and the traceback arrow points up.
   </text>
-  <text x="380" y="358" font-size="12" fill="#555">
+  <text x="380" y="358" font-size="14" fill="#555">
     Walking arrows back from (n, m) recovers the alignment.
   </text>
 

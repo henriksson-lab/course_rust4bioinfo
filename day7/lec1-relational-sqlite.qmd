@@ -1,0 +1,541 @@
+---
+title: "Relational data, SQL, and SQLite from Rust"
+subtitle: "Day 7"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: simple
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+::: {.incremental}
+- Why "a few TSV files" stops working, and a relational database starts
+- The minimum SQL you will use every working day
+- What SQLite is, and why it is the right answer for bioinformatics tooling
+- Driving SQLite from Rust with the `rusqlite` crate
+- Written companion: [day 7 — Concepts](00-concepts.qmd) (keep it open)
+:::
+
+::: notes
+Today is the half-day shift away from sequence data into structured data — strain collections, assay measurements, sample sheets, anything you would otherwise keep in a spreadsheet. The first half of the lecture is plain SQL with no Rust at all; the second half is `rusqlite`, the thin Rust binding to the SQLite C library. By the end you should be able to read and write a small relational database from a Rust program.
+:::
+
+## The pain that motivates today
+
+You start with one TSV: `strains.tsv`. Fine.
+
+Then you add `assays.tsv`. Some assays reference strains that have been renamed. Some have a typo in the species name. You write a Python script to reconcile them. Then a colleague produces `media.tsv` independently.
+
+Three months in, half your codebase is glue.
+
+::: {.incremental}
+- "Give me all *E. coli* isolates after 1980" needs you to re-read the whole file
+- Every script reinvents joining, filtering, and deduplication
+- Nothing prevents an assay row pointing at a strain that no longer exists
+- Two people writing at once will silently clobber each other
+:::
+
+::: notes
+This is the universal story: a project starts with one tidy file, grows a second, and at some point the relationships between them stop fitting into ad-hoc Python or R glue. A relational database is the standard, fifty-year-old answer to all four bullet points. Today is the introduction.
+:::
+
+## A relational database in one picture
+
+![A table is a 2D grid: each row is a record (a tuple), each column has a name and a type. The primary key uniquely identifies one row.](images/lec1-relational-model.svg){fig-alt="The strain table drawn as a grid. Header row in light blue lists the five columns (strain_id, strain_name, species, isolation_source, year_isolated) with their types (INTEGER, TEXT, TEXT, TEXT, INTEGER). Four data rows follow; the first row (K-12 MG1655) is highlighted in yellow to make the 'one row equals one record' point visible. An annotation on the left points at the highlighted row and reads 'one row = one record (a tuple)'. A dashed line from the type sub-row points to a label 'each column has a declared type'. A green PRIMARY KEY badge under the strain_id header is connected by a dashed line up to the column. Below the table, three small fact callouts summarise: rows are an unordered set of records; columns have fixed names and types; the primary key is unique across every row."}
+
+::: notes
+This is the mental model. A table is a 2D grid; one row per record; each column has a fixed name and type. The primary key column makes it possible to refer unambiguously to one row. Every SQL idea today builds on this picture.
+:::
+
+## Tables, rows, columns, types
+
+A **table** is a named grid.
+
+A **row** is one record — a tuple of column values.
+
+A **column** has a name and a declared type. SQLite's main types:
+
+| Declared type | Used for |
+|---|---|
+| `INTEGER` | counts, IDs, years |
+| `REAL` | floating-point values (OD, fractions) |
+| `TEXT` | strings (names, free text) |
+| `INTEGER PRIMARY KEY` | auto-incrementing row ID |
+
+::: notes
+SQLite has just a handful of declared types — INTEGER, REAL, TEXT, BLOB. The big ecosystem databases (PostgreSQL, MySQL) have richer type systems (timestamps, JSONB, arrays, geographic types). For our work the four above cover everything. We will see in a minute that `INTEGER PRIMARY KEY` is a special spelling that also means "auto-assign the next free integer when I omit it on INSERT".
+:::
+
+## Primary keys — one row, one identity
+
+The **primary key** is the column (or set of columns) that uniquely identifies a row. Two rows may agree on every other column, but never on the primary key.
+
+```sql
+CREATE TABLE strain (
+    strain_id        INTEGER PRIMARY KEY,
+    strain_name      TEXT    NOT NULL,
+    species          TEXT    NOT NULL,
+    isolation_source TEXT,
+    year_isolated    INTEGER
+);
+```
+
+`INTEGER PRIMARY KEY` is SQLite's "auto-assign on INSERT" spelling. `NOT NULL` makes the column mandatory.
+
+Reference: [`CREATE TABLE`](https://www.sqlite.org/lang_createtable.html), [`PRIMARY KEY`](https://www.sqlite.org/lang_createtable.html#primkeyconst), [`NOT NULL`](https://www.sqlite.org/lang_createtable.html#notnullconst).
+
+::: notes
+The primary key is the database's name for the row. Once a row has a primary key value, other tables can refer to it — that is what makes the data relational. The convention `INTEGER PRIMARY KEY` is unusually convenient in SQLite: you do not have to invent IDs, the engine hands you the next free integer when you INSERT without one.
+:::
+
+## Foreign keys — linking two tables
+
+A second table refers to the first by storing its primary-key value as a *foreign key*.
+
+![A foreign-key relationship: the assay.strain_id column points at strain.strain_id; rows are coloured by which strain they belong to.](images/lec1-foreign-key.svg){fig-alt="Two tables side by side. Left table (strain) has three rows: strain_id 1 K-12 MG1655 in blue, strain_id 2 DH5alpha in magenta, strain_id 3 168 in orange; the strain_id column is highlighted in green with a small PRIMARY KEY badge. Right table (assay) has three rows: assay_id 101 strain_id 1 in blue, 102 strain_id 3 in orange, 103 strain_id 1 in blue; the strain_id column is highlighted in green with a FOREIGN KEY badge in yellow. A large dashed arrow from the assay.strain_id header to the strain.strain_id header reads 'REFERENCES strain(strain_id)'. Coloured connector lines link each assay row to its matching strain row by colour. Caption at bottom explains: one strain can have many assays; every assay belongs to exactly one strain; the database enforces the relationship."}
+
+::: notes
+The schema is straightforward: a second table whose key column references the first. `strain_id INTEGER NOT NULL REFERENCES strain(strain_id)` declares the foreign key, and the database refuses inserts whose strain_id has no matching strain — referential integrity, for free. PostgreSQL enforces this by default; SQLite has it off by default for backward compatibility, and you turn it on with `PRAGMA foreign_keys = ON`. The exercises do that automatically. The coloured connector lines show the typical one-to-many shape — strain 1 has two assays, strain 3 has one, strain 2 currently has none. This colouring carries forward into the JOIN slides.
+:::
+
+## INSERT — add rows
+
+```sql
+INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
+VALUES ('K-12 MG1655', 'Escherichia coli', 'human gut', 1922);
+```
+
+- Strings in **single** quotes. Double quotes mean *identifier* (column or table name).
+- Integers bare.
+- We omitted `strain_id` — `INTEGER PRIMARY KEY` assigns the next free integer.
+
+Reference: [`INSERT`](https://www.sqlite.org/lang_insert.html).
+
+::: notes
+Single quotes wrap string values; double quotes wrap identifiers like column names. Forgetting this is the single most common newbie SQL footgun: write `WHERE species = "Escherichia coli"` and the engine looks for a column called Escherichia coli. Always single quotes for text. Omitting the primary key column on INSERT is a convenient idiom — let the engine pick the ID for you.
+:::
+
+## SELECT — read rows
+
+```sql
+SELECT strain_name, species, year_isolated
+FROM strain
+WHERE species = 'Escherichia coli'
+ORDER BY year_isolated DESC
+LIMIT 5;
+```
+
+- `FROM` picks the table
+- `WHERE` filters rows
+- `ORDER BY` sorts the survivors
+- `LIMIT` keeps the top N
+
+[`SELECT`](https://www.sqlite.org/lang_select.html), [`WHERE`](https://www.sqlite.org/lang_select.html#whereclause), [`ORDER BY`](https://www.sqlite.org/lang_select.html#orderby), [`LIMIT`](https://www.sqlite.org/lang_select.html#limitoffset).
+
+::: notes
+A SELECT statement is the bread and butter of SQL — you will write tens of these a day in real work. The four clauses on this slide cover most one-table queries: pick a table, filter rows, sort, cut to a limit. The next slide visualises the pipeline.
+:::
+
+## SELECT as a pipeline
+
+![A SELECT statement, drawn as a horizontal pipeline of stages: FROM joins source tables, WHERE drops rows, GROUP BY buckets them, COUNT/AVG aggregates each bucket, HAVING drops groups, SELECT keeps named columns, ORDER BY + LIMIT sort and cut.](images/lec1-sql-pipeline.svg){fig-alt="At the top a SQL query in a light blue box: SELECT species, COUNT(*) AS n, AVG(od600_24h) AS mean_od FROM strain JOIN assay ON assay.strain_id = strain.strain_id WHERE medium = 'LB' GROUP BY species HAVING COUNT(*) > 1 ORDER BY mean_od DESC LIMIT 10. Below, seven yellow stage boxes arranged left to right: FROM (load + join source tables), WHERE (drop rows not matching), GROUP BY (bucket rows by a column), COUNT / AVG (reduce each group to one row), HAVING (drop groups post-aggregation), SELECT (keep only named columns), ORDER + LIMIT (sort then keep top N rows). Arrows run between stages. Dashed lines connect each clause in the top query box to its corresponding stage. Under each stage is a small annotation describing what it changes (all matching pairs, fewer rows, rows grouped, one row per group, fewer groups, fewer columns, final order top N). A bottom note explains that WHERE filters individual rows before grouping; HAVING filters whole groups after aggregation; you cannot put COUNT(*) > 1 in WHERE because at WHERE time the count does not exist yet."}
+
+::: notes
+You write the clauses in declarative order — SELECT first, FROM second — but the engine runs them in execution order: pick tables, drop rows, bucket, aggregate, drop groups, project columns, sort, cut. Understanding this order is what makes the difference between WHERE and HAVING click: WHERE filters individual rows before grouping, HAVING filters whole groups after aggregation. You cannot use `COUNT(*) > 1` in WHERE — at WHERE-time the count does not exist yet.
+:::
+
+## Aggregation — GROUP BY + COUNT / AVG
+
+```sql
+-- How many strains per species?
+SELECT species, COUNT(*) AS n
+FROM strain
+GROUP BY species
+ORDER BY n DESC;
+```
+
+```sql
+-- Mean OD per medium, only counting media measured >= 3 times
+SELECT medium, AVG(od600_24h) AS mean_od, COUNT(*) AS n
+FROM assay
+GROUP BY medium
+HAVING COUNT(*) >= 3;
+```
+
+[`GROUP BY`](https://www.sqlite.org/lang_select.html#groupby), [`COUNT`](https://www.sqlite.org/lang_aggfunc.html#count), [`AVG`](https://www.sqlite.org/lang_aggfunc.html#avg).
+
+::: notes
+GROUP BY is the SQL spelling of "for each unique value of column X, give me one summary row". COUNT, AVG, SUM, MIN, MAX are the standard aggregate functions. The second query shows HAVING — filtering whole groups after aggregation. AS gives the output column a friendlier name; you can use that name in ORDER BY but not (in most engines) back in WHERE, because of the pipeline order from the previous slide.
+:::
+
+## JOIN — combine two tables
+
+```sql
+SELECT s.strain_name, s.species, a.medium, a.od600_24h
+FROM strain AS s
+INNER JOIN assay AS a ON a.strain_id = s.strain_id
+WHERE s.species = 'Escherichia coli'
+ORDER BY a.date_measured;
+```
+
+- `AS s`, `AS a` — table aliases, saves typing
+- `ON a.strain_id = s.strain_id` — the join condition
+- `INNER JOIN` keeps rows that match on **both** sides
+
+::: notes
+JOIN is how relational data earns its name. Match `assay.strain_id` to `strain.strain_id`, and you can ask questions that span both tables — "every E. coli assay, with the strain name attached". Aliases (`s`, `a`) make the column-qualification readable. INNER JOIN is the default and the most common; the next two slides cover NATURAL JOIN and LEFT JOIN.
+:::
+
+## INNER JOIN — visualised
+
+![INNER JOIN matches rows from the two tables on the join key. Each matching pair becomes one output row.](images/inner-join.svg){fig-alt="Three-panel diagram of an inner join. Top-left: the strain table with three rows; top-right: the assay table with five rows; strain_id column highlighted in green in both as the join key. Coloured lines connect each strain row to its matching assay rows: strain 1 (blue) matches assays 101 and 102; strain 2 (magenta) matches assay 103; strain 3 (orange) matches assays 104 and 105. Bottom panel shows the joined result, five rows wide, each row a concatenation of one strain row with one matching assay row, with coloured stripes on the left edge to show which strain each came from."}
+
+::: notes
+This is the same figure from the natural-join exercise — five output rows because three strain rows multiply against five assay rows by their key matches. A strain with zero matching assays would be dropped from the output entirely — that's the defining behaviour of INNER JOIN. Hold that thought; it is exactly what LEFT JOIN exists to fix.
+:::
+
+## NATURAL JOIN — the shortcut
+
+If both tables have a column with the **same name**, SQL can infer the join:
+
+```sql
+SELECT strain_name, species, medium, od600_24h
+FROM strain NATURAL JOIN assay;
+```
+
+Equivalent to the explicit `JOIN ... ON a.strain_id = s.strain_id` because that is the one column the two schemas share.
+
+::: {.fragment}
+**Convenient** when you name your foreign keys carefully.
+**Dangerous** when someone later adds a column whose name happens to match.
+
+Use it once; reach for explicit `JOIN ... ON` in real code.
+:::
+
+::: notes
+NATURAL JOIN is a syntactic convenience that pays off in tidy schemas — when every foreign-key column is named exactly like the primary key it points at, NATURAL JOIN just works. The danger is silent: add an unrelated `created_at` column to both tables next year, and your queries quietly start joining on it too. Explicit JOIN ... ON is more typing and more robust. We use both today so you recognise NATURAL JOIN in textbooks, but you should write the explicit form.
+:::
+
+## LEFT JOIN — keep the unmatched
+
+```sql
+SELECT s.strain_name, COUNT(a.assay_id) AS n
+FROM strain AS s
+LEFT JOIN assay AS a ON a.strain_id = s.strain_id
+GROUP BY s.strain_name
+ORDER BY n;
+```
+
+`LEFT JOIN` keeps **every** row from the left table, filling `NULL` on the right when there is no match.
+
+A strain with zero assays shows up with `n = 0`. With `INNER JOIN` it would silently vanish.
+
+::: notes
+This is one of the most common bugs in production SQL: someone reaches for INNER JOIN by reflex, and rows from the left table that have no matching right-side row disappear from the output. The fix is to use LEFT JOIN whenever you want to preserve every left-side row regardless of whether there is a match. Note also `COUNT(a.assay_id)` rather than `COUNT(*)` — count of a column ignores NULLs, which is what makes the no-assay strain come out as 0 instead of 1.
+:::
+
+## INNER vs LEFT vs NATURAL — when to use which
+
+| Want | Use |
+|---|---|
+| Only rows present in both tables | `INNER JOIN ... ON ...` |
+| Every row from one table, even unmatched | `LEFT JOIN ... ON ...` |
+| Quick prototype on a tidy schema | `NATURAL JOIN` |
+| Real, long-lived code | `INNER` or `LEFT` with explicit `ON` |
+
+::: notes
+Three joins covers 95% of what you need. INNER for "the matches", LEFT for "everything from this side plus matches", NATURAL for quick exploration. There are also RIGHT and FULL OUTER joins but SQLite historically did not support them and we leave them for self-study. You will reach for INNER and LEFT every working day.
+:::
+
+## What is SQLite?
+
+A relational database engine packaged as a **C library**, not a server.
+
+::: {.incremental}
+- One **`.db` file** is one entire database (schema + every row)
+- No daemon, no port, no user accounts, no configuration
+- The most-deployed database in the world — every Android app, every iPhone, every browser, most desktop software, every airliner
+:::
+
+::: notes
+SQLite is the unusual entry in the database world. Most relational databases — PostgreSQL, MySQL, Oracle, SQL Server — are servers: a long-lived process you connect to over a socket. SQLite skips all of that. It is a C library; you link it into your program; your program reads and writes the .db file directly. No service to install, no daemon, no port. It is genuinely the most-deployed database in existence — every smartphone has hundreds of SQLite databases on it, every web browser uses it, basically every desktop app that needs structured storage uses SQLite.
+:::
+
+## SQLite vs. client/server
+
+![Two-panel comparison. Left: PostgreSQL — your code in one process, server in another, TCP between them, server manages many files in /var/lib/postgresql. Right: SQLite — your code in one process with the SQLite library linked in, reading and writing one strains.db file directly.](images/lec1-sqlite-vs-server.svg){fig-alt="Two-panel diagram. Left panel headed 'Client / server (PostgreSQL)' in red: a light-blue box labelled 'Process A — your code, cargo run, Postgres client library opens a socket' and a magenta box labelled 'Process B — postgres, postgres -D /var/lib, listens on port 5432, long-running daemon'. A TCP arrow runs between them in both directions. The server connects down to a grey database-file box labelled '/var/lib/postgresql/ — many files, WAL, locks, managed by the server'. Below: cost of admission list — install + configure server daemon, create user, create database set password, open and authenticate a TCP connection, network latency on every query — and a note 'justified at multi-user web scale'. Right panel headed 'Embedded (SQLite)' in green: one large blue process box labelled 'Process — your code, with SQLite linked in, cargo run', containing a smaller green box labelled 'rusqlite + libsqlite3, function calls inside your process (no network)', which connects down to a grey file box labelled 'strains.db — one file, schema + data, opened directly via fs' with a 'read() / write()' label on the arrow. Below: cost of admission list — cargo add rusqlite that is it, no server to start no user to create, no network no socket no auth, one .db file you can email to a colleague — and a note 'justified at one analyst, one pipeline'. Caption at bottom: SQLite is a library, not a server. The most-deployed database in the world."}
+
+::: notes
+The picture says it. On the left, PostgreSQL: two processes, a TCP connection, a directory the server owns. On the right, SQLite: one process, no socket, one file. For a course server with one analyst running one pipeline, the SQLite shape is dramatically simpler. The skills transfer — the SQL you learn today runs almost unchanged on PostgreSQL. The only thing that changes is the operational story.
+:::
+
+## Why SQLite fits bioinformatics
+
+::: {.incremental}
+- **One file** — fits the "one analysis directory" workflow we already use
+- **Embedded** — no extra service to keep alive on a shared cluster
+- **Cross-platform** — `.db` files work unchanged on Linux, macOS, Windows
+- **Single writer** — fine when one pipeline owns the data
+- The same `sqlite3` CLI you debug data with also runs your Rust program's queries
+:::
+
+Concretely, where a `.sqlite` file shows up in practice:
+
+| Use case | Why a file works |
+|---|---|
+| Public annotation dumps (e.g. genome browsers) | One download, no server to install |
+| Your lab's strain or sample collection | Email or rsync one `.db` to a collaborator |
+| Pipeline metadata / per-sample results | Embedded next to the output directory |
+| Test fixtures for analysis code | Open in-memory, seed, throw away |
+
+::: notes
+A typical bioinformatics workflow has one pipeline producing data and a handful of downstream analyses reading it. That is exactly SQLite's sweet spot: single-writer, many-reader, on one machine. If you need genuine concurrent writes from multiple processes — a web service, a multi-user lab information system — you move to PostgreSQL. The SQL you learned for SQLite works unchanged. The migration is operational: change the connection string, lose the `bundled` feature, gain a server.
+:::
+
+## The sqlite3 CLI
+
+```bash
+$ sqlite3 strains.db        # opens (creates if missing)
+sqlite> SELECT * FROM strain LIMIT 3;     -- runs SQL
+```
+
+Dot-commands are **CLI-only** features (no trailing `;`):
+
+```
+.tables              -- list table names
+.schema strain       -- show CREATE TABLE
+.headers on          -- show column names in SELECT output
+.mode column         -- align rows as a table
+.read seed.sql       -- run SQL from a file
+.import data.csv t   -- load CSV into table t
+.quit
+```
+
+[`sqlite3` docs](https://www.sqlite.org/cli.html).
+
+::: notes
+The CLI is your first stop for any new SQLite database. Type `sqlite3 strains.db` and you get a prompt; type SQL and it runs. Dot-commands are a CLI feature — they are not SQL, they cannot run from a Rust program, they do not end with a semicolon. The four you will use most are `.tables`, `.schema`, `.headers on`, and `.mode column`. Exercise 1 walks you through all of them.
+:::
+
+## Talking to SQLite from Rust — rusqlite
+
+```toml
+[dependencies]
+rusqlite = { version = "0.31", features = ["bundled"] }
+```
+
+[`rusqlite`](https://docs.rs/rusqlite/) is a thin Rust wrapper around the SQLite C library.
+
+The [`bundled`](https://docs.rs/rusqlite/latest/rusqlite/#features) feature compiles SQLite from source into your binary — no system library required. Costs ~30 s on the first build, then cached.
+
+::: notes
+`rusqlite` is one Cargo dependency. The `bundled` feature is the convenience flag: it builds SQLite from source as part of your project, so you have no external dependency on a system libsqlite3. The first build takes about half a minute while the C code compiles; subsequent builds reuse the cached object files. For a course we always use bundled. For a production library you might prefer linking against the system library to save binary size.
+:::
+
+## The rusqlite read pipeline
+
+![The rusqlite read pipeline as four steps: Connection::open opens the file, conn.prepare compiles the SQL into a Statement, stmt.query_map binds parameters and yields an iterator of results, and a for loop materialises each row by calling row.get(i) for each column.](images/lec1-rusqlite-pipeline.svg){fig-alt="A four-step pipeline diagram. Step 1 box headed 'open': Connection::open('strains.db')? — opens the .db file, creates if missing. Step 2 box headed 'prepare': conn.prepare('SELECT ... WHERE x = ?1')? — compile SQL into a Statement. Step 3 box headed 'query_map': stmt.query_map([param], row_fn)? — bind ?1, run, return iterator of Result<T>. Step 4 box headed 'iterate': for r in rows { let s = r?; } — materialise rows. Arrows connect each step to the next. A dotted line from step 3 leads down to an expanded detail panel showing the row_fn closure: |row| Ok(Strain { strain_id: row.get(0)?, strain_name: row.get(1)?, species: row.get(2)?, isolation_source: row.get(3)?, year_isolated: row.get(4)?, }). Annotations on the right map each row.get(i) call to its column type (column 0 → i64, column 1 → String, column 2 → String, column 3 → Option<String>, column 4 → Option<i64>) and note that the Rust type is inferred from the field you assign into. Footer: same shape for every SELECT — prepare once, query_map with parameters, iterate; each ? unwraps a Result so a SQL error short-circuits the loop instead of crashing the process."}
+
+::: notes
+Four steps; the same shape for every SELECT in rusqlite. Open returns a Connection. Prepare compiles the SQL into a Statement that you can reuse. query_map binds the parameters into the placeholders and gives you back an iterator. The for loop materialises each row by invoking your closure. The closure is where column types meet Rust types — row.get(i) returns a Result whose inner type is inferred from the field you assign into.
+:::
+
+## Open and execute one statement
+
+```rust
+use rusqlite::Connection;
+
+let conn = Connection::open("strains.db")?;
+
+conn.execute(
+    "INSERT INTO strain (strain_name, species, year_isolated)
+     VALUES (?1, ?2, ?3)",
+    rusqlite::params!["K-12 MG1655", "Escherichia coli", 1922],
+)?;
+```
+
+- [`Connection::open`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.open) opens (creates) the file.
+- [`Connection::execute`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.execute) runs one statement that returns no rows.
+- `?1`, `?2`, `?3` are parameter placeholders filled by [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html).
+
+::: notes
+Two method calls and a macro. Open returns a Connection. Execute runs a statement that does not produce a result set — INSERT, UPDATE, DELETE, CREATE TABLE, anything but SELECT. The placeholders `?1` and friends are filled by the `params!` macro, which knows how to encode each Rust value into the right SQL type. Never glue strings together with format! — we will get to why on the SQL-injection slide.
+:::
+
+## Read rows back
+
+```rust
+let mut stmt = conn.prepare(
+    "SELECT strain_id, strain_name, species
+     FROM strain
+     WHERE species = ?1",
+)?;
+
+let rows = stmt.query_map(["Escherichia coli"], |row| {
+    Ok(Strain {
+        strain_id:   row.get(0)?,
+        strain_name: row.get(1)?,
+        species:     row.get(2)?,
+    })
+})?;
+
+for strain in rows {
+    println!("{:?}", strain?);
+}
+```
+
+[`prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) → [`query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map) → loop. Same shape every time.
+
+::: notes
+This is the read path: prepare the SQL, call query_map with the parameters and a closure that maps each row to your Rust struct, iterate. The closure calls row.get(i) for each column, in declaration order. row.get returns Result, so the `?` short-circuits on a type-mismatch error. The for loop yields Result<Strain> values, so you `?` again to unwrap each one. Look how little there is here — eight lines of boilerplate plus your SQL.
+:::
+
+## Nullable columns map to Option
+
+```rust
+struct Strain {
+    strain_id:        i64,
+    strain_name:      String,           // NOT NULL  -> T
+    species:          String,           // NOT NULL  -> T
+    isolation_source: Option<String>,   // nullable  -> Option<T>
+    year_isolated:    Option<i64>,      // nullable  -> Option<i64>
+}
+```
+
+If a column can be `NULL`, the Rust field **must** be `Option<T>`.
+
+Getting it wrong is one of the few `rusqlite` errors that bites at runtime — `InvalidColumnType` on the first NULL.
+
+::: notes
+The rule is mechanical: a column declared `NOT NULL` in the schema maps to a plain T; any other column maps to `Option<T>`. row.get reads NULL into None and any other value into Some(...). If you accidentally typed it as plain T and the column does contain a NULL, you get a runtime InvalidColumnType error. The tests on exercise 03 catch exactly that case for you.
+:::
+
+## Parameter binding — never format! into SQL
+
+```rust
+// NEVER do this:
+let species = user_input;
+conn.execute(
+    &format!("SELECT * FROM strain WHERE species = '{}'", species),
+    [],
+)?;
+```
+
+If `user_input` is `"x'; DROP TABLE strain; --"`, you just deleted the table.
+
+```rust
+// ALWAYS do this:
+conn.execute(
+    "SELECT * FROM strain WHERE species = ?1",
+    rusqlite::params![species],
+)?;
+```
+
+The `?1` placeholder + [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro escape the value safely. **Non-negotiable.**
+
+::: notes
+SQL injection is fifty years old and still the #1 web vulnerability. The mechanism: if you build SQL by string concatenation, an attacker can sneak SQL syntax inside what looks like a value. The fix is universal — use the parameter placeholder mechanism the library gives you, which sends the SQL and the values separately to the database. rusqlite's `params!` macro handles every primitive and Option type. The rule is absolute: any value not literally typed by you goes through `?1`/`params!`, not format!.
+:::
+
+## Transactions — atomicity AND performance
+
+![Two timelines comparing six INSERTs without and with a transaction. Without: each INSERT is followed by its own fsync to disk (slow). With: one BEGIN, six fast INSERTs, one COMMIT, one fsync at the end (fast). Total time bracket shows the difference.](images/lec1-transaction.svg){fig-alt="Two timelines stacked vertically on the same horizontal time axis. Top timeline headed in red 'Without a transaction — one fsync per INSERT': six small blue INSERT bars, each followed by a tall magenta fsync bar; under the timeline a red bracket spans the full width labelled 'total: ~6 × disk-sync (each fsync ≈ 5–10 ms on an SSD)'. Bottom timeline headed in green 'With a transaction — one fsync at COMMIT': a green BEGIN box, then six small blue INSERT bars back-to-back, then a green COMMIT box, then a single tall magenta fsync bar at the end; under the timeline a green bracket much shorter than the top one labelled 'total: ~1 × disk-sync'. Bottom caption: for a 10 000-row bulk load this is roughly a 1000× speedup; always wrap bulk writes in BEGIN ... COMMIT. In rusqlite use Connection::transaction with tx.commit, and dropping the transaction without commit rolls back."}
+
+::: notes
+Transactions have two reasons to exist. The textbook reason is atomicity — either all of the statements happen or none do, so you cannot leave the database in a half-updated state if something errors. The pragmatic reason is performance. Outside a transaction, every INSERT calls fsync() to flush to disk for durability — that is slow, typically 5 to 10 milliseconds on an SSD. Inside a transaction, fsync only happens at COMMIT. For a 10 000-row bulk load that is roughly a 1000x speedup. Always wrap bulk writes.
+:::
+
+## Transactions in rusqlite
+
+```rust
+let tx = conn.transaction()?;
+{
+    let mut stmt = tx.prepare(
+        "INSERT INTO strain (strain_name, species, year_isolated)
+         VALUES (?1, ?2, ?3)",
+    )?;
+    for s in strains {
+        stmt.execute(rusqlite::params![s.name, s.species, s.year])?;
+    }
+}
+tx.commit()?;
+```
+
+- [`Connection::transaction`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.transaction) starts one (needs `&mut Connection`).
+- [`Transaction::commit`](https://docs.rs/rusqlite/latest/rusqlite/struct.Transaction.html#method.commit) finalises.
+- Drop `tx` without `commit()` and rusqlite **rolls back** — Rust-shaped safety net.
+
+::: notes
+Three things to notice. First, transaction() needs `&mut Connection` — only one transaction can be live at a time. Second, the inner braces — the prepared statement borrows from `tx`, and `tx.commit()` consumes `tx`, so the statement has to drop first; the braces make that lifetime obvious. Third, if you forget to call commit, the Drop impl on Transaction rolls back automatically. That is the Rust-shaped version of the rule "if an error happens between BEGIN and COMMIT, undo everything". You get the safety net without typing a manual rollback path.
+:::
+
+## In-memory test databases
+
+```rust
+#[test]
+fn list_strains_returns_all_rows() {
+    let conn = Connection::open_in_memory().unwrap();
+    conn.execute_batch(SEED_SQL).unwrap();
+
+    let strains = list_strains(&conn).unwrap();
+
+    assert_eq!(strains.len(), 10);
+    assert_eq!(strains[0].strain_name, "K-12 MG1655");
+}
+```
+
+[`Connection::open_in_memory`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.open_in_memory) gives you a throwaway database that lives in RAM and dies with the test.
+
+::: notes
+Database tests have a reputation for being slow and flaky — you need test fixtures, you need to reset state between runs, you might trip over file permissions. SQLite removes all of that. `Connection::open_in_memory()` gives you a fresh, empty database that lives only in RAM. Seed it with a small SQL string, exercise your function, let the test finish — the database is gone. The exercises today all use this pattern. Tests take milliseconds and never touch the filesystem.
+:::
+
+## What we deliberately leave out
+
+::: {.incremental}
+- `UPDATE`, `DELETE`, `ALTER TABLE` — same parameter pattern as `INSERT`
+- **Indexes** — `CREATE INDEX` turns a `WHERE` filter from O(n) to O(log n); matters at 10⁶ rows
+- `EXPLAIN QUERY PLAN` — see which indexes the engine actually used
+- Window functions, CTEs (`WITH ...`), recursive queries
+- Migrations (`refinery`, `sqlx-cli`) — versioned `ALTER TABLE`
+- The async ecosystem ([`sqlx`](https://docs.rs/sqlx/), [`SeaORM`](https://www.sea-ql.org/SeaORM/), [`tokio-postgres`](https://docs.rs/tokio-postgres/))
+:::
+
+You will recognise the names. The skills you learn today transfer 1:1 to PostgreSQL, MySQL, and the async stack.
+
+::: notes
+A short list of things we do not have time for, in roughly increasing order of "you might actually need this next". UPDATE and DELETE follow the same INSERT pattern with `?1` parameters. Indexes are the single biggest performance lever once a table exceeds a million rows. The async ecosystem matters if you build a web service; the same query_map shape applies, just with `.await?` instead of `?`. None of these change the mental model from today.
+:::
+
+## To the exercises
+
+| # | Exercise | What you build |
+|---|---|---|
+| 01 | [sqlite-cli](01-sqlite-cli.qmd) | `CREATE`, `INSERT`, `SELECT`, `WHERE`, `GROUP BY` |
+| 02 | [natural-join](02-natural-join.qmd) | `INNER`/`NATURAL`/`LEFT JOIN` across two tables |
+| 03 | [read-from-rust](03-read-from-rust.qmd) | `Connection::open`, `prepare`, `query_map` |
+| 04 | [write-from-rust](04-write-from-rust.qmd) | `transaction`, prepared `INSERT`, `Option<T>` |
+| 05 | [query-from-rust](05-query-from-rust.qmd) | `LEFT JOIN` + `GROUP BY`, from Rust |
+
+Reference: [day 7 — Concepts](00-concepts.qmd). Start: [Exercise 1](01-sqlite-cli.qmd).
+
+```bash
+cd day7/ex-sqlite-strains
+sqlite3 strains.db
+```
+
+::: notes
+Two tabs open: the concepts page in one, the current exercise in another. Plus a terminal in the exercise directory. Exercise 1 is pure SQL at the sqlite3 prompt — no Rust until exercise 3. Exercise 5 is the capstone — it pulls together everything: schema design, JOIN, LEFT JOIN, GROUP BY, the rusqlite read pipeline. Five well-scoped exercises in one half-day; pace yourself. See you in the lab.
+:::

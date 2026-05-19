@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="it-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Measuring a block with std::time::Instant
+  </text>
+
+  <!-- ===== Code panel ===== -->
+  <rect x="40" y="60" width="500" height="280" fill="#fafafa"
+        stroke="#888" stroke-width="1.5" rx="4"/>
+
+  <text x="60" y="92" font-size="15" font-family="ui-monospace, monospace" fill="#1565c0">
+    use std::time::Instant;
+  </text>
+
+  <!-- Start mark -->
+  <rect x="60" y="110" width="450" height="32" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="72" y="132" font-size="15" font-family="ui-monospace, monospace" fill="#0d47a1">
+    let t = Instant::now();
+  </text>
+  <text x="500" y="132" text-anchor="end" font-size="11" font-style="italic" fill="#1565c0">
+    snapshot the clock
+  </text>
+
+  <!-- Work block -->
+  <rect x="60" y="156" width="450" height="100" fill="#fff3cd" stroke="#d97706" stroke-width="1"/>
+  <text x="285" y="174" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">
+    /* the work you want to measure */
+  </text>
+  <text x="72" y="202" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    let total: usize = sequences
+  </text>
+  <text x="72" y="220" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+        .iter()
+  </text>
+  <text x="72" y="238" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+        .map(|seq| count_gc(seq))
+  </text>
+  <text x="72" y="252" font-size="11" font-family="ui-monospace, monospace" fill="#888">
+        .sum();   // fold over 1,000,000 sequences
+  </text>
+
+  <!-- End mark -->
+  <rect x="60" y="270" width="450" height="32" fill="#e3f2fd" stroke="#1565c0" stroke-width="1"/>
+  <text x="72" y="292" font-size="15" font-family="ui-monospace, monospace" fill="#0d47a1">
+    let dt = t.elapsed();
+  </text>
+  <text x="500" y="292" text-anchor="end" font-size="11" font-style="italic" fill="#1565c0">
+    now - t
+  </text>
+
+  <text x="60" y="324" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    println!("elapsed: {:.3?}", dt);
+  </text>
+
+  <!-- ===== Right side: output + diagram ===== -->
+  <text x="730" y="92" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    $ cargo run --release
+  </text>
+
+  <rect x="580" y="110" width="300" height="80" fill="#1e1e1e" stroke="#444" stroke-width="1.5" rx="3"/>
+  <text x="596" y="138" font-size="13" font-family="ui-monospace, monospace" fill="#ddd">
+    counting GC over 1M reads...
+  </text>
+  <text x="596" y="160" font-size="14" font-family="ui-monospace, monospace">
+    <tspan x="596" dy="0" fill="#ddd">elapsed: </tspan>
+    <tspan fill="#5fd35f" font-weight="700">142.317ms</tspan>
+  </text>
+  <text x="596" y="180" font-size="12" font-family="ui-monospace, monospace" fill="#aaa">
+    total GC: 53_812_419
+  </text>
+
+  <!-- Timeline visualisation -->
+  <text x="730" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="#444">
+    Conceptually
+  </text>
+
+  <line x1="600" y1="260" x2="860" y2="260" stroke="#444" stroke-width="2"/>
+  <line x1="600" y1="252" x2="600" y2="268" stroke="#1565c0" stroke-width="3"/>
+  <line x1="860" y1="252" x2="860" y2="268" stroke="#1565c0" stroke-width="3"/>
+
+  <text x="600" y="282" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">
+    t
+  </text>
+  <text x="860" y="282" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">
+    t.elapsed()
+  </text>
+
+  <rect x="600" y="244" width="260" height="14" fill="#fff3cd" stroke="#d97706" stroke-width="1"/>
+  <text x="730" y="240" text-anchor="middle" font-size="11" fill="#b45309" font-style="italic">
+    the work
+  </text>
+
+  <!-- Footer -->
+  <text x="450" y="400" text-anchor="middle" font-size="13" fill="#333">
+    Three lines of std-library code. Good enough for order-of-magnitude comparisons.
+  </text>
+  <text x="450" y="424" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    For rigorous benchmarks (means, std-devs, outliers) reach for the criterion crate.
+  </text>
+
+</svg>

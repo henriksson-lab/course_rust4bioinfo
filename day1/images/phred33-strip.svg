@@ -6,7 +6,7 @@
   <text x="380" y="26" text-anchor="middle" font-size="16" font-weight="600">
     Phred+33 encoding: from FASTQ byte to error probability
   </text>
-  <text x="380" y="46" text-anchor="middle" font-size="12" fill="#555">
+  <text x="380" y="46" text-anchor="middle" font-size="14" fill="#555">
     Q = byte − 33,  P(error) ≈ 10^(−Q/10)
   </text>
 
@@ -31,11 +31,11 @@
   <rect x="10"  y="70"  width="150" height="240" fill="#e3f2fd" stroke="#bbb"/>
 
   <!-- Row labels -->
-  <text x="150" y="112" text-anchor="end" font-size="13" font-weight="600">ASCII char</text>
-  <text x="150" y="165" text-anchor="end" font-size="13" font-weight="600">byte value</text>
-  <text x="150" y="205" text-anchor="end" font-size="13" font-weight="600">subtract 33</text>
-  <text x="150" y="245" text-anchor="end" font-size="13" font-weight="600">Phred score Q</text>
-  <text x="150" y="290" text-anchor="end" font-size="13" font-weight="600">P(error)</text>
+  <text x="150" y="112" text-anchor="end" font-size="15" font-weight="600">ASCII char</text>
+  <text x="150" y="165" text-anchor="end" font-size="15" font-weight="600">byte value</text>
+  <text x="150" y="205" text-anchor="end" font-size="15" font-weight="600">subtract 33</text>
+  <text x="150" y="245" text-anchor="end" font-size="15" font-weight="600">Phred score Q</text>
+  <text x="150" y="290" text-anchor="end" font-size="15" font-weight="600">P(error)</text>
 
   <!-- ===== Char-box header band across all 6 data columns ===== -->
   <rect x="160" y="70" width="570" height="70" fill="#e3f2fd" stroke="#bbb"/>
@@ -75,37 +75,37 @@
   <!-- ===== Column 0: '!' byte 33, Q 0, P 1.0 (worst quality) ===== -->
   <text x="207.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace">!</text>
-  <text x="207.5" y="168" text-anchor="middle" font-size="14"
+  <text x="207.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">33</text>
-  <text x="207.5" y="208" text-anchor="middle" font-size="14"
+  <text x="207.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="207.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="207.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace">0</text>
-  <text x="207.5" y="291" text-anchor="middle" font-size="13"
+  <text x="207.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">1.0</text>
 
   <!-- ===== Column 1: '#' byte 35, Q 2, P 0.63 ===== -->
   <text x="302.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace">#</text>
-  <text x="302.5" y="168" text-anchor="middle" font-size="14"
+  <text x="302.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">35</text>
-  <text x="302.5" y="208" text-anchor="middle" font-size="14"
+  <text x="302.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="302.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="302.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace">2</text>
-  <text x="302.5" y="291" text-anchor="middle" font-size="13"
+  <text x="302.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">0.63</text>
 
   <!-- ===== Column 2: '5' byte 53, Q 20, P 0.01 ===== -->
   <text x="397.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace">5</text>
-  <text x="397.5" y="168" text-anchor="middle" font-size="14"
+  <text x="397.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">53</text>
-  <text x="397.5" y="208" text-anchor="middle" font-size="14"
+  <text x="397.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="397.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="397.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace">20</text>
-  <text x="397.5" y="291" text-anchor="middle" font-size="13"
+  <text x="397.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">0.01</text>
 
   <!-- ===== Column 3: 'I' byte 73, Q 40, P 1e-4 (typical Illumina) ===== -->
@@ -114,42 +114,42 @@
         stroke-width="2.5"/>
   <text x="492.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace" fill="#b45309">I</text>
-  <text x="492.5" y="168" text-anchor="middle" font-size="14"
+  <text x="492.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">73</text>
-  <text x="492.5" y="208" text-anchor="middle" font-size="14"
+  <text x="492.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="492.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="492.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace" fill="#b45309">40</text>
-  <text x="492.5" y="291" text-anchor="middle" font-size="13"
+  <text x="492.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">1 × 10⁻⁴</text>
 
   <!-- ===== Column 4: ']' byte 93, Q 60, P 1e-6 ===== -->
   <text x="587.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace">]</text>
-  <text x="587.5" y="168" text-anchor="middle" font-size="14"
+  <text x="587.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">93</text>
-  <text x="587.5" y="208" text-anchor="middle" font-size="14"
+  <text x="587.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="587.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="587.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace">60</text>
-  <text x="587.5" y="291" text-anchor="middle" font-size="13"
+  <text x="587.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">1 × 10⁻⁶</text>
 
   <!-- ===== Column 5: '~' byte 126, Q 93, P 5e-10 (best the encoding allows) ===== -->
   <text x="682.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
         font-family="ui-monospace, monospace" fill="#2e7d32">~</text>
-  <text x="682.5" y="168" text-anchor="middle" font-size="14"
+  <text x="682.5" y="168" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace">126</text>
-  <text x="682.5" y="208" text-anchor="middle" font-size="14"
+  <text x="682.5" y="208" text-anchor="middle" font-size="16"
         font-family="ui-monospace, monospace" fill="#555">− 33</text>
-  <text x="682.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+  <text x="682.5" y="248" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace" fill="#2e7d32">93</text>
-  <text x="682.5" y="291" text-anchor="middle" font-size="13"
+  <text x="682.5" y="291" text-anchor="middle" font-size="15"
         font-family="ui-monospace, monospace">~5 × 10⁻¹⁰</text>
 
   <!-- ===== Footnote ===== -->
-  <text x="160" y="338" font-size="12" fill="#555">
-    Q = 40 (highlighted) is the typical Illumina "high-quality" call. Q = 93 is the ceiling of the Phred+33 encoding.
+  <text x="380" y="338" text-anchor="middle" font-size="13" fill="#555">
+    Q = 40 (highlighted) is the typical Illumina "high-quality" call. Q = 93 is the ceiling of Phred+33.
   </text>
 
 </svg>

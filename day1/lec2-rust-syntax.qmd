@@ -348,8 +348,8 @@ The naive Python choice (list of ints) costs 8× more memory than the smart Pyth
 What happens when you add 1 to a `u8` that's already 255?
 
 ```rust
-let mut x: u8 = 255;
-x += 1;
+let mut a_count: u8 = 255;   // counting how many A bases we've seen so far
+a_count += 1;
 ```
 
 - **Debug build**: program **panics** with a clear message.
@@ -396,13 +396,13 @@ Don't agonize over the choice. If you pick wrong, the compiler will tell you whe
 Rust **never converts numeric types implicitly**.
 
 ```rust
-let count: usize = 42;
-let total: usize = 100;
+let gc: usize = 42;
+let length: usize = 100;
 
-// let frac: f64 = count / total;          // compile error
-// let frac        = count / total;        //  = 0  (integer division!)
+// let frac: f64 = gc / length;            // compile error
+// let frac        = gc / length;          //  = 0  (integer division!)
 
-let frac: f64 = count as f64 / total as f64;     // = 0.42
+let frac: f64 = gc as f64 / length as f64;       // = 0.42 (GC ratio)
 ```
 
 `as` does the cast. One CPU instruction, usually free.
@@ -412,7 +412,7 @@ Try to mix two different numeric types in one expression and the compiler refuse
 
 The reason: every conversion between numeric types involves a choice. usize to f64 can lose precision for very large numbers. i32 to u32 changes the meaning of negative values. i64 to i32 might truncate. The compiler makes you say which conversion you want, using the keyword `as`.
 
-A different bug the same rule catches: integer division. If both sides of `count / total` are integers, the result is an integer. 42 over 100 is zero, not 0.42. If you wanted a float, you have to cast at least one side to f64 first.
+A different bug the same rule catches: integer division. If both sides of `gc / length` are integers, the result is an integer. A gc count of 42 out of a total length of 100 gives zero, not 0.42. If you wanted a float, you have to cast at least one side to f64 first.
 
 When you forget, the compiler tells you exactly which line. The fix is one `as` keyword.
 :::

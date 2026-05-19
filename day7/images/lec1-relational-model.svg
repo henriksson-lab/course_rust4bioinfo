@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    A table: rows of records, columns of typed fields
+  </text>
+  <text x="450" y="56" text-anchor="middle" font-size="14" fill="#555">
+    The strain table — one row per microbial strain in the collection
+  </text>
+
+  <!-- ===== Table grid ===== -->
+  <!-- Column x-positions: strain_id 80..170, strain_name 170..340, species 340..540,
+       isolation_source 540..720, year_isolated 720..860 -->
+
+  <!-- Header band -->
+  <rect x="80" y="90" width="780" height="36" fill="#e3f2fd"
+        stroke="#888" stroke-width="1.5"/>
+
+  <!-- Column dividers (down to last row only) -->
+  <line x1="170" y1="90" x2="170" y2="284" stroke="#bbb"/>
+  <line x1="340" y1="90" x2="340" y2="284" stroke="#bbb"/>
+  <line x1="540" y1="90" x2="540" y2="284" stroke="#bbb"/>
+  <line x1="720" y1="90" x2="720" y2="284" stroke="#bbb"/>
+
+  <!-- Header text -->
+  <text x="125" y="114" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</text>
+  <text x="255" y="114" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="440" y="114" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="630" y="114" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_source</text>
+  <text x="790" y="114" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">year_isolated</text>
+
+  <!-- type sub-row -->
+  <text x="125" y="142" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">INTEGER</text>
+  <text x="255" y="142" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">TEXT</text>
+  <text x="440" y="142" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">TEXT</text>
+  <text x="630" y="142" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">TEXT</text>
+  <text x="790" y="142" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">INTEGER</text>
+
+  <!-- Row 1 (highlighted in yellow) -->
+  <rect x="80" y="150" width="780" height="38" fill="#fff3cd"
+        stroke="#d97706" stroke-width="2"/>
+  <text x="125" y="174" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
+  <text x="255" y="174" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="440" y="174" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="630" y="174" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">human gut</text>
+  <text x="790" y="174" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1922</text>
+
+  <!-- Row 2 -->
+  <rect x="80" y="188" width="780" height="32" fill="white" stroke="#ddd"/>
+  <text x="125" y="209" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">2</text>
+  <text x="255" y="209" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="440" y="209" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="630" y="209" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">lab derivative</text>
+  <text x="790" y="209" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1980</text>
+
+  <!-- Row 3 -->
+  <rect x="80" y="220" width="780" height="32" fill="white" stroke="#ddd"/>
+  <text x="125" y="241" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">3</text>
+  <text x="255" y="241" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">BL21(DE3)</text>
+  <text x="440" y="241" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="630" y="241" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">lab derivative</text>
+  <text x="790" y="241" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1986</text>
+
+  <!-- Row 4 -->
+  <rect x="80" y="252" width="780" height="32" fill="white" stroke="#ddd"/>
+  <text x="125" y="273" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">4</text>
+  <text x="255" y="273" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">168</text>
+  <text x="440" y="273" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Bacillus subtilis</text>
+  <text x="630" y="273" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">soil</text>
+  <text x="790" y="273" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1947</text>
+
+  <!-- Outer border -->
+  <rect x="80" y="90" width="780" height="194" fill="none"
+        stroke="#888" stroke-width="1.5"/>
+
+  <!-- ===== Annotations ===== -->
+
+  <!-- "one row = one record" annotation above the highlighted row -->
+  <text x="450" y="76" text-anchor="middle" font-size="13" font-weight="700"
+        fill="#d97706">
+    yellow row = one record (a tuple of values)
+  </text>
+
+  <!-- PK badge inside strain_id column at the bottom of the table -->
+  <rect x="84" y="296" width="172" height="22" rx="4" ry="4"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="170" y="312" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">strain_id = PRIMARY KEY</text>
+
+  <!-- Bottom explanatory prose -->
+  <text x="450" y="396" text-anchor="middle" font-size="14" fill="#333">
+    The schema fixes the shape; every row is a tuple of values, one per column.
+  </text>
+
+  <!-- Three small fact callouts -->
+  <g>
+    <rect x="80" y="420" width="240" height="80" fill="#fafafa" stroke="#bbb" rx="4"/>
+    <text x="200" y="442" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+      rows
+    </text>
+    <text x="200" y="464" text-anchor="middle" font-size="12" fill="#555">
+      unordered set of records
+    </text>
+    <text x="200" y="482" text-anchor="middle" font-size="12" fill="#555">
+      look one up by primary key
+    </text>
+  </g>
+
+  <g>
+    <rect x="330" y="420" width="240" height="80" fill="#fafafa" stroke="#bbb" rx="4"/>
+    <text x="450" y="442" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+      columns
+    </text>
+    <text x="450" y="464" text-anchor="middle" font-size="12" fill="#555">
+      fixed name, fixed type
+    </text>
+    <text x="450" y="482" text-anchor="middle" font-size="12" fill="#555">
+      may be NOT NULL
+    </text>
+  </g>
+
+  <g>
+    <rect x="580" y="420" width="280" height="80" fill="#fafafa" stroke="#bbb" rx="4"/>
+    <text x="720" y="442" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+      primary key
+    </text>
+    <text x="720" y="464" text-anchor="middle" font-size="12" fill="#555">
+      one column (or several) that is
+    </text>
+    <text x="720" y="482" text-anchor="middle" font-size="12" fill="#555">
+      unique across every row
+    </text>
+  </g>
+
+</svg>

@@ -21,30 +21,30 @@
   <!-- User -->
   <rect x="60" y="50" width="140" height="44" rx="6" ry="6"
         fill="#eeeeee" stroke="#888" stroke-width="1.5"/>
-  <text x="130" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="#333">
+  <text x="130" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="#333">
     User
   </text>
-  <text x="130" y="86" text-anchor="middle" font-size="11" fill="#666">
+  <text x="130" y="86" text-anchor="middle" font-size="13" fill="#666">
     (clicks in browser)
   </text>
 
   <!-- Browser (Yew) -->
   <rect x="310" y="50" width="160" height="44" rx="6" ry="6"
         fill="#5b9bd5" stroke="#3a78b0" stroke-width="1.5"/>
-  <text x="390" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="white">
+  <text x="390" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="white">
     Browser (Yew app)
   </text>
-  <text x="390" y="86" text-anchor="middle" font-size="11" fill="#e8f1fb">
+  <text x="390" y="86" text-anchor="middle" font-size="13" fill="#e8f1fb">
     .wasm in the page
   </text>
 
   <!-- axum backend -->
   <rect x="580" y="50" width="140" height="44" rx="6" ry="6"
         fill="#81c784" stroke="#4f9e54" stroke-width="1.5"/>
-  <text x="650" y="70" text-anchor="middle" font-size="13" font-weight="600" fill="white">
+  <text x="650" y="70" text-anchor="middle" font-size="15" font-weight="600" fill="white">
     axum backend
   </text>
-  <text x="650" y="86" text-anchor="middle" font-size="11" fill="#eaf5ec">
+  <text x="650" y="86" text-anchor="middle" font-size="13" fill="#eaf5ec">
     :3000 on localhost
   </text>
 
@@ -59,7 +59,7 @@
   <!-- ===== 1. User → Browser: click ===== -->
   <line x1="132" y1="130" x2="386" y2="130"
         stroke="#444" stroke-width="1.8" marker-end="url(#arrow-solid)"/>
-  <text x="259" y="123" text-anchor="middle" font-size="12" fill="#333">
+  <text x="259" y="123" text-anchor="middle" font-size="14" fill="#333">
     click "Load sample 42" button
   </text>
 
@@ -70,7 +70,7 @@
   <!-- ===== 2. Browser → axum: GET ===== -->
   <line x1="395" y1="170" x2="646" y2="170"
         stroke="#444" stroke-width="1.8" marker-end="url(#arrow-solid)"/>
-  <text x="520" y="163" text-anchor="middle" font-size="12"
+  <text x="520" y="163" text-anchor="middle" font-size="14"
         font-family="ui-monospace, monospace" fill="#333">
     GET /api/samples/42
   </text>
@@ -83,10 +83,10 @@
   <path d="M 655 200 Q 700 215, 655 230"
         fill="none" stroke="#444" stroke-width="1.5"
         marker-end="url(#arrow-solid)"/>
-  <text x="710" y="219" text-anchor="middle" font-size="11" fill="#555">
+  <text x="710" y="219" text-anchor="middle" font-size="13" fill="#555">
     read row
   </text>
-  <text x="710" y="234" text-anchor="middle" font-size="11" fill="#555">
+  <text x="710" y="234" text-anchor="middle" font-size="13" fill="#555">
     from DB / CSV
   </text>
 
@@ -94,21 +94,21 @@
   <line x1="645" y1="270" x2="396" y2="270"
         stroke="#444" stroke-width="1.8" stroke-dasharray="6 4"
         marker-end="url(#arrow-dashed)"/>
-  <text x="520" y="263" text-anchor="middle" font-size="12"
+  <text x="520" y="263" text-anchor="middle" font-size="14"
         font-family="ui-monospace, monospace" fill="#333">
     200 OK   {id, name, sequence}
   </text>
-  <text x="520" y="283" text-anchor="middle" font-size="11" fill="#666">
+  <text x="520" y="283" text-anchor="middle" font-size="13" fill="#666">
     JSON body, deserialised by serde
   </text>
 
   <!-- ===== 5. Note on Browser lifeline ===== -->
   <rect x="306" y="312" width="170" height="44" rx="3" ry="3"
         fill="#fff3cd" stroke="#d97706" stroke-width="1.2"/>
-  <text x="391" y="330" text-anchor="middle" font-size="11" fill="#b45309">
+  <text x="391" y="330" text-anchor="middle" font-size="13" fill="#b45309">
     update state →
   </text>
-  <text x="391" y="346" text-anchor="middle" font-size="11" fill="#b45309">
+  <text x="391" y="346" text-anchor="middle" font-size="13" fill="#b45309">
     re-render textarea
   </text>
 
@@ -116,7 +116,7 @@
   <line x1="385" y1="395" x2="133" y2="395"
         stroke="#444" stroke-width="1.8" stroke-dasharray="6 4"
         marker-end="url(#arrow-dashed)"/>
-  <text x="259" y="388" text-anchor="middle" font-size="12" fill="#333">
+  <text x="259" y="388" text-anchor="middle" font-size="14" fill="#333">
     sequence now visible
   </text>
 
@@ -124,28 +124,28 @@
   <!-- (already drawn as one block above) -->
 
   <!-- ===== Time axis label ===== -->
-  <text x="30" y="120" font-size="11" fill="#888">time</text>
+  <text x="30" y="120" font-size="13" fill="#888">time</text>
   <line x1="36" y1="130" x2="36" y2="430"
         stroke="#888" stroke-width="1"/>
   <polygon points="32,425 40,425 36,435" fill="#888"/>
 
   <!-- ===== Legend ===== -->
-  <text x="60" y="475" font-size="12" font-weight="600" fill="#333">Legend</text>
+  <text x="60" y="475" font-size="14" font-weight="600" fill="#333">Legend</text>
 
   <line x1="60" y1="492" x2="100" y2="492" stroke="#444" stroke-width="1.8"
         marker-end="url(#arrow-solid)"/>
-  <text x="108" y="496" font-size="11" fill="#333">request / call</text>
+  <text x="108" y="496" font-size="13" fill="#333">request / call</text>
 
   <line x1="220" y1="492" x2="260" y2="492" stroke="#444" stroke-width="1.8"
         stroke-dasharray="6 4" marker-end="url(#arrow-dashed)"/>
-  <text x="268" y="496" font-size="11" fill="#333">response / return</text>
+  <text x="268" y="496" font-size="13" fill="#333">response / return</text>
 
   <rect x="400" y="486" width="10" height="14"
         fill="#e3f2fd" stroke="#5b9bd5" stroke-width="1"/>
-  <text x="418" y="496" font-size="11" fill="#333">activation (busy on this lifeline)</text>
+  <text x="418" y="496" font-size="13" fill="#333">activation (busy on this lifeline)</text>
 
   <line x1="60" y1="514" x2="100" y2="514" stroke="#888" stroke-width="1.2"
         stroke-dasharray="4 4"/>
-  <text x="108" y="518" font-size="11" fill="#333">lifeline (time flows top → bottom)</text>
+  <text x="108" y="518" font-size="13" fill="#333">lifeline (time flows top → bottom)</text>
 
 </svg>

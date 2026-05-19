@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="sl-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="sl-arrow-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    A slice is a <tspan font-style="italic">fat pointer</tspan> &#8212;
+    address + length, no allocation
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    let v = vec![b'A', b'C', b'G', b'T', b'A', b'C', b'G', b'T'];
+  </text>
+  <text x="450" y="74" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    let s: &amp;[u8] = &amp;v[2..6];
+  </text>
+
+  <!-- ===== STACK ===== -->
+  <text x="170" y="110" text-anchor="middle" font-size="17" font-weight="700" fill="#333">
+    Stack
+  </text>
+  <rect x="40" y="125" width="260" height="290" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- v: Vec header -->
+  <text x="60" y="155" font-size="13" font-family="ui-monospace, monospace" fill="#1565c0">
+    v: Vec&lt;u8&gt;
+  </text>
+  <rect x="60" y="165" width="220" height="36" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="74" y="190" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    ptr
+  </text>
+  <circle cx="260" cy="183" r="4" fill="#1565c0"/>
+  <rect x="60" y="201" width="220" height="32" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="74" y="223" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    len: 8, cap: 8
+  </text>
+
+  <!-- s: &[u8] - fat pointer (ptr + len) -->
+  <text x="60" y="278" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32">
+    s: &amp;[u8]    <tspan fill="#888" font-style="italic" font-family="system-ui, sans-serif">// 16 bytes</tspan>
+  </text>
+  <rect x="60" y="290" width="220" height="36" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="74" y="315" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    ptr
+  </text>
+  <circle cx="260" cy="308" r="4" fill="#2e7d32"/>
+  <rect x="60" y="326" width="220" height="32" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="74" y="348" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    len: 4
+  </text>
+
+  <text x="170" y="392" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    no allocation; just two
+  </text>
+  <text x="170" y="408" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    8-byte words on the stack
+  </text>
+
+  <!-- ===== HEAP ===== -->
+  <text x="620" y="110" text-anchor="middle" font-size="17" font-weight="700" fill="#333">
+    Heap
+  </text>
+  <rect x="360" y="125" width="510" height="290" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- 8-cell heap allocation -->
+  <g stroke="#888" stroke-width="1.2">
+    <rect x="400" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="456" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="512" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="568" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="624" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="680" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="736" y="240" width="56" height="56" fill="#fff3cd"/>
+    <rect x="792" y="240" width="56" height="56" fill="#fff3cd"/>
+  </g>
+
+  <!-- bytes -->
+  <text x="428" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">A</text>
+  <text x="484" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">C</text>
+  <text x="540" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">G</text>
+  <text x="596" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+  <text x="652" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">A</text>
+  <text x="708" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">C</text>
+  <text x="764" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">G</text>
+  <text x="820" y="276" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+
+  <!-- indices -->
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#666">
+    <text x="428" y="316" text-anchor="middle">[0]</text>
+    <text x="484" y="316" text-anchor="middle">[1]</text>
+    <text x="540" y="316" text-anchor="middle">[2]</text>
+    <text x="596" y="316" text-anchor="middle">[3]</text>
+    <text x="652" y="316" text-anchor="middle">[4]</text>
+    <text x="708" y="316" text-anchor="middle">[5]</text>
+    <text x="764" y="316" text-anchor="middle">[6]</text>
+    <text x="820" y="316" text-anchor="middle">[7]</text>
+  </g>
+
+  <!-- v.ptr arrow -> heap[0] -->
+  <line x1="280" y1="183" x2="395" y2="252"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#sl-arrow-blue)"/>
+
+  <!-- s.ptr arrow -> heap[2], with bracket spanning [2..6] -->
+  <line x1="280" y1="308" x2="510" y2="245"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#sl-arrow-green)"/>
+
+  <!-- bracket above [2..6]: 4 cells -->
+  <line x1="512" y1="210" x2="680" y2="210" stroke="#2e7d32" stroke-width="2.2"/>
+  <line x1="512" y1="210" x2="512" y2="228" stroke="#2e7d32" stroke-width="2.2"/>
+  <line x1="680" y1="210" x2="680" y2="228" stroke="#2e7d32" stroke-width="2.2"/>
+  <text x="596" y="200" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32">
+    s = &amp;v[2..6]  (len = 4)
+  </text>
+
+  <!-- bracket above all 8: v's range -->
+  <line x1="400" y1="165" x2="848" y2="165" stroke="#d97706" stroke-width="2"/>
+  <line x1="400" y1="165" x2="400" y2="180" stroke="#d97706" stroke-width="2"/>
+  <line x1="848" y1="165" x2="848" y2="180" stroke="#d97706" stroke-width="2"/>
+  <text x="624" y="156" text-anchor="middle" font-size="13" fill="#d97706" font-weight="600">
+    v owns these 8 bytes
+  </text>
+
+  <text x="624" y="370" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    s points inside v's allocation &#8212; no bytes are copied.
+  </text>
+
+  <!-- Footer -->
+  <text x="450" y="455" text-anchor="middle" font-size="14" fill="#333">
+    <tspan font-family="ui-monospace, monospace">&amp;[u8]</tspan>
+    is a <tspan font-weight="700">pointer + length</tspan>, 16 bytes total on a 64-bit machine.
+  </text>
+  <text x="450" y="478" text-anchor="middle" font-size="14" fill="#666" font-style="italic">
+    While s exists, v can't be moved, dropped, or mutated &#8212; the compiler tracks it.
+  </text>
+
+</svg>

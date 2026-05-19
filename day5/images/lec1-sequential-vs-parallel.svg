@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="sp-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Eight sequences, one thread vs. four threads
+  </text>
+  <text x="450" y="50" text-anchor="middle" font-size="13" fill="#777">
+    Each box = one sequence being GC-counted; width = wall-clock time
+  </text>
+
+  <!-- ===== Top: sequential ===== -->
+  <text x="70" y="98" font-size="15" font-weight="700" fill="#c62828">
+    Sequential (.iter())
+  </text>
+  <text x="70" y="116" font-size="11" fill="#666" font-style="italic">
+    one thread runs every item, one after another
+  </text>
+
+  <!-- Thread label -->
+  <text x="60" y="160" text-anchor="end" font-size="12" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">T0</text>
+
+  <!-- Sequential timeline: 8 boxes, 80 px each, from x=70 to x=710 -->
+  <g stroke="#b85c5c" stroke-width="1.2">
+    <rect x="70"  y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="150" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="230" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="310" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="390" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="470" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="550" y="140" width="80" height="40" fill="#ffcdd2"/>
+    <rect x="630" y="140" width="80" height="40" fill="#ffcdd2"/>
+  </g>
+  <text x="110" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 0</text>
+  <text x="190" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 1</text>
+  <text x="270" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 2</text>
+  <text x="350" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 3</text>
+  <text x="430" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 4</text>
+  <text x="510" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 5</text>
+  <text x="590" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 6</text>
+  <text x="670" y="166" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 7</text>
+
+  <!-- Sequential x-axis with time scale -->
+  <line x1="70" y1="200" x2="710" y2="200" stroke="#444" stroke-width="1.5"/>
+  <line x1="70" y1="196" x2="70" y2="204" stroke="#444" stroke-width="1.5"/>
+  <line x1="710" y1="196" x2="710" y2="204" stroke="#444" stroke-width="1.5"/>
+  <text x="70" y="220" text-anchor="middle" font-size="12" fill="#444"
+        font-family="ui-monospace, monospace">t = 0</text>
+  <text x="710" y="220" text-anchor="middle" font-size="12" font-weight="700" fill="#c62828"
+        font-family="ui-monospace, monospace">t = 8</text>
+
+  <text x="780" y="166" font-size="13" font-weight="700" fill="#c62828">
+    total = 8 units
+  </text>
+
+  <!-- ===== Bottom: parallel ===== -->
+  <text x="70" y="278" font-size="15" font-weight="700" fill="#2e7d32">
+    Parallel (.par_iter())
+  </text>
+  <text x="70" y="296" font-size="11" fill="#666" font-style="italic">
+    four threads, two items each, all started together
+  </text>
+
+  <!-- Thread labels -->
+  <text x="60" y="340" text-anchor="end" font-size="12" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">T0</text>
+  <text x="60" y="380" text-anchor="end" font-size="12" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">T1</text>
+  <text x="60" y="420" text-anchor="end" font-size="12" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">T2</text>
+  <text x="60" y="460" text-anchor="end" font-size="12" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">T3</text>
+
+  <!-- Parallel timeline: 4 rows, 2 items per row -->
+  <g stroke="#5a9c5e" stroke-width="1.2">
+    <!-- T0: seq 0, seq 4 -->
+    <rect x="70"  y="320" width="80" height="40" fill="#c8e6c9"/>
+    <rect x="150" y="320" width="80" height="40" fill="#c8e6c9"/>
+    <!-- T1: seq 1, seq 5 -->
+    <rect x="70"  y="360" width="80" height="40" fill="#c8e6c9"/>
+    <rect x="150" y="360" width="80" height="40" fill="#c8e6c9"/>
+    <!-- T2: seq 2, seq 6 -->
+    <rect x="70"  y="400" width="80" height="40" fill="#c8e6c9"/>
+    <rect x="150" y="400" width="80" height="40" fill="#c8e6c9"/>
+    <!-- T3: seq 3, seq 7 -->
+    <rect x="70"  y="440" width="80" height="40" fill="#c8e6c9"/>
+    <rect x="150" y="440" width="80" height="40" fill="#c8e6c9"/>
+  </g>
+
+  <text x="110" y="346" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 0</text>
+  <text x="190" y="346" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 4</text>
+  <text x="110" y="386" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 1</text>
+  <text x="190" y="386" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 5</text>
+  <text x="110" y="426" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 2</text>
+  <text x="190" y="426" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 6</text>
+  <text x="110" y="466" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 3</text>
+  <text x="190" y="466" text-anchor="middle" font-size="14" font-weight="700" font-family="ui-monospace, monospace" fill="#333">seq 7</text>
+
+  <!-- thread-reuse arrow on T0 (above the T0 row, between seq 0 and seq 4) -->
+  <line x1="110" y1="315" x2="190" y2="315" stroke="#2e7d32" stroke-width="1.5"
+        stroke-dasharray="3,3" marker-end="url(#sp-arrow)"/>
+  <text x="150" y="310" text-anchor="middle" font-size="10" fill="#2e7d32" font-style="italic">
+    T0 reused
+  </text>
+
+  <!-- Parallel x-axis -->
+  <line x1="70" y1="490" x2="710" y2="490" stroke="#444" stroke-width="1.5"/>
+  <line x1="70" y1="486" x2="70" y2="494" stroke="#444" stroke-width="1.5"/>
+  <line x1="230" y1="486" x2="230" y2="494" stroke="#444" stroke-width="1.5"/>
+  <line x1="710" y1="486" x2="710" y2="494" stroke="#444" stroke-width="1.5"/>
+  <text x="70" y="510" text-anchor="middle" font-size="12" fill="#444"
+        font-family="ui-monospace, monospace">t = 0</text>
+  <text x="230" y="510" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">t = 2</text>
+  <text x="710" y="510" text-anchor="middle" font-size="11" fill="#aaa"
+        font-family="ui-monospace, monospace">(t = 8)</text>
+
+  <text x="780" y="386" font-size="13" font-weight="700" fill="#2e7d32">
+    total ~ 2 units
+  </text>
+  <text x="780" y="404" font-size="12" fill="#444">
+    (4x speedup)
+  </text>
+
+</svg>

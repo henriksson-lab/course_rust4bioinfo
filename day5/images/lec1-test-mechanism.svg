@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="tm-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Tests live next to the code; cargo test runs them
+  </text>
+
+  <!-- ===== Left panel: source code ===== -->
+  <text x="220" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#1565c0">
+    src/lib.rs
+  </text>
+  <rect x="30" y="80" width="380" height="340" fill="#fafafa"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+
+  <!-- Code block -->
+  <text x="48" y="106" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    <tspan x="48" dy="0">pub fn gc_content(seq: &amp;[u8]) -&gt; f64 {</tspan>
+    <tspan x="48" dy="18">    let mut gc = 0usize;</tspan>
+    <tspan x="48" dy="18">    for &amp;b in seq {</tspan>
+    <tspan x="48" dy="18">        if b == b'G' || b == b'C' { gc += 1; }</tspan>
+    <tspan x="48" dy="18">    }</tspan>
+    <tspan x="48" dy="18">    gc as f64 / seq.len() as f64</tspan>
+    <tspan x="48" dy="18">}</tspan>
+  </text>
+
+  <!-- Highlighted #[cfg(test)] band -->
+  <rect x="40" y="248" width="360" height="22" fill="#fff3cd" stroke="#d97706" stroke-width="1"/>
+  <text x="48" y="264" font-size="13" font-weight="700" font-family="ui-monospace, monospace" fill="#b45309">
+    #[cfg(test)]
+  </text>
+
+  <text x="48" y="288" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    <tspan x="48" dy="0">mod tests {</tspan>
+    <tspan x="48" dy="18">    use super::*;</tspan>
+    <tspan x="48" dy="22">    #[test]</tspan>
+    <tspan x="48" dy="18">    fn gc_of_acgt() {</tspan>
+    <tspan x="48" dy="18">        assert_eq!(gc_content(b"ACGT"), 0.5);</tspan>
+    <tspan x="48" dy="18">    }</tspan>
+    <tspan x="48" dy="22">    // ... more tests ...</tspan>
+    <tspan x="48" dy="18">}</tspan>
+  </text>
+
+  <!-- Annotation arrow toward #[cfg(test)] -->
+  <text x="220" y="448" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    cfg(test) strips the module out of release builds
+  </text>
+
+  <!-- ===== Right panel: cargo test output ===== -->
+  <text x="660" y="68" text-anchor="middle" font-size="16" font-weight="700" fill="#2e7d32">
+    $ cargo test
+  </text>
+  <rect x="450" y="80" width="420" height="340" fill="#1e1e1e"
+        stroke="#444" stroke-width="1.5" rx="4"/>
+
+  <!-- Output lines -->
+  <text x="466" y="108" font-size="13" font-family="ui-monospace, monospace" fill="#ddd">
+    <tspan x="466" dy="0">running 3 tests</tspan>
+  </text>
+
+  <text x="466" y="138" font-size="13" font-family="ui-monospace, monospace">
+    <tspan x="466" dy="0" fill="#ddd">test tests::gc_of_acgt ... </tspan>
+    <tspan fill="#5fd35f" font-weight="700">ok</tspan>
+  </text>
+
+  <text x="466" y="160" font-size="13" font-family="ui-monospace, monospace">
+    <tspan x="466" dy="0" fill="#ddd">test tests::gc_of_empty ... </tspan>
+    <tspan fill="#5fd35f" font-weight="700">ok</tspan>
+  </text>
+
+  <text x="466" y="182" font-size="13" font-family="ui-monospace, monospace">
+    <tspan x="466" dy="0" fill="#ddd">test tests::gc_of_gggg ... </tspan>
+    <tspan fill="#ff6b6b" font-weight="700">FAILED</tspan>
+  </text>
+
+  <!-- failure expansion -->
+  <text x="466" y="216" font-size="12" font-family="ui-monospace, monospace" fill="#aaa">
+    <tspan x="466" dy="0">failures:</tspan>
+  </text>
+  <text x="466" y="234" font-size="12" font-family="ui-monospace, monospace" fill="#aaa">
+    <tspan x="466" dy="0">---- tests::gc_of_gggg stdout ----</tspan>
+  </text>
+  <text x="466" y="252" font-size="12" font-family="ui-monospace, monospace" fill="#ff8a8a">
+    <tspan x="466" dy="0">thread 'tests::gc_of_gggg' panicked at</tspan>
+  </text>
+  <text x="466" y="268" font-size="12" font-family="ui-monospace, monospace" fill="#ff8a8a">
+    <tspan x="466" dy="0">  assertion `left == right` failed</tspan>
+  </text>
+  <text x="466" y="284" font-size="12" font-family="ui-monospace, monospace" fill="#ff8a8a">
+    <tspan x="466" dy="0">    left:  0.75</tspan>
+  </text>
+  <text x="466" y="300" font-size="12" font-family="ui-monospace, monospace" fill="#ff8a8a">
+    <tspan x="466" dy="0">    right: 1.0</tspan>
+  </text>
+  <text x="466" y="316" font-size="12" font-family="ui-monospace, monospace" fill="#ff8a8a">
+    <tspan x="466" dy="0">  src/lib.rs:14:9</tspan>
+  </text>
+
+  <!-- summary line -->
+  <text x="466" y="356" font-size="13" font-family="ui-monospace, monospace" fill="#ddd">
+    <tspan x="466" dy="0">test result: </tspan>
+    <tspan fill="#ff6b6b" font-weight="700">FAILED</tspan>
+    <tspan fill="#ddd">. </tspan>
+    <tspan fill="#5fd35f">2 passed</tspan>
+    <tspan fill="#ddd">; </tspan>
+    <tspan fill="#ff6b6b">1 failed</tspan>
+  </text>
+
+  <text x="466" y="378" font-size="12" font-family="ui-monospace, monospace" fill="#aaa">
+    <tspan x="466" dy="0">finished in 0.02s</tspan>
+  </text>
+
+  <!-- Caption underneath -->
+  <text x="660" y="448" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    Two pass (green), one fails (red) with assertion values shown
+  </text>
+
+  <!-- Arrow between panels -->
+  <line x1="415" y1="250" x2="445" y2="250" stroke="#444" stroke-width="2.5"
+        marker-end="url(#tm-arrow)"/>
+  <text x="430" y="240" text-anchor="middle" font-size="11" fill="#444">runs</text>
+
+  <!-- Footer -->
+  <text x="450" y="494" text-anchor="middle" font-size="13" fill="#333">
+    Same crate: production code at the top, test module at the bottom, gated by #[cfg(test)].
+  </text>
+
+</svg>

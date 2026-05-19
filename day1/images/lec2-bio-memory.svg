@@ -190,7 +190,7 @@
     every key a <tspan font-family="ui-monospace, monospace">bytes</tspan> (~54 B),
   </text>
   <text x="685" y="356" font-size="10" fill="#555">
-    every value a <tspan font-family="ui-monospace, monospace">PyLong</tspan> (~28 B) + dict slots
+    every value a <tspan font-family="ui-monospace, monospace">PyLong</tspan> (~28 B)
   </text>
 
   <!-- 2. R named list 150 MB -->
@@ -198,10 +198,10 @@
   <text x="645" y="374" font-size="12" font-weight="700"
         font-family="ui-monospace, monospace" fill="#b45309">150 MB</text>
   <text x="700" y="374" font-size="10" fill="#555">
-    named-list lookup is O(n); use
+    named-list lookup is O(n);
   </text>
   <text x="700" y="386" font-size="10" fill="#555">
-    <tspan font-family="ui-monospace, monospace">environment</tspan> or external packages for hashing
+    use <tspan font-family="ui-monospace, monospace">environment</tspan> for hashing
   </text>
 
   <!-- 3. Rust HashMap 32 MB -->

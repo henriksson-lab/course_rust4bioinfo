@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="it-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="it-arrow-pass" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="it-arrow-drop" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="26" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    Iterator chain: source → adaptors → consumer
+  </text>
+  <text x="450" y="52" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    seq.iter().filter(|&amp;&amp;b| b == b'G' || b == b'C').count()
+  </text>
+
+  <!-- ===== Source array (left) ===== -->
+  <text x="125" y="90" text-anchor="middle" font-size="14" font-weight="700" fill="#555">
+    source: &amp;[u8]
+  </text>
+  <g stroke="#888" stroke-width="1.2">
+    <rect x="60" y="105" width="50" height="50" fill="#e3f2fd"/>
+    <rect x="60" y="155" width="50" height="50" fill="#e3f2fd"/>
+    <rect x="60" y="205" width="50" height="50" fill="#e3f2fd"/>
+    <rect x="60" y="255" width="50" height="50" fill="#e3f2fd"/>
+    <rect x="60" y="305" width="50" height="50" fill="#e3f2fd"/>
+    <rect x="60" y="355" width="50" height="50" fill="#e3f2fd"/>
+  </g>
+  <text x="85" y="138" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">A</text>
+  <text x="85" y="188" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">C</text>
+  <text x="85" y="238" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">G</text>
+  <text x="85" y="288" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">T</text>
+  <text x="85" y="338" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">C</text>
+  <text x="85" y="388" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace">A</text>
+
+  <!-- ===== Filter stage (middle) ===== -->
+  <rect x="280" y="120" width="280" height="270" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="6"/>
+  <text x="420" y="148" text-anchor="middle" font-size="15" font-weight="700"
+        fill="#b45309" font-family="ui-monospace, monospace">.filter(|&amp;&amp;b| ...)</text>
+  <text x="420" y="168" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    keeps only bytes that are G or C
+  </text>
+
+  <!-- per-byte slots inside the filter, mirroring source order -->
+  <g font-family="ui-monospace, monospace" font-size="14" text-anchor="middle">
+    <text x="420" y="200" fill="#c62828">A → drop</text>
+    <text x="420" y="222" fill="#2e7d32" font-weight="700">C → pass</text>
+    <text x="420" y="244" fill="#2e7d32" font-weight="700">G → pass</text>
+    <text x="420" y="266" fill="#c62828">T → drop</text>
+    <text x="420" y="288" fill="#2e7d32" font-weight="700">C → pass</text>
+    <text x="420" y="310" fill="#c62828">A → drop</text>
+  </g>
+  <text x="420" y="350" text-anchor="middle" font-size="12" fill="#555">
+    one byte in, zero or one byte out — no buffering
+  </text>
+
+  <!-- arrows source → filter (one per row) -->
+  <g>
+    <!-- A drop -->
+    <line x1="115" y1="130" x2="275" y2="198" stroke="#c62828" stroke-width="1.5" marker-end="url(#it-arrow-drop)"/>
+    <!-- C pass -->
+    <line x1="115" y1="180" x2="275" y2="220" stroke="#2e7d32" stroke-width="2" marker-end="url(#it-arrow-pass)"/>
+    <!-- G pass -->
+    <line x1="115" y1="230" x2="275" y2="242" stroke="#2e7d32" stroke-width="2" marker-end="url(#it-arrow-pass)"/>
+    <!-- T drop -->
+    <line x1="115" y1="280" x2="275" y2="264" stroke="#c62828" stroke-width="1.5" marker-end="url(#it-arrow-drop)"/>
+    <!-- C pass -->
+    <line x1="115" y1="330" x2="275" y2="286" stroke="#2e7d32" stroke-width="2" marker-end="url(#it-arrow-pass)"/>
+    <!-- A drop -->
+    <line x1="115" y1="380" x2="275" y2="308" stroke="#c62828" stroke-width="1.5" marker-end="url(#it-arrow-drop)"/>
+  </g>
+
+  <!-- ===== Consumer (right) ===== -->
+  <rect x="640" y="190" width="220" height="130" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5" rx="6"/>
+  <text x="750" y="218" text-anchor="middle" font-size="15" font-weight="700"
+        fill="#1b5e20" font-family="ui-monospace, monospace">.count()</text>
+  <text x="750" y="240" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    pull elements until exhausted
+  </text>
+  <text x="750" y="280" text-anchor="middle" font-size="22" font-weight="700" fill="#1b5e20">
+    3
+  </text>
+  <text x="750" y="304" text-anchor="middle" font-size="11" fill="#555">
+    final value of the chain
+  </text>
+
+  <!-- arrows filter → count -->
+  <line x1="560" y1="260" x2="635" y2="260"
+        stroke="#444" stroke-width="2" marker-end="url(#it-arrow)"/>
+  <text x="595" y="252" text-anchor="middle" font-size="10" fill="#555" font-style="italic">pull</text>
+
+  <!-- ===== Footer ===== -->
+  <text x="450" y="425" text-anchor="middle" font-size="13" fill="#333">
+    Lazy: each element flows through the chain on demand; nothing happens until the consumer pulls.
+  </text>
+  <text x="450" y="445" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    Compiles to the same loop you would write by hand — zero-cost abstraction.
+  </text>
+</svg>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rar" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    The rusqlite read pipeline — four steps
+  </text>
+
+  <!-- =================== Step 1: Connection::open =================== -->
+  <rect x="30" y="70" width="200" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="130" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    1. open
+  </text>
+  <text x="130" y="120" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">Connection::open</text>
+  <text x="130" y="140" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#555">("strains.db")?</text>
+  <text x="130" y="166" text-anchor="middle" font-size="11" fill="#555">
+    opens the .db file
+  </text>
+  <text x="130" y="182" text-anchor="middle" font-size="11" fill="#555">
+    (creates if missing)
+  </text>
+
+  <!-- Arrow 1 -> 2 -->
+  <line x1="230" y1="130" x2="260" y2="130" stroke="#555" stroke-width="1.5"
+        marker-end="url(#rar)"/>
+
+  <!-- =================== Step 2: conn.prepare =================== -->
+  <rect x="260" y="70" width="200" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="360" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    2. prepare
+  </text>
+  <text x="360" y="120" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">conn.prepare(</text>
+  <text x="360" y="138" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#555">"SELECT ... WHERE x = ?1"</text>
+  <text x="360" y="156" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">)?</text>
+  <text x="360" y="182" text-anchor="middle" font-size="11" fill="#555">
+    compile SQL → Statement
+  </text>
+
+  <!-- Arrow 2 -> 3 -->
+  <line x1="460" y1="130" x2="490" y2="130" stroke="#555" stroke-width="1.5"
+        marker-end="url(#rar)"/>
+
+  <!-- =================== Step 3: stmt.query_map =================== -->
+  <rect x="490" y="70" width="200" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="590" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    3. query_map
+  </text>
+  <text x="590" y="120" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">stmt.query_map(</text>
+  <text x="590" y="138" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#555">[param], row_fn)?</text>
+  <text x="590" y="166" text-anchor="middle" font-size="11" fill="#555">
+    bind ?1, run, return
+  </text>
+  <text x="590" y="182" text-anchor="middle" font-size="11" fill="#555">
+    iterator of Result&lt;T&gt;
+  </text>
+
+  <!-- Arrow 3 -> 4 -->
+  <line x1="690" y1="130" x2="720" y2="130" stroke="#555" stroke-width="1.5"
+        marker-end="url(#rar)"/>
+
+  <!-- =================== Step 4: for row in rows =================== -->
+  <rect x="720" y="70" width="170" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="805" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    4. iterate
+  </text>
+  <text x="805" y="120" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">for r in rows {</text>
+  <text x="805" y="138" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#555">let s = r?;</text>
+  <text x="805" y="156" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">}</text>
+  <text x="805" y="182" text-anchor="middle" font-size="11" fill="#555">
+    materialise rows
+  </text>
+
+  <!-- =================== Detail expansion: row_fn closure =================== -->
+  <!-- Dotted line from step 3 to detail panel -->
+  <line x1="590" y1="190" x2="450" y2="240" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+
+  <text x="450" y="232" text-anchor="middle" font-size="13" font-weight="700" fill="#555">
+    the row_fn closure: map columns to Rust fields
+  </text>
+
+  <rect x="180" y="250" width="540" height="180" fill="#fafafa"
+        stroke="#888" stroke-width="1.2" rx="4"/>
+
+  <text x="200" y="276" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    |row| Ok(Strain {
+  </text>
+  <text x="220" y="298" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    strain_id: <tspan fill="#1565c0">row.get(0)?</tspan>,
+  </text>
+  <text x="220" y="318" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    strain_name: <tspan fill="#1565c0">row.get(1)?</tspan>,
+  </text>
+  <text x="220" y="338" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    species: <tspan fill="#1565c0">row.get(2)?</tspan>,
+  </text>
+  <text x="220" y="358" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    isolation_source: <tspan fill="#1565c0">row.get(3)?</tspan>,
+  </text>
+  <text x="220" y="378" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    year_isolated: <tspan fill="#1565c0">row.get(4)?</tspan>,
+  </text>
+  <text x="200" y="400" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    })
+  </text>
+
+  <!-- Annotation arrows from row.get(i) to "column i" -->
+  <text x="540" y="298" font-size="11" fill="#888">column 0 → i64</text>
+  <text x="540" y="318" font-size="11" fill="#888">column 1 → String</text>
+  <text x="540" y="338" font-size="11" fill="#888">column 2 → String</text>
+  <text x="540" y="358" font-size="11" fill="#888">column 3 → Option&lt;String&gt;</text>
+  <text x="540" y="378" font-size="11" fill="#888">column 4 → Option&lt;i64&gt;</text>
+
+  <text x="200" y="420" font-size="11" fill="#888">
+    Rust type is inferred from the field you assign into.
+  </text>
+
+  <!-- =================== Bottom footer =================== -->
+  <text x="450" y="466" text-anchor="middle" font-size="13" fill="#333">
+    Same shape for every SELECT: prepare once, query_map with parameters, iterate.
+  </text>
+  <text x="450" y="487" text-anchor="middle" font-size="12" fill="#555">
+    Each <tspan font-family="ui-monospace, monospace">?</tspan>
+    unwraps a
+    <tspan font-family="ui-monospace, monospace">Result</tspan>;
+    a SQL error short-circuits the loop instead of crashing the process.
+  </text>
+
+</svg>

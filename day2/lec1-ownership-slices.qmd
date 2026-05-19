@@ -1,0 +1,576 @@
+---
+title: "Ownership, borrowing, slices"
+subtitle: "Day 2"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: simple
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+::: {.incremental}
+- The conceptual heart of Rust: who owns a value, who can read it, who can write it
+- Today's tools: ownership, `&T`, `&mut T`, slices (`&[u8]`), `Vec<T>`
+- Written companion: [day 2 — Concepts](00-concepts.qmd)
+- ~30 minutes, then four exercises: reverse complement, buffer reuse, k-mers, quality trim
+:::
+
+::: notes
+Yesterday was syntax. Today is the thing that makes Rust *Rust* — the part that no other mainstream language does, and the part that pays for itself a hundred times over once you've absorbed it.
+
+The four exercises this afternoon all hinge on these ideas: who owns the bytes, who is reading them, who is writing them. Get the ownership story right and the code is short and fast; get it wrong and the compiler stops you before any damage is done.
+
+Keep the concepts page open in a tab. I'll move fast.
+:::
+
+## Where Day 1 left off
+
+Yesterday: a `Vec<u8>` is a 24-byte header on the stack pointing at a heap allocation.
+
+![A Vec<u8> with ptr/len/cap on the stack, pointing to an 8-cell heap allocation holding ACGTA.](../day1/images/lec2-vec-memory.svg){fig-alt="Stack/heap split with a Vec<u8> three-field header on the stack and the bytes on the heap."}
+
+Today: **who is allowed to touch that heap allocation, and when?**
+
+::: notes
+Quick recap of where day 1 left us. The Vec is a header — ptr, len, cap — sitting on the stack. The actual bytes live on the heap, separately. Cheap to pass around, because moving a Vec just copies 24 bytes; the heap data doesn't budge.
+
+But this picture leaves a question unanswered: when there are several variables and several function calls in flight, who is allowed to read those heap bytes? Who is allowed to write them? Who is allowed to free them? That's the question ownership and borrowing answer.
+:::
+
+## Ownership in one sentence
+
+**Every value has exactly one owner. When the owner goes out of scope, the value is dropped.**
+
+```rust
+fn main() {
+    let v = vec![b'A', b'C', b'G', b'T'];
+    // v owns the heap allocation here.
+}   // v goes out of scope -> heap allocation is freed automatically.
+```
+
+No `free()`, no garbage collector. The compiler inserts the cleanup at the closing `}`.
+
+::: notes
+This is the headline rule. Every value — every Vec, every String, every File handle — has exactly one variable that owns it. When that variable goes out of scope, Rust runs cleanup code: for a Vec, it frees the heap allocation.
+
+This happens at compile time, not at runtime. The compiler can see exactly where `v` goes out of scope, and it inserts the free call there for you. No garbage collector pause, no manual `free()` call, no double-free bug. The memory is gone the instant it isn't needed any more.
+
+This is half of why Rust is fast and predictable. The other half is borrowing, which we get to in a moment.
+:::
+
+## Move: assignment transfers ownership
+
+```rust
+let v = vec![b'A', b'C', b'G', b'T'];
+let w = v;                    // ownership MOVES from v to w
+// println!("{:?}", v);       // compile error: v has been moved
+println!("{:?}", w);          // OK
+```
+
+After `let w = v`, `v` is no longer a valid name. Using it is a compile error, not a runtime crash.
+
+::: notes
+Assigning a Vec to a new variable does not copy the data. It transfers ownership. After `let w = v`, the variable `v` simply doesn't refer to anything any more — the compiler invalidates that binding.
+
+Why? Two reasons. First, copying a million-byte vector on every assignment would be a hidden cost; explicit is better than implicit. Second — the deeper reason — if both `v` and `w` could refer to the same heap allocation, then when both went out of scope you'd try to free the same memory twice. That's a classic C bug. Rust's solution: only one of them gets to own it.
+
+If you try to use `v` after the move, the compiler stops you with a clear error message. No segfault. No "use after free". The bug is impossible.
+:::
+
+## What "move" actually moves
+
+![Move semantics: the 24-byte Vec header is copied to the new owner; the heap allocation stays put; the old binding is invalidated.](images/lec1-move-semantics.svg){fig-alt="Stack/heap diagram with v greyed out and crossed in red, w now holding the same ptr/len/cap, and the 4-byte heap allocation unchanged."}
+
+::: notes
+This is what's actually happening at the machine level. The 24-byte Vec header — ptr, len, cap — gets copied bit-for-bit from v's stack slot to w's stack slot. That's fast: 24 bytes.
+
+The heap allocation — the actual ACGT bytes — does not move. Same address, same bytes. What moved was the *right to use it*. After the assignment, w is the unique owner; v is a name with nothing behind it.
+
+When this function returns, w goes out of scope, and the heap allocation gets freed. Once. Never twice. The compiler made that impossible by invalidating v at the point of assignment.
+:::
+
+## `Copy` types — the exception
+
+Primitive types implement [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html). Assigning them duplicates the value instead of moving.
+
+```rust
+let q: u8 = 30;
+let r = q;  // Phred 30 — both q and r still usable
+println!("{} {}", q, r);   // both still valid
+```
+
+Rule of thumb: types that are **small and own no heap memory** are `Copy`. So `u8`, `i32`, `f64`, `bool`, `char`, fixed-size arrays of those.
+
+`Vec<u8>`, `String`, `File` &mdash; **not** `Copy`. They own a resource.
+
+::: notes
+If everything moved on assignment, primitives would be unusable — you couldn't even write `let r = q; if r >= 20 && q >= 20`. Rust handles this with a trait called `Copy`. Types that implement `Copy` are duplicated on assignment instead of moved.
+
+The line is drawn at "does this type own a heap allocation or other resource?" A Phred score `u8` is just 1 byte; there's no resource to free, no duplication hazard. Copy it. A Vec owns a heap allocation; copying its 24-byte header would create two owners and a double-free. Move it.
+
+So quality scores, base bytes, floats, bools — copy. Vec, String, File handles, mutex guards — move. That's the rule. You'll internalize it within a day.
+:::
+
+## References — `&T` and `&mut T`
+
+To use a value **without taking ownership**, borrow it via a reference.
+
+```rust
+fn gc_content(seq: &[u8]) -> f64 { /* ... */ }   // takes a shared borrow
+
+let v = vec![b'A', b'C', b'G', b'T'];
+let g = gc_content(&v);          // pass &v, not v
+println!("{:?}", v);             // v still owns the data
+```
+
+`&v` makes a reference; the function reads through it. `v` is never moved.
+
+::: notes
+A reference is a borrow. The owner keeps owning; the function gets temporary access through a pointer.
+
+In the example, `gc_content` doesn't need to own the sequence — it just needs to read each byte and count. So we pass `&v`, a reference, instead of `v` itself. After the call, `v` is unchanged and still valid.
+
+The syntax `&v` is "make a reference to v". The type `&[u8]` is "a reference to a slice of u8". And here's where the slice idea creeps in: when you take a reference to a Vec, Rust often gives you a slice — a view of the bytes without the Vec header. We'll see this more in a few slides.
+
+For now: borrowing is the default when a function only needs to read. Moves are for transferring ownership; borrows are for temporary access.
+:::
+
+## Two flavours of borrow
+
+| Form | Meaning | How many at once |
+|---|---|---|
+| `&T` | **shared** borrow — read-only view | any number |
+| `&mut T` | **unique** borrow — read + write | exactly one |
+
+A value has either **any number of `&T`** *or* **exactly one `&mut T`**.
+
+Never both. The compiler enforces this at every program point.
+
+::: notes
+Two flavours, one rule.
+
+A shared borrow, written `&T`, is read-only. You can make as many as you like, and they can coexist freely — readers don't fight.
+
+A mutable borrow, written `&mut T`, is exclusive. While it exists, nothing else may touch the value — not another `&mut`, not even a read-only `&`. That's because a mutating function can move bytes around, reallocate buffers, change indices — and if someone else were reading through a stale pointer at the same time, you'd get garbage or a crash.
+
+This rule — "many readers OR one writer, never both" — is checked at compile time. Not at runtime. There is no lock, no atomic, no overhead. If your code compiles, it cannot have a data race on this value. That is the whole foundation of Rust's safety story.
+:::
+
+## Many shared borrows, all at once
+
+![Shared borrows: v owns the heap allocation; r and s are both &v and both point to the same data.](images/lec1-borrow-immutable.svg){fig-alt="v with ptr/len/cap on the stack, two &Vec<u8> references r and s also on the stack, all three pointing at the same 4-cell heap allocation containing ACGT."}
+
+::: notes
+Three names — v, r, s — all touching the same four bytes. v owns them; r and s borrow them. All three can read. None of them can write. None of them can free.
+
+This is fine. Concurrent readers never conflict, because no one is changing anything underneath them. You can pass `&v` to ten functions in a row, or hand it to ten threads in parallel; none of them can step on each other.
+
+This is the "many readers" half of the rule.
+:::
+
+## One mutable borrow, alone
+
+![Two-panel diagram: left, &mut v as the sole outstanding borrow compiles fine; right, trying to add a second & borrow while &mut is alive is rejected by the compiler.](images/lec1-borrow-mut-exclusive.svg){fig-alt="Left panel labeled OK: v with one &mut v borrow, with note 'sole writer'. Right panel labeled compile error: v with both &mut v and &v, the &v crossed out and the compiler error printed below."}
+
+::: notes
+The other half: exclusive writers. On the left, we have a `&mut v` and nothing else. That compiles — m can mutate the Vec, push to it, even cause a reallocation. Safe, because no other borrow could be invalidated.
+
+On the right, we tried to add a read-only borrow `r = &v` while the mutable borrow m is still alive. The compiler refuses with error E0502 — "cannot borrow as immutable because it is also borrowed as mutable". The mutable borrow's exclusivity is what makes a subsequent `push` safe; if r were allowed to coexist, a reallocation triggered by m would leave r pointing at freed memory.
+
+You will see this error often in week one. It is almost always the compiler protecting you from a real bug. Read the message; the suggestion at the bottom usually contains the fix.
+:::
+
+## Why the rule pays off
+
+```rust
+let mut v = vec![b'A', b'C', b'G'];
+let first = &v[0];          // shared borrow into v's heap allocation
+v.push(b'T');               // may REALLOCATE -> first would dangle!
+println!("{}", first);      // (in C/C++, undefined behaviour)
+```
+
+Rust rejects this at compile time. `first` is a `&u8` into v's buffer; `v.push` needs `&mut v`; the two cannot coexist.
+
+::: notes
+This is the canonical example of why the rule matters.
+
+`first` is a reference to the `b'A'` byte in v's heap buffer. `v.push(b'T')` may or may not trigger a reallocation, depending on capacity — and if it does, the old buffer is freed. `first` would then point at freed memory. Read through it, get garbage. Or worse: get whatever the allocator handed out next.
+
+In C++, this is one of the most common sources of crashes in production code — `std::vector::iterator` invalidation. In Java, it's a `ConcurrentModificationException` at runtime, *if you're lucky*. In Rust, the compiler refuses to build the program. Same bug, three different consequences. Rust's is the only one that catches it before shipping.
+
+The fix is mechanical: don't keep `first` alive across the push, or use an index instead of a reference. The compiler tells you exactly which line is the problem.
+:::
+
+## Borrowing in function signatures
+
+```rust
+fn gc_content(seq: &[u8]) -> f64 { /* reads */ }
+fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) { /* writes out */ }
+fn into_uppercase(v: Vec<u8>) -> Vec<u8> { /* takes ownership */ }
+```
+
+Read the signatures **as contracts**:
+
+- `&[u8]` — "I will read your bytes; you keep them."
+- `&mut Vec<u8>` — "I will write into your buffer; you keep the allocation."
+- `Vec<u8>` — "Hand it over; I own it now."
+
+::: notes
+The right way to read a Rust signature is as a contract about ownership.
+
+If you see `&T`, the function is promising not to modify your value and not to keep it after the call returns. You can pass it and forget about it.
+
+If you see `&mut T`, the function is going to mutate the value through the reference. Your binding is unchanged — you still own the underlying data — but its contents may differ when the call returns.
+
+If you see `T` by value, the function takes ownership. After the call you cannot use that variable any more. If you want to use the value yourself later, either keep a clone or have the function return it back to you.
+
+These three shapes cover almost every Rust function you will ever read. Today's exercises use all three.
+:::
+
+## `Vec<T>` — owned, growable heap buffer
+
+```rust
+let mut v: Vec<u8> = Vec::new();           // empty, no allocation yet
+let mut v = Vec::with_capacity(100);       // empty, pre-allocated for 100
+v.push(b'A');                              // append
+v.clear();                                 // len -> 0, allocation kept
+v.reserve(50);                             // ensure room for 50 more
+let n = v.len();
+```
+
+`Vec<T>` **owns** its heap buffer. Returning it from a function transfers that ownership.
+
+::: notes
+[`Vec`](https://doc.rust-lang.org/std/vec/struct.Vec.html) is the standard growable array. It is the workhorse of Rust just as `list` is the workhorse of Python.
+
+`Vec::new` makes an empty Vec with no heap allocation yet. The first push will allocate. `Vec::with_capacity(n)` pre-allocates room for n elements — useful when you know the rough size up front, because it avoids the geometric "double the capacity" reallocations as you fill it.
+
+`push` appends. `clear` sets the length to zero but keeps the allocation — that's the trick we'll use in the buffer-reuse exercise. `reserve` tops up capacity if needed; it's a no-op if you already have room.
+
+Returning a Vec from a function moves it to the caller. No copying. Just the 24-byte header.
+:::
+
+## Slices — `&[T]`, a *view* into someone's buffer
+
+```rust
+let v = vec![b'A', b'C', b'G', b'T', b'A', b'C', b'G', b'T'];
+let s: &[u8] = &v[2..6];        // view of indices 2, 3, 4, 5 (length 4)
+println!("{}", s.len());        // 4
+```
+
+A slice is a **pointer + length**. No allocation. It borrows from the source.
+
+While `s` exists, `v` cannot be moved, dropped, or mutated.
+
+::: notes
+A slice is the second great idea of day 2. Where a Vec owns its data, a slice borrows it. A slice has two fields — a pointer to the first element, and a length — and that's it. 16 bytes on a 64-bit machine. No allocation, no copying.
+
+In the example, `&v[2..6]` makes a slice pointing at the four bytes starting from index 2 of v. The slice itself lives on the stack. The bytes still live in v's heap allocation. There are now two ways to reach those bytes: through v, and through s. The compiler tracks both.
+
+The crucial property: while s is alive, v is frozen. You can't mutate v, you can't move it, you can't drop it — because that would invalidate s. The borrow checker enforces this for you.
+:::
+
+## A slice is a fat pointer
+
+![A fat pointer: &[u8] is two words on the stack — a pointer to the first byte and a length — viewing a sub-range of a Vec's heap allocation.](images/lec1-slice-into-vec.svg){fig-alt="Stack on the left contains v's Vec header and s's fat pointer (ptr + len = 4); heap on the right shows an 8-cell allocation owned by v with a green bracket marking the &v[2..6] range that s points into."}
+
+::: notes
+This picture is the whole slice abstraction in one diagram. The owning Vec on the left has its three-field header. The slice s has just two fields — pointer and length. Both point into the same heap allocation.
+
+Notice what's *not* there: no separate copy of the bytes. The slice is purely metadata. That's why `&v[2..6]` is O(1) — you're not copying four bytes, you're computing one address and writing one length.
+
+This is also why the same `fn gc_content(seq: &[u8])` works on `b"ACGT"`, on a piece of a chromosome, or on a chunk of a FASTA record. The function never knows or cares where the bytes came from. It just sees pointer-plus-length.
+:::
+
+## DNA is `&[u8]`, not `&str`
+
+```rust
+fn gc_content(seq: &[u8]) -> f64 {       // YES
+    let mut gc = 0usize;
+    for &b in seq {
+        if b == b'G' || b == b'C' { gc += 1; }
+    }
+    gc as f64 / seq.len() as f64
+}
+
+// fn gc_content(seq: &str) -> f64 { ... }   // worse: UTF-8 tax, no O(1) index
+```
+
+`&[u8]` is just bytes — O(1) indexing, drops straight into byte-literal patterns.
+
+::: notes
+A reminder from day 1 that gets reinforced today: DNA functions take `&[u8]`, not `&str`.
+
+`&str` is UTF-8. Every byte has to be valid Unicode. Indexing is O(n) because a character may span 1 to 4 bytes. That's right for natural-language text. It is wrong for DNA, where every base is exactly one ASCII byte.
+
+`&[u8]` has none of that overhead. Indexing is O(1). Byte literals like `b'G'` drop into match patterns without conversion. And — this is the new bit — a `&[u8]` is a slice, which means it's a fat pointer into someone else's buffer. Zero allocation, zero copy.
+
+For the rest of the week, any function that touches DNA takes `&[u8]`. Any function that touches FASTQ quality takes `&[u8]`. You will rarely see `&str` in real bioinformatics Rust.
+:::
+
+## Range expressions for slicing
+
+```rust
+&seq[..]                   // the whole thing
+&seq[..3]                  // first 3-mer (prefix)
+&seq[seq.len()-3..]        // last 3-mer (suffix)
+&seq[a..b]                 // a (inclusive) to b (exclusive)
+&seq[a..=b]                // a to b inclusive
+```
+
+Out-of-bounds slicing **panics at runtime** — the compiler can't catch it statically because the length isn't known at compile time.
+
+::: notes
+The full menu of slice notations. They all produce a `&[T]` of the appropriate length, all in O(1), all without copying.
+
+The empty form `&seq[..]` is the whole thing — a slice covering the entire Vec. This is how you turn a `Vec<u8>` into a `&[u8]` when calling a function that expects one. (In many cases, Rust does this conversion implicitly via a feature called Deref coercion, but the explicit form is always available.)
+
+Out-of-bounds slicing panics — that is, the program stops with a clear message at the offending line. This is different from C, where slicing past the end is silent corruption. The runtime cost of the bounds check is small, and in tight loops the compiler often proves the check unnecessary and removes it.
+:::
+
+## k-mers as slice views
+
+```rust
+fn kmers(seq: &[u8], k: usize) -> Vec<&[u8]> {
+    let mut out = Vec::with_capacity(seq.len() - k + 1);
+    for i in 0..=seq.len() - k {
+        out.push(&seq[i..i + k]);     // a view, not a copy
+    }
+    out
+}
+```
+
+For a 100 Mb genome with k=21: ~100M *slices* (16 bytes each), **zero bytes of DNA duplicated.**
+
+::: notes
+This is exercise 3 this afternoon, foreshadowed. The function takes a sequence and a window size, and returns every k-length window.
+
+Two design choices, both important. First, the return type is `Vec<&[u8]>`, not `Vec<Vec<u8>>`. If we returned `Vec<Vec<u8>>`, every k-mer would be a separate heap allocation containing a copy of those bytes — gigabytes of duplicated DNA for a real genome. Returning `Vec<&[u8]>` instead returns a vector of slice descriptors — pointer-plus-length pairs — that all point back into the original sequence.
+
+Second, the lifetime of the returned slices is tied to `seq`. The compiler enforces that the returned vector cannot outlive seq. You don't write any annotation for this; one input reference, output reference, the compiler infers the rest. That's lifetime elision, which we'll meet in two slides.
+:::
+
+## k-mers — picture
+
+![Three k=3 sliding windows over the same 7-byte Vec<u8>; each window is a &[u8] pointing into the same backing storage.](images/kmers.svg){fig-alt="A 7-cell row of DNA bytes ACGTACG with three coloured brackets below labelling the three k=3 windows ACG, CGT, GTA, each a &[u8] view into the same backing storage."}
+
+::: notes
+This is what `kmers(b"ACGTACG", 3)` produces. Seven bytes in the input. Five possible 3-mers. Each 3-mer is a slice — a 16-byte pointer-plus-length — pointing at the appropriate offset in the same backing buffer. No bytes are copied. The total heap allocation is just the vector of five slice descriptors; the DNA itself is unchanged.
+
+If you scaled this up to a real genome with k=21, you'd produce roughly one slice per base, each 16 bytes — about 1.5 GB of metadata for a human chromosome. That sounds like a lot until you remember the alternative: copying every k-mer as its own Vec, which would be roughly 21 times bigger plus a per-Vec header tax. Day 3 makes this even cheaper using iterators that don't even allocate the outer vector.
+:::
+
+## Writing into a caller-owned buffer
+
+A function that allocates a fresh `Vec` on every call is wasteful in a hot loop:
+
+```rust
+fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
+    out.clear();                          // len = 0, allocation KEPT
+    out.reserve(seq.len());
+    for i in (0..seq.len()).rev() {
+        out.push(complement_base(seq[i]));
+    }
+}
+```
+
+The same heap allocation is reused across millions of calls.
+
+::: notes
+This is exercise 2 this afternoon. The shape — `&[u8]` in, `&mut Vec<u8>` out — is what every fast bioinformatics tool uses in its inner loop.
+
+The trick is `clear()`. It sets the Vec's length to zero, but it does *not* free the underlying allocation. The capacity stays the same. Next time the function fills the buffer, no allocator call is needed — the storage is right there from last time.
+
+For a million reads, this is the difference between a million allocator round-trips and effectively zero. Allocation is one of the few things in Rust that has measurable per-call cost, so removing it from the hot path matters.
+
+You'll see this exact API shape in crates like `noodles` and `rust-htslib`. Now you know why.
+:::
+
+## Buffer reuse — picture
+
+![Three states of the caller's Vec<u8> across one call: full from a previous call, empty after clear() but same allocation, full again after revcomp_into wrote into the existing storage.](images/revcomp-buf.svg){fig-alt="Three rows showing the same heap allocation across three states of a caller-owned Vec: filled (len 12, cap 64), cleared (len 0, cap 64), and refilled with the reverse complement (len 12, cap 64), with a yellow callout noting the heap allocation never moves."}
+
+::: notes
+The same heap block in all three rows. Top: 12 bytes from the previous call. Middle: `clear()` set the length to 0; the allocation is still there. Bottom: `revcomp_into` walked the input in reverse, complemented each base, and pushed into the existing storage — no allocator call, because the capacity was already 64.
+
+Multiply this by a hundred million reads and you have the difference between a tool that takes an hour and a tool that takes a minute.
+:::
+
+## Quality trim returns a slice, not a Vec
+
+```rust
+fn quality_trim(qual: &[u8], min_score: u8) -> &[u8] {
+    let threshold = min_score + 33;
+    let mut start = 0;
+    while start < qual.len() && qual[start] < threshold { start += 1; }
+    let mut end = qual.len();
+    while end > start && qual[end - 1] < threshold { end -= 1; }
+    &qual[start..end]
+}
+```
+
+Zero allocation. The returned slice borrows from `qual`.
+
+::: notes
+Exercise 4 this afternoon. Two-pointer trim: walk start rightward until you find a base that passes, walk end leftward until you find one, return the slice in between.
+
+The signature returns `&[u8]` — a borrow of the input, not a fresh allocation. This is the right shape because trimming never needs to produce new bytes; it just narrows the range of existing ones. Returning a slice is O(1) regardless of how long the input is.
+
+The returned slice's lifetime is tied to qual. The caller cannot use the trimmed slice after qual itself is gone. Again — no annotation needed; the compiler infers it from the single input reference.
+:::
+
+## Quality trim — picture
+
+![Two-pointer quality trim: start walks rightward and end walks leftward until both land on bases above threshold; the function returns &qual[start..end].](images/quality-trim.svg){fig-alt="A 10-cell strip of Phred+33 quality bytes with cells 0-2 and 8-9 shaded grey (trimmed) and cells 3-7 shaded green (kept); two green brackets mark final positions start=3 and end=8; faded dashed arrows arc inward from the initial positions 0 and 10."}
+
+::: notes
+The 10-cell strip is one read's worth of quality bytes. The two arcs at the top show where the pointers started; the green brackets show where they ended up. The middle five bytes pass the threshold, so the function returns `&qual[3..8]` — a five-element slice borrowing from the input. Zero bytes were copied. Zero allocations were made. The work was 10 byte comparisons.
+:::
+
+## Lifetime elision
+
+For one-input, one-output reference signatures, the compiler infers what's safe:
+
+![A function signature on the left as the programmer writes it; on the right, the same signature with the implicit lifetime 'a drawn in on both the input and output reference.](images/lec1-lifetime-elision.svg){fig-alt="Top: the signature fn quality_trim(qual: &[u8], min: u8) -> &[u8]. Below: the same signature with the implicit lifetime 'a on both input and output, plus a dashed arrow linking input to output and the rule 'output lives no longer than the input'."}
+
+::: notes
+You'll notice we haven't written a single `<'a>` annotation today. That's lifetime elision: in common cases the compiler infers the lifetimes for you.
+
+The rule that matters this week: if a function takes one reference parameter and returns a reference, the output's lifetime is the input's. So in `fn quality_trim(qual: &[u8], min: u8) -> &[u8]`, the returned slice borrows from qual, and the compiler enforces that the returned slice cannot outlive qual.
+
+You only need to write explicit lifetimes when the inference is ambiguous — typically when there are two input references that could feed the output, and the compiler needs you to say which one. That comes up later in the week. For today's exercises, elision covers everything.
+:::
+
+## The whole rulebook on one slide
+
+![Three-row reference table comparing owned T, shared borrow &T, and mutable borrow &mut T across read, mutate, drop, and count.](images/lec1-ownership-table.svg){fig-alt="A table with rows T (owned), &T (shared borrow), and &mut T (mutable borrow), and columns Can read?, Can mutate?, Can drop?, How many?. T can read, mutate (if mut) and drop, exactly 1 owner. &T can read only, any number. &mut T can read and mutate, exactly 1. Footer: any number of readers or exactly one writer."}
+
+::: notes
+This is the whole borrow checker on one slide. Keep this picture in your head and the compiler errors stop being surprising.
+
+Three forms — owned, shared borrow, mutable borrow. Four questions — read, mutate, drop, count. The "how many?" column is where the rule lives: exactly one owner, any number of shared borrows, exactly one mutable borrow.
+
+When the compiler complains, it's almost always because you tried to violate the count rule. The error message will say so. The fix is usually one of: scope a borrow down by introducing a block; switch from `&mut` to `&`; clone the value if you really do need two owners.
+:::
+
+## What you can `Copy`, and what you must `move`
+
+| Type | On assignment |
+|---|---|
+| `u8`, `i32`, `usize`, `f64`, `bool`, `char` | **copied** (Copy) |
+| `[u8; 4]` and other fixed arrays of Copy types | **copied** |
+| References `&T`, `&mut T` (the *pointer* itself) | **copied** |
+| `Vec<u8>`, `String`, `File`, `HashMap<K, V>` | **moved** |
+
+If in doubt: anything that owns a heap allocation is move-only.
+
+::: notes
+A quick reference table for which types Copy and which move. The line is "does it own a heap allocation or an OS resource?" Primitives don't, so they copy. Vec and String do, so they move.
+
+References are interesting: the pointer itself is Copy, because a pointer is just 8 bytes. Copying a `&T` gives you two `&T`s pointing at the same place, which is fine — the rule allows multiple shared borrows. Copying a `&mut T` is *not* allowed, because that would give you two mutable borrows, which violates exclusivity. The compiler enforces this.
+
+For the rest of the week, just remember: numerics copy, owners move. If you really do want to duplicate a Vec, call `.clone()` explicitly. That makes the cost visible.
+:::
+
+## Common borrow-checker errors
+
+::: {.incremental}
+- **E0382: borrow of moved value** &mdash; you used `v` after `let w = v`. Fix: pass `&v` instead, or reorder.
+- **E0502: cannot borrow as mutable / immutable** &mdash; you have a `&` and a `&mut` overlapping. Fix: narrow the scope of one borrow, or use an index.
+- **E0507: cannot move out of borrowed content** &mdash; you tried to take ownership from behind a `&T`. Fix: copy the value, clone, or change the API.
+- **E0596: cannot borrow as mutable** &mdash; the binding isn't `mut`. Fix: `let mut v = ...`.
+:::
+
+::: notes
+You will see all four of these by the end of the afternoon. They are not bugs — they are the compiler protecting you.
+
+E0382 is the move-then-use error. Often you didn't actually mean to take ownership; passing `&v` instead solves it.
+
+E0502 is the borrow overlap. The fix is to make sure the shared borrow ends before the mutable borrow begins, often by introducing a `{ }` block or reordering operations.
+
+E0507 happens when you try to pull a non-Copy value out from behind a reference. You can't move out of someone else's value — you only borrowed it.
+
+E0596 is the smallest one: you forgot the `mut` keyword on a `let` binding.
+
+The error messages are good. They almost always include the fix in a suggestion at the bottom. Read them.
+:::
+
+## A function that returns ownership
+
+```rust
+fn reverse_complement(seq: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(seq.len());
+    for i in (0..seq.len()).rev() {
+        out.push(complement_base(seq[i]));
+    }
+    out                  // ownership of the Vec MOVES to the caller
+}
+```
+
+Caller receives a fresh `Vec<u8>` they own. Function keeps nothing.
+
+::: notes
+Exercise 1 this afternoon. Read the signature: takes `&[u8]` (a borrow — we'll only read), returns `Vec<u8>` (a fresh, owned vector — caller takes ownership).
+
+Inside, we allocate a Vec, fill it in reverse order with complemented bases, and return it. The bare `out` at the end — no `return`, no `;` — is the function's value. That value is a Vec, and returning it moves ownership to the caller.
+
+No copying. The 24-byte Vec header is moved out; the heap allocation is now the caller's. When the caller's binding eventually goes out of scope, the heap is freed.
+
+This is the "produce a new owned value" shape. The next exercise rewrites it as "fill a caller-owned buffer" — same algorithm, different ownership story, much faster in a loop.
+:::
+
+## Recap
+
+::: {.incremental}
+- Every value has one owner; out of scope &rArr; dropped (no GC).
+- Assignment **moves** by default; primitives are `Copy`.
+- `&T` &mdash; shared, many readers, no writers.
+- `&mut T` &mdash; unique, sole writer, no other borrows.
+- Slices `&[u8]` are fat pointers (ptr + len); zero allocation.
+- `Vec<u8>` owns its heap buffer; `clear()` keeps the allocation.
+- Lifetime elision: one-in, one-out reference signatures need no annotation.
+:::
+
+::: notes
+Seven bullets. The whole afternoon hangs off these.
+
+Ownership, moves, Copy, two flavours of borrow, slices, Vec, elision. If you remember the picture from the ownership-table slide, you have most of it; the rest comes from doing the exercises.
+
+The borrow checker will yell at you. Read the error. The fix is usually small and obvious once you see what the compiler is protecting.
+:::
+
+## To the exercises
+
+- Reference companion: [day 2 &mdash; Concepts](00-concepts.qmd)
+- Start here: [Exercise 1 &mdash; Reverse complement](01-reverse-complement.qmd)
+
+In a terminal:
+
+```bash
+cd day2/ex-reverse-complement
+cargo test
+```
+
+::: {.fragment .fade-in style="margin-top: 1em;"}
+Four exercises today: reverse complement, buffer reuse, k-mers, quality trim. They build on each other.
+:::
+
+::: notes
+Same drill as yesterday. Open the concepts page in one tab as a reference. Open exercise 1. Open a terminal in the exercise directory.
+
+Exercises 1 and 2 are the same algorithm with two different ownership stories. Exercise 3 introduces returning slice views. Exercise 4 returns a slice from the input.
+
+Three hours. See you at the recap.
+:::

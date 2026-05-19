@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    A SELECT statement is a pipeline of stages
+  </text>
+
+  <!-- ===== The full SQL query (top) ===== -->
+  <rect x="40" y="50" width="820" height="120" fill="#e3f2fd" stroke="#888"
+        stroke-width="1.2" rx="4"/>
+  <text x="60" y="76" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">SELECT</text>
+  <text x="130" y="76" font-size="13" font-family="ui-monospace, monospace">
+    species, COUNT(*) AS n, AVG(od600_24h) AS mean_od
+  </text>
+
+  <text x="60" y="98" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">FROM</text>
+  <text x="130" y="98" font-size="13" font-family="ui-monospace, monospace">
+    strain JOIN assay ON assay.strain_id = strain.strain_id
+  </text>
+
+  <text x="60" y="120" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">WHERE</text>
+  <text x="130" y="120" font-size="13" font-family="ui-monospace, monospace">
+    medium = 'LB'
+  </text>
+
+  <text x="430" y="120" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">GROUP BY</text>
+  <text x="525" y="120" font-size="13" font-family="ui-monospace, monospace">
+    species
+  </text>
+
+  <text x="60" y="142" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">HAVING</text>
+  <text x="135" y="142" font-size="13" font-family="ui-monospace, monospace">
+    COUNT(*) &gt; 1
+  </text>
+
+  <text x="60" y="160" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">ORDER BY</text>
+  <text x="145" y="160" font-size="13" font-family="ui-monospace, monospace">
+    mean_od DESC
+  </text>
+  <text x="320" y="160" font-size="14" font-weight="600" font-family="ui-monospace, monospace"
+        fill="#1565c0">LIMIT</text>
+  <text x="375" y="160" font-size="13" font-family="ui-monospace, monospace">
+    10;
+  </text>
+
+  <!-- ===== Pipeline stages (bottom row of boxes) ===== -->
+  <!-- 7 stages, each 110 wide, spaced 7px apart, starting x=30 -->
+
+  <!-- Stage boxes y = 280 .. 360 -->
+  <g font-family="ui-monospace, monospace">
+    <!-- 1 FROM -->
+    <rect x="30" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="85" y="304" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">FROM</text>
+    <text x="85" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">load + join</text>
+    <text x="85" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">source tables</text>
+
+    <!-- 2 WHERE -->
+    <rect x="148" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="203" y="304" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">WHERE</text>
+    <text x="203" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">drop rows</text>
+    <text x="203" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">not matching</text>
+
+    <!-- 3 GROUP BY -->
+    <rect x="266" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="321" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">GROUP BY</text>
+    <text x="321" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">bucket rows</text>
+    <text x="321" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">by a column</text>
+
+    <!-- 4 aggregate -->
+    <rect x="384" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="439" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">COUNT / AVG</text>
+    <text x="439" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">reduce each</text>
+    <text x="439" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">group to one row</text>
+
+    <!-- 5 HAVING -->
+    <rect x="502" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="557" y="304" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">HAVING</text>
+    <text x="557" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">drop groups</text>
+    <text x="557" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">post-aggregation</text>
+
+    <!-- 6 SELECT -->
+    <rect x="620" y="280" width="110" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="675" y="304" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">SELECT</text>
+    <text x="675" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">keep only</text>
+    <text x="675" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">named columns</text>
+
+    <!-- 7 ORDER BY + LIMIT -->
+    <rect x="738" y="280" width="130" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.5" rx="4"/>
+    <text x="803" y="304" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">ORDER + LIMIT</text>
+    <text x="803" y="328" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">sort, then keep</text>
+    <text x="803" y="345" text-anchor="middle" font-size="11" fill="#555" font-family="system-ui, sans-serif">top N rows</text>
+  </g>
+
+  <!-- Arrows between stages -->
+  <line x1="140" y1="320" x2="148" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="258" y1="320" x2="266" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="376" y1="320" x2="384" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="494" y1="320" x2="502" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="612" y1="320" x2="620" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="730" y1="320" x2="738" y2="320" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Dashed lines from SQL clauses (top box) to pipeline stages (boxes) -->
+  <!-- FROM (top y=98) -> stage 1 (x=85, y=280) -->
+  <line x1="92" y1="100" x2="85" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- WHERE (top y=120) -> stage 2 (x=203) -->
+  <line x1="98" y1="122" x2="203" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- GROUP BY (top y=120, x ~ 470) -> stage 3 (x=321) -->
+  <line x1="470" y1="122" x2="321" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- COUNT/AVG inside SELECT, near top -->
+  <line x1="300" y1="78" x2="439" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- HAVING (top y=142) -> stage 5 (x=557) -->
+  <line x1="100" y1="144" x2="557" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- SELECT (top y=76, x=90) -> stage 6 (x=675) -->
+  <line x1="90" y1="78" x2="675" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+  <!-- ORDER BY (top y=160, x=100) -> stage 7 (x=803) -->
+  <line x1="100" y1="162" x2="803" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3 3"/>
+
+  <!-- Annotations under the pipeline -->
+  <text x="450" y="395" text-anchor="middle" font-size="13" fill="#555">
+    You write the clauses in declarative order; the engine runs them in this execution order.
+  </text>
+
+  <!-- Annotations: what each step does to the row count / column count -->
+  <text x="85"  y="420" text-anchor="middle" font-size="11" fill="#888">all matching pairs</text>
+  <text x="203" y="420" text-anchor="middle" font-size="11" fill="#888">fewer rows</text>
+  <text x="321" y="420" text-anchor="middle" font-size="11" fill="#888">rows grouped</text>
+  <text x="439" y="420" text-anchor="middle" font-size="11" fill="#888">one row per group</text>
+  <text x="557" y="420" text-anchor="middle" font-size="11" fill="#888">fewer groups</text>
+  <text x="675" y="420" text-anchor="middle" font-size="11" fill="#888">fewer columns</text>
+  <text x="803" y="420" text-anchor="middle" font-size="11" fill="#888">final order, top N</text>
+
+  <!-- Bottom note about WHERE vs HAVING -->
+  <rect x="40" y="450" width="820" height="50" fill="#fafafa" stroke="#bbb" rx="4"/>
+  <text x="60" y="473" font-size="13" fill="#333">
+    Key distinction:
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#d97706">WHERE</tspan>
+    filters individual rows
+    <tspan fill="#555">before</tspan>
+    grouping;
+    <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#d97706">HAVING</tspan>
+    filters whole groups
+    <tspan fill="#555">after</tspan>
+    aggregation.
+  </text>
+  <text x="60" y="491" font-size="12" fill="#555">
+    You cannot put
+    <tspan font-family="ui-monospace, monospace">COUNT(*) &gt; 1</tspan>
+    in WHERE — at WHERE-time, the count does not exist yet.
+  </text>
+
+</svg>

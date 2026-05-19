@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Owned, shared borrow, mutable borrow &#8212; at a glance
+  </text>
+
+  <!-- Table layout: 4 columns -->
+  <!-- column x positions: 60, 320, 460, 600, 740, 870 -->
+  <!-- header row -->
+  <rect x="40" y="60" width="820" height="56" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+
+  <text x="180" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#0d47a1">
+    Form
+  </text>
+  <text x="400" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#0d47a1">
+    Can read?
+  </text>
+  <text x="540" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#0d47a1">
+    Can mutate?
+  </text>
+  <text x="680" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#0d47a1">
+    Can drop?
+  </text>
+  <text x="810" y="94" text-anchor="middle" font-size="15" font-weight="700" fill="#0d47a1">
+    How many?
+  </text>
+
+  <!-- Row 1: owned T -->
+  <rect x="40" y="116" width="820" height="80" fill="white" stroke="#aaa" stroke-width="1"/>
+  <rect x="40" y="116" width="280" height="80" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.2"/>
+  <text x="180" y="148" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    T  (owned)
+  </text>
+  <text x="180" y="172" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    e.g. let v: Vec&lt;u8&gt; = ...
+  </text>
+  <text x="180" y="188" text-anchor="middle" font-size="11" fill="#888">
+    you own the value
+  </text>
+
+  <text x="400" y="162" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    yes
+  </text>
+  <text x="540" y="162" text-anchor="middle" font-size="14" fill="#333">
+    yes (if
+    <tspan font-family="ui-monospace, monospace">mut</tspan>)
+  </text>
+  <text x="680" y="162" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    yes
+  </text>
+  <text x="810" y="162" text-anchor="middle" font-size="13" fill="#333">
+    exactly 1 owner
+  </text>
+
+  <!-- Row 2: shared borrow &T -->
+  <rect x="40" y="196" width="820" height="80" fill="white" stroke="#aaa" stroke-width="1"/>
+  <rect x="40" y="196" width="280" height="80" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="180" y="228" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    &amp;T  (shared borrow)
+  </text>
+  <text x="180" y="252" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    e.g. fn gc(seq: &amp;[u8])
+  </text>
+  <text x="180" y="268" text-anchor="middle" font-size="11" fill="#888">
+    read-only view
+  </text>
+
+  <text x="400" y="242" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    yes
+  </text>
+  <text x="540" y="242" text-anchor="middle" font-size="18" font-weight="700" fill="#c62828">
+    no
+  </text>
+  <text x="680" y="242" text-anchor="middle" font-size="18" font-weight="700" fill="#c62828">
+    no
+  </text>
+  <text x="810" y="242" text-anchor="middle" font-size="14" fill="#333">
+    any number
+  </text>
+
+  <!-- Row 3: mutable borrow &mut T -->
+  <rect x="40" y="276" width="820" height="80" fill="white" stroke="#aaa" stroke-width="1"/>
+  <rect x="40" y="276" width="280" height="80" fill="#fff3cd" stroke="#d97706" stroke-width="1.2"/>
+  <text x="180" y="308" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    &amp;mut T  (mutable borrow)
+  </text>
+  <text x="180" y="332" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    e.g. fn fill(out: &amp;mut Vec&lt;u8&gt;)
+  </text>
+  <text x="180" y="348" text-anchor="middle" font-size="11" fill="#888">
+    sole writer
+  </text>
+
+  <text x="400" y="322" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    yes
+  </text>
+  <text x="540" y="322" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    yes
+  </text>
+  <text x="680" y="322" text-anchor="middle" font-size="18" font-weight="700" fill="#c62828">
+    no
+  </text>
+  <text x="810" y="322" text-anchor="middle" font-size="14" fill="#333">
+    exactly 1
+  </text>
+
+  <!-- Footer -->
+  <rect x="40" y="380" width="820" height="60" fill="#f1f8e9"
+        stroke="#2e7d32" stroke-width="1.3" rx="4"/>
+  <text x="450" y="406" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    The whole borrow checker is in the &quot;how many?&quot; column.
+  </text>
+  <text x="450" y="428" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    Any number of readers <tspan font-weight="700">or</tspan> exactly one writer.
+    Never both at the same time.
+  </text>
+
+</svg>

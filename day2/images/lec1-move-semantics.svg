@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="mv-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="mv-arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Move semantics &#8212; the data didn't move; the <tspan font-style="italic">ownership</tspan> did
+  </text>
+
+  <!-- Code -->
+  <text x="450" y="64" text-anchor="middle" font-size="15"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    let v = vec![b'A', b'C', b'G', b'T'];   let w = v;
+  </text>
+
+  <!-- ===== STACK on the left ===== -->
+  <text x="180" y="100" text-anchor="middle" font-size="18" font-weight="700" fill="#333">
+    Stack
+  </text>
+  <rect x="40" y="115" width="280" height="320" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- v: greyed out / X'd -->
+  <text x="60" y="150" font-size="14" font-family="ui-monospace, monospace" fill="#888">
+    v  (moved-from)
+  </text>
+  <rect x="60" y="160" width="240" height="90" fill="#f0f0f0"
+        stroke="#aaa" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="76" y="184" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    ptr: ----
+  </text>
+  <text x="76" y="208" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    len: ----
+  </text>
+  <text x="76" y="232" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    cap: ----
+  </text>
+  <!-- Red X over v -->
+  <line x1="60" y1="160" x2="300" y2="250" stroke="#c62828" stroke-width="3" opacity="0.6"/>
+  <line x1="300" y1="160" x2="60" y2="250" stroke="#c62828" stroke-width="3" opacity="0.6"/>
+
+  <text x="180" y="272" text-anchor="middle" font-size="12" fill="#c62828" font-style="italic">
+    using v now is a compile error
+  </text>
+
+  <!-- w: new owner -->
+  <text x="60" y="312" font-size="14" font-family="ui-monospace, monospace" fill="#1565c0">
+    w  (new owner)
+  </text>
+  <rect x="60" y="322" width="240" height="90" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="76" y="346" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#1565c0">(8 bytes)</tspan>
+  </text>
+  <text x="76" y="370" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    len: 4
+  </text>
+  <text x="76" y="394" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    cap: 4
+  </text>
+
+  <!-- ===== HEAP on the right ===== -->
+  <text x="630" y="100" text-anchor="middle" font-size="18" font-weight="700" fill="#333">
+    Heap
+  </text>
+  <rect x="400" y="115" width="460" height="320" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- 4-cell allocation; never moved -->
+  <g stroke="#888" stroke-width="1.2">
+    <rect x="450" y="230" width="80" height="80" fill="#fff3cd"/>
+    <rect x="530" y="230" width="80" height="80" fill="#fff3cd"/>
+    <rect x="610" y="230" width="80" height="80" fill="#fff3cd"/>
+    <rect x="690" y="230" width="80" height="80" fill="#fff3cd"/>
+  </g>
+  <text x="490" y="278" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">A</text>
+  <text x="570" y="278" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">C</text>
+  <text x="650" y="278" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">G</text>
+  <text x="730" y="278" text-anchor="middle" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+
+  <text x="610" y="340" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    the 4 bytes never moved
+  </text>
+
+  <text x="610" y="195" text-anchor="middle" font-size="14" fill="#d97706" font-weight="600">
+    same heap allocation throughout
+  </text>
+
+  <!-- ===== Arrow from w.ptr to heap[0] (live, blue) ===== -->
+  <line x1="290" y1="346" x2="445" y2="260"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#mv-arrow)"/>
+
+  <!-- ===== Footer ===== -->
+  <text x="450" y="475" text-anchor="middle" font-size="15" fill="#333">
+    Assignment <tspan font-family="ui-monospace, monospace">let w = v</tspan>
+    transfers the 24-byte Vec header. The heap bytes stay put.
+  </text>
+  <text x="450" y="498" text-anchor="middle" font-size="14" fill="#666" font-style="italic">
+    Only one variable owns the allocation at a time. The compiler enforces this.
+  </text>
+
+</svg>

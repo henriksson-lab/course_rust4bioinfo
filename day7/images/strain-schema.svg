@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 320"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 320"
      font-family="system-ui, -apple-system, sans-serif">
 
-  <text x="410" y="24" text-anchor="middle" font-size="16" font-weight="600">
+  <text x="470" y="24" text-anchor="middle" font-size="16" font-weight="600">
     Schema of the strain table — one row per microbial strain
   </text>
 
@@ -19,66 +19,66 @@
   <line x1="30" y1="86" x2="370" y2="86" stroke="#888" stroke-width="1.5"/>
   <text x="46" y="74" font-size="15" font-weight="700"
         font-family="ui-monospace, monospace">strain</text>
-  <text x="364" y="73" text-anchor="end" font-size="11" fill="#555">table</text>
+  <text x="364" y="73" text-anchor="end" font-size="13" fill="#555">table</text>
 
   <!-- Column headings (faint) -->
-  <text x="92" y="104" font-size="10" fill="#888">column</text>
-  <text x="248" y="104" font-size="10" fill="#888">type</text>
-  <text x="346" y="104" font-size="10" fill="#888" text-anchor="end">constraints</text>
+  <text x="92" y="104" font-size="12" fill="#888">column</text>
+  <text x="248" y="104" font-size="12" fill="#888">type</text>
+  <text x="346" y="104" font-size="12" fill="#888" text-anchor="end">constraints</text>
   <line x1="40" y1="110" x2="360" y2="110" stroke="#ddd" stroke-width="1"/>
 
   <!-- Row 1: strain_id (PK) -->
   <!-- PK badge -->
   <rect x="42" y="120" width="32" height="18" rx="4" ry="4"
         fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
-  <text x="58" y="134" text-anchor="middle" font-size="11" font-weight="700"
+  <text x="58" y="134" text-anchor="middle" font-size="13" font-weight="700"
         fill="#2e7d32" font-family="ui-monospace, monospace">PK</text>
-  <text x="84" y="134" font-size="13"
+  <text x="84" y="134" font-size="15"
         font-family="ui-monospace, monospace">strain_id</text>
-  <text x="240" y="134" font-size="12" fill="#555"
+  <text x="240" y="134" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">INTEGER</text>
-  <text x="360" y="134" text-anchor="end" font-size="11" fill="#2e7d32"
+  <text x="360" y="134" text-anchor="end" font-size="13" fill="#2e7d32"
         font-weight="700">PRIMARY KEY</text>
   <line x1="40" y1="146" x2="360" y2="146" stroke="#eee"/>
 
   <!-- Row 2: strain_name -->
-  <text x="84" y="164" font-size="13"
+  <text x="84" y="164" font-size="15"
         font-family="ui-monospace, monospace">strain_name</text>
-  <text x="240" y="164" font-size="12" fill="#555"
+  <text x="240" y="164" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">TEXT</text>
-  <text x="360" y="164" text-anchor="end" font-size="11" fill="#555">NOT NULL</text>
+  <text x="360" y="164" text-anchor="end" font-size="13" fill="#555">NOT NULL</text>
   <line x1="40" y1="176" x2="360" y2="176" stroke="#eee"/>
 
   <!-- Row 3: species -->
-  <text x="84" y="194" font-size="13"
+  <text x="84" y="194" font-size="15"
         font-family="ui-monospace, monospace">species</text>
-  <text x="240" y="194" font-size="12" fill="#555"
+  <text x="240" y="194" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">TEXT</text>
-  <text x="360" y="194" text-anchor="end" font-size="11" fill="#555">NOT NULL</text>
+  <text x="360" y="194" text-anchor="end" font-size="13" fill="#555">NOT NULL</text>
   <line x1="40" y1="206" x2="360" y2="206" stroke="#eee"/>
 
   <!-- Row 4: isolation_source -->
-  <text x="84" y="224" font-size="13"
+  <text x="84" y="224" font-size="15"
         font-family="ui-monospace, monospace">isolation_source</text>
-  <text x="240" y="224" font-size="12" fill="#555"
+  <text x="240" y="224" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">TEXT</text>
-  <text x="360" y="224" text-anchor="end" font-size="11" fill="#888">—</text>
+  <text x="360" y="224" text-anchor="end" font-size="13" fill="#888">—</text>
   <line x1="40" y1="236" x2="360" y2="236" stroke="#eee"/>
 
   <!-- Row 5: year_isolated -->
-  <text x="84" y="254" font-size="13"
+  <text x="84" y="254" font-size="15"
         font-family="ui-monospace, monospace">year_isolated</text>
-  <text x="240" y="254" font-size="12" fill="#555"
+  <text x="240" y="254" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">INTEGER</text>
-  <text x="360" y="254" text-anchor="end" font-size="11" fill="#888">—</text>
+  <text x="360" y="254" text-anchor="end" font-size="13" fill="#888">—</text>
 
   <!-- Footnote inside card -->
-  <text x="200" y="280" text-anchor="middle" font-size="10" fill="#888">
+  <text x="200" y="280" text-anchor="middle" font-size="12" fill="#888">
     PK = uniquely identifies a row;  NOT NULL = must be filled in
   </text>
 
   <!-- ===== Sample row (right) ===== -->
-  <text x="410" y="78" font-size="11" fill="#555">one row of data:</text>
+  <text x="410" y="78" font-size="13" fill="#555">one row of data:</text>
 
   <!-- The 5 cells of the sample row -->
   <!-- Layout: 5 cells starting at x=410, total width 390 -->
@@ -87,33 +87,33 @@
     <!-- strain_id -->
     <rect x="410" y="88" width="40" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="430" y="106" text-anchor="middle" font-size="10" fill="#888"
+    <text x="430" y="106" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">strain_id</text>
-    <text x="430" y="126" text-anchor="middle" font-size="14" font-weight="700"
+    <text x="430" y="126" text-anchor="middle" font-size="16" font-weight="700"
           font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
 
     <!-- strain_name -->
     <rect x="450" y="88" width="100" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="500" y="106" text-anchor="middle" font-size="10" fill="#888"
+    <text x="500" y="106" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">strain_name</text>
-    <text x="500" y="126" text-anchor="middle" font-size="13"
+    <text x="500" y="126" text-anchor="middle" font-size="15"
           font-family="ui-monospace, monospace">K-12 MG1655</text>
 
     <!-- species -->
     <rect x="550" y="88" width="140" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="620" y="106" text-anchor="middle" font-size="10" fill="#888"
+    <text x="620" y="106" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">species</text>
-    <text x="620" y="126" text-anchor="middle" font-size="13"
+    <text x="620" y="126" text-anchor="middle" font-size="15"
           font-family="ui-monospace, monospace">Escherichia coli</text>
 
     <!-- isolation_source -->
     <rect x="690" y="88" width="90" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="735" y="106" text-anchor="middle" font-size="10" fill="#888"
+    <text x="735" y="106" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">isolation_source</text>
-    <text x="735" y="126" text-anchor="middle" font-size="13"
+    <text x="735" y="126" text-anchor="middle" font-size="15"
           font-family="ui-monospace, monospace">human gut</text>
 
     <!-- year_isolated -->
@@ -122,19 +122,19 @@
 
   <!-- year_isolated cell (separate block to fit) -->
   <g>
-    <rect x="410" y="146" width="60" height="48" fill="#f7faff"
+    <rect x="410" y="146" width="78" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="440" y="164" text-anchor="middle" font-size="10" fill="#888"
+    <text x="449" y="164" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">year_isolated</text>
-    <text x="440" y="184" text-anchor="middle" font-size="13"
+    <text x="449" y="184" text-anchor="middle" font-size="15"
           font-family="ui-monospace, monospace">1922</text>
   </g>
 
   <!-- Annotations to the right of the sample row -->
-  <text x="490" y="166" font-size="12" fill="#555">
+  <text x="490" y="166" font-size="14" fill="#555">
     five columns above + the year column = one complete row.
   </text>
-  <text x="490" y="184" font-size="12" fill="#555">
+  <text x="490" y="184" font-size="14" fill="#555">
     The schema fixes the
     <tspan font-family="ui-monospace, monospace">shape</tspan>;
     every row must match it.
@@ -144,23 +144,23 @@
   <path d="M 430 88 C 430 60 390 60 380 70 C 372 78 372 92 380 100 L 380 134"
         fill="none" stroke="#2e7d32" stroke-width="1.5"
         stroke-dasharray="4 3"/>
-  <text x="395" y="58" font-size="11" fill="#2e7d32" font-weight="600">
+  <text x="395" y="58" font-size="13" fill="#2e7d32" font-weight="600">
     primary key — unique per row
   </text>
 
   <!-- Bottom prose -->
-  <text x="410" y="232" font-size="13" font-weight="600" fill="#333">
+  <text x="410" y="232" font-size="15" font-weight="600" fill="#333">
     Inserting another row…
   </text>
-  <text x="410" y="252" font-size="12" fill="#555"
+  <text x="410" y="252" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">
     INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
   </text>
-  <text x="410" y="270" font-size="12" fill="#555"
+  <text x="410" y="270" font-size="14" fill="#555"
         font-family="ui-monospace, monospace">
     VALUES ('DH5alpha', 'Escherichia coli', 'lab derivative', 1980);
   </text>
-  <text x="410" y="290" font-size="11" fill="#888">
+  <text x="410" y="290" font-size="13" fill="#888">
     strain_id is assigned automatically because it is INTEGER PRIMARY KEY.
   </text>
 

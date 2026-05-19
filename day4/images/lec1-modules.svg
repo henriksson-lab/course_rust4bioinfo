@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-mod" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-mod-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Modules: split one crate across files
+  </text>
+
+  <!-- ===== Left: directory tree ===== -->
+  <text x="160" y="75" text-anchor="middle" font-size="16" font-weight="600" fill="#555">
+    On disk
+  </text>
+  <rect x="30" y="90" width="260" height="170" rx="6" ry="6"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#222">
+    <text x="45" y="120">ex-fasta-stats/</text>
+    <text x="60" y="140">Cargo.toml</text>
+    <text x="60" y="160">src/</text>
+    <text x="80" y="180">main.rs</text>
+    <text x="80" y="200">parser.rs</text>
+    <text x="80" y="220">stats.rs</text>
+  </g>
+  <text x="160" y="248" text-anchor="middle" font-size="11" fill="#666" font-style="italic">
+    one source file per module
+  </text>
+
+  <!-- ===== Right top: main.rs ===== -->
+  <rect x="340" y="75" width="530" height="155" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="358" y="98" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    src/main.rs
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#222">
+    <text x="360" y="125">mod parser;</text>
+    <text x="360" y="143">mod stats;</text>
+    <text x="360" y="167">use crate::parser::parse_record;</text>
+    <text x="360" y="185">use crate::stats::ContigStat;</text>
+    <text x="360" y="215">fn main() { /* ... */ }</text>
+  </g>
+
+  <!-- arrows from `mod parser;` line down to parser.rs box -->
+  <line x1="500" y1="135" x2="500" y2="270"
+        stroke="#888" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow-mod-grey)"/>
+  <text x="510" y="248" font-size="11" font-style="italic" fill="#666">
+    mod parser; -&gt; look for parser.rs
+  </text>
+
+  <!-- arrow from `use ... parse_record;` to pub fn -->
+  <line x1="450" y1="190" x2="450" y2="270"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-mod)"/>
+  <text x="360" y="264" font-size="11" font-weight="600" fill="#2e7d32">
+    name lookup
+  </text>
+
+  <!-- ===== Right bottom: parser.rs ===== -->
+  <rect x="340" y="275" width="530" height="180" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="358" y="298" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    src/parser.rs
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#222">
+    <text x="360" y="325">pub struct Record {</text>
+    <text x="360" y="343">    pub name: String,</text>
+    <text x="360" y="361">    pub sequence: Vec&lt;u8&gt;,</text>
+    <text x="360" y="379">}</text>
+    <text x="360" y="405">pub fn parse_record(line: &amp;str)</text>
+    <text x="360" y="423">      -&gt; Record { /* ... */ }</text>
+  </g>
+  <text x="605" y="448" text-anchor="middle" font-size="11" font-style="italic" fill="#555">
+    pub = visible to other modules
+  </text>
+
+  <!-- footer -->
+  <text x="450" y="485" text-anchor="middle" font-size="13" fill="#555">
+    mod declares a child module; pub controls what leaks out; use brings a name into scope.
+  </text>
+
+</svg>

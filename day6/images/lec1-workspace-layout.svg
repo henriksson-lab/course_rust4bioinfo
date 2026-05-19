@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-dep" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    A Cargo workspace with three crates
+  </text>
+
+  <!-- ===== Directory tree (left panel) ===== -->
+  <rect x="30" y="60" width="340" height="420" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-dasharray="6,4" stroke-width="1.5"/>
+
+  <text x="50" y="92" font-size="16" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#333">sequence-inspector/</text>
+
+  <text x="65" y="120" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">├── Cargo.toml</text>
+  <text x="265" y="120" font-size="11" fill="#888" font-style="italic">workspace root</text>
+
+  <text x="65" y="142" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">├── Cargo.lock</text>
+
+  <text x="65" y="170" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">├── shared/</text>
+  <text x="85" y="190" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   ├── Cargo.toml</text>
+  <text x="85" y="208" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   └── src/lib.rs</text>
+  <text x="265" y="208" font-size="11" fill="#888" font-style="italic">SampleRecord</text>
+
+  <text x="65" y="246" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">├── frontend/</text>
+  <text x="85" y="266" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   ├── Cargo.toml</text>
+  <text x="85" y="284" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   ├── Trunk.toml</text>
+  <text x="85" y="302" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   ├── index.html</text>
+  <text x="85" y="320" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">│   └── src/main.rs</text>
+  <text x="265" y="320" font-size="11" fill="#888" font-style="italic">Yew app</text>
+
+  <text x="65" y="358" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">└── backend/</text>
+  <text x="85" y="378" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">    ├── Cargo.toml</text>
+  <text x="85" y="396" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">    └── src/main.rs</text>
+  <text x="265" y="396" font-size="11" fill="#888" font-style="italic">axum server</text>
+
+  <text x="65" y="434" font-size="12" fill="#888" font-style="italic">target/</text>
+  <text x="125" y="434" font-size="11" fill="#888" font-style="italic">— one shared build dir</text>
+
+  <!-- ===== Dependency graph (right panel) ===== -->
+  <rect x="410" y="60" width="460" height="380" rx="6" ry="6"
+        fill="white" stroke="#888" stroke-dasharray="6,4" stroke-width="1.5"/>
+
+  <text x="640" y="92" text-anchor="middle" font-size="16" font-weight="600" fill="#333">
+    Who depends on what
+  </text>
+
+  <!-- frontend box -->
+  <rect x="440" y="120" width="180" height="76" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="530" y="146" text-anchor="middle" font-size="15" font-weight="600" fill="#1565c0">
+    frontend
+  </text>
+  <text x="530" y="166" text-anchor="middle" font-size="12" fill="#555">
+    compiles to WASM
+  </text>
+  <text x="530" y="184" text-anchor="middle" font-size="12" fill="#555">
+    (browser target)
+  </text>
+
+  <!-- backend box -->
+  <rect x="660" y="120" width="180" height="76" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="750" y="146" text-anchor="middle" font-size="15" font-weight="600" fill="#2e7d32">
+    backend
+  </text>
+  <text x="750" y="166" text-anchor="middle" font-size="12" fill="#555">
+    compiles native
+  </text>
+  <text x="750" y="184" text-anchor="middle" font-size="12" fill="#555">
+    (axum on :3000)
+  </text>
+
+  <!-- shared box (center, lower) -->
+  <rect x="540" y="300" width="200" height="90" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="640" y="326" text-anchor="middle" font-size="15" font-weight="600" fill="#b45309">
+    shared
+  </text>
+  <text x="640" y="350" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">SampleRecord</text>
+  <text x="640" y="368" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">SampleSummary</text>
+  <text x="640" y="384" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    serde-derived types
+  </text>
+
+  <!-- Arrows from frontend and backend down to shared -->
+  <line x1="530" y1="198" x2="600" y2="298" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#arr-dep)"/>
+  <line x1="750" y1="198" x2="680" y2="298" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#arr-dep)"/>
+  <text x="555" y="250" font-size="12" fill="#2e7d32" font-weight="600">uses</text>
+  <text x="710" y="250" font-size="12" fill="#2e7d32" font-weight="600">uses</text>
+
+  <!-- caption -->
+  <text x="640" y="425" text-anchor="middle" font-size="13" fill="#333">
+    One Rust type, two compile targets.
+  </text>
+
+  <text x="450" y="500" text-anchor="middle" font-size="13" fill="#555">
+    The same struct validates both sides of the network call — no schema drift between client and server.
+  </text>
+
+</svg>

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="ss-arrow-ok" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="ss-arrow-bad" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Send and Sync: the two traits that gate concurrency
+  </text>
+
+  <!-- ===== Panel 1: Send (left) ===== -->
+  <rect x="30" y="60" width="410" height="380" fill="#fafafa"
+        stroke="#1565c0" stroke-width="1.5" rx="6"/>
+  <rect x="30" y="60" width="410" height="42" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="6"/>
+  <text x="235" y="88" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    Send
+  </text>
+  <text x="235" y="124" text-anchor="middle" font-size="13" fill="#333">
+    "T can be <tspan font-weight="700">moved</tspan> to another thread"
+  </text>
+
+  <!-- Thread A / Thread B blocks -->
+  <rect x="60" y="150" width="120" height="60" fill="white" stroke="#1565c0" stroke-width="1.2" rx="3"/>
+  <text x="120" y="178" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">Thread A</text>
+  <text x="120" y="198" text-anchor="middle" font-size="11" fill="#666">holds value</text>
+
+  <rect x="290" y="150" width="120" height="60" fill="white" stroke="#1565c0" stroke-width="1.2" rx="3"/>
+  <text x="350" y="178" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">Thread B</text>
+  <text x="350" y="198" text-anchor="middle" font-size="11" fill="#666">receives it</text>
+
+  <line x1="185" y1="180" x2="285" y2="180" stroke="#2e7d32" stroke-width="2.5"
+        marker-end="url(#ss-arrow-ok)"/>
+  <text x="235" y="172" text-anchor="middle" font-size="12" fill="#2e7d32" font-weight="600">move</text>
+
+  <!-- Examples list -->
+  <text x="60" y="252" font-size="13" font-weight="700" fill="#333">Examples:</text>
+
+  <text x="60" y="282" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    Vec&lt;u8&gt;
+  </text>
+  <text x="220" y="282" font-size="20" font-weight="700" fill="#2e7d32">OK</text>
+  <text x="260" y="282" font-size="11" fill="#666">DNA sequences travel</text>
+
+  <text x="60" y="312" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    String, HashMap
+  </text>
+  <text x="220" y="312" font-size="20" font-weight="700" fill="#2e7d32">OK</text>
+
+  <text x="60" y="342" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    Rc&lt;u8&gt;
+  </text>
+  <text x="220" y="342" font-size="20" font-weight="700" fill="#c62828">NO</text>
+  <text x="260" y="342" font-size="11" fill="#666">non-atomic refcount races</text>
+
+  <text x="60" y="372" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    *mut T
+  </text>
+  <text x="220" y="372" font-size="20" font-weight="700" fill="#c62828">NO</text>
+  <text x="260" y="372" font-size="11" fill="#666">raw pointer, no safety</text>
+
+  <text x="235" y="416" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    most types you write are Send automatically
+  </text>
+
+  <!-- ===== Panel 2: Sync (right) ===== -->
+  <rect x="460" y="60" width="410" height="380" fill="#fafafa"
+        stroke="#2e7d32" stroke-width="1.5" rx="6"/>
+  <rect x="460" y="60" width="410" height="42" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5" rx="6"/>
+  <text x="665" y="88" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    Sync
+  </text>
+  <text x="665" y="124" text-anchor="middle" font-size="13" fill="#333">
+    "&amp;T can be <tspan font-weight="700">shared</tspan> between threads"
+  </text>
+
+  <!-- Shared value diagram -->
+  <rect x="600" y="150" width="130" height="42" fill="white" stroke="#2e7d32" stroke-width="1.5" rx="3"/>
+  <text x="665" y="177" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">value</text>
+
+  <rect x="490" y="220" width="100" height="42" fill="white" stroke="#2e7d32" stroke-width="1.2" rx="3"/>
+  <text x="540" y="247" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">Thread A</text>
+  <rect x="740" y="220" width="100" height="42" fill="white" stroke="#2e7d32" stroke-width="1.2" rx="3"/>
+  <text x="790" y="247" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">Thread B</text>
+
+  <line x1="630" y1="195" x2="555" y2="219" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#ss-arrow-ok)"/>
+  <line x1="700" y1="195" x2="775" y2="219" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#ss-arrow-ok)"/>
+  <text x="555" y="212" text-anchor="middle" font-size="11" fill="#2e7d32">&amp;value</text>
+  <text x="775" y="212" text-anchor="middle" font-size="11" fill="#2e7d32">&amp;value</text>
+
+  <!-- Examples list -->
+  <text x="490" y="298" font-size="13" font-weight="700" fill="#333">Examples:</text>
+
+  <text x="490" y="324" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    &amp;[u8], &amp;Vec&lt;u8&gt;
+  </text>
+  <text x="700" y="324" font-size="20" font-weight="700" fill="#2e7d32">OK</text>
+  <text x="740" y="324" font-size="11" fill="#666">read-only is safe</text>
+
+  <text x="490" y="350" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    Mutex&lt;T&gt;
+  </text>
+  <text x="700" y="350" font-size="20" font-weight="700" fill="#2e7d32">OK</text>
+  <text x="740" y="350" font-size="11" fill="#666">guards its own state</text>
+
+  <text x="490" y="376" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    Cell&lt;u8&gt;
+  </text>
+  <text x="700" y="376" font-size="20" font-weight="700" fill="#c62828">NO</text>
+  <text x="740" y="376" font-size="11" fill="#666">mutation w/o sync</text>
+
+  <text x="490" y="402" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    RefCell&lt;T&gt;
+  </text>
+  <text x="700" y="402" font-size="20" font-weight="700" fill="#c62828">NO</text>
+  <text x="740" y="402" font-size="11" fill="#666">single-thread only</text>
+
+  <text x="665" y="430" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    rayon refuses to compile any closure that captures a non-Sync borrow
+  </text>
+
+  <!-- Footer -->
+  <text x="450" y="478" text-anchor="middle" font-size="13" font-weight="600" fill="#333">
+    "Fearless concurrency": the compiler refuses code that would race, before it ever runs.
+  </text>
+
+</svg>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="ok-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="err-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    The <tspan font-family="ui-monospace, monospace">?</tspan> operator — branch on Result, propagate Err
+  </text>
+  <text x="450" y="50" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#555">
+    let chrom = parse_chrom(s)?;   // ← the call site
+  </text>
+
+  <!-- ===== Call box (top centre) ===== -->
+  <rect x="320" y="80" width="260" height="70" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="450" y="108" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    parse_chrom(s)
+  </text>
+  <text x="450" y="130" text-anchor="middle" font-size="12" fill="#555">
+    returns Result&lt;String, ParseError&gt;
+  </text>
+
+  <!-- ===== Branch labels ===== -->
+  <text x="450" y="175" text-anchor="middle" font-size="13" font-weight="700" fill="#555">
+    inspect the Result variant
+  </text>
+
+  <!-- ===== Left arrow: Ok ===== -->
+  <line x1="380" y1="155" x2="220" y2="220"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#ok-arrow)"/>
+  <text x="270" y="190" font-size="14" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">Ok(chrom)</text>
+
+  <!-- ===== Right arrow: Err ===== -->
+  <line x1="520" y1="155" x2="680" y2="220"
+        stroke="#c62828" stroke-width="2.5" marker-end="url(#err-arrow)"/>
+  <text x="620" y="190" font-size="14" font-weight="700" fill="#c62828"
+        font-family="ui-monospace, monospace">Err(e)</text>
+
+  <!-- ===== Left box: Ok path ===== -->
+  <rect x="60" y="230" width="340" height="130" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5" rx="4"/>
+  <text x="230" y="258" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    unwrap and continue
+  </text>
+  <text x="230" y="290" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">
+    let chrom: String = ...;
+  </text>
+  <text x="230" y="318" text-anchor="middle" font-size="12" fill="#555">
+    next line of the function runs
+  </text>
+  <text x="230" y="338" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    chrom is now a plain String, not a Result
+  </text>
+
+  <!-- ===== Right box: Err path (short-circuit) ===== -->
+  <rect x="500" y="230" width="340" height="130" fill="#ffebee"
+        stroke="#c62828" stroke-width="1.5" rx="4"/>
+  <text x="670" y="258" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828">
+    early return from this function
+  </text>
+  <text x="670" y="290" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">
+    return Err(e);
+  </text>
+  <text x="670" y="318" text-anchor="middle" font-size="12" fill="#555">
+    caller gets the same Err
+  </text>
+  <text x="670" y="338" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    one keystroke replaces a four-line match
+  </text>
+
+  <!-- ===== Caller frame box ===== -->
+  <rect x="60" y="395" width="780" height="80" fill="#fafafa"
+        stroke="#888" stroke-dasharray="6,4" stroke-width="1.2" rx="4"/>
+  <text x="450" y="420" text-anchor="middle" font-size="13" font-weight="700" fill="#555">
+    enclosing function must itself return Result&lt;_, E&gt; (or Option) for <tspan font-family="ui-monospace, monospace" fill="#1565c0">?</tspan> to compile
+  </text>
+  <text x="450" y="445" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">
+    fn parse_region(s: &amp;str) -&gt; Result&lt;Region, ParseError&gt; { ... }
+  </text>
+  <text x="450" y="465" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    propagation is local and explicit — every <tspan font-family="ui-monospace, monospace">?</tspan> is a possible return path
+  </text>
+</svg>

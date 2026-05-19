@@ -157,20 +157,20 @@ This is one of the biggest practical advantages of Rust for our field. People yo
 ## Safety — what the word means here
 
 ```rust
-let mut counts = vec![0; 100];
-let r = &counts[0];        // shared borrow of counts
-counts.push(42);           // try to mutate while borrowed
+let mut seq = vec![0u8; 100];
+let r = &seq[0];           // shared borrow of seq
+seq.push(b'A');            // try to mutate while borrowed
 println!("{}", r);
 ```
 
 ```
-error[E0502]: cannot borrow `counts` as mutable because it is also
+error[E0502]: cannot borrow `seq` as mutable because it is also
               borrowed as immutable
   --> src/main.rs:3:5
    |
- 2 | let r = &counts[0];
+ 2 | let r = &seq[0];
    |          ------ immutable borrow occurs here
- 3 | counts.push(42);
+ 3 | seq.push(b'A');
    | ^^^^^^^^^^^^^^^ mutable borrow occurs here
  4 | println!("{}", r);
    |                - immutable borrow later used here

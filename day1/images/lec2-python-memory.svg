@@ -97,7 +97,7 @@
   <text x="410" y="380" font-size="11" font-family="ui-monospace, monospace" fill="#555">refcount: 1, type: list</text>
   <text x="410" y="396" font-size="11" font-family="ui-monospace, monospace" fill="#333">items:</text>
   <circle cx="450" cy="393" r="4" fill="#888"/>
-  <line x1="454" y1="393" x2="478" y2="393" stroke="#888" stroke-width="1.5"
+  <line x1="454" y1="393" x2="655" y2="376" stroke="#888" stroke-width="1.5"
         marker-end="url(#py-arrow-sm)"/>
 
   <!-- Three small PyLongObjects for 1,2,3 -->
