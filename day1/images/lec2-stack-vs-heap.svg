@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== Outer "program memory" frame ===== -->
+  <rect x="20" y="20" width="860" height="430" fill="none"
+        stroke="#888" stroke-dasharray="6,4" stroke-width="1.5" rx="6"/>
+  <text x="450" y="42" text-anchor="middle" font-size="14" fill="#555">
+    your program's memory
+  </text>
+
+  <!-- ===== Left panel: Stack ===== -->
+  <rect x="40" y="60" width="400" height="370" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+
+  <text x="240" y="88" text-anchor="middle" font-size="22" font-weight="700" fill="#1565c0">
+    Stack
+  </text>
+
+  <!-- Stack icon: 4 small boxes stacked vertically (LIFO) -->
+  <g stroke="#1565c0" stroke-width="1.5">
+    <rect x="190" y="100" width="100" height="20" fill="white"/>
+    <rect x="190" y="120" width="100" height="20" fill="white"/>
+    <rect x="190" y="140" width="100" height="20" fill="white"/>
+    <rect x="190" y="160" width="100" height="20" fill="#bbdefb"/>
+  </g>
+  <text x="305" y="173" font-size="11" fill="#555" font-style="italic">top</text>
+
+  <!-- Bulleted facts -->
+  <text x="60" y="210" font-size="16" fill="#333">
+    <tspan x="60" dy="0">&#8226; Fixed-size slots, one per function call</tspan>
+    <tspan x="60" dy="26">&#8226; Allocate by pushing, free by popping</tspan>
+    <tspan x="80" dy="20" fill="#555" font-size="14">(free is instant)</tspan>
+    <tspan x="60" dy="26">&#8226; Compiler decides the size at build time</tspan>
+    <tspan x="60" dy="26">&#8226; Typical total size: 1&#8211;8 MB</tspan>
+  </text>
+
+  <!-- Holds: line -->
+  <line x1="60" y1="370" x2="420" y2="370" stroke="#1565c0" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="60" y="392" font-size="14" font-weight="700" fill="#1565c0">Holds:</text>
+  <text x="60" y="414" font-size="14" fill="#333">
+    function arguments, local variables of fixed size
+  </text>
+
+  <!-- ===== Right panel: Heap ===== -->
+  <rect x="460" y="60" width="400" height="370" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+
+  <text x="660" y="88" text-anchor="middle" font-size="22" font-weight="700" fill="#d97706">
+    Heap
+  </text>
+
+  <!-- Heap icon: 4 scattered, varied-size boxes (free chunks) -->
+  <g stroke="#d97706" stroke-width="1.5">
+    <rect x="500" y="105" width="60"  height="30" fill="white"/>
+    <rect x="580" y="100" width="40"  height="50" fill="white"/>
+    <rect x="640" y="115" width="80"  height="25" fill="white"/>
+    <rect x="740" y="105" width="50"  height="45" fill="white"/>
+  </g>
+  <text x="660" y="173" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    find a free chunk of the right size
+  </text>
+
+  <!-- Bulleted facts -->
+  <text x="480" y="210" font-size="16" fill="#333">
+    <tspan x="480" dy="0">&#8226; Variable-size chunks, allocated on request</tspan>
+    <tspan x="480" dy="26">&#8226; Allocate and free in any order</tspan>
+    <tspan x="500" dy="20" fill="#555" font-size="14">(slower)</tspan>
+    <tspan x="480" dy="26">&#8226; Size can be decided at runtime</tspan>
+    <tspan x="480" dy="26">&#8226; Limited only by RAM</tspan>
+  </text>
+
+  <!-- Holds: line -->
+  <line x1="480" y1="370" x2="840" y2="370" stroke="#d97706" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="480" y="392" font-size="14" font-weight="700" fill="#d97706">Holds:</text>
+  <text x="480" y="414" font-size="14" fill="#333">
+    anything whose size or lifetime isn't known at compile time
+  </text>
+
+  <!-- ===== Footer connecting line ===== -->
+  <text x="450" y="480" text-anchor="middle" font-size="15" fill="#333">
+    Most programming languages use both.
+  </text>
+  <text x="450" y="502" text-anchor="middle" font-size="15" fill="#333">
+    Python hides the choice; Rust makes it explicit.
+  </text>
+
+</svg>

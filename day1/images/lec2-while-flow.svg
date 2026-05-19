@@ -82,14 +82,15 @@
   <!-- ===== RIGHT COLUMN: Rust code panel ===== -->
   <rect x="555" y="60" width="320" height="110" rx="6" ry="6"
         fill="#fafafa" stroke="#bbb"/>
-  <text x="570" y="82" font-size="13" fill="#555" font-weight="600">
+  <text x="570" y="78" font-size="13" fill="#555" font-weight="600">
     Rust code
   </text>
-  <text x="570" y="106" font-size="14" font-family="ui-monospace, monospace">let mut start = 0;</text>
-  <text x="570" y="126" font-size="14" font-family="ui-monospace, monospace">while start &lt; qual.len()</text>
-  <text x="570" y="143" font-size="14" font-family="ui-monospace, monospace">      &amp;&amp; qual[start] &lt; threshold {</text>
-  <text x="570" y="160" font-size="14" font-family="ui-monospace, monospace">    start += 1;</text>
-  <text x="570" y="177" font-size="14" font-family="ui-monospace, monospace">}</text>
+  <text x="570" y="95" font-size="13" font-family="ui-monospace, monospace">let mut start = 0;</text>
+  <text x="570" y="109" font-size="13" font-family="ui-monospace, monospace">while start &lt; qual.len()</text>
+  <text x="570" y="123" font-size="13" font-family="ui-monospace, monospace">    &amp;&amp; qual[start] &lt; threshold</text>
+  <text x="570" y="137" font-size="13" font-family="ui-monospace, monospace">{</text>
+  <text x="570" y="151" font-size="13" font-family="ui-monospace, monospace">    start += 1;</text>
+  <text x="570" y="165" font-size="13" font-family="ui-monospace, monospace">}</text>
 
   <!-- Footnote, spans full width -->
   <text x="60" y="420" font-size="13" fill="#555">

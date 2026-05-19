@@ -279,6 +279,36 @@ In practice, on the machine in front of you, usize is just u64 with a different 
 The rule: lengths and indices are usize. Always.
 :::
 
+## Stack and heap — two regions of program memory
+
+Every running program gets two pots of memory with very different rules.
+
+![Two side-by-side panels inside an outer 'program memory' frame: a blue Stack panel and an orange Heap panel, each with a small icon and a bulleted list of properties.](images/lec2-stack-vs-heap.svg){fig-alt="An outer dashed rectangle labelled 'your program's memory' contains two panels. Left panel, tinted light blue, is titled Stack. It shows an icon of four small boxes stacked vertically with 'top' marked at the bottom, then a bulleted list: fixed-size slots one per function call; allocate by pushing, free by popping (free is instant); compiler decides the size at build time; typical total size 1 to 8 MB. A 'Holds:' line reads: function arguments, local variables of fixed size. Right panel, tinted light orange, is titled Heap. It shows an icon of four scattered varied-size boxes with caption 'find a free chunk of the right size', then a bulleted list: variable-size chunks, allocated on request; allocate and free in any order (slower); size can be decided at runtime; limited only by RAM. A 'Holds:' line reads: anything whose size or lifetime isn't known at compile time. Footer below both panels: Most programming languages use both. Python hides the choice; Rust makes it explicit."}
+
+::: notes
+This distinction is universal — every program in every language uses both regions. The key trade-off is fast and disciplined (stack) versus flexible and slower (heap). What differs between languages is how visible the choice is to you: Python hides it almost entirely, Rust makes it explicit in the type you choose.
+:::
+
+## The call stack — one frame per function call
+
+Calling a function pushes a frame; returning pops it. That's the whole mechanism.
+
+![Three panels showing the stack before, during, and after a call from main to gc_content, with green 'push frame' and orange 'pop frame' arrows between them.](images/lec2-call-stack.svg){fig-alt="Three vertical panels show the stack at three moments. Panel 1, labelled '1. before the call — main is running': the stack column shows a single blue main frame containing seq (a slice) and g (an f64 reserved but not yet set), with older frames as a dashed placeholder marked with three dots below. Panel 2, labelled '2. inside the call — gc_content is running; main is paused': an orange gc_content frame sits on top of the blue main frame; gc_content contains seq, gc=4, and a loop variable b, and is marked 'top of stack'; main is unchanged below, marked 'paused, waiting'. A green arrow labelled 'push frame' connects panel 1 to panel 2. Panel 3, labelled '3. after the call — main resumes with the result': only the main frame remains, with g now set to 0.5 in green ('received the return value'). An orange arrow labelled 'pop frame' connects panel 2 to panel 3. Footer: Allocating a frame is just moving the stack pointer — that's why let x = 42; is free."}
+
+::: notes
+This mechanism is the same in every compiled language — C, C++, Rust, Go, Java internals. The frame size is decided at compile time from the function's locals, which is why fixed-size types are cheap. Too many nested calls overflows the stack — that's literally what 'stack overflow' means.
+:::
+
+## Python: stack holds references, heap holds the values
+
+Python's simplicity comes from putting almost everything on the heap, including a `42`.
+
+![A two-column diagram: small named-pointer boxes for x, y, z on the stack, each with an arrow pointing into the heap where PyLongObject, PyUnicodeObject, and PyListObject sit, with the list itself pointing to three more separate PyLongObject boxes for 1, 2, 3.](images/lec2-python-memory.svg){fig-alt="A small code panel at the top reads: x = 42; y = 'hello'; z = [1, 2, 3]. Below, a two-column diagram. Left column, tinted light blue, is titled Stack (current function's frame) and contains three small named-pointer boxes: x with an arrow leaving it, y with an arrow leaving it, and z with an arrow leaving it. Right column, tinted light orange, is titled Heap (Python objects) and contains three boxes. The first box is labelled PyLongObject with refcount: 1, type: int, value: 42, noted as about 28 bytes. The second is PyUnicodeObject with refcount: 1, type: str, value: 'hello', noted as about 54 bytes. The third is PyListObject with refcount: 1, type: list, items pointer leading to three small separate PyLongObject boxes containing 1, 2, 3, noted as '+ 3 separate int objects on heap'. Blue arrows run from each stack pointer box to its corresponding heap object. Bottom captions: every value in Python lives on the heap — even a small integer; variables on the stack hold references (pointers + refcount) to those heap objects; convenient, but costs about 10 to 30 times the memory of holding the value directly. A green contrast note at the very bottom reads: In Rust, let x: i32 = 42; stores the value 42 directly on the stack (4 bytes); heap is opt-in (Vec, String, Box)."}
+
+::: notes
+This is why pure-Python loops are slow: each integer access dereferences through a heap pointer, checks a type tag, and touches a refcount. It is also why NumPy and PyTorch exist — they store raw value arrays directly on the heap, without one Python object per element. When we get to Rust's i32 on the stack, students should recognise it as the opposite end of the spectrum from what they're used to.
+:::
+
 ## A Vec lives on the stack; its data lives on the heap
 
 ![A Vec<u8> with ptr/len/cap on the stack pointing to an 8-cell heap allocation holding the bytes for ACGTA, with three trailing empty cells.](images/lec2-vec-memory.svg){fig-alt="Two regions side by side. On the left, the stack contains a 3-field Vec<u8> struct with rows labelled ptr (8 bytes), len: 5, and cap: 8 - a 24-byte header. On the right, the heap contains an 8-cell allocation; the first five cells hold the DNA bytes b'A', b'C', b'G', b'T', b'A' and the last three cells are dim/empty. A bracket above the first 5 cells reads 'len = 5'; a bracket above all 8 cells reads 'cap = 8'. An arrow runs from the ptr row on the stack to the first cell on the heap. Footer: stack is 24 bytes (3 times 8), heap is 8 bytes; cheap to move because only the 24-byte header is copied and the data never moves with it."}
