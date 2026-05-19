@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rv-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="rv-arrow-sm" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="24" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    R: bulk-boxed &#8212; one header per vector, not per element
+  </text>
+
+  <!-- ===== Panel titles ===== -->
+  <text x="210" y="56" text-anchor="middle" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">
+    Python: [1.1, 2.2, 3.3, 4.4, 5.5]
+  </text>
+  <text x="210" y="73" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    list[float] &#8212; per-element boxing
+  </text>
+
+  <text x="690" y="56" text-anchor="middle" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    R: c(1.1, 2.2, 3.3, 4.4, 5.5)
+  </text>
+  <text x="690" y="73" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    numeric vector &#8212; per-vector boxing
+  </text>
+
+  <!-- ===== LEFT PANEL: Python ===== -->
+
+  <!-- Stack region -->
+  <rect x="20" y="86" width="80" height="220" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.2" rx="3"/>
+  <text x="60" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">
+    Stack
+  </text>
+  <rect x="30" y="116" width="60" height="28" fill="white"
+        stroke="#1565c0" stroke-width="1"/>
+  <text x="38" y="135" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    xs
+  </text>
+  <circle cx="78" cy="130" r="3.5" fill="#1565c0"/>
+
+  <!-- Heap region -->
+  <rect x="110" y="86" width="290" height="280" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.2" rx="3"/>
+  <text x="255" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#d97706">
+    Heap
+  </text>
+
+  <!-- PyListObject header -->
+  <rect x="125" y="114" width="160" height="86" fill="white"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="133" y="129" font-size="10" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">PyListObject</text>
+  <text x="133" y="144" font-size="9.5" font-family="ui-monospace, monospace" fill="#555">refcount: 1</text>
+  <text x="133" y="158" font-size="9.5" font-family="ui-monospace, monospace" fill="#555">ob_type: list</text>
+  <text x="133" y="172" font-size="9.5" font-family="ui-monospace, monospace" fill="#555">size: 5</text>
+  <text x="133" y="188" font-size="10" font-family="ui-monospace, monospace" fill="#333">items:</text>
+  <circle cx="170" cy="185" r="3.5" fill="#888"/>
+  <line x1="174" y1="185" x2="198" y2="220" stroke="#888" stroke-width="1.4"
+        marker-end="url(#rv-arrow-sm)"/>
+
+  <!-- Pointer array (5 cells) -->
+  <g stroke="#888" stroke-width="1">
+    <rect x="200" y="220" width="22" height="26" fill="white"/>
+    <rect x="222" y="220" width="22" height="26" fill="white"/>
+    <rect x="244" y="220" width="22" height="26" fill="white"/>
+    <rect x="266" y="220" width="22" height="26" fill="white"/>
+    <rect x="288" y="220" width="22" height="26" fill="white"/>
+  </g>
+  <circle cx="211" cy="233" r="2.5" fill="#888"/>
+  <circle cx="233" cy="233" r="2.5" fill="#888"/>
+  <circle cx="255" cy="233" r="2.5" fill="#888"/>
+  <circle cx="277" cy="233" r="2.5" fill="#888"/>
+  <circle cx="299" cy="233" r="2.5" fill="#888"/>
+  <text x="255" y="259" text-anchor="middle" font-size="9" fill="#888" font-style="italic">
+    array of 5 pointers
+  </text>
+
+  <!-- 5 separate PyFloat objects (row at bottom) -->
+  <g>
+    <rect x="125" y="280" width="50" height="64" fill="white" stroke="#d97706" stroke-width="1"/>
+    <text x="150" y="294" text-anchor="middle" font-size="8" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#b45309">PyFloat</text>
+    <text x="150" y="306" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">rc</text>
+    <text x="150" y="318" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">float</text>
+    <text x="150" y="335" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">1.1</text>
+
+    <rect x="180" y="280" width="50" height="64" fill="white" stroke="#d97706" stroke-width="1"/>
+    <text x="205" y="294" text-anchor="middle" font-size="8" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#b45309">PyFloat</text>
+    <text x="205" y="306" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">rc</text>
+    <text x="205" y="318" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">float</text>
+    <text x="205" y="335" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">2.2</text>
+
+    <rect x="235" y="280" width="50" height="64" fill="white" stroke="#d97706" stroke-width="1"/>
+    <text x="260" y="294" text-anchor="middle" font-size="8" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#b45309">PyFloat</text>
+    <text x="260" y="306" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">rc</text>
+    <text x="260" y="318" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">float</text>
+    <text x="260" y="335" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">3.3</text>
+
+    <rect x="290" y="280" width="50" height="64" fill="white" stroke="#d97706" stroke-width="1"/>
+    <text x="315" y="294" text-anchor="middle" font-size="8" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#b45309">PyFloat</text>
+    <text x="315" y="306" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">rc</text>
+    <text x="315" y="318" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">float</text>
+    <text x="315" y="335" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">4.4</text>
+
+    <rect x="345" y="280" width="50" height="64" fill="white" stroke="#d97706" stroke-width="1"/>
+    <text x="370" y="294" text-anchor="middle" font-size="8" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#b45309">PyFloat</text>
+    <text x="370" y="306" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">rc</text>
+    <text x="370" y="318" text-anchor="middle" font-size="7.5"
+          font-family="ui-monospace, monospace" fill="#888">float</text>
+    <text x="370" y="335" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">5.5</text>
+  </g>
+
+  <!-- arrows from pointer cells to PyFloat objects -->
+  <line x1="211" y1="246" x2="150" y2="278" stroke="#888" stroke-width="1"
+        marker-end="url(#rv-arrow-sm)"/>
+  <line x1="233" y1="246" x2="205" y2="278" stroke="#888" stroke-width="1"
+        marker-end="url(#rv-arrow-sm)"/>
+  <line x1="255" y1="246" x2="260" y2="278" stroke="#888" stroke-width="1"
+        marker-end="url(#rv-arrow-sm)"/>
+  <line x1="277" y1="246" x2="315" y2="278" stroke="#888" stroke-width="1"
+        marker-end="url(#rv-arrow-sm)"/>
+  <line x1="299" y1="246" x2="370" y2="278" stroke="#888" stroke-width="1"
+        marker-end="url(#rv-arrow-sm)"/>
+
+  <!-- stack arrow to PyListObject -->
+  <line x1="82" y1="130" x2="122" y2="148" stroke="#1565c0" stroke-width="2"
+        marker-end="url(#rv-arrow)"/>
+
+  <!-- Left tally -->
+  <text x="210" y="382" text-anchor="middle" font-size="12" fill="#333">
+    5 floats: ~24 (list hdr) + 40 (5 ptrs) + 5&#215;24 (PyFloats) &#8776; <tspan font-weight="700">184 bytes</tspan>
+  </text>
+  <text x="210" y="400" text-anchor="middle" font-size="10.5" fill="#888" font-style="italic">
+    for 5 doubles whose raw values are 40 bytes total
+  </text>
+
+  <!-- ===== Center divider with comparison notes ===== -->
+  <line x1="450" y1="100" x2="450" y2="360" stroke="#ccc" stroke-width="1" stroke-dasharray="4,4"/>
+
+  <text x="450" y="200" text-anchor="middle" font-size="11" font-weight="700" fill="#c62828">
+    Python:
+  </text>
+  <text x="450" y="216" text-anchor="middle" font-size="11" fill="#c62828">
+    per-element
+  </text>
+  <text x="450" y="230" text-anchor="middle" font-size="11" fill="#c62828">
+    boxing
+  </text>
+
+  <text x="450" y="260" text-anchor="middle" font-size="14" fill="#888">vs.</text>
+
+  <text x="450" y="290" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">
+    R:
+  </text>
+  <text x="450" y="306" text-anchor="middle" font-size="11" fill="#2e7d32">
+    per-vector
+  </text>
+  <text x="450" y="320" text-anchor="middle" font-size="11" fill="#2e7d32">
+    boxing
+  </text>
+
+  <!-- ===== RIGHT PANEL: R ===== -->
+
+  <!-- Stack region -->
+  <rect x="500" y="86" width="80" height="220" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.2" rx="3"/>
+  <text x="540" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">
+    Stack
+  </text>
+  <rect x="510" y="116" width="60" height="28" fill="white"
+        stroke="#1565c0" stroke-width="1"/>
+  <text x="518" y="135" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    xs
+  </text>
+  <circle cx="558" cy="130" r="3.5" fill="#1565c0"/>
+
+  <!-- Heap region -->
+  <rect x="590" y="86" width="290" height="280" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.2" rx="3"/>
+  <text x="735" y="102" text-anchor="middle" font-size="11" font-weight="700" fill="#d97706">
+    Heap
+  </text>
+
+  <!-- Single SEXP box -->
+  <rect x="610" y="150" width="250" height="170" fill="white"
+        stroke="#d97706" stroke-width="1.5"/>
+
+  <!-- Darker header band -->
+  <rect x="610" y="150" width="250" height="56" fill="#ffe9b3"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="735" y="170" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    SEXP header (~32 bytes)
+  </text>
+  <text x="735" y="190" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#555">
+    type: REALSXP   length: 5
+  </text>
+
+  <!-- Contiguous data cells -->
+  <g stroke="#888" stroke-width="1">
+    <rect x="620" y="226" width="46" height="64" fill="#e3f2fd"/>
+    <rect x="666" y="226" width="46" height="64" fill="#e3f2fd"/>
+    <rect x="712" y="226" width="46" height="64" fill="#e3f2fd"/>
+    <rect x="758" y="226" width="46" height="64" fill="#e3f2fd"/>
+    <rect x="804" y="226" width="46" height="64" fill="#e3f2fd"/>
+  </g>
+  <text x="643" y="263" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">1.1</text>
+  <text x="689" y="263" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">2.2</text>
+  <text x="735" y="263" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">3.3</text>
+  <text x="781" y="263" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">4.4</text>
+  <text x="827" y="263" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">5.5</text>
+
+  <text x="735" y="308" text-anchor="middle" font-size="10" fill="#888" font-style="italic">
+    contiguous doubles (5 &#215; 8 bytes)
+  </text>
+
+  <!-- stack arrow to SEXP -->
+  <line x1="562" y1="130" x2="606" y2="174" stroke="#1565c0" stroke-width="2"
+        marker-end="url(#rv-arrow)"/>
+
+  <text x="735" y="346" text-anchor="middle" font-size="11" fill="#2e7d32" font-style="italic">
+    one allocation, one header, raw values
+  </text>
+
+  <!-- Right tally -->
+  <text x="735" y="382" text-anchor="middle" font-size="12" fill="#333">
+    5 doubles: ~32 (SEXP hdr) + 40 (5 &#215; 8 bytes) &#8776; <tspan font-weight="700">72 bytes</tspan>
+  </text>
+  <text x="735" y="400" text-anchor="middle" font-size="10.5" fill="#888" font-style="italic">
+    the header amortises &#8212; a vector of a million doubles is ~32 + 8 MB
+  </text>
+
+  <!-- ===== Full-width callout ===== -->
+  <rect x="20" y="420" width="860" height="84" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.2" rx="4"/>
+  <text x="450" y="448" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    R wins for one big numeric vector. R loses when you have many short vectors or use <tspan font-family="ui-monospace, monospace">list()</tspan> instead of an atomic vector.
+  </text>
+  <text x="450" y="475" text-anchor="middle" font-size="11.5" fill="#555">
+    Bioinformatics-relevant pitfalls: <tspan font-family="ui-monospace, monospace">list(seq1, seq2, ..., seqN)</tspan> is N SEXP headers; row-wise data frames;
+  </text>
+  <text x="450" y="492" text-anchor="middle" font-size="11.5" fill="#555">
+    mass <tspan font-family="ui-monospace, monospace">c()</tspan> concatenation. Atomic vectors and matrices stay fast.
+  </text>
+
+</svg>
