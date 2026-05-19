@@ -26,6 +26,8 @@ Per-end quality trimming is the simplest quality-control step in any sequencing 
 
 The input quality is stored as Phred+33 bytes (so `'!'` = score 0, `'I'` = score 40); the threshold is given as a score. Convert the score to a byte threshold by adding 33.
 
+![Two-pointer quality trim of a 10-base read at threshold Q ≥ 20. `start` walks rightward from 0 until it lands on a passing base (index 3); `end` walks leftward from 10 until it lands just past one (index 8). The function returns `&qual[3..8]` — five bases, no bytes copied.](images/quality-trim.svg){#fig-quality-trim fig-alt="A horizontal strip of 10 cells showing Phred+33 quality bytes. The chars row reads ! ! # I I I I I # !, the Q row reads 0 0 2 40 40 40 40 40 2 0, and the idx row reads 0 through 9. Cells 0-2 and 8-9 are shaded grey (trimmed); cells 3-7 are shaded light green (kept). Above the strip, two green brackets and arrows mark the final positions start=3 (pointing at cell 3) and end=8 (pointing between cells 7 and 8). Faded dashed grey curves arc from the initial positions start=0 and end=10 inward, labelled 'advance while Q < 20' and 'retreat while Q < 20'. A green result box below the strip reads: result = seq[3..8] — 5 high-quality bases, zero bytes copied. A legend identifies the grey, green, and dashed-arrow elements."}
+
 ## Why a slice, not a `Vec`?
 
 Returning `&[u8]` means the function performs **zero allocation**. The returned slice points into the same memory as `qual`. The caller can use it for as long as `qual` itself is alive — the borrow checker tracks this for you, with no annotations needed (single input reference → its lifetime is the output's).

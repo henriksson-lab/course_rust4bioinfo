@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 560"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== Title ===== -->
+  <text x="410" y="28" text-anchor="middle" font-size="17" font-weight="600">
+    One tree, three notations
+  </text>
+  <text x="410" y="48" text-anchor="middle" font-size="12" fill="#555">
+    the (A, B) clade is highlighted in orange across all three views
+  </text>
+
+  <!-- ===========================================================
+       Panel 1 — picture (top left)
+       Box: x = 30..400, y = 70..280
+       Root at (70, 200). Internal N1 at (160, 200). From N1:
+         - edge to C at (380, 280) length 0.5
+         - edge to internal N2 at (250, 120) length 0.3
+       From N2:
+         - edge to A at (380, 90)  length 0.1
+         - edge to B at (380, 150) length 0.2
+       =========================================================== -->
+  <rect x="30" y="70" width="370" height="210" fill="#fafafa" stroke="#bbb"/>
+  <text x="40" y="88" font-size="13" font-weight="700" fill="#333">Panel 1 — picture</text>
+
+  <!-- Orange highlight behind the (A,B) subtree (N2 and its two leaves) -->
+  <rect x="220" y="78" width="170" height="84" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="6"/>
+
+  <!-- Root label and stub -->
+  <line x1="50" y1="200" x2="80" y2="200" stroke="#333" stroke-width="2"/>
+  <text x="55" y="194" font-size="11" fill="#777">root</text>
+
+  <!-- N1 internal node -->
+  <line x1="80"  y1="200" x2="160" y2="200" stroke="#333" stroke-width="2"/>
+  <circle cx="160" cy="200" r="4.5" fill="#333"/>
+  <text x="155" y="216" font-size="11" fill="#555" text-anchor="end">N1</text>
+
+  <!-- N1 -> C: horizontal then to C tip at (380, 240) length 0.5 -->
+  <!-- Use right-angle: down from N1 to y=240, then right to (380,240) -->
+  <line x1="160" y1="200" x2="160" y2="240" stroke="#333" stroke-width="2"/>
+  <line x1="160" y1="240" x2="380" y2="240" stroke="#333" stroke-width="2"/>
+  <text x="270" y="234" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">0.5</text>
+  <text x="388" y="244" font-size="16" font-weight="700" fill="#333">C</text>
+
+  <!-- N1 -> N2: up from N1 to y=120, then right to N2 at (240,120) length 0.3 -->
+  <line x1="160" y1="200" x2="160" y2="120" stroke="#d97706" stroke-width="2.5"/>
+  <line x1="160" y1="120" x2="240" y2="120" stroke="#d97706" stroke-width="2.5"/>
+  <text x="200" y="114" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#b45309" font-weight="700">0.3</text>
+  <circle cx="240" cy="120" r="4.5" fill="#b45309"/>
+  <text x="234" y="136" font-size="11" fill="#b45309" text-anchor="end" font-weight="700">N2</text>
+
+  <!-- N2 -> A: right-angle up to (380, 90) length 0.1 -->
+  <line x1="240" y1="120" x2="240" y2="90" stroke="#d97706" stroke-width="2.5"/>
+  <line x1="240" y1="90"  x2="380" y2="90" stroke="#d97706" stroke-width="2.5"/>
+  <text x="310" y="84" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#b45309" font-weight="700">0.1</text>
+  <text x="388" y="94" font-size="16" font-weight="700" fill="#b45309">A</text>
+
+  <!-- N2 -> B: right-angle down to (380, 150) length 0.2 -->
+  <line x1="240" y1="120" x2="240" y2="150" stroke="#d97706" stroke-width="2.5"/>
+  <line x1="240" y1="150" x2="380" y2="150" stroke="#d97706" stroke-width="2.5"/>
+  <text x="310" y="144" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#b45309" font-weight="700">0.2</text>
+  <text x="388" y="154" font-size="16" font-weight="700" fill="#b45309">B</text>
+
+  <!-- ===========================================================
+       Panel 2 — Newick string (top right)
+       Box: x = 420..790, y = 70..280
+       =========================================================== -->
+  <rect x="420" y="70" width="370" height="210" fill="#fafafa" stroke="#bbb"/>
+  <text x="430" y="88" font-size="13" font-weight="700" fill="#333">Panel 2 — Newick</text>
+
+  <!-- Orange highlight behind (A:0.1,B:0.2):0.3 substring -->
+  <!-- The full Newick string is rendered as a single text element below. We
+       layer the highlight rectangle behind a measured x-range.
+       Full string: ((A:0.1,B:0.2):0.3,C:0.5);
+       We render the inner part (A:0.1,B:0.2):0.3 in its own tspan; the outer
+       parens and C portion in another. To keep alignment trivial we render
+       the whole string and place a coloured rectangle behind the inner part.
+  -->
+  <!-- Highlight rect, sized to roughly cover "(A:0.1,B:0.2):0.3" in 22px mono -->
+  <rect x="450" y="165" width="252" height="42" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="6"/>
+
+  <!-- Newick text -->
+  <text x="445" y="195" font-size="22" font-family="ui-monospace, monospace" fill="#333">
+    <tspan>(</tspan><tspan fill="#b45309" font-weight="700">(A:0.1,B:0.2):0.3</tspan><tspan>,C:0.5);</tspan>
+  </text>
+
+  <text x="445" y="240" font-size="12" fill="#555">
+    A pair of matched parentheses = an internal node.
+  </text>
+  <text x="445" y="258" font-size="12" fill="#555">
+    The number after a node is the branch length leading to its parent.
+  </text>
+
+  <!-- ===========================================================
+       Panel 3 — Rust enum literal (bottom)
+       Box: x = 30..790, y = 300..520
+       =========================================================== -->
+  <rect x="30" y="300" width="760" height="250" fill="#fafafa" stroke="#bbb"/>
+  <text x="40" y="318" font-size="13" font-weight="700" fill="#333">Panel 3 — Rust value</text>
+
+  <!-- Highlight rect behind the inner Internal { ... } block -->
+  <!-- Inner block occupies lines 4..10 of the snippet (y ~ 358..476). -->
+  <rect x="80" y="358" width="700" height="118" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="6"/>
+
+  <!-- Rust enum literal, rendered line by line for control -->
+  <g font-family="ui-monospace, monospace" font-size="13" fill="#222">
+    <text x="50"  y="346">Node::Internal {</text>
+    <text x="80"  y="362">    branch_length: 0.0,</text>
+    <text x="80"  y="378">    children: vec![</text>
+    <text x="110" y="394" fill="#b45309" font-weight="700">        Node::Internal {</text>
+    <text x="110" y="410" fill="#b45309" font-weight="700">            branch_length: 0.3,</text>
+    <text x="110" y="426" fill="#b45309" font-weight="700">            children: vec![</text>
+    <text x="110" y="442" fill="#b45309" font-weight="700">                Node::Leaf { name: "A".into(), branch_length: 0.1 },</text>
+    <text x="110" y="458" fill="#b45309" font-weight="700">                Node::Leaf { name: "B".into(), branch_length: 0.2 },</text>
+    <text x="110" y="474" fill="#b45309" font-weight="700">            ],</text>
+    <text x="110" y="490" fill="#b45309" font-weight="700">        },</text>
+    <text x="80"  y="506">        Node::Leaf { name: "C".into(), branch_length: 0.5 },</text>
+    <text x="80"  y="522">    ],</text>
+  </g>
+  <text x="50"  y="538" font-family="ui-monospace, monospace" font-size="13" fill="#222">}</text>
+
+</svg>

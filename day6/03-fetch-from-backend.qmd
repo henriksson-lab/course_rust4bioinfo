@@ -29,6 +29,8 @@ let data: T = resp.json().await?;
 
 Two `await`s: one to wait for the HTTP response headers and status; one to wait for the body to be fully received and deserialised by `serde_json`. The `T` you deserialise into has to live in the `shared` crate (or be re-defined identically here) — but we already have `SampleSummary` and `SampleRecord` there, ready to use.
 
+![A single round-trip when the user picks a sample. The Yew app, running as WebAssembly inside the page, issues `GET /api/samples/42` from inside an `async` block scheduled by `spawn_local`. axum looks the record up, returns a JSON body `{id, name, sequence}`, and the Yew component writes the sequence into the same `typed` state that the textarea is bound to — so the stats panel from exercise 2 re-renders for free. Open the browser devtools' Network panel and you should see exactly one row per click, matching the solid request arrow above.](images/fetch-sequence-diagram.svg){#fig-fetch-sequence fig-alt="UML sequence diagram with three lifelines (User in grey, Browser/Yew app in blue, axum backend in green). A click on a 'Load sample 42' button triggers a GET /api/samples/42, axum reads a row from DB or CSV and returns 200 OK with a JSON body, the Yew app updates state and re-renders, and the sequence becomes visible to the user."}
+
 ## The exercise
 
 ```bash

@@ -34,6 +34,8 @@ You do not have to think about threads, mutexes, or locks. The compiler does.
 
 `rayon` requires that the closure run on each element is `Send` (movable to another thread) and that any captured references are `Sync` (safe to share between threads). For our exercise — every element is computed independently from an immutable input slice — the compiler accepts this without a fuss. If you tried to share a mutable counter across the threads, the compiler would refuse to compile (this is the famous "fearless concurrency" pitch).
 
+![Illustrative speedup for per-sequence GC content over 100 000 sequences as the rayon thread pool grows. Observed scaling is sub-linear — the dashed markers show ideal Nx speedup, and real bars fall short because of thread-pool overhead, memory bandwidth, and Amdahl's law. The only user-code change is swapping `.iter()` for `.par_iter()`; rayon supplies the work-stealing thread pool, and no concurrency primitives appear in your function.](images/rayon-scaling.svg){#fig-rayon-scaling fig-alt="Bar chart of speedup factor versus number of rayon worker threads: 1.0x at 1 core, 1.9x at 2 cores, 3.7x at 4 cores, 7.2x at 8 cores, with dashed grey markers at 1, 2, 4, and 8 showing perfect linear scaling above each bar."}
+
 ## The crate
 
 ```toml

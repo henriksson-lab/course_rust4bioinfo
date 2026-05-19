@@ -256,4 +256,6 @@ Rust does not guarantee tail-call optimisation, so very deep recursion can overf
 
 When a recursive formula visits the same subproblem many times, fill a table once instead. The recurrence becomes a nested `for` loop; each cell computed exactly once. The day-3 alignment exercise is the canonical example.
 
+![Each cell of a dynamic-programming table is the max (or min) of a small set of already-computed neighbours. Filling the table in dependency order — here top-left to bottom-right — means every subproblem is solved exactly once.](images/dp-cell-recurrence.svg){#fig-dp-recurrence fig-alt="A 2x2 cell layout. Three predecessor cells labelled [i-1][j-1], [i-1][j], and [i][j-1] each have an arrow pointing into the fourth cell, [i][j], which is highlighted. A side panel lists the three options being maximised: diagonal (match or mismatch), up (gap in b), left (gap in a)."}
+
 → [Wikipedia: Dynamic programming](https://en.wikipedia.org/wiki/Dynamic_programming)

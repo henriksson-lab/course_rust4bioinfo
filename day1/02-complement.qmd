@@ -18,6 +18,8 @@ This is a single [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) ex
 
 DNA is double-stranded. Wherever one strand has an A, the complementary strand has a T at the same position; wherever one strand has a C, the other has a G. The function you write today is the inner workhorse of "reverse complement", which you will assemble on day 2.
 
+![Two antiparallel DNA strands shown column-wise. Read each column top-to-bottom to see the base pair, and count the short horizontal lines between the strands to see the hydrogen-bond count: A=T has two bonds, G=C has three. The 5' and 3' end labels show that the two strands point in opposite directions.](images/base-pairing.svg){#fig-base-pairing fig-alt="Two horizontal DNA strands drawn as light-blue bands holding boxed monospace letters. Top strand left to right: 5 prime A T C G 3 prime. Bottom strand left to right: 3 prime T A G C 5 prime. Between each aligned pair of bases, short black horizontal lines represent hydrogen bonds: two lines for the A-T and T-A columns, three lines for the C-G and G-C columns. Dashed grey connectors point to annotations reading 'A=T: 2 H-bonds' and 'G=C: 3 H-bonds'."}
+
 ## The exercise
 
 Open the starter project:

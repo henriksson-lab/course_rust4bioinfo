@@ -30,6 +30,8 @@ A microbial strain collection is a natural fit for a relational database. We wan
 
 The starter ships with 10 strains in [`data/strains.csv`](ex-sqlite-strains/data/strains.csv). Take a moment to look at the file — it is plain CSV, header line on top.
 
+![The schema describes the *shape* of every row in the `strain` table — the column names, types, and which constraints apply. The primary key (`strain_id`) uniquely identifies each row and is assigned automatically when a row is inserted. The card on the right shows what one actual row looks like once that schema is filled in.](images/strain-schema.svg){#fig-strain-schema fig-alt="Diagram of the strain table schema: a card with a light-blue header showing the table name, then one row per column listing strain_id (INTEGER, primary key, marked with a green PK badge), strain_name (TEXT, NOT NULL), species (TEXT, NOT NULL), isolation_source (TEXT), and year_isolated (INTEGER). To the right, a sample row showing strain_id=1, strain_name='K-12 MG1655', species='Escherichia coli', isolation_source='human gut', year_isolated=1922."}
+
 ## The exercise
 
 ```bash

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== Title ===== -->
+  <text x="380" y="26" text-anchor="middle" font-size="16" font-weight="600">
+    Phred+33 encoding: from FASTQ byte to error probability
+  </text>
+  <text x="380" y="46" text-anchor="middle" font-size="12" fill="#555">
+    Q = byte − 33,  P(error) ≈ 10^(−Q/10)
+  </text>
+
+  <!-- ===== Grid layout =====
+       Row-label column: x = 10..160 (width 150)
+       Data columns: 6 columns each 95 wide, starting at x = 160
+         col 0: 160..255  (centre 207.5)
+         col 1: 255..350  (centre 302.5)
+         col 2: 350..445  (centre 397.5)
+         col 3: 445..540  (centre 492.5)
+         col 4: 540..635  (centre 587.5)
+         col 5: 635..730  (centre 682.5)
+       Rows (top to bottom):
+         row 0: char box   y = 70..140  (h 70)  centre y ≈ 112
+         row 1: byte       y = 140..180 (h 40)  centre y ≈ 165
+         row 2: subtract   y = 180..220 (h 40)  centre y ≈ 205
+         row 3: Q          y = 220..260 (h 40)  centre y ≈ 245
+         row 4: P(err)     y = 260..310 (h 50)  centre y ≈ 290
+  -->
+
+  <!-- ===== Row-label column background (light blue header band) ===== -->
+  <rect x="10"  y="70"  width="150" height="240" fill="#e3f2fd" stroke="#bbb"/>
+
+  <!-- Row labels -->
+  <text x="150" y="112" text-anchor="end" font-size="13" font-weight="600">ASCII char</text>
+  <text x="150" y="165" text-anchor="end" font-size="13" font-weight="600">byte value</text>
+  <text x="150" y="205" text-anchor="end" font-size="13" font-weight="600">subtract 33</text>
+  <text x="150" y="245" text-anchor="end" font-size="13" font-weight="600">Phred score Q</text>
+  <text x="150" y="290" text-anchor="end" font-size="13" font-weight="600">P(error)</text>
+
+  <!-- ===== Char-box header band across all 6 data columns ===== -->
+  <rect x="160" y="70" width="570" height="70" fill="#e3f2fd" stroke="#bbb"/>
+
+  <!-- ===== Vertical dividers between data columns ===== -->
+  <line x1="255" y1="70" x2="255" y2="310" stroke="#bbb" stroke-width="1"/>
+  <line x1="350" y1="70" x2="350" y2="310" stroke="#bbb" stroke-width="1"/>
+  <line x1="445" y1="70" x2="445" y2="310" stroke="#bbb" stroke-width="1"/>
+  <line x1="540" y1="70" x2="540" y2="310" stroke="#bbb" stroke-width="1"/>
+  <line x1="635" y1="70" x2="635" y2="310" stroke="#bbb" stroke-width="1"/>
+
+  <!-- ===== Horizontal dividers between data rows ===== -->
+  <!-- between char and byte -->
+  <line x1="10"  y1="140" x2="730" y2="140" stroke="#bbb" stroke-width="1"/>
+  <!-- between byte and subtract -->
+  <line x1="10"  y1="180" x2="730" y2="180" stroke="#bbb" stroke-width="1"/>
+  <!-- between subtract and Q -->
+  <line x1="10"  y1="220" x2="730" y2="220" stroke="#bbb" stroke-width="1"/>
+  <!-- between Q and P(err) -->
+  <line x1="10"  y1="260" x2="730" y2="260" stroke="#bbb" stroke-width="1"/>
+
+  <!-- Outer border for the table -->
+  <rect x="10" y="70" width="720" height="240" fill="none" stroke="#888" stroke-width="1.2"/>
+
+  <!-- Vertical divider between label column and data columns -->
+  <line x1="160" y1="70" x2="160" y2="310" stroke="#888" stroke-width="1.2"/>
+
+  <!-- ============================================================
+       Column data — each column shows:
+         row 0: big monospace ASCII char
+         row 1: byte value (e.g. 33)
+         row 2: − 33
+         row 3: Q = ...
+         row 4: P(err) ≈ ...
+       ============================================================ -->
+
+  <!-- ===== Column 0: '!' byte 33, Q 0, P 1.0 (worst quality) ===== -->
+  <text x="207.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace">!</text>
+  <text x="207.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">33</text>
+  <text x="207.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="207.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">0</text>
+  <text x="207.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1.0</text>
+
+  <!-- ===== Column 1: '#' byte 35, Q 2, P 0.63 ===== -->
+  <text x="302.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace">#</text>
+  <text x="302.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">35</text>
+  <text x="302.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="302.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">2</text>
+  <text x="302.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.63</text>
+
+  <!-- ===== Column 2: '5' byte 53, Q 20, P 0.01 ===== -->
+  <text x="397.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace">5</text>
+  <text x="397.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">53</text>
+  <text x="397.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="397.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">20</text>
+  <text x="397.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.01</text>
+
+  <!-- ===== Column 3: 'I' byte 73, Q 40, P 1e-4 (typical Illumina) ===== -->
+  <!-- highlighted as the canonical "good" quality -->
+  <rect x="445" y="70" width="95" height="240" fill="#fff3cd" stroke="#d97706"
+        stroke-width="2.5"/>
+  <text x="492.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">I</text>
+  <text x="492.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">73</text>
+  <text x="492.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="492.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">40</text>
+  <text x="492.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1 × 10⁻⁴</text>
+
+  <!-- ===== Column 4: ']' byte 93, Q 60, P 1e-6 ===== -->
+  <text x="587.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace">]</text>
+  <text x="587.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">93</text>
+  <text x="587.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="587.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">60</text>
+  <text x="587.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1 × 10⁻⁶</text>
+
+  <!-- ===== Column 5: '~' byte 126, Q 93, P 5e-10 (best the encoding allows) ===== -->
+  <text x="682.5" y="120" text-anchor="middle" font-size="34" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">~</text>
+  <text x="682.5" y="168" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">126</text>
+  <text x="682.5" y="208" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">− 33</text>
+  <text x="682.5" y="248" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">93</text>
+  <text x="682.5" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">~5 × 10⁻¹⁰</text>
+
+  <!-- ===== Footnote ===== -->
+  <text x="160" y="338" font-size="12" fill="#555">
+    Q = 40 (highlighted) is the typical Illumina "high-quality" call. Q = 93 is the ceiling of the Phred+33 encoding.
+  </text>
+
+</svg>

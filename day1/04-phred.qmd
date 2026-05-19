@@ -24,6 +24,8 @@ FASTQ files store per-base quality alongside the sequence. The quality of base *
 
 A score of *q* corresponds to a base-call error probability of 10^(−*q*/10). So *q* = 30 ≈ 1 wrong call in 1000; *q* = 40 ≈ 1 in 10,000.
 
+![Read the strip top to bottom: pick an ASCII character, look up its byte value, subtract 33 to get the Phred score Q, then convert to an approximate error probability. The highlighted `I` column is the canonical Q = 40 Illumina "high-quality" call; `~` is the encoding's ceiling.](images/phred33-strip.svg){#fig-phred33-strip fig-alt="Six-column table with row labels on the left. Rows from top to bottom: ASCII char, byte value, subtract 33, Phred score Q, P(error). Columns from left to right: '!' byte 33 → Q 0, P(err) 1.0; '#' byte 35 → Q 2, P(err) 0.63; '5' byte 53 → Q 20, P(err) 0.01; 'I' byte 73 → Q 40, P(err) 1e-4 (highlighted in yellow with orange border); ']' byte 93 → Q 60, P(err) 1e-6; '~' byte 126 → Q 93, P(err) approximately 5e-10 (drawn in green as the ceiling)."}
+
 Anything outside the byte range 33..=126 is not a valid Phred+33 quality and your function should panic.
 
 ## The exercise

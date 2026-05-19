@@ -18,6 +18,8 @@ This is the first exercise where the function **owns** the data it returns. The 
 
 The reverse complement is one of the most common operations in bioinformatics. To compute it, complement each base (A↔T, C↔G) and reverse the order. Aliasing on day 1: `ATGCATGC` → complemented `TACGTACG` → reversed `GCATGCAT`. We will reuse the [`complement_base`](../day1/02-complement.qmd) function from day 1.
 
+![Reverse complement of `ATTGC`: reverse the order, then complement each base. Doing it in the opposite order — complement first, then reverse — produces the same result, because the two operations commute.](images/reverse-complement.svg){#fig-revcomp fig-alt="Three rows of five monospace boxes. Row 1: A T T G C (input). A left-pointing arrow labelled 'reverse' connects to row 2: C G T T A. A down arrow labelled 'complement (A↔T, C↔G)' connects to row 3: G C A A T, highlighted in light yellow with an orange border to mark the final output."}
+
 ## The exercise
 
 ```bash

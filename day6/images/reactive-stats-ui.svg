@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-live" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Browser window chrome ===== -->
+  <rect x="20" y="20" width="580" height="500" rx="10" ry="10"
+        fill="white" stroke="#888" stroke-width="1.5"/>
+
+  <!-- URL bar strip -->
+  <rect x="20" y="20" width="580" height="36" rx="10" ry="10"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <!-- Square off bottom of url bar -->
+  <rect x="20" y="44" width="580" height="12"
+        fill="#f5f5f5" stroke="none"/>
+  <line x1="20" y1="56" x2="600" y2="56" stroke="#888" stroke-width="1.5"/>
+
+  <!-- traffic-light dots -->
+  <circle cx="40"  cy="38" r="5" fill="#e57373"/>
+  <circle cx="56"  cy="38" r="5" fill="#ffb74d"/>
+  <circle cx="72"  cy="38" r="5" fill="#81c784"/>
+
+  <!-- URL pill -->
+  <rect x="100" y="28" width="420" height="20" rx="10" ry="10"
+        fill="white" stroke="#bbb"/>
+  <text x="310" y="42" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">localhost:8080</text>
+
+  <!-- ===== Textarea label ===== -->
+  <text x="60" y="84" font-size="13" font-weight="600" fill="#333">
+    Paste DNA sequence
+  </text>
+
+  <!-- ===== Textarea ===== -->
+  <rect x="60" y="94" width="400" height="120" rx="6" ry="6"
+        fill="white" stroke="#bbb" stroke-width="1.5"/>
+  <text x="74" y="118" font-size="14"
+        font-family="ui-monospace, monospace" fill="#222">ATGCATGCATGC</text>
+  <!-- blinking caret hint -->
+  <line x1="174" y1="106" x2="174" y2="124" stroke="#555" stroke-width="1.5"/>
+
+  <!-- ===== Live-update arrow (curved, from textarea down to stats) ===== -->
+  <path d="M 460 154 C 530 154, 530 280, 460 280"
+        fill="none" stroke="#2e7d32" stroke-width="2.5"
+        marker-end="url(#arrow-live)"/>
+  <text x="540" y="210" text-anchor="middle" font-size="12"
+        font-weight="600" fill="#2e7d32">
+    keystroke
+  </text>
+  <text x="540" y="226" text-anchor="middle" font-size="12"
+        font-weight="600" fill="#2e7d32">
+    → re-render
+  </text>
+
+  <!-- ===== Stats panel ===== -->
+  <rect x="60" y="244" width="400" height="170" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#bbb" stroke-width="1.5"/>
+
+  <text x="78" y="274" font-size="14" font-weight="600" fill="#333">
+    Statistics
+  </text>
+
+  <!-- Row: length -->
+  <text x="78" y="306" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">Length:</text>
+  <text x="200" y="306" font-size="13"
+        font-family="ui-monospace, monospace" font-weight="700" fill="#222">12 bp</text>
+
+  <!-- Row: GC content -->
+  <text x="78" y="332" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">GC content:</text>
+  <text x="200" y="332" font-size="13"
+        font-family="ui-monospace, monospace" font-weight="700" fill="#222">50.0%</text>
+
+  <!-- Row: per-base counts -->
+  <text x="78" y="364" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">A: 3</text>
+  <text x="158" y="364" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">C: 3</text>
+  <text x="238" y="364" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">G: 3</text>
+  <text x="318" y="364" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">T: 3</text>
+
+  <!-- highlight box for the "this is what changes" cue -->
+  <rect x="68" y="384" width="384" height="22" rx="4" ry="4"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="78" y="400" font-size="12" fill="#b45309"
+        font-family="ui-monospace, monospace">
+    these values are recomputed on every render
+  </text>
+
+  <!-- ===== Footer annotation ===== -->
+  <text x="60" y="450" font-size="12" fill="#888">
+    No "Recompute" button — the UI re-renders on every input event.
+  </text>
+  <text x="60" y="470" font-size="12" fill="#888">
+    use_state holds the textarea's value; reading it triggers gc_content / base_counts.
+  </text>
+  <text x="60" y="490" font-size="12" fill="#888">
+    Same Rust functions as days 1 and 2, now compiled to WebAssembly.
+  </text>
+
+</svg>

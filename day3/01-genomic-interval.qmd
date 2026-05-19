@@ -32,6 +32,8 @@ Then implement two methods on the struct:
 
 A genomic interval is the most basic spatial data type in bioinformatics. Every BED record, every gene annotation, every variant call ultimately resolves to "chromosome X, position a to position b, on this strand". Coordinates are **half-open**: an interval `[100, 200)` covers 100 base pairs and starts at position 100, but does *not* include position 200. The interval `[200, 300)` starts where the previous one ends and they do **not** overlap.
 
+![Half-open intervals (the BED/UCSC convention): the start position is included (filled dot) and the end position is excluded (open dot), so the length is simply `end − start` and the next interval `[200, 300)` abuts this one without overlap or gap.](images/half-open-interval.svg){#fig-half-open fig-alt="A horizontal number line from 0 to 300 with ticks every 50. A filled black dot marks position 100 labelled start = 100 (inclusive); an open circle marks position 200 labelled end = 200 (exclusive). A light blue bar above the line spans 100 to 200 and is labelled length = end − start = 100. An arrow to the right of position 200 notes that the next interval [200, 300) starts there with no overlap and no gap."}
+
 We will build BED parsing on top of this struct on day 4.
 
 ## The exercise

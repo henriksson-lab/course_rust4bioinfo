@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="qt-arrow-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="qt-arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <text x="410" y="26" text-anchor="middle" font-size="17" font-weight="600">
+    Two-pointer quality trim at threshold Q ≥ 20
+  </text>
+  <text x="410" y="46" text-anchor="middle" font-size="12" fill="#555">
+    start walks right from 0; end walks left from the length, until both hit a passing base.
+  </text>
+
+  <!-- ====== Layout: 10 cells, width 60, height 60, origin x=80, y=160 ====== -->
+  <!-- cell centres: 110, 170, 230, 290, 350, 410, 470, 530, 590, 650 -->
+  <!-- shading:
+       cells 0,1,2 (x=80..260): trimmed grey
+       cells 3..7 (x=260..560): kept green
+       cells 8,9 (x=560..680):  trimmed grey
+  -->
+
+  <!-- backgrounds first -->
+  <rect x="80"  y="160" width="180" height="60" fill="#eeeeee"/>
+  <rect x="260" y="160" width="300" height="60" fill="#e8f5e9"/>
+  <rect x="560" y="160" width="120" height="60" fill="#eeeeee"/>
+
+  <!-- cell borders -->
+  <rect x="80"  y="160" width="60" height="60" fill="none" stroke="#888"/>
+  <rect x="140" y="160" width="60" height="60" fill="none" stroke="#888"/>
+  <rect x="200" y="160" width="60" height="60" fill="none" stroke="#888"/>
+  <rect x="260" y="160" width="60" height="60" fill="none" stroke="#2e7d32"/>
+  <rect x="320" y="160" width="60" height="60" fill="none" stroke="#2e7d32"/>
+  <rect x="380" y="160" width="60" height="60" fill="none" stroke="#2e7d32"/>
+  <rect x="440" y="160" width="60" height="60" fill="none" stroke="#2e7d32"/>
+  <rect x="500" y="160" width="60" height="60" fill="none" stroke="#2e7d32"/>
+  <rect x="560" y="160" width="60" height="60" fill="none" stroke="#888"/>
+  <rect x="620" y="160" width="60" height="60" fill="none" stroke="#888"/>
+
+  <!-- ====== chars row (Phred+33 character) ====== -->
+  <text x="60" y="180" text-anchor="end" font-size="12" fill="#555">char:</text>
+  <text x="110" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#777">!</text>
+  <text x="170" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#777">!</text>
+  <text x="230" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#777">#</text>
+  <text x="290" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">I</text>
+  <text x="350" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">I</text>
+  <text x="410" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">I</text>
+  <text x="470" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">I</text>
+  <text x="530" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">I</text>
+  <text x="590" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#777">#</text>
+  <text x="650" y="183" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#777">!</text>
+
+  <!-- ====== Q score row ====== -->
+  <text x="60" y="212" text-anchor="end" font-size="12" fill="#555">Q:</text>
+  <text x="110" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#777">0</text>
+  <text x="170" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#777">0</text>
+  <text x="230" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#777">2</text>
+  <text x="290" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">40</text>
+  <text x="350" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">40</text>
+  <text x="410" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">40</text>
+  <text x="470" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">40</text>
+  <text x="530" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">40</text>
+  <text x="590" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#777">2</text>
+  <text x="650" y="213" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#777">0</text>
+
+  <!-- ====== index row (below cells) ====== -->
+  <text x="60" y="240" text-anchor="end" font-size="12" fill="#555">idx:</text>
+  <text x="110" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">0</text>
+  <text x="170" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">1</text>
+  <text x="230" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">2</text>
+  <text x="290" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">3</text>
+  <text x="350" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">4</text>
+  <text x="410" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">5</text>
+  <text x="470" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">6</text>
+  <text x="530" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">7</text>
+  <text x="590" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">8</text>
+  <text x="650" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">9</text>
+  <text x="710" y="240" text-anchor="middle" font-size="12" fill="#555"
+        font-family="ui-monospace, monospace">10</text>
+
+  <!-- ====== Final start = 3 bracket (green, above the strip) ======
+       points to cell 3 (centred x=290). bracket bottom at y=148, top at y=128 -->
+  <path d="M 270 148 L 270 138 L 310 138 L 310 148"
+        stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+  <line x1="290" y1="138" x2="290" y2="158"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#qt-arrow-green)"/>
+  <text x="290" y="124" text-anchor="middle" font-size="13" fill="#2e7d32" font-weight="700"
+        font-family="ui-monospace, monospace">start = 3</text>
+
+  <!-- ====== Final end = 8 bracket (green, above the strip), pointing between cell 7 and 8 ======
+       boundary between cell 7 and 8 is at x=560 -->
+  <path d="M 540 148 L 540 138 L 580 138 L 580 148"
+        stroke="#2e7d32" stroke-width="2.5" fill="none"/>
+  <line x1="560" y1="138" x2="560" y2="158"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#qt-arrow-green)"/>
+  <text x="560" y="124" text-anchor="middle" font-size="13" fill="#2e7d32" font-weight="700"
+        font-family="ui-monospace, monospace">end = 8</text>
+
+  <!-- ====== Faded initial-position markers and curved arrows ====== -->
+  <!-- start = 0 (faded, left edge x=80) curving to x=290 -->
+  <text x="80" y="92" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">start = 0</text>
+  <path d="M 80 100 Q 80 70 290 110"
+        stroke="#888" stroke-width="1.8" fill="none" stroke-dasharray="5,4"
+        marker-end="url(#qt-arrow-grey)"/>
+  <text x="170" y="68" text-anchor="middle" font-size="11" fill="#666"
+        font-style="italic">advance while Q &lt; 20</text>
+
+  <!-- end = 10 (faded, right edge x=680) curving to x=560 -->
+  <text x="710" y="92" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">end = 10</text>
+  <path d="M 710 100 Q 710 70 560 110"
+        stroke="#888" stroke-width="1.8" fill="none" stroke-dasharray="5,4"
+        marker-end="url(#qt-arrow-grey)"/>
+  <text x="640" y="68" text-anchor="middle" font-size="11" fill="#666"
+        font-style="italic">retreat while Q &lt; 20</text>
+
+  <!-- ====== Bottom result note ====== -->
+  <rect x="80" y="290" width="600" height="56" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="380" y="316" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="700">
+    result = <tspan font-family="ui-monospace, monospace">seq[3..8]</tspan>
+    — 5 high-quality bases, zero bytes copied
+  </text>
+  <text x="380" y="336" text-anchor="middle" font-size="12" fill="#333">
+    The trimmed cells (grey) stay in the original buffer; only the slice indices change.
+  </text>
+
+  <!-- ====== Legend ====== -->
+  <text x="80" y="380" font-size="13" font-weight="600" fill="#333">Legend</text>
+  <rect x="80" y="390" width="22" height="18" fill="#eeeeee" stroke="#888"/>
+  <text x="110" y="404" font-size="12" fill="#333">trimmed (Q &lt; threshold)</text>
+  <rect x="280" y="390" width="22" height="18" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="310" y="404" font-size="12" fill="#333">kept (Q ≥ threshold)</text>
+  <line x1="490" y1="399" x2="520" y2="399"
+        stroke="#888" stroke-width="1.8" stroke-dasharray="5,4"
+        marker-end="url(#qt-arrow-grey)"/>
+  <text x="528" y="404" font-size="12" fill="#333">pointer movement during trim</text>
+
+  <text x="80" y="446" font-size="12" fill="#555">
+    Threshold byte = score 20 + 33 = 53 = <tspan font-family="ui-monospace, monospace">b'5'</tspan>;
+    cells whose Phred+33 byte is below 53 are skipped.
+  </text>
+
+</svg>

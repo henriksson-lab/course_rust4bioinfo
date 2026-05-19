@@ -24,6 +24,8 @@ The standard genetic code maps each of the 64 possible DNA triplets to one of 20
 
 [`Option<T>`](https://doc.rust-lang.org/std/option/enum.Option.html) is Rust's "this might be there or not" type. Unlike `null` in many other languages, the compiler forces every caller to handle both cases — there is no way to accidentally use a `None` as if it were a value.
 
+![The standard genetic code: every cell is indexed by its first base (row band), second base (column band), and third base (sub-row). Background colour groups amino acids by chemistry — hydrophobic, polar uncharged, acidic, basic, or stop. `ATG` is the universal start codon.](images/codon-table.svg){#fig-codon-table fig-alt="A 4 by 4 grid of outer cells indexed by first base (rows T, C, A, G) and second base (columns T, C, A, G). Each outer cell contains four sub-rows for the third base T, C, A, G. Every sub-row shows a codon on the left and its one-letter amino acid on the right. Cells are background-coloured: cream for hydrophobic amino acids, light blue for polar uncharged, light pink for acidic, light green for basic, and dark grey with white text for stop codons. The codon ATG is annotated as the start codon. A legend at the bottom names the colour categories."}
+
 ## The exercise
 
 ```bash

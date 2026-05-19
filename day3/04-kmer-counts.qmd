@@ -20,6 +20,8 @@ K-mer counting is a foundational operation in bioinformatics. Spectrum-based ass
 
 On day 2 you wrote `kmers(seq, k) -> Vec<&[u8]>` which produced the k-mers as slice views. That is great if you want to *iterate* k-mers without copying, but it does not group duplicates — and a hash map cannot key on a borrowed `&[u8]` whose lifetime is tied to the input sequence (the entries need to outlive the map, which would outlive the sequence). So we promote each k-mer to a `Vec<u8>` (an owned copy) when we insert it.
 
+![3-mer counts for the toy sequence `ATGATGCAT`. Seven windows of length 3 slide across the sequence; the resulting six distinct k-mers are shown sorted alphabetically, with `ATG` standing out at count 2 because it occurs at positions 0 and 3.](images/kmer-counts.svg){#fig-kmer-counts fig-alt="A bar chart of 3-mer counts in ATGATGCAT. Above the chart the source sequence is shown as A T G A T G C A T with a bracket indicating seven sliding windows of length 3 and the first window ATG outlined in orange. Below, the bar chart has the y-axis labelled count with ticks at 0, 1, 2, and the x-axis labelled k-mer (alphabetical order) with six bars: ATG = 2, CAT = 1, GAT = 1, GCA = 1, TGA = 1, TGC = 1. Each bar is labelled with its count on top."}
+
 ## The exercise
 
 ```bash

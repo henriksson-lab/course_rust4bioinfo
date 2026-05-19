@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 658 640"
+     font-family="system-ui, -apple-system, sans-serif">
+  <text x="329" y="28" text-anchor="middle" font-size="17" font-weight="600">
+    The standard genetic code (64 codons)</text>
+  <text x="329" y="48" text-anchor="middle" font-size="12" fill="#555">
+    rows: 1st base · columns: 2nd base · sub-rows inside each cell: 3rd base</text>
+  <text x="344.0" y="64" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">2nd base</text>
+  <text transform="translate(32,310.0) rotate(-90)" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">1st base</text>
+  <text transform="translate(634,310.0) rotate(-90)" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">3rd base</text>
+  <rect x="80" y="70" width="132" height="40" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="146.0" y="97" text-anchor="middle" font-size="20" font-weight="700">T</text>
+  <rect x="212" y="70" width="132" height="40" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="278.0" y="97" text-anchor="middle" font-size="20" font-weight="700">C</text>
+  <rect x="344" y="70" width="132" height="40" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="410.0" y="97" text-anchor="middle" font-size="20" font-weight="700">A</text>
+  <rect x="476" y="70" width="132" height="40" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="542.0" y="97" text-anchor="middle" font-size="20" font-weight="700">G</text>
+  <rect x="40" y="110" width="40" height="100" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="60" y="167.0" text-anchor="middle" font-size="20" font-weight="700">T</text>
+  <rect x="40" y="210" width="40" height="100" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="60" y="267.0" text-anchor="middle" font-size="20" font-weight="700">C</text>
+  <rect x="40" y="310" width="40" height="100" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="60" y="367.0" text-anchor="middle" font-size="20" font-weight="700">A</text>
+  <rect x="40" y="410" width="40" height="100" fill="#e3f2fd" stroke="#90caf9"/>
+  <text x="60" y="467.0" text-anchor="middle" font-size="20" font-weight="700">G</text>
+  <rect x="80" y="110" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="80" y="110.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="127.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TT<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="198" y="127.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">F</text>
+  <rect x="80" y="135.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="152.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TT<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="198" y="152.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">F</text>
+  <rect x="80" y="160.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="177.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TT<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="198" y="177.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="80" y="185.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="202.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TT<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="198" y="202.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="212" y="110" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="212" y="110.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="127.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TC<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="330" y="127.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="212" y="135.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="152.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TC<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="330" y="152.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="212" y="160.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="177.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TC<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="330" y="177.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="212" y="185.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="202.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TC<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="330" y="202.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="344" y="110" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="344" y="110.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="127.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TA<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="462" y="127.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">Y</text>
+  <rect x="344" y="135.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="152.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TA<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="462" y="152.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">Y</text>
+  <rect x="344" y="160.0" width="132" height="25.0" fill="#424242" stroke="#ccc"/>
+  <text x="354" y="177.5" font-size="13" font-family="ui-monospace, monospace" fill="white">TA<tspan fill="#bbb" font-weight="700">A</tspan></text>
+  <text x="462" y="177.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="white">*</text>
+  <rect x="344" y="185.0" width="132" height="25.0" fill="#424242" stroke="#ccc"/>
+  <text x="354" y="202.5" font-size="13" font-family="ui-monospace, monospace" fill="white">TA<tspan fill="#bbb" font-weight="700">G</tspan></text>
+  <text x="462" y="202.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="white">*</text>
+  <rect x="476" y="110" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="476" y="110.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="127.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TG<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="594" y="127.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">C</text>
+  <rect x="476" y="135.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="152.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TG<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="594" y="152.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">C</text>
+  <rect x="476" y="160.0" width="132" height="25.0" fill="#424242" stroke="#ccc"/>
+  <text x="486" y="177.5" font-size="13" font-family="ui-monospace, monospace" fill="white">TG<tspan fill="#bbb" font-weight="700">A</tspan></text>
+  <text x="594" y="177.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="white">*</text>
+  <rect x="476" y="185.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="486" y="202.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">TG<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="594" y="202.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">W</text>
+  <rect x="80" y="210" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="80" y="210.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="227.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CT<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="198" y="227.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="80" y="235.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="252.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CT<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="198" y="252.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="80" y="260.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="277.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CT<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="198" y="277.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="80" y="285.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="302.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CT<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="198" y="302.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">L</text>
+  <rect x="212" y="210" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="212" y="210.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="227.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CC<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="330" y="227.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">P</text>
+  <rect x="212" y="235.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="252.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CC<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="330" y="252.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">P</text>
+  <rect x="212" y="260.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="277.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CC<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="330" y="277.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">P</text>
+  <rect x="212" y="285.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="302.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CC<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="330" y="302.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">P</text>
+  <rect x="344" y="210" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="344" y="210.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="354" y="227.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CA<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="462" y="227.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">H</text>
+  <rect x="344" y="235.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="354" y="252.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CA<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="462" y="252.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">H</text>
+  <rect x="344" y="260.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="277.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CA<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="462" y="277.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">Q</text>
+  <rect x="344" y="285.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="302.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CA<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="462" y="302.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">Q</text>
+  <rect x="476" y="210" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="476" y="210.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="227.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CG<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="594" y="227.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="476" y="235.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="252.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CG<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="594" y="252.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="476" y="260.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="277.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CG<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="594" y="277.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="476" y="285.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="302.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">CG<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="594" y="302.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="80" y="310" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="80" y="310.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="327.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AT<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="198" y="327.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">I</text>
+  <rect x="80" y="335.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="352.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AT<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="198" y="352.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">I</text>
+  <rect x="80" y="360.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="377.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AT<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="198" y="377.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">I</text>
+  <rect x="80" y="385.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="402.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AT<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="198" y="402.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">M</text>
+  <rect x="212" y="310" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="212" y="310.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="327.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AC<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="330" y="327.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">T</text>
+  <rect x="212" y="335.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="352.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AC<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="330" y="352.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">T</text>
+  <rect x="212" y="360.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="377.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AC<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="330" y="377.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">T</text>
+  <rect x="212" y="385.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="222" y="402.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AC<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="330" y="402.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">T</text>
+  <rect x="344" y="310" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="344" y="310.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="327.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AA<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="462" y="327.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">N</text>
+  <rect x="344" y="335.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="354" y="352.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AA<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="462" y="352.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">N</text>
+  <rect x="344" y="360.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="354" y="377.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AA<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="462" y="377.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">K</text>
+  <rect x="344" y="385.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="354" y="402.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AA<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="462" y="402.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">K</text>
+  <rect x="476" y="310" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="476" y="310.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="327.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AG<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="594" y="327.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="476" y="335.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="352.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AG<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="594" y="352.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">S</text>
+  <rect x="476" y="360.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="377.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AG<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="594" y="377.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="476" y="385.0" width="132" height="25.0" fill="#e8f5e9" stroke="#ccc"/>
+  <text x="486" y="402.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">AG<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="594" y="402.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">R</text>
+  <rect x="80" y="410" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="80" y="410.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="427.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GT<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="198" y="427.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">V</text>
+  <rect x="80" y="435.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="452.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GT<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="198" y="452.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">V</text>
+  <rect x="80" y="460.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="477.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GT<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="198" y="477.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">V</text>
+  <rect x="80" y="485.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="90" y="502.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GT<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="198" y="502.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">V</text>
+  <rect x="212" y="410" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="212" y="410.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="427.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GC<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="330" y="427.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">A</text>
+  <rect x="212" y="435.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="452.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GC<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="330" y="452.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">A</text>
+  <rect x="212" y="460.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="477.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GC<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="330" y="477.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">A</text>
+  <rect x="212" y="485.0" width="132" height="25.0" fill="#fff8dc" stroke="#ccc"/>
+  <text x="222" y="502.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GC<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="330" y="502.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">A</text>
+  <rect x="344" y="410" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="344" y="410.0" width="132" height="25.0" fill="#fce4ec" stroke="#ccc"/>
+  <text x="354" y="427.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GA<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="462" y="427.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">D</text>
+  <rect x="344" y="435.0" width="132" height="25.0" fill="#fce4ec" stroke="#ccc"/>
+  <text x="354" y="452.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GA<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="462" y="452.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">D</text>
+  <rect x="344" y="460.0" width="132" height="25.0" fill="#fce4ec" stroke="#ccc"/>
+  <text x="354" y="477.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GA<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="462" y="477.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">E</text>
+  <rect x="344" y="485.0" width="132" height="25.0" fill="#fce4ec" stroke="#ccc"/>
+  <text x="354" y="502.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GA<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="462" y="502.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">E</text>
+  <rect x="476" y="410" width="132" height="100" fill="white" stroke="#666" stroke-width="1.2"/>
+  <rect x="476" y="410.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="427.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GG<tspan fill="#888" font-weight="700">T</tspan></text>
+  <text x="594" y="427.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">G</text>
+  <rect x="476" y="435.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="452.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GG<tspan fill="#888" font-weight="700">C</tspan></text>
+  <text x="594" y="452.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">G</text>
+  <rect x="476" y="460.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="477.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GG<tspan fill="#888" font-weight="700">A</tspan></text>
+  <text x="594" y="477.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">G</text>
+  <rect x="476" y="485.0" width="132" height="25.0" fill="#e3f2fd" stroke="#ccc"/>
+  <text x="486" y="502.5" font-size="13" font-family="ui-monospace, monospace" fill="#222">GG<tspan fill="#888" font-weight="700">G</tspan></text>
+  <text x="594" y="502.5" text-anchor="end" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#222">G</text>
+  <text x="136" y="402.5" font-size="10" fill="#2e7d32" font-style="italic" font-weight="700">(start)</text>
+  <text x="40" y="536" font-size="13" font-weight="600">Amino-acid categories:</text>
+  <rect x="40" y="547" width="18" height="14" fill="#fff8dc" stroke="#888"/>
+  <text x="64" y="558" font-size="11" fill="#333">hydrophobic (A V L I P F M W)</text>
+  <rect x="297" y="547" width="18" height="14" fill="#e3f2fd" stroke="#888"/>
+  <text x="321" y="558" font-size="11" fill="#333">polar uncharged (G S T C Y N Q)</text>
+  <rect x="568" y="547" width="18" height="14" fill="#fce4ec" stroke="#888"/>
+  <text x="592" y="558" font-size="11" fill="#333">acidic (D E)</text>
+  <rect x="40" y="569" width="18" height="14" fill="#e8f5e9" stroke="#888"/>
+  <text x="64" y="580" font-size="11" fill="#333">basic (K R H)</text>
+  <rect x="185" y="569" width="18" height="14" fill="#424242" stroke="#888"/>
+  <text x="209" y="580" font-size="11" fill="#333">stop (*)</text>
+</svg>

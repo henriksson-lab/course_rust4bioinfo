@@ -23,6 +23,8 @@ Yew is built around two ideas that React users will recognise immediately:
 
 The pattern for a controlled input — a textarea whose content lives in component state — is the textbook example for both.
 
+![A simulated browser running the finished exercise: every keystroke in the textarea updates `use_state`, which causes the component function to re-run, which recomputes `gc_content` and `base_counts` from days 1 and 2 and re-renders the stats panel. There is no explicit "Recompute" step — the same pattern as `useState` / `useEffect` in React, with the entire reactive loop running inside the WebAssembly bundle.](images/reactive-stats-ui.svg){#fig-reactive-stats-ui fig-alt="Mock-up of a browser window at localhost:8080 showing a textarea containing ATGCATGCATGC, a green curved arrow labelled 'keystroke → re-render' from the textarea down to a stats panel showing Length 12 bp, GC content 50.0%, and per-base counts A 3 C 3 G 3 T 3."}
+
 ## The exercise
 
 ```bash

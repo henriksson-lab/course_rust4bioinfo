@@ -50,6 +50,8 @@ Increase the count (e.g. `1000` → `5000`) until the release build takes around
 2. **Compile time.** The first release build is much slower than the first debug build, because LLVM is doing real optimisation work. After that, incremental compiles are similar.
 3. **Output size.** `ls -lah target/debug/ex-release-mode target/release/ex-release-mode` — debug binaries are usually larger because they include debug info; release binaries are smaller and faster.
 
+![Illustrative wall-clock times for counting all 7-mers across many random 1000-bp sequences, plotted on a log scale. The point of this exercise is that you measure your own numbers — these bars only show the order of magnitude you should expect.](images/debug-vs-release.svg){#fig-debug-vs-release fig-alt="Bar chart with two bars on a logarithmic time axis: a tall red 'debug' bar at 40 seconds and a short green 'release' bar at 0.8 seconds, with an arrow between them labeled '50x faster'."}
+
 ## What you do NOT need to do
 
 - Add the `#[bench]` attribute or use any benchmarking framework today. The simple `Instant::now() ... elapsed()` pattern in the provided code is the right tool for "show me the order of magnitude". For statistically rigorous benchmarks, [`criterion`](https://docs.rs/criterion/) is the standard choice — but we will not need it.

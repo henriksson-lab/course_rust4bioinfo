@@ -24,6 +24,8 @@ In the previous exercise, `reverse_complement` allocated a fresh `Vec<u8>` on ev
 
 This is also your first real encounter with `&mut`: a *unique* reference that lets the callee modify the caller's data, while Rust's [borrow checker](https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html) guarantees nobody else can touch that data at the same time.
 
+![Three snapshots of the caller's `Vec<u8>` across one call to `revcomp_into`. The heap allocation is the same 64-byte block in all three states; only the Vec header's `len` field changes. `clear()` is essentially free, and `revcomp_into` writes into the existing storage rather than asking the allocator for new memory.](images/revcomp-buf.svg){#fig-revcomp-buf fig-alt="Three stacked rows, each showing a Vec<u8> as a small header box (len, cap, ptr) with an arrow into a long horizontal allocation rectangle representing 64 cells. State A: len=12, cap=64, first 12 cells contain A T G C A T G C A T G C. State B (after buf.clear()): len=0, cap=64, all 64 cells empty, same pointer. State C (after revcomp_into): len=12, cap=64, first 12 cells contain G C A T G C A T G C A T highlighted green, same pointer. A yellow annotation box at the bottom emphasises that the same heap allocation persists across all three states and the caller controls when it is freed."}
+
 ## The exercise
 
 ```bash

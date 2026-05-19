@@ -38,6 +38,8 @@ If we returned `Vec<Vec<u8>>`, every k-mer would be a separate heap allocation c
 
 The lifetime of the returned slices is tied to `seq`. Rust elides the annotation because there is only one input reference, so the compiler infers that the output must borrow from it. (You will see explicit lifetime annotations later in the week.)
 
+![Three k=3 sliding windows over `b"ACGTACG"`. Each window is a `&[u8]` slice — a pointer-plus-length pair — pointing into the same backing `Vec<u8>`. The seven DNA bytes are never copied; the output `Vec<&[u8]>` only stores three slice descriptors.](images/kmers.svg){#fig-kmers fig-alt="One long horizontal rectangle with seven cells containing A C G T A C G in large monospace text, with indices 0 through 6 underneath. Below the indices, three coloured brackets show the three k=3 windows: a blue bracket spanning cells 0-2 labelled &seq[0..3] → b\"ACG\"; an orange bracket spanning cells 1-3 labelled &seq[1..4] → b\"CGT\"; a green bracket spanning cells 2-4 labelled &seq[2..5] → b\"GTA\". A blue note box at the bottom explains that each slice is a 16-byte pointer-plus-length on a 64-bit machine and that all three windows share the same backing storage."}
+
 ## The exercise
 
 ```bash

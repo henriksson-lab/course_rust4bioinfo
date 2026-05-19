@@ -49,6 +49,8 @@ At the `sqlite>` prompt:
 SELECT COUNT(*) FROM assay;   -- expect 24
 ```
 
+![`INNER JOIN` matches rows from the two tables wherever the join key (`strain_id`) is equal on both sides. One strain can produce multiple result rows when it has multiple matching assays (strain 1 → assays 101 and 102; strain 3 → assays 104 and 105). A strain with **no** matching assay would be dropped from the result entirely — that is the defining behaviour of `INNER JOIN`. If you wanted to keep such a strain (with `NULL`s in the assay columns), you would use `LEFT JOIN` instead.](images/inner-join.svg){#fig-inner-join fig-alt="Three-panel diagram of an inner join. Top-left: the strain table with three rows (strain_id 1 'K-12 MG1655' Escherichia coli, 2 'DH5alpha' Escherichia coli, 3 '168' Bacillus subtilis), strain_id column highlighted in light green as the join key. Top-right: the assay table with five rows (101→strain 1 LB 0.85, 102→strain 1 M9-glucose 0.42, 103→strain 2 LB 0.78, 104→strain 3 LB 1.10, 105→strain 3 BHI 1.25), strain_id column highlighted. Coloured lines connect each strain row to all matching assay rows (strain 1 in blue, 2 in magenta, 3 in orange). Bottom: the joined result table with five rows, each combining one strain row with one matching assay row, with the same colour stripe down the left edge to show provenance."}
+
 ### Step 1 — explicit `INNER JOIN`
 
 Combine each assay with its strain by matching `assay.strain_id` to `strain.strain_id`:
