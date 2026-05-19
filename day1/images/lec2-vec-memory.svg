@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="ptr-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Stack region (left) ===== -->
+  <text x="170" y="50" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    Stack
+  </text>
+  <rect x="50" y="70" width="240" height="280" fill="#fafafa" stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- Vec<u8> struct -->
+  <text x="170" y="105" text-anchor="middle" font-size="17" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    Vec&lt;u8&gt;
+  </text>
+
+  <!-- Three fields: ptr / len / cap -->
+  <!-- ptr row -->
+  <rect x="80" y="130" width="180" height="50" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="98" y="161" font-size="17" font-family="ui-monospace, monospace" fill="#333">
+    ptr:
+  </text>
+  <text x="170" y="161" text-anchor="middle" font-size="14" fill="#1565c0" font-style="italic">
+    (8 bytes)
+  </text>
+
+  <!-- len row -->
+  <rect x="80" y="180" width="180" height="50" fill="white" stroke="#888" stroke-width="1.5"/>
+  <text x="98" y="211" font-size="17" font-family="ui-monospace, monospace" fill="#333">
+    len: 5
+  </text>
+
+  <!-- cap row -->
+  <rect x="80" y="230" width="180" height="50" fill="white" stroke="#888" stroke-width="1.5"/>
+  <text x="98" y="261" font-size="17" font-family="ui-monospace, monospace" fill="#333">
+    cap: 8
+  </text>
+
+  <!-- Annotation: stack header size -->
+  <text x="170" y="310" text-anchor="middle" font-size="13" fill="#555">
+    24-byte header
+  </text>
+  <text x="170" y="328" text-anchor="middle" font-size="12" fill="#888">
+    (3 fields &#215; 8 bytes)
+  </text>
+
+  <!-- ===== Heap region (right) ===== -->
+  <text x="620" y="50" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    Heap
+  </text>
+  <rect x="380" y="70" width="490" height="280" fill="#fafafa" stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <!-- 8-cell heap allocation: each 50x70, x starts at 410, y = 180 -->
+  <!-- First 5 cells: filled with DNA bytes -->
+  <g stroke="#888" stroke-width="1.2">
+    <rect x="410" y="180" width="50" height="70" fill="#e3f2fd"/>
+    <rect x="460" y="180" width="50" height="70" fill="#e3f2fd"/>
+    <rect x="510" y="180" width="50" height="70" fill="#e3f2fd"/>
+    <rect x="560" y="180" width="50" height="70" fill="#e3f2fd"/>
+    <rect x="610" y="180" width="50" height="70" fill="#e3f2fd"/>
+    <!-- Empty cells (dim) -->
+    <rect x="660" y="180" width="50" height="70" fill="#f5f5f5"/>
+    <rect x="710" y="180" width="50" height="70" fill="#f5f5f5"/>
+    <rect x="760" y="180" width="50" height="70" fill="#f5f5f5"/>
+  </g>
+
+  <!-- DNA bytes -->
+  <text x="435" y="222" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">b'A'</text>
+  <text x="485" y="222" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">b'C'</text>
+  <text x="535" y="222" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">b'G'</text>
+  <text x="585" y="222" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">b'T'</text>
+  <text x="635" y="222" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">b'A'</text>
+  <!-- empty markers -->
+  <text x="685" y="222" text-anchor="middle" font-size="14" fill="#bbb" font-style="italic">&#8212;</text>
+  <text x="735" y="222" text-anchor="middle" font-size="14" fill="#bbb" font-style="italic">&#8212;</text>
+  <text x="785" y="222" text-anchor="middle" font-size="14" fill="#bbb" font-style="italic">&#8212;</text>
+
+  <!-- ===== Brackets above ===== -->
+  <!-- len = 5 bracket over first 5 cells -->
+  <line x1="410" y1="155" x2="660" y2="155" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="410" y1="155" x2="410" y2="170" stroke="#2e7d32" stroke-width="2"/>
+  <line x1="660" y1="155" x2="660" y2="170" stroke="#2e7d32" stroke-width="2"/>
+  <text x="535" y="143" text-anchor="middle" font-size="15" font-weight="700" fill="#2e7d32">
+    len = 5
+  </text>
+
+  <!-- cap = 8 bracket over all 8 cells -->
+  <line x1="410" y1="120" x2="810" y2="120" stroke="#d97706" stroke-width="2"/>
+  <line x1="410" y1="120" x2="410" y2="135" stroke="#d97706" stroke-width="2"/>
+  <line x1="810" y1="120" x2="810" y2="135" stroke="#d97706" stroke-width="2"/>
+  <text x="610" y="108" text-anchor="middle" font-size="15" font-weight="700" fill="#d97706">
+    cap = 8
+  </text>
+
+  <!-- per-cell index labels below -->
+  <text x="435" y="272" text-anchor="middle" font-size="11" fill="#666"
+        font-family="ui-monospace, monospace">[0]</text>
+  <text x="485" y="272" text-anchor="middle" font-size="11" fill="#666"
+        font-family="ui-monospace, monospace">[1]</text>
+  <text x="535" y="272" text-anchor="middle" font-size="11" fill="#666"
+        font-family="ui-monospace, monospace">[2]</text>
+  <text x="585" y="272" text-anchor="middle" font-size="11" fill="#666"
+        font-family="ui-monospace, monospace">[3]</text>
+  <text x="635" y="272" text-anchor="middle" font-size="11" fill="#666"
+        font-family="ui-monospace, monospace">[4]</text>
+  <text x="685" y="272" text-anchor="middle" font-size="11" fill="#bbb"
+        font-family="ui-monospace, monospace">[5]</text>
+  <text x="735" y="272" text-anchor="middle" font-size="11" fill="#bbb"
+        font-family="ui-monospace, monospace">[6]</text>
+  <text x="785" y="272" text-anchor="middle" font-size="11" fill="#bbb"
+        font-family="ui-monospace, monospace">[7]</text>
+
+  <!-- Annotation: heap data size -->
+  <text x="610" y="310" text-anchor="middle" font-size="13" fill="#555">
+    8 bytes of element storage
+  </text>
+  <text x="610" y="328" text-anchor="middle" font-size="12" fill="#888">
+    (cap = 8 &#215; sizeof(u8))
+  </text>
+
+  <!-- ===== Arrow from ptr to heap[0] ===== -->
+  <line x1="260" y1="155" x2="405" y2="200"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#ptr-arrow)"/>
+
+  <!-- ===== Footer ===== -->
+  <text x="450" y="395" text-anchor="middle" font-size="15" fill="#333">
+    Stack: 24 bytes (3 &#215; 8).  Heap: 8 bytes.
+  </text>
+  <text x="450" y="420" text-anchor="middle" font-size="14" fill="#555">
+    Cheap to move (just copy the 24-byte header) &#8212; the data never moves with it.
+  </text>
+
+</svg>

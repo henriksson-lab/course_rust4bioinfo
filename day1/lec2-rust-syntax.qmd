@@ -70,6 +70,22 @@ Cargo's two jobs are usually separate tools in other ecosystems. Python has `pip
 A practical side effect: every Rust project on disk has the same shape. Cargo created it, so cargo knows where everything is. That's the shape we look at next.
 :::
 
+## What cargo actually does
+
+![Cargo orchestrates the full pipeline from sources and external dependencies through rustc to a standalone executable.](images/lec2-cargo-workflow.svg){fig-alt="A horizontal flow diagram. On the left, a light-blue Sources box contains src/main.rs and Cargo.toml with a subtext that Cargo.toml declares edition, deps and name. A green arrow labeled 'cargo build' points right to a light-orange rustc box labeled 'compile + link'. Above the rustc box, a grey External dependencies box lists serde 1.0.193 and clap 4.4.7 with a subtext that they are fetched from crates.io and cached in ~/.cargo/registry; a grey arrow drops down from the deps box into rustc, labeled 'linked in'. From rustc, a green arrow labeled 'produces' points right to a green Output box containing target/debug/my-project, labelled 'an executable, ~MB', plus a note 'no separate Python/JVM needed'. A dashed arrow labeled 'cargo run' drops from the Output box to a small terminal-style box showing '$ cargo run -- ATGC' and 'hello, ATGC!'. A footer reads: 'You type cargo. It invokes rustc, fetches deps, links, and runs the binary — one tool, all the steps.'"}
+
+::: notes
+This is the pipeline `cargo build` and `cargo run` execute behind the scenes.
+
+You write the two source artefacts on the left: `src/main.rs` is the code; `Cargo.toml` declares which edition, dependencies, and project name to use.
+
+When you invoke `cargo build`, cargo reads `Cargo.toml`, fetches any external dependencies it doesn't already have from crates.io, caches them under `~/.cargo/registry`, and then invokes `rustc` with the right flags to compile your sources and link them against those dependencies.
+
+The output is a single standalone executable in `target/debug/`. Note what this means: no separate Python interpreter, no JVM, no shared-library hunt — the binary contains everything it needs. You can hand it to a colleague and they can run it without installing Rust.
+
+`cargo run` is the same pipeline, but cargo also invokes the resulting binary at the end, passing on any arguments after the `--`.
+:::
+
 ## A cargo project on disk
 
 ```text
@@ -206,6 +222,10 @@ If you read it as "signed", one bit — by convention the leftmost — encodes w
 Same number of bits. Same memory. Different interpretation. Which interpretation you get is decided by the type.
 :::
 
+## The same byte, two ways to read it
+
+![Eight bits set to one, read once as u8 (255) and once as i8 (-1).](images/lec2-signed-bit.svg){fig-alt="A single 8-bit byte with all eight bits set to 1. The most-significant bit is highlighted with a 'sign bit?' annotation and dashed arrow. Below the byte, two panels show the two interpretations: as u8 (unsigned) the bits sum to 128+64+32+16+8+4+2+1 = 255; as i8 (signed, two's complement) flipping and adding 1 gives 00000001, so the value is minus one. Footer: same 8 bits in memory, the type picks the reading."}
+
 ## Rust's integer types
 
 | Type | Width | Signed | Range |
@@ -259,6 +279,10 @@ In practice, on the machine in front of you, usize is just u64 with a different 
 The rule: lengths and indices are usize. Always.
 :::
 
+## A Vec lives on the stack; its data lives on the heap
+
+![A Vec<u8> with ptr/len/cap on the stack pointing to an 8-cell heap allocation holding the bytes for ACGTA, with three trailing empty cells.](images/lec2-vec-memory.svg){fig-alt="Two regions side by side. On the left, the stack contains a 3-field Vec<u8> struct with rows labelled ptr (8 bytes), len: 5, and cap: 8 - a 24-byte header. On the right, the heap contains an 8-cell allocation; the first five cells hold the DNA bytes b'A', b'C', b'G', b'T', b'A' and the last three cells are dim/empty. A bracket above the first 5 cells reads 'len = 5'; a bracket above all 8 cells reads 'cap = 8'. An arrow runs from the ptr row on the stack to the first cell on the heap. Footer: stack is 24 bytes (3 times 8), heap is 8 bytes; cheap to move because only the 24-byte header is copied and the data never moves with it."}
+
 ## Overflow
 
 What happens when you add 1 to a `u8` that's already 255?
@@ -302,6 +326,10 @@ For today's exercises you'll mostly type u8 (for bases) and usize (for lengths a
 
 Don't agonize over the choice. If you pick wrong, the compiler will tell you when something doesn't fit, and you change the type. There is no runtime "I picked the wrong type" cost; you'll know at build time.
 :::
+
+## i64 vs f64 — same 8 bytes, two encodings
+
+![Two 64-bit ribbons: i64 stores a sign bit plus 63 magnitude bits; f64 stores a sign bit, 11 exponent bits, and 52 mantissa bits.](images/lec2-int-vs-float.svg){fig-alt="Two horizontal 64-cell memory ribbons. Top ribbon (i64): one yellow sign-bit cell followed by 63 light-blue magnitude cells; range plus or minus 9.2e18; exact integer values. Bottom ribbon (f64, IEEE 754): one yellow sign-bit cell, 11 light-green exponent cells, 52 light-pink mantissa cells; range about plus or minus 1.8e308 with 15 to 17 decimal digits of precision; fractional values but not exact (0.1 + 0.2 not equal to 0.3). Below: a small code box showing let n: i64 = 1_000_000_000_000 (exact) and let g: f64 = 0.42 (approximate)."}
 
 ## Casting with `as`
 
@@ -350,6 +378,10 @@ char in Rust is the surprising one. A `char` is a Unicode scalar value — four 
 
 You'll see u8 everywhere this week for DNA. char appears almost never.
 :::
+
+## bool — one byte, two valid values
+
+![A bool occupies a whole byte: false is 0x00, true is 0x01; a callout explains why a whole byte is used.](images/lec2-bool.svg){fig-alt="Two 8-cell bytes shown stacked. The first byte (false) has all eight bits set to 0 and is labelled 'false to 0x00'. The second byte (true) has seven zeros and a single 1 in the rightmost bit, labelled 'true to 0x01'. A callout panel on the right explains why a whole byte is used for one bit: CPUs read memory byte-aligned, a 1-bit bool would need bit-fiddling on every read; 1 byte is the cheapest read so Rust pays the 8x memory cost for speed; only 0x00 and 0x01 are valid values, anything else is undefined behaviour."}
 
 ## Functions
 
@@ -426,6 +458,14 @@ One important rule: the condition must be a real boolean. Rust does not have "tr
 This sounds pedantic. In return, you can't ever accidentally branch on the empty string when you meant to branch on null, or on zero when you meant to branch on absence. Those classes of bug do not exist in Rust.
 :::
 
+## if/else — visualised
+
+![Flow of control through an if / else if / else chain assigning a single value to `label`.](images/lec2-if-else-flow.svg){fig-alt="Flowchart of the GC-content if/else chain: starting from gc: f64, a diamond tests gc > 0.6; on true it assigns label = \"GC-rich\", on false it falls through to a second diamond testing gc > 0.4; on true that assigns label = \"balanced\", on false it assigns label = \"AT-rich\". All three branches converge to a single end terminator stating that label is now bound. The matching Rust code is shown to the right."}
+
+::: notes
+This is the same if/else chain from the previous slide, drawn as a flowchart so the control flow is obvious. Each diamond is a condition; the green arrow is the "true" branch, the red arrow is "false". All three branches converge into a single point because the whole if/else is one expression that produces one value — that value gets bound to `label`.
+:::
+
 ## `if` is also an expression
 
 ```rust
@@ -496,6 +536,20 @@ To work with the byte directly, you destructure the reference in the pattern. `f
 If you wrote `for b in seq`, then b would be a `&u8`, and you'd have to dereference it inside the body — comparing against `&b'G'` instead of `b'G'`. Cleaner to destructure in the pattern.
 :::
 
+## `for &b in seq` — each byte through the body
+
+![Each byte of the slice flows into the loop body once; G and C take the +1 branch and bump gc, A and T fall through. After 8 iterations gc = 4.](images/lec2-for-slice.svg){fig-alt="At the top, a horizontal row of eight cells labelled seq: &[u8] holds the bytes b'A', b'C', b'G', b'T', b'A', b'C', b'G', b'A' with indices 0 through 7 below. Cells at indices 1, 2, 5, 6 (the C and G bases) are tinted light green; the A and T cells are white. From each cell a separate arrow descends into a light-blue function box labelled 'loop body: check & maybe increment gc' containing the two-line snippet 'if b == b'G' || b == b'C' { gc += 1; }'. Arrows from the green cells are green, accompanied by a green '+1' label; arrows from the white cells are grey, accompanied by a grey dash. To the right of the function box sits an accumulator box labelled gc, half filled green, with the final value 'gc = 4' below it, plus a caption 'four +1s from the green cells'. A footer says: 'The pattern &b destructures the &u8 yielded by iteration into a u8 you can compare directly.'"}
+
+::: notes
+This diagram walks through what happens when `for &b in seq` runs on an 8-byte slice.
+
+Iteration visits each byte exactly once. On each visit, the loop body — the boxed `if` — looks at the byte and either bumps `gc` by 1 (green path) or does nothing (grey path).
+
+Out of the 8 bytes here, 4 are G or C, so the body takes the `+1` branch 4 times. The accumulator on the right ends at `gc = 4`.
+
+Two things worth noticing. First, mutation is confined to one named variable, `gc`. The slice itself is never modified — the loop reads through it. Second, the pattern `&b` in the loop header is what lets you write `b == b'G'` instead of `*b == b'G'`. Iteration over `&[u8]` yields `&u8`, but the pattern destructures the reference for you so the body sees a plain `u8`.
+:::
+
 ## `while`
 
 ```rust
@@ -519,6 +573,14 @@ Two subtleties:
 The `&&` is short-circuit — the right side is only evaluated when the left side is true. So `qual[start]` is only indexed when `start` is still in bounds. Without that guard, the indexing would panic on the empty-slice edge case. Short-circuit evaluation lets you write the safety check naturally.
 
 There's also `loop { ... break; }` for "loop forever until something breaks". You'll see it less often than `for` and `while`.
+:::
+
+## while — visualised
+
+![Flow of control through the quality-trim `while` loop; the body loops back to retest the condition each iteration.](images/lec2-while-flow.svg){fig-alt="Flowchart of a while loop: from start = 0, a diamond tests start < qual.len() AND qual[start] < threshold. The true branch (green) goes down to a process box start += 1, then a curved arrow loops back up to the diamond. The false branch (red) exits to the right to an end terminator: start now points at the first kept base. The matching Rust code is shown above the end terminator."}
+
+::: notes
+The same quality-trim while loop from the previous slide, drawn as a flowchart. Note the curved arrow on the left — that's what makes it a loop: after `start += 1`, control returns to the top of the loop and the condition is rechecked. The false (red) branch exits the loop. Compare to the if/else flowchart, where each branch ran exactly once.
 :::
 
 ## `match`
@@ -545,6 +607,14 @@ You match on a value. The arms are tried top to bottom. The first pattern that m
 The underscore at the end is the wildcard pattern — it matches anything you haven't explicitly listed. Use it for "any other".
 
 A pattern can also be more elaborate than a single value, which is what makes match useful. We'll see two patterns in the next slides.
+:::
+
+## match — first matching arm wins
+
+![Walking through `match base` with `base = b'G'`: the first two patterns fail, the third (b'G') matches and its result becomes the value of the whole expression; the rest are not reached.](images/lec2-match-flow.svg){fig-alt="Diagram of a match expression with base = b'G'. The input value b'G' enters at the top. Five arms are arranged vertically: b'A' => 1, b'C' => 2, b'G' => 3, b'T' => 4, _ => 0. The first two arms (b'A' and b'C') are faded with a red X over the pattern and labelled no match. The third arm (b'G') is highlighted in green with the input arrow landing on it, an arrow leading to the result 3, and a label match — return this value. The last two arms (b'T' and _) are dimmed and labelled not reached. A vertical arrow on the left says try arms top to bottom; first match wins. A box at the bottom right reads: value of the match expression = 3."}
+
+::: notes
+This shows what `match` actually does. The input value is `b'G'`. The arms are tried top to bottom. `b'A'` and `b'C'` don't match — control moves on. `b'G'` matches — its right-hand side, `3`, becomes the value of the whole match expression, and the remaining arms (`b'T'` and `_`) never run. "First match wins" — once an arm matches, nothing below it is tried.
 :::
 
 ## Byte literals — `b'X'`

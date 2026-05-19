@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="arr-faded" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#bbb"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600">
+    match — first matching arm wins
+  </text>
+
+  <!-- ===== Input value at top ===== -->
+  <rect x="370" y="50" width="160" height="38" rx="19" ry="19"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="450" y="75" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace">base = b'G'</text>
+
+  <!-- arrow from input down into the column -->
+  <line x1="450" y1="88" x2="450" y2="108"
+        stroke="#555" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+  <!-- ===== Vertical try-order indicator on the LEFT ===== -->
+  <line x1="190" y1="115" x2="190" y2="410"
+        stroke="#555" stroke-width="2" marker-end="url(#arr-grey)"/>
+  <text x="180" y="135" text-anchor="end" font-size="13" fill="#555" font-weight="600">try arms</text>
+  <text x="180" y="151" text-anchor="end" font-size="13" fill="#555" font-weight="600">top to bottom;</text>
+  <text x="180" y="167" text-anchor="end" font-size="13" fill="#555" font-weight="600">first match wins</text>
+
+  <!-- ===== Five arms — each is a row at y = 115, 175, 235, 295, 355 ===== -->
+  <!-- Each pattern cell: x=220..340 (width 120, h 40). Result cell: x=460..540 (w 80, h 40). Arrow between. -->
+
+  <!-- Row 1: b'A' => 1   (NO MATCH - faded) -->
+  <rect x="220" y="115" width="120" height="40" rx="4" ry="4"
+        fill="#fff8dc" stroke="#bbb" opacity="0.55"/>
+  <text x="280" y="141" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#888">b'A'</text>
+  <!-- input enters from above -->
+  <line x1="450" y1="108" x2="340" y2="135"
+        stroke="#bbb" stroke-width="1.5" marker-end="url(#arr-faded)"/>
+  <!-- red X on pattern -->
+  <line x1="270" y1="125" x2="290" y2="145"
+        stroke="#c62828" stroke-width="2.5"/>
+  <line x1="290" y1="125" x2="270" y2="145"
+        stroke="#c62828" stroke-width="2.5"/>
+  <text x="355" y="141" text-anchor="start" font-size="12"
+        fill="#c62828" font-weight="600">no match</text>
+  <rect x="460" y="115" width="80" height="40" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#bbb" opacity="0.45"/>
+  <text x="500" y="141" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#888">1</text>
+
+  <!-- Row 2: b'C' => 2   (NO MATCH - faded) -->
+  <rect x="220" y="175" width="120" height="40" rx="4" ry="4"
+        fill="#fff8dc" stroke="#bbb" opacity="0.55"/>
+  <text x="280" y="201" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#888">b'C'</text>
+  <line x1="450" y1="108" x2="340" y2="195"
+        stroke="#bbb" stroke-width="1.5" marker-end="url(#arr-faded)"/>
+  <line x1="270" y1="185" x2="290" y2="205"
+        stroke="#c62828" stroke-width="2.5"/>
+  <line x1="290" y1="185" x2="270" y2="205"
+        stroke="#c62828" stroke-width="2.5"/>
+  <text x="355" y="201" text-anchor="start" font-size="12"
+        fill="#c62828" font-weight="600">no match</text>
+  <rect x="460" y="175" width="80" height="40" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#bbb" opacity="0.45"/>
+  <text x="500" y="201" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#888">2</text>
+
+  <!-- Row 3: b'G' => 3   (MATCH! highlighted in green) -->
+  <rect x="220" y="235" width="120" height="40" rx="4" ry="4"
+        fill="#fff8dc" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="280" y="261" text-anchor="middle" font-size="17"
+        font-family="ui-monospace, monospace" font-weight="700" fill="#2e7d32">b'G'</text>
+  <!-- input arrow GREEN landing on this row -->
+  <line x1="450" y1="108" x2="340" y2="255"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <!-- arrow pattern -> result, green -->
+  <line x1="340" y1="255" x2="460" y2="255"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arr-green)"/>
+  <rect x="460" y="235" width="80" height="40" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#2e7d32" stroke-width="2.5"/>
+  <text x="500" y="261" text-anchor="middle" font-size="17"
+        font-family="ui-monospace, monospace" font-weight="700" fill="#2e7d32">3</text>
+  <!-- match label -->
+  <text x="555" y="252" text-anchor="start" font-size="13"
+        fill="#2e7d32" font-weight="700">match!</text>
+  <text x="555" y="270" text-anchor="start" font-size="12"
+        fill="#2e7d32">return this value</text>
+
+  <!-- Row 4: b'T' => 4   (not reached, dim) -->
+  <rect x="220" y="295" width="120" height="40" rx="4" ry="4"
+        fill="#fff8dc" stroke="#bbb" opacity="0.4"/>
+  <text x="280" y="321" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#aaa">b'T'</text>
+  <rect x="460" y="295" width="80" height="40" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#bbb" opacity="0.4"/>
+  <text x="500" y="321" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#aaa">4</text>
+  <text x="555" y="321" text-anchor="start" font-size="12"
+        fill="#aaa">not reached</text>
+
+  <!-- Row 5: _ => 0   (not reached, dim) -->
+  <rect x="220" y="355" width="120" height="40" rx="4" ry="4"
+        fill="#fff8dc" stroke="#bbb" opacity="0.4"/>
+  <text x="280" y="381" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#aaa">_</text>
+  <rect x="460" y="355" width="80" height="40" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#bbb" opacity="0.4"/>
+  <text x="500" y="381" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace" fill="#aaa">0</text>
+  <text x="555" y="381" text-anchor="start" font-size="12"
+        fill="#aaa">not reached</text>
+
+  <!-- ===== Output box at bottom right ===== -->
+  <rect x="555" y="410" width="320" height="42" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="715" y="436" text-anchor="middle" font-size="14">
+    value of the match expression = <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#2e7d32">3</tspan>
+  </text>
+
+  <!-- Footnote -->
+  <text x="60" y="478" font-size="13" fill="#555">
+    If you remove the `_` arm and `base` isn't one of A/C/G/T, the compiler refuses to build — exhaustiveness.
+  </text>
+
+</svg>

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600">
+    if / else if / else — flow of control
+  </text>
+
+  <!-- ===== LEFT COLUMN: flowchart ===== -->
+
+  <!-- Start terminator (pill) -->
+  <rect x="120" y="55" width="200" height="38" rx="19" ry="19"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="220" y="80" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace">gc: f64</text>
+
+  <!-- arrow start -> diamond 1 -->
+  <line x1="220" y1="93" x2="220" y2="115"
+        stroke="#555" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+  <!-- Diamond 1: gc > 0.6 ? -->
+  <polygon points="220,118 340,168 220,218 100,168"
+           fill="#fff8dc" stroke="#888" stroke-width="1.5"/>
+  <text x="220" y="173" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace">gc &gt; 0.6 ?</text>
+
+  <!-- true arrow right to GC-rich box -->
+  <line x1="340" y1="168" x2="430" y2="168"
+        stroke="#2e7d32" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text x="385" y="160" text-anchor="middle" font-size="14"
+        fill="#2e7d32" font-weight="700">true</text>
+
+  <!-- GC-rich process box -->
+  <rect x="430" y="148" width="200" height="42" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2"/>
+  <text x="530" y="174" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">label = "GC-rich"</text>
+
+  <!-- false arrow down to diamond 2 -->
+  <line x1="220" y1="218" x2="220" y2="240"
+        stroke="#c62828" stroke-width="2.2" marker-end="url(#arr-red)"/>
+  <text x="240" y="234" text-anchor="start" font-size="14"
+        fill="#c62828" font-weight="700">false</text>
+
+  <!-- Diamond 2: gc > 0.4 ? -->
+  <polygon points="220,243 340,293 220,343 100,293"
+           fill="#fff8dc" stroke="#888" stroke-width="1.5"/>
+  <text x="220" y="298" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace">gc &gt; 0.4 ?</text>
+
+  <!-- true arrow right to balanced box -->
+  <line x1="340" y1="293" x2="430" y2="293"
+        stroke="#2e7d32" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text x="385" y="285" text-anchor="middle" font-size="14"
+        fill="#2e7d32" font-weight="700">true</text>
+
+  <!-- balanced process box -->
+  <rect x="430" y="273" width="200" height="42" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2"/>
+  <text x="530" y="299" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">label = "balanced"</text>
+
+  <!-- false arrow down to AT-rich box -->
+  <line x1="220" y1="343" x2="220" y2="370"
+        stroke="#c62828" stroke-width="2.2" marker-end="url(#arr-red)"/>
+  <text x="240" y="364" text-anchor="start" font-size="14"
+        fill="#c62828" font-weight="700">false</text>
+
+  <!-- AT-rich process box -->
+  <rect x="120" y="370" width="200" height="42" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2"/>
+  <text x="220" y="396" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">label = "AT-rich"</text>
+
+  <!-- Converge arrows from all three boxes to a single merge point at (530, 440) -->
+  <!-- from GC-rich box: down then right-merge -->
+  <line x1="530" y1="190" x2="530" y2="440"
+        stroke="#555" stroke-width="1.5"/>
+  <!-- from balanced box: down to merge -->
+  <line x1="530" y1="315" x2="530" y2="440"
+        stroke="#555" stroke-width="1.5"/>
+  <!-- from AT-rich box: right to merge -->
+  <line x1="220" y1="412" x2="220" y2="440"
+        stroke="#555" stroke-width="1.5"/>
+  <line x1="220" y1="440" x2="530" y2="440"
+        stroke="#555" stroke-width="1.5"/>
+
+  <!-- arrow down to end terminator -->
+  <line x1="530" y1="440" x2="530" y2="455"
+        stroke="#555" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+  <!-- End terminator -->
+  <rect x="380" y="455" width="300" height="34" rx="17" ry="17"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="530" y="478" text-anchor="middle" font-size="14">label is now bound</text>
+
+  <!-- ===== RIGHT COLUMN: actual Rust code ===== -->
+  <rect x="660" y="55" width="230" height="220" rx="6" ry="6"
+        fill="#fafafa" stroke="#bbb"/>
+  <text x="675" y="78" font-size="13" fill="#555" font-weight="600">
+    Rust code
+  </text>
+  <text x="675" y="105" font-size="14" font-family="ui-monospace, monospace">let label =</text>
+  <text x="675" y="125" font-size="14" font-family="ui-monospace, monospace">    if gc &gt; 0.6 {</text>
+  <text x="675" y="145" font-size="14" font-family="ui-monospace, monospace">        "GC-rich"</text>
+  <text x="675" y="165" font-size="14" font-family="ui-monospace, monospace">    } else if gc &gt; 0.4 {</text>
+  <text x="675" y="185" font-size="14" font-family="ui-monospace, monospace">        "balanced"</text>
+  <text x="675" y="205" font-size="14" font-family="ui-monospace, monospace">    } else {</text>
+  <text x="675" y="225" font-size="14" font-family="ui-monospace, monospace">        "AT-rich"</text>
+  <text x="675" y="245" font-size="14" font-family="ui-monospace, monospace">    };</text>
+
+  <!-- footnote -->
+  <text x="660" y="320" font-size="13" fill="#555">
+    Because `if` is an expression,
+  </text>
+  <text x="660" y="338" font-size="13" fill="#555">
+    the whole chain produces
+  </text>
+  <text x="660" y="356" font-size="13" fill="#555">
+    one value — the type of `label`.
+  </text>
+
+</svg>

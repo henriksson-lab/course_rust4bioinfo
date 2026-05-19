@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="26" text-anchor="middle" font-size="17" font-weight="600">
+    What cargo actually does
+  </text>
+
+  <!-- ===== 1. Sources group (light blue) ===== -->
+  <rect x="20" y="180" width="180" height="150" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#5b9bd5" stroke-width="1.5"/>
+  <text x="110" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#1565c0">
+    Sources (you write)
+  </text>
+
+  <!-- file icon + main.rs -->
+  <rect x="40" y="218" width="14" height="18" fill="white" stroke="#666"/>
+  <line x1="43" y1="224" x2="51" y2="224" stroke="#666" stroke-width="0.8"/>
+  <line x1="43" y1="228" x2="51" y2="228" stroke="#666" stroke-width="0.8"/>
+  <line x1="43" y1="232" x2="51" y2="232" stroke="#666" stroke-width="0.8"/>
+  <text x="60" y="232" font-size="14" font-family="ui-monospace, monospace">src/main.rs</text>
+
+  <!-- file icon + Cargo.toml -->
+  <rect x="40" y="252" width="14" height="18" fill="white" stroke="#666"/>
+  <line x1="43" y1="258" x2="51" y2="258" stroke="#666" stroke-width="0.8"/>
+  <line x1="43" y1="262" x2="51" y2="262" stroke="#666" stroke-width="0.8"/>
+  <line x1="43" y1="266" x2="51" y2="266" stroke="#666" stroke-width="0.8"/>
+  <text x="60" y="266" font-size="14" font-family="ui-monospace, monospace">Cargo.toml</text>
+  <text x="40" y="288" font-size="11" fill="#555">
+    (declares: edition, deps,
+  </text>
+  <text x="40" y="302" font-size="11" fill="#555">
+     name)
+  </text>
+
+  <!-- Arrow 1: Sources -> rustc, labeled "cargo build" -->
+  <line x1="205" y1="255" x2="318" y2="255"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+  <text x="261" y="246" text-anchor="middle" font-size="13" font-weight="600" fill="#2e7d32">
+    cargo build
+  </text>
+
+  <!-- ===== 2. External deps group (grey, drawn ABOVE the main path) ===== -->
+  <rect x="220" y="60" width="280" height="90" rx="8" ry="8"
+        fill="#f0f0f0" stroke="#888" stroke-width="1.2"/>
+  <text x="360" y="80" text-anchor="middle" font-size="13" font-weight="600" fill="#444">
+    External dependencies
+  </text>
+  <text x="235" y="100" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    serde 1.0.193
+  </text>
+  <text x="235" y="118" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    clap  4.4.7
+  </text>
+  <text x="235" y="138" font-size="11" fill="#555">
+    (fetched from crates.io, cached in ~/.cargo/registry)
+  </text>
+
+  <!-- Downward arrow from deps into rustc -->
+  <line x1="370" y1="152" x2="370" y2="222"
+        stroke="#888" stroke-width="2" marker-end="url(#arrow-grey)"/>
+  <text x="378" y="190" font-size="11" fill="#666" font-style="italic">
+    linked in
+  </text>
+
+  <!-- ===== 3. rustc node (light orange) ===== -->
+  <rect x="320" y="222" width="170" height="66" rx="8" ry="8"
+        fill="#ffe0b2" stroke="#d97706" stroke-width="2"/>
+  <text x="405" y="247" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309">
+    rustc
+  </text>
+  <text x="405" y="270" text-anchor="middle" font-size="12" fill="#7a4a09">
+    compile + link
+  </text>
+
+  <!-- Arrow 2: rustc -> output, labeled "produces" -->
+  <line x1="494" y1="255" x2="600" y2="255"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-green)"/>
+  <text x="547" y="246" text-anchor="middle" font-size="13" font-weight="600" fill="#2e7d32">
+    produces
+  </text>
+
+  <!-- ===== 4. Output group (green) ===== -->
+  <rect x="602" y="180" width="280" height="150" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="742" y="200" text-anchor="middle" font-size="13" font-weight="600" fill="#1b5e20">
+    Output
+  </text>
+
+  <text x="615" y="226" font-size="14" font-family="ui-monospace, monospace" fill="#1b5e20">
+    target/debug/my-project
+  </text>
+  <text x="615" y="244" font-size="11" fill="#385a3c">
+    (an executable, ~MB)
+  </text>
+
+  <line x1="615" y1="262" x2="869" y2="262" stroke="#a5d6a7" stroke-width="1"/>
+
+  <text x="615" y="286" font-size="12" fill="#333">
+    no separate Python/JVM
+  </text>
+  <text x="615" y="302" font-size="12" fill="#333">
+    needed
+  </text>
+
+  <!-- Arrow 3: dashed from output -> terminal box, labeled "cargo run" -->
+  <line x1="742" y1="333" x2="742" y2="375"
+        stroke="#444" stroke-width="2" stroke-dasharray="5,4"
+        marker-end="url(#arrow-dark)"/>
+  <text x="752" y="358" font-size="12" font-weight="600" fill="#444">
+    cargo run
+  </text>
+
+  <!-- ===== 5. Terminal-style box ===== -->
+  <rect x="595" y="378" width="295" height="78" rx="4" ry="4"
+        fill="#222" stroke="#000" stroke-width="1"/>
+  <!-- terminal title bar -->
+  <rect x="595" y="378" width="295" height="16" rx="4" ry="4" fill="#444"/>
+  <circle cx="606" cy="386" r="3" fill="#ff5f56"/>
+  <circle cx="616" cy="386" r="3" fill="#ffbd2e"/>
+  <circle cx="626" cy="386" r="3" fill="#27c93f"/>
+
+  <text x="608" y="416" font-size="13" font-family="ui-monospace, monospace" fill="#a8e6a8">
+    $ cargo run -- ATGC
+  </text>
+  <text x="608" y="436" font-size="13" font-family="ui-monospace, monospace" fill="#e0e0e0">
+    hello, ATGC!
+  </text>
+
+  <!-- ===== Footer note ===== -->
+  <text x="450" y="486" text-anchor="middle" font-size="12" fill="#555">
+    You type `cargo`. It invokes `rustc`, fetches deps, links, and runs the binary &#8212; one tool, all the steps.
+  </text>
+
+</svg>

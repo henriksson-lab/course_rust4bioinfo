@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600">
+    while — loop until the condition fails
+  </text>
+
+  <!-- ===== LEFT COLUMN: flowchart ===== -->
+
+  <!-- Start terminator -->
+  <rect x="200" y="60" width="200" height="38" rx="19" ry="19"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="300" y="85" text-anchor="middle" font-size="16"
+        font-family="ui-monospace, monospace">start = 0</text>
+
+  <!-- arrow into diamond -->
+  <line x1="300" y1="98" x2="300" y2="125"
+        stroke="#555" stroke-width="2" marker-end="url(#arr-grey)"/>
+
+  <!-- Diamond: condition.  Make it wide because text is long. -->
+  <polygon points="300,128 480,210 300,292 120,210"
+           fill="#fff8dc" stroke="#888" stroke-width="1.5"/>
+  <text x="300" y="200" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">start &lt; qual.len()</text>
+  <text x="300" y="220" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">AND</text>
+  <text x="300" y="240" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">qual[start] &lt; threshold ?</text>
+
+  <!-- false arrow right to end terminator -->
+  <line x1="480" y1="210" x2="555" y2="210"
+        stroke="#c62828" stroke-width="2.2" marker-end="url(#arr-red)"/>
+  <text x="518" y="200" text-anchor="middle" font-size="14"
+        fill="#c62828" font-weight="700">false</text>
+
+  <!-- End terminator on the right -->
+  <rect x="555" y="180" width="320" height="60" rx="30" ry="30"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="715" y="206" text-anchor="middle" font-size="13">
+    start now points at the first
+  </text>
+  <text x="715" y="226" text-anchor="middle" font-size="13">
+    kept base — exit the loop
+  </text>
+
+  <!-- true arrow down to process box -->
+  <line x1="300" y1="292" x2="300" y2="325"
+        stroke="#2e7d32" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text x="320" y="316" text-anchor="start" font-size="14"
+        fill="#2e7d32" font-weight="700">true</text>
+
+  <!-- Process box: start += 1 -->
+  <rect x="200" y="325" width="200" height="42" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2"/>
+  <text x="300" y="351" text-anchor="middle" font-size="15"
+        font-family="ui-monospace, monospace">start += 1</text>
+
+  <!-- Curved loop arrow back to the diamond's left input -->
+  <!-- start from left edge of process box (200, 346), curve up around to diamond left tip (120, 210) -->
+  <path d="M 200 346 L 70 346 L 70 210 L 120 210"
+        fill="none" stroke="#555" stroke-width="2"
+        marker-end="url(#arr-grey)"/>
+  <text x="55" y="280" text-anchor="middle" font-size="14" fill="#555" font-weight="600">loop</text>
+
+  <!-- ===== RIGHT COLUMN: Rust code panel ===== -->
+  <rect x="555" y="60" width="320" height="110" rx="6" ry="6"
+        fill="#fafafa" stroke="#bbb"/>
+  <text x="570" y="82" font-size="13" fill="#555" font-weight="600">
+    Rust code
+  </text>
+  <text x="570" y="106" font-size="14" font-family="ui-monospace, monospace">let mut start = 0;</text>
+  <text x="570" y="126" font-size="14" font-family="ui-monospace, monospace">while start &lt; qual.len()</text>
+  <text x="570" y="143" font-size="14" font-family="ui-monospace, monospace">      &amp;&amp; qual[start] &lt; threshold {</text>
+  <text x="570" y="160" font-size="14" font-family="ui-monospace, monospace">    start += 1;</text>
+  <text x="570" y="177" font-size="14" font-family="ui-monospace, monospace">}</text>
+
+  <!-- Footnote, spans full width -->
+  <text x="60" y="420" font-size="13" fill="#555">
+    The `&amp;&amp;` short-circuits — `qual[start]` is only evaluated when `start &lt; qual.len()`.
+  </text>
+  <text x="60" y="440" font-size="13" fill="#555">
+    Otherwise the index would panic on the last iteration.
+  </text>
+
+</svg>

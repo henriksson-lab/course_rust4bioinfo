@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== State 1: false ===== -->
+  <text x="180" y="60" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    <tspan font-family="ui-monospace, monospace" fill="#888">false</tspan>
+  </text>
+
+  <!-- 8 cells, each 36 wide, starting at x = 36, y = 80 -->
+  <g stroke="#888" stroke-width="1">
+    <rect x="36"  y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="72"  y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="108" y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="144" y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="180" y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="216" y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="252" y="80" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="288" y="80" width="36" height="48" fill="#f5f5f5"/>
+  </g>
+  <text x="54"  y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="90"  y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="126" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="162" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="198" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="234" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="270" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="306" y="113" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+
+  <text x="180" y="160" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#333">
+    false  &#8594;  0x00
+  </text>
+
+  <!-- ===== State 2: true ===== -->
+  <text x="180" y="220" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    <tspan font-family="ui-monospace, monospace" fill="#2e7d32">true</tspan>
+  </text>
+
+  <g stroke="#888" stroke-width="1">
+    <rect x="36"  y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="72"  y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="108" y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="144" y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="180" y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="216" y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="252" y="240" width="36" height="48" fill="#f5f5f5"/>
+    <rect x="288" y="240" width="36" height="48" fill="#d8f0d8" stroke="#2e7d32" stroke-width="2.5"/>
+  </g>
+  <text x="54"  y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="90"  y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="126" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="162" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="198" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="234" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="270" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="306" y="273" text-anchor="middle" font-size="22" font-weight="700" font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
+
+  <text x="180" y="320" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#333">
+    true   &#8594;  0x01
+  </text>
+
+  <!-- byte width annotation -->
+  <line x1="36"  y1="358" x2="324" y2="358" stroke="#555" stroke-width="1"/>
+  <line x1="36"  y1="354" x2="36"  y2="362" stroke="#555" stroke-width="1"/>
+  <line x1="324" y1="354" x2="324" y2="362" stroke="#555" stroke-width="1"/>
+  <text x="180" y="378" text-anchor="middle" font-size="14" fill="#555">
+    one byte (8 bits) per bool
+  </text>
+
+  <!-- ===== Right callout panel ===== -->
+  <rect x="430" y="50" width="450" height="370" fill="#f8f9fa" stroke="#bbb" stroke-width="1.5" rx="6"/>
+
+  <text x="450" y="90" font-size="20" font-weight="700" fill="#333">
+    Why a whole byte for one bit?
+  </text>
+
+  <text x="460" y="138" font-size="16" fill="#d97706" font-weight="700">&#8226;</text>
+  <text x="480" y="138" font-size="16" fill="#333">
+    CPUs read memory byte-aligned. A 1-bit
+  </text>
+  <text x="480" y="158" font-size="16" fill="#333">
+    <tspan font-family="ui-monospace, monospace">bool</tspan> would need bit-fiddling on every read.
+  </text>
+
+  <text x="460" y="208" font-size="16" fill="#d97706" font-weight="700">&#8226;</text>
+  <text x="480" y="208" font-size="16" fill="#333">
+    1 byte is the cheapest read; Rust pays that
+  </text>
+  <text x="480" y="228" font-size="16" fill="#333">
+    8&#215; memory cost for speed.
+  </text>
+
+  <text x="460" y="278" font-size="16" fill="#d97706" font-weight="700">&#8226;</text>
+  <text x="480" y="278" font-size="16" fill="#333">
+    Only two valid values:
+  </text>
+  <text x="480" y="300" font-size="16" font-family="ui-monospace, monospace" fill="#333">
+    0x00 <tspan font-family="system-ui, -apple-system, sans-serif">(false)</tspan> and 0x01 <tspan font-family="system-ui, -apple-system, sans-serif">(true)</tspan>.
+  </text>
+  <text x="480" y="322" font-size="16" fill="#b45309">
+    Anything else is undefined behaviour.
+  </text>
+
+  <text x="450" y="390" font-size="13" fill="#555" font-style="italic">
+    The CPU favours bytes; Rust pays the cost in memory for speed and safety.
+  </text>
+
+</svg>
