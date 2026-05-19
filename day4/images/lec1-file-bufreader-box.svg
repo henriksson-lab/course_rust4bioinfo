@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-fb-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arrow-fb-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    File and BufReader: a box inside a box
+  </text>
+
+  <!-- ===== Nested boxes (left half) ===== -->
+  <!-- Outermost: BufReader<File> -->
+  <rect x="40" y="75" width="430" height="370" rx="10" ry="10"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <text x="255" y="100" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    BufReader&lt;File&gt;
+  </text>
+  <text x="255" y="120" text-anchor="middle" font-size="12" fill="#444">
+    buffers reads in 64 KB chunks
+  </text>
+  <text x="255" y="138" text-anchor="middle" font-size="12" fill="#444">
+    gives you .lines(), .read_line(), .fill_buf()
+  </text>
+
+  <!-- Middle: File -->
+  <rect x="80" y="160" width="350" height="220" rx="10" ry="10"
+        fill="#bbdefb" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="255" y="184" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    File
+  </text>
+  <text x="255" y="204" text-anchor="middle" font-size="12" fill="#444">
+    an open file handle
+  </text>
+  <text x="255" y="220" text-anchor="middle" font-size="12" fill="#444">
+    gives you .read() of raw bytes
+  </text>
+
+  <!-- Innermost: OS -->
+  <rect x="120" y="240" width="270" height="120" rx="10" ry="10"
+        fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+  <text x="255" y="266" text-anchor="middle" font-size="15" font-weight="700" fill="#333">
+    Operating system
+  </text>
+  <text x="255" y="288" text-anchor="middle" font-size="12" fill="#555">
+    kernel file descriptor
+  </text>
+  <text x="255" y="304" text-anchor="middle" font-size="12" fill="#555">
+    reads from disk on demand
+  </text>
+  <text x="255" y="328" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    one syscall per refill
+  </text>
+
+  <!-- Caption under nested boxes -->
+  <text x="255" y="468" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    Each layer adds one capability without replacing the one below.
+  </text>
+
+  <!-- ===== Byte arrow (right half) ===== -->
+  <text x="700" y="95" text-anchor="middle" font-size="15" font-weight="700" fill="#333">
+    Bytes flow outward
+  </text>
+
+  <!-- disk -->
+  <rect x="540" y="125" width="120" height="50" rx="6" ry="6"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <text x="600" y="148" text-anchor="middle" font-size="13" font-weight="700" fill="#333">disk</text>
+  <text x="600" y="165" text-anchor="middle" font-size="11" fill="#555">platters / SSD</text>
+
+  <!-- File -->
+  <rect x="740" y="125" width="120" height="50" rx="6" ry="6"
+        fill="#bbdefb" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="800" y="146" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">File</text>
+  <text x="800" y="164" text-anchor="middle" font-size="11" fill="#555">raw bytes</text>
+
+  <line x1="663" y1="150" x2="738" y2="150"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-fb-dark)"/>
+
+  <!-- BufReader buffer band -->
+  <text x="700" y="210" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    BufReader 64 KB buffer
+  </text>
+  <rect x="540" y="220" width="320" height="34" rx="4" ry="4"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#7a4a09">
+    <text x="555" y="241">@read1\nACGTACGT\n+\n!!!!!!!! ... (up to 64 KB)</text>
+  </g>
+
+  <!-- arrows from File down into the buffer -->
+  <line x1="800" y1="178" x2="800" y2="218"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-fb-dark)"/>
+  <text x="810" y="200" font-size="10" fill="#555" font-style="italic">64 KB chunk</text>
+
+  <!-- your code at the bottom -->
+  <rect x="540" y="290" width="320" height="60" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="700" y="315" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">your code</text>
+  <text x="700" y="335" text-anchor="middle" font-size="11" fill="#385a3c">
+    receives one line at a time from the buffer
+  </text>
+
+  <!-- arrow buffer -> your code -->
+  <line x1="700" y1="257" x2="700" y2="287"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-fb-green)"/>
+  <text x="710" y="275" font-size="11" fill="#2e7d32" font-weight="600">.lines()</text>
+
+  <!-- summary under right column -->
+  <text x="700" y="395" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    disk -&gt; File -&gt; BufReader -&gt; your code
+  </text>
+  <text x="700" y="412" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    one syscall fills the buffer; many .lines() calls drain it.
+  </text>
+
+</svg>

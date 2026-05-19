@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="ac-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Three levels of the same line of code
+  </text>
+
+  <!-- ===== Layer 1: Rust source (blue) ===== -->
+  <rect x="40" y="60" width="560" height="110" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="55" y="84" font-size="14" font-weight="700" fill="#0d47a1">
+    What you write — Rust
+  </text>
+  <rect x="55" y="96" width="530" height="34" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1"/>
+  <text x="70" y="120" font-size="17" font-family="ui-monospace, monospace" fill="#0d47a1">
+    let x = a + b;
+  </text>
+  <text x="55" y="152" font-size="13" font-style="italic" fill="#444">
+    Human-friendly. Type-checked. Portable across CPUs.
+  </text>
+
+  <!-- Arrow: compile -->
+  <line x1="320" y1="170" x2="320" y2="210" stroke="#444" stroke-width="2"
+        marker-end="url(#ac-arrow)"/>
+  <text x="332" y="194" font-size="13" font-weight="600" fill="#444"
+        font-family="ui-monospace, monospace">
+    compile
+  </text>
+
+  <!-- ===== Layer 2: Assembly (orange) ===== -->
+  <rect x="40" y="210" width="560" height="110" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="55" y="234" font-size="14" font-weight="700" fill="#b45309">
+    What the compiler emits — x86-64 assembly
+  </text>
+  <rect x="55" y="246" width="530" height="34" rx="4" ry="4"
+        fill="white" stroke="#d97706" stroke-width="1"/>
+  <text x="70" y="270" font-size="17" font-family="ui-monospace, monospace" fill="#b45309">
+    add rax, rbx
+  </text>
+  <text x="350" y="269" font-size="12" font-style="italic" fill="#888"
+        font-family="ui-monospace, monospace">
+    ; a in rax, b in rbx
+  </text>
+  <text x="55" y="302" font-size="13" font-style="italic" fill="#444">
+    One CPU operation per line. Different for each CPU family.
+  </text>
+
+  <!-- Arrow: assemble -->
+  <line x1="320" y1="320" x2="320" y2="360" stroke="#444" stroke-width="2"
+        marker-end="url(#ac-arrow)"/>
+  <text x="332" y="344" font-size="13" font-weight="600" fill="#444"
+        font-family="ui-monospace, monospace">
+    assemble
+  </text>
+
+  <!-- ===== Layer 3: Machine code (grey) ===== -->
+  <rect x="40" y="360" width="560" height="110" rx="6" ry="6"
+        fill="#eeeeee" stroke="#888" stroke-width="1.5"/>
+  <text x="55" y="384" font-size="14" font-weight="700" fill="#444">
+    What the CPU actually reads — bytes
+  </text>
+  <rect x="55" y="396" width="530" height="34" rx="4" ry="4"
+        fill="white" stroke="#888" stroke-width="1"/>
+  <text x="70" y="420" font-size="17" font-family="ui-monospace, monospace" fill="#333">
+    48 01 D8
+  </text>
+  <text x="55" y="452" font-size="13" font-style="italic" fill="#444">
+    Three bytes. The CPU's hardware decodes these directly.
+  </text>
+
+  <!-- ===== Side note (right column) ===== -->
+  <rect x="630" y="170" width="240" height="200" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="750" y="198" text-anchor="middle" font-size="14" font-weight="700" fill="#444">
+    Why this matters
+  </text>
+  <line x1="650" y1="210" x2="850" y2="210" stroke="#ccc" stroke-width="1"/>
+  <text x="645" y="236" font-size="13" fill="#333">
+    You almost never
+  </text>
+  <text x="645" y="254" font-size="13" fill="#333">
+    read assembly.
+  </text>
+  <text x="645" y="286" font-size="13" fill="#333">
+    But knowing it exists
+  </text>
+  <text x="645" y="304" font-size="13" fill="#333">
+    tells you what
+  </text>
+  <text x="645" y="322" font-size="13" font-weight="700" fill="#2e7d32">
+    "release mode"
+  </text>
+  <text x="645" y="340" font-size="13" fill="#333">
+    actually changes.
+  </text>
+
+</svg>

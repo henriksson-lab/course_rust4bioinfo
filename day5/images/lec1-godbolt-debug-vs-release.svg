@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Same Rust, two very different assembly outputs
+  </text>
+
+  <!-- ============================================================
+       Top: Rust source (full width, centred)
+       ============================================================ -->
+  <rect x="170" y="46" width="560" height="80" rx="6" ry="6"
+        fill="#eeeeee" stroke="#888" stroke-width="1.2"/>
+  <text x="450" y="68" text-anchor="middle" font-size="13" font-weight="700" fill="#444">
+    Rust source
+  </text>
+  <text x="200" y="92" font-size="13" font-family="ui-monospace, monospace" fill="#222">
+    fn sum(slice: &amp;[i32]) -&gt; i32 {
+  </text>
+  <text x="200" y="108" font-size="13" font-family="ui-monospace, monospace" fill="#222">
+    &#160;&#160;&#160;&#160;slice.iter().sum()
+  </text>
+  <text x="200" y="124" font-size="13" font-family="ui-monospace, monospace" fill="#222">
+    }
+  </text>
+
+  <!-- ============================================================
+       LEFT panel: Debug (-O0)
+       ============================================================ -->
+  <rect x="20" y="146" width="425" height="320" rx="6" ry="6"
+        fill="#fce4ec" stroke="#c62828" stroke-width="1.8"/>
+  <text x="232" y="170" text-anchor="middle" font-size="15" font-weight="700" fill="#c62828">
+    Debug mode (-O0) — ~25 lines of x86-64
+  </text>
+
+  <!-- Code block (terminal style) -->
+  <rect x="32" y="182" width="400" height="240" rx="4" ry="4"
+        fill="#1a1a1a" stroke="#c62828" stroke-width="1.2"/>
+  <text x="44" y="200" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">push rbp</text>
+  <text x="44" y="214" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  rbp, rsp</text>
+  <text x="44" y="228" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">sub  rsp, 48</text>
+  <text x="44" y="242" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  [rbp-8],  rdi</text>
+  <text x="44" y="256" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  [rbp-16], rsi</text>
+  <text x="44" y="270" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  dword [rbp-24], 0</text>
+  <text x="44" y="284" font-size="11" font-family="ui-monospace, monospace" fill="#ffb86c">.loop:</text>
+  <text x="44" y="298" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">call core::slice::iter::Iter::next</text>
+  <text x="44" y="312" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">test rax, rax</text>
+  <text x="44" y="326" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">je   .done</text>
+  <text x="44" y="340" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  ecx, [rax]</text>
+  <text x="44" y="354" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">call core::num::&lt;i32&gt;::checked_add</text>
+  <text x="44" y="368" font-size="11" font-family="ui-monospace, monospace" fill="#ff6b6b">jo   panic_overflow</text>
+  <text x="44" y="382" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">mov  [rbp-24], eax</text>
+  <text x="44" y="396" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">jmp  .loop</text>
+  <text x="44" y="410" font-size="11" font-family="ui-monospace, monospace" fill="#ffb86c">.done:</text>
+
+  <!-- Annotation -->
+  <text x="232" y="442" text-anchor="middle" font-size="12" font-style="italic" fill="#c62828">
+    Bounds-checked. Variables on stack. Iterator not inlined.
+  </text>
+  <text x="232" y="458" text-anchor="middle" font-size="12" font-style="italic" fill="#c62828">
+    Two function calls per element.
+  </text>
+
+  <!-- ============================================================
+       RIGHT panel: Release (-O3)
+       ============================================================ -->
+  <rect x="455" y="146" width="425" height="320" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="667" y="170" text-anchor="middle" font-size="15" font-weight="700" fill="#2e7d32">
+    Release mode (-O3) — ~9 lines, vectorised
+  </text>
+
+  <!-- Code block (terminal style) -->
+  <rect x="467" y="182" width="400" height="240" rx="4" ry="4"
+        fill="#1a1a1a" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="479" y="206" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">pxor   xmm0, xmm0</text>
+  <text x="479" y="226" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">xor    rax, rax</text>
+  <text x="479" y="246" font-size="12" font-family="ui-monospace, monospace" fill="#a8e6a8">.loop:</text>
+  <text x="479" y="266" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">movdqu xmm1, [rdi+rax*4]</text>
+  <text x="479" y="286" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">paddd  xmm0, xmm1</text>
+  <text x="479" y="306" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">add    rax, 4</text>
+  <text x="479" y="326" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">cmp    rax, rsi</text>
+  <text x="479" y="346" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">jne    .loop</text>
+  <text x="479" y="366" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">phaddd xmm0, xmm0</text>
+  <text x="479" y="386" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">phaddd xmm0, xmm0</text>
+  <text x="479" y="406" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">movd   eax, xmm0</text>
+  <text x="479" y="418" font-size="12" font-family="ui-monospace, monospace" fill="#e0e0e0">ret</text>
+
+  <!-- Annotation -->
+  <text x="667" y="442" text-anchor="middle" font-size="12" font-style="italic" fill="#2e7d32">
+    Vectorised (SSE). Loop body inlined. No bounds checks.
+  </text>
+  <text x="667" y="458" text-anchor="middle" font-size="12" font-style="italic" fill="#2e7d32">
+    Four i32s added per iteration.
+  </text>
+
+  <!-- ============================================================
+       Footer
+       ============================================================ -->
+  <text x="450" y="494" text-anchor="middle" font-size="13" fill="#333">
+    Same code. Same machine. The flag <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#2e7d32">--release</tspan> is the difference.
+  </text>
+  <text x="450" y="516" text-anchor="middle" font-size="13" fill="#555">
+    Try this yourself at <tspan font-family="ui-monospace, monospace" fill="#1976d2">godbolt.org</tspan> with <tspan font-family="ui-monospace, monospace" fill="#1976d2">rustc -O3</tspan>.
+  </text>
+
+</svg>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-rm-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    A noodles Record in memory: stack header + heap bytes
+  </text>
+
+  <!-- ===== STACK (left) ===== -->
+  <text x="180" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">
+    Stack frame
+  </text>
+
+  <rect x="50" y="80" width="260" height="280" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="180" y="105" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    Record
+  </text>
+  <text x="180" y="122" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    fixed-size header, lives in your loop variable
+  </text>
+
+  <!-- field: name -->
+  <rect x="70" y="140" width="220" height="56" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1.2"/>
+  <text x="80" y="160" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    name: String
+  </text>
+  <text x="80" y="180" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+    ptr | len | cap
+  </text>
+
+  <!-- field: sequence -->
+  <rect x="70" y="206" width="220" height="56" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1.2"/>
+  <text x="80" y="226" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    sequence: Sequence
+  </text>
+  <text x="80" y="246" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+    ptr | len | cap
+  </text>
+
+  <!-- field: description -->
+  <rect x="70" y="272" width="220" height="56" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1.2"/>
+  <text x="80" y="292" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    description: Option&lt;String&gt;
+  </text>
+  <text x="80" y="312" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+    Some(ptr | len | cap)
+  </text>
+
+  <!-- ===== HEAP (right) ===== -->
+  <text x="640" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32">
+    Heap
+  </text>
+
+  <rect x="430" y="80" width="430" height="280" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="645" y="105" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    three independent allocations
+  </text>
+
+  <!-- heap row 1: name bytes -->
+  <text x="445" y="148" font-size="12" font-weight="700" fill="#1b5e20"
+        font-family="ui-monospace, monospace">
+    name bytes:
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="13">
+    <rect x="540" y="135" width="30" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="555" y="151" text-anchor="middle" fill="#333">c</text>
+    <rect x="570" y="135" width="30" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="585" y="151" text-anchor="middle" fill="#333">h</text>
+    <rect x="600" y="135" width="30" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="615" y="151" text-anchor="middle" fill="#333">r</text>
+    <rect x="630" y="135" width="30" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="645" y="151" text-anchor="middle" fill="#333">1</text>
+  </g>
+
+  <!-- heap row 2: sequence bytes -->
+  <text x="445" y="218" font-size="12" font-weight="700" fill="#1b5e20"
+        font-family="ui-monospace, monospace">
+    sequence bytes:
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="13">
+    <rect x="540" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="551" y="221" text-anchor="middle" fill="#333">A</text>
+    <rect x="562" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="573" y="221" text-anchor="middle" fill="#333">C</text>
+    <rect x="584" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="595" y="221" text-anchor="middle" fill="#333">G</text>
+    <rect x="606" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="617" y="221" text-anchor="middle" fill="#333">T</text>
+    <rect x="628" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="639" y="221" text-anchor="middle" fill="#333">A</text>
+    <rect x="650" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="661" y="221" text-anchor="middle" fill="#333">C</text>
+    <rect x="672" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="683" y="221" text-anchor="middle" fill="#333">G</text>
+    <rect x="694" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="705" y="221" text-anchor="middle" fill="#333">T</text>
+    <rect x="716" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="727" y="221" text-anchor="middle" fill="#333">A</text>
+    <rect x="738" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="749" y="221" text-anchor="middle" fill="#333">C</text>
+    <rect x="760" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="771" y="221" text-anchor="middle" fill="#333">G</text>
+    <rect x="782" y="205" width="22" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="793" y="221" text-anchor="middle" fill="#333">T</text>
+    <text x="815" y="221" fill="#888">...</text>
+  </g>
+
+  <!-- heap row 3: description bytes -->
+  <text x="445" y="289" font-size="12" font-weight="700" fill="#1b5e20"
+        font-family="ui-monospace, monospace">
+    description:
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#333">
+    <rect x="540" y="275" width="290" height="22" fill="white" stroke="#2e7d32"/>
+    <text x="550" y="291">"human chromosome 1"</text>
+  </g>
+  <text x="540" y="320" font-size="11" fill="#888" font-style="italic">
+    (None when absent: no allocation)
+  </text>
+
+  <!-- ===== arrows: stack ptr -> heap -->
+  <line x1="295" y1="180" x2="535" y2="146"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow-rm-dark)"/>
+  <line x1="295" y1="246" x2="535" y2="216"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow-rm-dark)"/>
+  <line x1="295" y1="312" x2="535" y2="286"
+        stroke="#444" stroke-width="1.5" marker-end="url(#arrow-rm-dark)"/>
+
+  <!-- ===== Footer annotation ===== -->
+  <rect x="50" y="385" width="810" height="100" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="455" y="412" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a07">
+    Each Record owns its bytes.
+  </text>
+  <text x="455" y="436" text-anchor="middle" font-size="13" fill="#333">
+    When the loop drops the record, all three heap allocations are freed.
+  </text>
+  <text x="455" y="458" text-anchor="middle" font-size="13" fill="#333">
+    Next iteration allocates fresh ones &#8212; small enough to be cheap.
+  </text>
+  <text x="455" y="478" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    No garbage collector. The Drop impl runs the moment the variable goes out of scope.
+  </text>
+
+</svg>

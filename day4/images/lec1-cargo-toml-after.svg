@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Editor window (top pane) ===== -->
+  <rect x="20" y="20" width="860" height="240" rx="8" ry="8"
+        fill="white" stroke="#888" stroke-width="1.5"/>
+
+  <!-- editor title bar -->
+  <rect x="20" y="20" width="860" height="28" rx="8" ry="8"
+        fill="#f0f0f0" stroke="#888" stroke-width="1.5"/>
+  <rect x="20" y="38" width="860" height="10"
+        fill="#f0f0f0" stroke="none"/>
+  <line x1="20" y1="48" x2="880" y2="48" stroke="#888" stroke-width="1.5"/>
+
+  <!-- traffic-light dots -->
+  <circle cx="40"  cy="34" r="5" fill="#e57373"/>
+  <circle cx="56"  cy="34" r="5" fill="#ffb74d"/>
+  <circle cx="72"  cy="34" r="5" fill="#81c784"/>
+
+  <!-- tab / filename -->
+  <rect x="110" y="22" width="140" height="22" rx="4" ry="4"
+        fill="white" stroke="#bbb"/>
+  <text x="180" y="38" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#333">
+    Cargo.toml
+  </text>
+
+  <!-- line number gutter -->
+  <rect x="20" y="48" width="40" height="212"
+        fill="#fafafa" stroke="none"/>
+  <line x1="60" y1="48" x2="60" y2="260" stroke="#ddd" stroke-width="1"/>
+
+  <text x="50" y="74" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">1</text>
+  <text x="50" y="92" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">2</text>
+  <text x="50" y="110" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">3</text>
+  <text x="50" y="128" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">4</text>
+  <text x="50" y="146" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">5</text>
+  <text x="50" y="164" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">6</text>
+  <text x="50" y="182" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">7</text>
+  <text x="50" y="200" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">8</text>
+  <text x="50" y="218" text-anchor="end" font-size="12"
+        font-family="ui-monospace, monospace" fill="#999">9</text>
+
+  <!-- toml content -->
+  <text x="72" y="74" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1565c0">[package]</text>
+  <text x="72" y="92" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">name = "my-fasta-tool"</text>
+  <text x="72" y="110" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">version = "0.1.0"</text>
+  <text x="72" y="128" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">edition = "2021"</text>
+  <text x="72" y="146" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333"></text>
+  <text x="72" y="164" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1565c0">[dependencies]</text>
+
+  <!-- highlighted new line -->
+  <rect x="62" y="170" width="816" height="20" rx="2" ry="2"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="72" y="186" font-size="14"
+        font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="600">noodles-fasta = "0.40"</text>
+  <text x="320" y="186" font-size="13"
+        font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">&#8592; NEW</text>
+
+  <text x="72" y="208" font-size="14"
+        font-family="ui-monospace, monospace" fill="#333">anyhow = "1"</text>
+
+  <!-- ===== Terminal (bottom pane) ===== -->
+  <rect x="20" y="280" width="860" height="180" rx="8" ry="8"
+        fill="#1a1a1a" stroke="#444" stroke-width="1.5"/>
+
+  <!-- terminal title bar -->
+  <rect x="20" y="280" width="860" height="24" rx="8" ry="8" fill="#333"/>
+  <rect x="20" y="296" width="860" height="8" fill="#333"/>
+  <circle cx="40"  cy="292" r="5" fill="#e57373"/>
+  <circle cx="56"  cy="292" r="5" fill="#ffb74d"/>
+  <circle cx="72"  cy="292" r="5" fill="#81c784"/>
+  <text x="450" y="297" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#bbb">
+    terminal
+  </text>
+
+  <!-- terminal output -->
+  <text x="36" y="326" font-size="14"
+        font-family="ui-monospace, monospace" fill="#a8e6a8">$ cargo build</text>
+  <text x="36" y="348" font-size="14"
+        font-family="ui-monospace, monospace" fill="#e0e0e0">&#160;&#160;&#160;Compiling noodles-core v0.18.0</text>
+  <text x="36" y="368" font-size="14"
+        font-family="ui-monospace, monospace" fill="#e0e0e0">&#160;&#160;&#160;Compiling noodles-fasta v0.40.0</text>
+  <text x="36" y="388" font-size="14"
+        font-family="ui-monospace, monospace" fill="#e0e0e0">&#160;&#160;&#160;Compiling my-fasta-tool v0.1.0 (/Users/.../my-fasta-tool)</text>
+  <text x="36" y="408" font-size="14"
+        font-family="ui-monospace, monospace" fill="#a8e6a8">&#160;&#160;&#160;&#160;Finished `dev` profile [unoptimized + debuginfo] in 5.21s</text>
+  <text x="36" y="428" font-size="14"
+        font-family="ui-monospace, monospace" fill="#a8e6a8">$</text>
+  <!-- blinking caret -->
+  <rect x="48" y="416" width="8" height="14" fill="#a8e6a8" opacity="0.7"/>
+
+  <!-- ===== Annotation ===== -->
+  <rect x="40" y="478" width="820" height="48" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="450" y="497" text-anchor="middle" font-size="14" fill="#7a4a09">
+    <tspan font-family="ui-monospace, monospace" font-weight="700">cargo build</tspan>
+    does the rest: fetches, compiles, links.
+  </text>
+  <text x="450" y="516" text-anchor="middle" font-size="14" fill="#7a4a09" font-weight="600">
+    Your code can now `use noodles_fasta;`.
+  </text>
+
+</svg>

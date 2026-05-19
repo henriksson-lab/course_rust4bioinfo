@@ -1,0 +1,172 @@
+---
+title: "Recursion and trees"
+subtitle: "Day 3"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: simple
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+Recursive data and recursive code. We'll use a phylogenetic tree as the example throughout — first the data type, then the functions that walk it.
+
+::: {.incremental}
+- A tree is a type that contains itself: a node holds its children, which are nodes
+- Rust needs one extra ingredient — heap indirection — to make that type compile
+- Once we have the type, the functions almost write themselves
+:::
+
+::: notes
+Up to now every type we've defined has had a fixed, finite size known at compile time. A struct's size is the sum of its field sizes. An enum's size is its tag plus its largest variant. The compiler computes the layout once and uses it everywhere.
+
+A tree breaks this: a node can have child nodes, which can have child nodes, with no fixed depth. We'll see exactly how that fails to compile in a moment, and what the fix looks like.
+
+The biological motivation is phylogenies. A phylogenetic tree relates species, gene families, viral strains — anything that descends from a common ancestor. Computing on phylogenies is one of the core things bioinformatics does.
+:::
+
+## Phylogenetic trees — what we want to model
+
+A phylogeny is a branching diagram representing evolutionary relationships between species, genes, or strains. **Internal nodes** are inferred common ancestors; **tips** (leaves) are present-day samples.
+
+At each node we want to record:
+
+- A **name** (at tips: species, gene, strain — internal nodes are usually nameless)
+- A **branch length** (everywhere except the root) — the evolutionary distance to the parent
+
+![Same tree as a picture, a Newick string, and a Rust enum literal.](images/phylo-three-views.svg){fig-alt="A small 3-tip tree shown three ways: a graphical tree, the Newick string ((A:0.1,B:0.2):0.3,C:0.5);, and the equivalent Rust Node::Internal { ... } literal — coloured highlights link matching parts across the three representations."}
+
+To write code that walks this — count tips, find the longest branch, prune a subtree — we need a recursive type and recursive functions.
+
+::: notes
+Three views of the same tree. The picture is what a biologist draws on a whiteboard; the Newick string is the standard text format the field uses for file storage and exchange; the Rust enum literal is what we'll be computing on for the next forty minutes.
+
+Each view carries exactly the same information: two tips (A and B) form a clade, the clade joins a third tip (C) at the root, and each edge has a length.
+
+What we want is to be able to ask programmatic questions about a tree value: how many tips, what's the deepest tip, which two tips are most similar. Those questions are naturally recursive — a question about a tree decomposes into the same question about each subtree.
+:::
+
+## Direct recursion is forbidden
+
+```rust
+// This does NOT compile:
+enum Node {
+    Internal { left: Node, right: Node },
+    Leaf,
+}
+// error[E0072]: recursive type `Node` has infinite size
+```
+
+`size(Node) = 1 + 2 × size(Node)` — there is no fixed answer.
+
+The fix: indirection through a heap pointer.
+
+::: notes
+A type that contains itself directly cannot have a fixed size — every layer would add the size of one more Node, recursively, forever. The compiler can't lay it out and rejects the definition.
+
+The same problem turns up in any language where types have fixed sizes. The standard fix is "use a pointer instead": the pointer is a fixed size (8 bytes on a 64-bit machine) regardless of what it points at. We'll see Rust's version of that next.
+:::
+
+## `Box<T>` — indirection makes it work
+
+![Box turns infinite recursion into a fixed-size pointer.](images/lec1-recursive-enum-box.svg){fig-alt="Two-panel diagram. Left panel headed enum Node { Internal { left: Node, right: Node }, Leaf } in red with subtitle compile error: recursive type has infinite size shows six nested Node boxes Russian-doll-style, the innermost containing ellipses and ...forever, with the footer size(Node) = 1 + 2 × size(Node), no fixed answer — compiler rejects. Right panel headed enum Node { Internal { left: Box<Node>, right: Box<Node> }, Leaf } in green with subtitle Box<T> is a heap pointer — always 8 bytes shows a blue Stack region containing a Node::Internal with two pointer cells left: and right:, labelled 2 × 8 byte pointers; on the right an orange Heap region holds two child Node::Leaf boxes labelled fixed size, with blue arrows from the pointer cells to the child boxes. Footer: size(Node) = tag + 2 × 8 (fixed); children live on the heap, the parent is a small record on the stack."}
+
+::: notes
+`Box<T>` is the standard owned heap pointer — a non-null pointer that owns the value it points at, and frees it when the box is dropped. The pointer itself is always 8 bytes on a 64-bit machine, regardless of how big T is.
+
+So `Box<Node>` is 8 bytes. The parent Node now has a fixed size: tag plus two 8-byte pointers. Each child Node lives on the heap and may itself contain Boxes pointing at further descendants. The tree's depth becomes a runtime property; the layout of any one node is fixed at compile time.
+
+For the phylogeny exercise the children live in a `Vec<Node>` instead of `Box<Node>`. A Vec is also a fixed-size header (24 bytes) pointing at heap storage, so the same trick applies — Vec gives you variable arity for free.
+:::
+
+## A phylogenetic tree as a recursive enum
+
+```rust
+enum Node {
+    Leaf     { name: String,        branch_length: f64 },
+    Internal { branch_length: f64,  children: Vec<Node> },
+}
+```
+
+A leaf is a tip species; an internal node groups child sub-trees. `Vec<Node>` provides the indirection (heap-allocated children) and the variable arity (two children or twenty — same type).
+
+::: notes
+This is exercise 5. A phylogenetic tree is naturally a recursive structure: each node is either a tip (Leaf) carrying a species name and the branch length leading to its parent, or an internal node grouping a list of child sub-trees.
+
+The Vec<Node> gives us two things at once. First, the indirection that makes the enum's size finite — Vec's three-field header is fixed even when the children list grows. Second, variable arity — an internal node can have two children or twenty, same type.
+
+Notice that the root has a `branch_length` field. In a strict reading of phylogenetics the root has no parent and therefore no branch length, but Newick stores one anyway (often zero or missing); we keep the field for symmetry and let it be zero at the root.
+:::
+
+## Recursive functions — match the type
+
+To count the tips of a tree:
+
+> if the tree is a single tip (Leaf), the answer is **1**.
+> Otherwise (Internal), the answer is the **sum** of the tip counts of each child, computed the same way.
+
+```rust
+fn count_tips(node: &Node) -> usize {
+    match node {
+        Node::Leaf { .. } => 1,
+        Node::Internal { children, .. } =>
+            children.iter().map(count_tips).sum(),
+    }
+}
+```
+
+The code reads exactly like the English description — the `match` arms correspond to the cases in the recursion.
+
+::: notes
+The function shape mirrors the type shape. A leaf contributes one tip. An internal node's tip count is the sum of its children's tip counts. The match exhausts both variants; the recursion bottoms out at leaves.
+
+Notice how `map(count_tips).sum()` composes — `count_tips` is passed as a function value to `map`, which produces an iterator of usize, which `sum` reduces. No mutable accumulator, no manual loop.
+
+This is the central pattern of recursive code on recursive types: one `match` arm per variant, and the recursive arms call the function on each contained sub-tree. Once you've written one of these, you've effectively written all of them.
+
+Rust does not guarantee tail-call optimisation. Very deep recursion can overflow the stack — phylogenies of biological depth (a few hundred internal nodes) are fine, but if you need to recurse a million levels deep you'd convert to an explicit stack-based iteration.
+:::
+
+## Another walk: deepest leaf
+
+> The depth of a tree is the longest path from the root to any leaf.
+> A leaf is at depth **0**. An internal node is at depth **1 + the max depth among its children**.
+
+```rust
+fn max_depth(node: &Node) -> usize {
+    match node {
+        Node::Leaf { .. } => 0,
+        Node::Internal { children, .. } =>
+            1 + children.iter().map(max_depth).max().unwrap_or(0),
+    }
+}
+```
+
+Same shape as `count_tips`: one arm per variant, recursive call per child, combine with an iterator method.
+
+::: notes
+The pattern generalises. To compute almost anything about a tree, write one arm per variant of `Node`. For each recursive arm, call the function on every child and combine the results — with `sum`, `max`, `min`, `count`, `collect`, or your own combiner.
+
+`unwrap_or(0)` handles the edge case of an internal node with no children — `.max()` on an empty iterator returns None. In practice phylogenetic internal nodes have at least two children, but the type doesn't enforce that, so we cover the case.
+
+If you wanted total branch length instead of depth, you'd add `*branch_length + ...` in the internal arm. If you wanted the name of the deepest leaf, you'd return a `(usize, String)` pair and combine with `max_by_key`. Same skeleton, different combiner.
+:::
+
+## To the next lecture
+
+Next lecture: **when recursion isn't enough — dynamic programming, with sequence alignment as the example.**
+
+::: notes
+Recursion is enough for trees because each node is visited once: the work is proportional to the size of the tree. That's not true for every recursive problem — some recursions revisit the same sub-problem exponentially often, and naive recursion becomes unusable. The fix is dynamic programming, and the canonical example is sequence alignment. That's lecture 3.
+:::

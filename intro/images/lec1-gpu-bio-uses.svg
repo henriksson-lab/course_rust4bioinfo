@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="gpu-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    GPUs in bioinformatics &#8212; three concrete examples
+  </text>
+
+  <!-- ============================================================
+       Three card columns
+       Card geometry: width = 270, height = 360
+       Column 1: x = 30,  fill = #e3f2fd, stroke = #1976d2
+       Column 2: x = 315, fill = #fff3cd, stroke = #d97706
+       Column 3: x = 600, fill = #e8f5e9, stroke = #2e7d32
+       y top = 55, y bottom = 415
+   ============================================================ -->
+
+  <!-- ===== Column 1: Dorado / Guppy ===== -->
+  <rect x="30" y="55" width="270" height="360" fill="#e3f2fd"
+        stroke="#1976d2" stroke-width="1.8" rx="8"/>
+
+  <!-- Title -->
+  <text x="165" y="85" text-anchor="middle" font-size="17" font-weight="700" fill="#0d47a1">
+    Dorado / Guppy
+  </text>
+  <text x="165" y="106" text-anchor="middle" font-size="13" fill="#0d47a1" font-style="italic">
+    (nanopore basecalling)
+  </text>
+
+  <!-- One-line description -->
+  <text x="165" y="138" text-anchor="middle" font-size="13" fill="#333">
+    Raw nanopore signal
+  </text>
+  <text x="165" y="156" text-anchor="middle" font-size="13" fill="#333">
+    &#8594; DNA bases
+  </text>
+
+  <!-- Visual: signal squiggle -> arrow -> ACGT text -->
+  <!-- y centre around 220, x within 50..280 -->
+  <text x="68" y="215" text-anchor="middle" font-size="10" font-style="italic" fill="#888">signal</text>
+  <path d="M 50 240 Q 60 220 70 240 T 90 240 T 110 240 T 130 240 T 150 240"
+        fill="none" stroke="#0d47a1" stroke-width="2"/>
+  <line x1="160" y1="240" x2="190" y2="240" stroke="#555"
+        stroke-width="1.8" marker-end="url(#gpu-arrow)"/>
+  <text x="245" y="245" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">ACGTACG...</text>
+  <text x="245" y="215" text-anchor="middle" font-size="10" font-style="italic" fill="#888">bases</text>
+
+  <!-- Speedup box -->
+  <rect x="55" y="295" width="220" height="48" fill="white"
+        stroke="#1976d2" stroke-width="1.2" rx="4"/>
+  <text x="165" y="316" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">
+    100&#215; faster on GPU
+  </text>
+  <text x="165" y="334" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    deep neural net per signal window
+  </text>
+
+  <!-- Bottom note -->
+  <text x="165" y="370" text-anchor="middle" font-size="11" fill="#555">
+    Oxford Nanopore now ships GPU
+  </text>
+  <text x="165" y="386" text-anchor="middle" font-size="11" fill="#555">
+    basecalling as the default path.
+  </text>
+
+  <!-- ===== Column 2: AlphaFold / ESMFold ===== -->
+  <rect x="315" y="55" width="270" height="360" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.8" rx="8"/>
+
+  <!-- Title -->
+  <text x="450" y="85" text-anchor="middle" font-size="17" font-weight="700" fill="#b45309">
+    AlphaFold / ESMFold
+  </text>
+  <text x="450" y="106" text-anchor="middle" font-size="13" fill="#b45309" font-style="italic">
+    (protein structure)
+  </text>
+
+  <!-- One-line description -->
+  <text x="450" y="138" text-anchor="middle" font-size="13" fill="#333">
+    Amino-acid sequence
+  </text>
+  <text x="450" y="156" text-anchor="middle" font-size="13" fill="#333">
+    &#8594; 3D fold
+  </text>
+
+  <!-- Visual: AA sequence -> arrow -> folded ribbon -->
+  <text x="370" y="215" text-anchor="middle" font-size="10" font-style="italic" fill="#888">sequence</text>
+  <text x="370" y="245" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">MKTVRQERL</text>
+  <text x="370" y="261" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">KSIVR...</text>
+
+  <line x1="425" y1="252" x2="465" y2="252" stroke="#555"
+        stroke-width="1.8" marker-end="url(#gpu-arrow)"/>
+
+  <!-- Folded ribbon: a curved/zigzag path, hand-drawn-ish -->
+  <text x="525" y="215" text-anchor="middle" font-size="10" font-style="italic" fill="#888">3D fold</text>
+  <path d="M 480 270
+           C 490 240, 510 235, 525 255
+           S 555 285, 545 260
+           S 525 230, 540 220
+           S 575 235, 565 260
+           S 540 285, 555 270"
+        fill="none" stroke="#b45309" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="480" cy="270" r="3" fill="#b45309"/>
+  <circle cx="555" cy="270" r="3" fill="#b45309"/>
+
+  <!-- Speedup box -->
+  <rect x="340" y="295" width="220" height="48" fill="white"
+        stroke="#d97706" stroke-width="1.2" rx="4"/>
+  <text x="450" y="316" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">
+    From weeks to hours
+  </text>
+  <text x="450" y="334" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    transformer + attention on GPU
+  </text>
+
+  <!-- Bottom note -->
+  <text x="450" y="370" text-anchor="middle" font-size="11" fill="#555">
+    The whole human proteome was
+  </text>
+  <text x="450" y="386" text-anchor="middle" font-size="11" fill="#555">
+    folded once, then released.
+  </text>
+
+  <!-- ===== Column 3: DeepVariant / Parabricks ===== -->
+  <rect x="600" y="55" width="270" height="360" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.8" rx="8"/>
+
+  <!-- Title -->
+  <text x="735" y="85" text-anchor="middle" font-size="17" font-weight="700" fill="#1b5e20">
+    DeepVariant / Parabricks
+  </text>
+  <text x="735" y="106" text-anchor="middle" font-size="13" fill="#1b5e20" font-style="italic">
+    (variant calling)
+  </text>
+
+  <!-- One-line description -->
+  <text x="735" y="138" text-anchor="middle" font-size="13" fill="#333">
+    BAM + reference
+  </text>
+  <text x="735" y="156" text-anchor="middle" font-size="13" fill="#333">
+    &#8594; VCF
+  </text>
+
+  <!-- Visual: BAM + REF boxes -> small neural net (3 -> 1) -> VCF box -->
+
+  <!-- Input boxes BAM and REF -->
+  <rect x="615" y="200" width="46" height="22" fill="white"
+        stroke="#1b5e20" stroke-width="1.2" rx="3"/>
+  <text x="638" y="215" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">BAM</text>
+
+  <rect x="615" y="232" width="46" height="22" fill="white"
+        stroke="#1b5e20" stroke-width="1.2" rx="3"/>
+  <text x="638" y="247" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">REF</text>
+
+  <!-- Arrows from BAM and REF into the net's input layer -->
+  <line x1="661" y1="211" x2="700" y2="216" stroke="#555"
+        stroke-width="1.5" marker-end="url(#gpu-arrow)"/>
+  <line x1="661" y1="243" x2="700" y2="238" stroke="#555"
+        stroke-width="1.5" marker-end="url(#gpu-arrow)"/>
+
+  <!-- Neural net: 3 input circles + 1 output circle with fan-in arrows -->
+  <!-- Input layer at x = 718, y = 210, 230, 250 -->
+  <circle cx="718" cy="210" r="6" fill="#1b5e20"/>
+  <circle cx="718" cy="230" r="6" fill="#1b5e20"/>
+  <circle cx="718" cy="250" r="6" fill="#1b5e20"/>
+
+  <!-- Output circle at x = 770, y = 230 -->
+  <circle cx="770" cy="230" r="8" fill="#1b5e20" stroke="#0d3d10" stroke-width="1.2"/>
+
+  <!-- Fan-in arrows from each input to the output -->
+  <line x1="724" y1="210" x2="763" y2="227" stroke="#555" stroke-width="1.2"/>
+  <line x1="724" y1="230" x2="762" y2="230" stroke="#555" stroke-width="1.2"/>
+  <line x1="724" y1="250" x2="763" y2="233" stroke="#555" stroke-width="1.2"/>
+
+  <text x="744" y="195" text-anchor="middle" font-size="10" font-style="italic" fill="#888">
+    CNN
+  </text>
+
+  <!-- Arrow from net to VCF -->
+  <line x1="780" y1="230" x2="810" y2="230" stroke="#555"
+        stroke-width="1.8" marker-end="url(#gpu-arrow)"/>
+
+  <!-- Output box VCF -->
+  <rect x="813" y="219" width="46" height="22" fill="white"
+        stroke="#1b5e20" stroke-width="1.2" rx="3"/>
+  <text x="836" y="234" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">VCF</text>
+
+  <!-- Speedup box -->
+  <rect x="625" y="295" width="220" height="48" fill="white"
+        stroke="#2e7d32" stroke-width="1.2" rx="4"/>
+  <text x="735" y="316" text-anchor="middle" font-size="13" font-weight="700" fill="#1b5e20">
+    CNN replaces hand-coded
+  </text>
+  <text x="735" y="334" text-anchor="middle" font-size="13" font-weight="700" fill="#1b5e20">
+    heuristics
+  </text>
+
+  <!-- Bottom note -->
+  <text x="735" y="370" text-anchor="middle" font-size="11" fill="#555">
+    Parabricks runs the GATK
+  </text>
+  <text x="735" y="386" text-anchor="middle" font-size="11" fill="#555">
+    pipeline on GPU end-to-end.
+  </text>
+
+  <!-- ===== Bottom caption ===== -->
+  <rect x="40" y="440" width="820" height="44" fill="#f5f5f5"
+        stroke="#888" stroke-width="1" rx="4"/>
+  <text x="450" y="466" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    These workloads share a pattern: lots of small independent computations
+  </text>
+  <text x="450" y="481" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    &#8212; exactly what GPUs do well.
+  </text>
+
+</svg>

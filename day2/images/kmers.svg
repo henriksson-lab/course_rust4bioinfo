@@ -86,7 +86,7 @@
     What is a slice?
   </text>
   <text x="75" y="412" font-size="13" fill="#333">
-    Each <tspan font-family="ui-monospace, monospace">&amp;[u8]</tspan> is a pointer plus a length — 16 bytes on a 64-bit machine — pointing into the same <tspan font-family="ui-monospace, monospace">Vec&lt;u8&gt;</tspan>.
+    Each <tspan font-family="ui-monospace, monospace">&amp;[u8]</tspan> is a pointer plus a length — 16 bytes on a 64-bit machine — into the same <tspan font-family="ui-monospace, monospace">Vec&lt;u8&gt;</tspan>.
   </text>
   <text x="75" y="430" font-size="13" fill="#333">
     All three windows above share the same backing storage; the seven DNA bytes are never copied.

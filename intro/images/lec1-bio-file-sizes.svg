@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    Log-scale x-axis from 100 B (1e2) to 1 PB (1e15) = 13 decades.
+    Plot region: x0 = 200, x1 = 800, width = 600 -> 46.15 px / decade.
+    x(v_bytes) = 200 + (log10(v) - 2) * 46.15
+    Visible tick positions:
+      1 KB  (1e3)  -> 246.15
+      1 MB  (1e6)  -> 384.6
+      1 GB  (1e9)  -> 523.05
+      1 TB  (1e12) -> 661.5
+      1 PB  (1e15) -> 800
+    Reference markers:
+      L3   (8 MB)    -> 426.3
+      RAM  (64 GB)   -> 606.4
+      SSD  (1 TB)    -> 661.5
+      HDD  (100 TB)  -> 753.8
+  -->
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="26" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Typical bioinformatics dataset sizes vs the memory hierarchy
+  </text>
+  <text x="450" y="46" text-anchor="middle" font-size="13" fill="#666" font-style="italic">
+    Horizontal bars on a log-scale x-axis; dashed lines mark the storage hierarchy boundaries
+  </text>
+
+  <!-- ===== Reference marker labels (top band) ===== -->
+  <!-- Marker labels stacked above the plot area so they don't collide -->
+  <text x="426.3" y="68" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">L3 cache (8 MB)</text>
+  <text x="606.4" y="68" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">RAM (64 GB on a workstation)</text>
+  <text x="661.5" y="82" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d84315">single SSD (1 TB)</text>
+  <text x="753.8" y="68" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b71c1c">lab NAS (100 TB)</text>
+
+  <!-- ===== Vertical dashed reference lines ===== -->
+  <!-- y range: 88 (top) .. 430 (bottom of plot) -->
+  <line x1="426.3" y1="88" x2="426.3" y2="430" stroke="#1b5e20"
+        stroke-width="1.2" stroke-dasharray="5,3"/>
+  <line x1="606.4" y1="88" x2="606.4" y2="430" stroke="#b45309"
+        stroke-width="1.2" stroke-dasharray="5,3"/>
+  <line x1="661.5" y1="88" x2="661.5" y2="430" stroke="#d84315"
+        stroke-width="1.2" stroke-dasharray="5,3"/>
+  <line x1="753.8" y1="88" x2="753.8" y2="430" stroke="#b71c1c"
+        stroke-width="1.2" stroke-dasharray="5,3"/>
+
+  <!-- ===== Bars (top to bottom). Row height 26, gap 4. Bar starts at x=200. ===== -->
+  <!-- Row centres: 105, 135, 165, 195, 225, 255, 285, 315, 345, 375 -->
+
+  <!-- 1. One FASTA gene record  ~1 KB  -> x_end = 246.15 -->
+  <text x="195" y="109" text-anchor="end" font-size="13" fill="#333">One FASTA gene record</text>
+  <rect x="200" y="95" width="46.15" height="20" fill="#2e7d32" opacity="0.9"
+        stroke="#1b5e20" stroke-width="0.6"/>
+  <text x="252" y="110" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">~1 KB</text>
+
+  <!-- 2. One FASTQ read (Illumina)  ~300 B  -> x_end = 222.0 -->
+  <text x="195" y="139" text-anchor="end" font-size="13" fill="#333">One FASTQ read (Illumina)</text>
+  <rect x="200" y="125" width="22.0" height="20" fill="#2e7d32" opacity="0.9"
+        stroke="#1b5e20" stroke-width="0.6"/>
+  <text x="228" y="140" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">~300 B</text>
+
+  <!-- 3. One bacterial genome (E. coli)  ~5 MB  -> x_end = 416.9 -->
+  <text x="195" y="169" text-anchor="end" font-size="13" fill="#333">One bacterial genome (E. coli)</text>
+  <rect x="200" y="155" width="216.9" height="20" fill="#2e7d32" opacity="0.9"
+        stroke="#1b5e20" stroke-width="0.6"/>
+  <text x="423" y="170" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">~5 MB</text>
+
+  <!-- 4. A human chromosome (FASTA)  ~250 MB  -> x_end = 495.3 -->
+  <text x="195" y="199" text-anchor="end" font-size="13" fill="#333">A human chromosome (FASTA)</text>
+  <rect x="200" y="185" width="295.3" height="20" fill="#1976d2" opacity="0.9"
+        stroke="#0d47a1" stroke-width="0.6"/>
+  <text x="501" y="200" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">~250 MB</text>
+
+  <!-- 5. Human reference genome (GRCh38)  ~3 GB  -> x_end = 545.0 -->
+  <text x="195" y="229" text-anchor="end" font-size="13" fill="#333">Human reference genome (GRCh38)</text>
+  <rect x="200" y="215" width="345.0" height="20" fill="#1976d2" opacity="0.9"
+        stroke="#0d47a1" stroke-width="0.6"/>
+  <text x="551" y="230" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">~3 GB</text>
+
+  <!-- 6. BWA index of human reference  ~5 GB  -> x_end = 555.3 -->
+  <text x="195" y="259" text-anchor="end" font-size="13" fill="#333">BWA index of human reference</text>
+  <rect x="200" y="245" width="355.3" height="20" fill="#1976d2" opacity="0.9"
+        stroke="#0d47a1" stroke-width="0.6"/>
+  <text x="561" y="260" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">~5 GB</text>
+
+  <!-- 7. Whole-genome BAM (30x coverage)  ~60 GB  -> x_end = 605.1 -->
+  <text x="195" y="289" text-anchor="end" font-size="13" fill="#333">Whole-genome BAM (30&#215; coverage)</text>
+  <rect x="200" y="275" width="405.1" height="20" fill="#d97706" opacity="0.9"
+        stroke="#b45309" stroke-width="0.6"/>
+  <text x="611" y="290" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">~60 GB</text>
+
+  <!-- 8. Single-cell RNA matrix (~1M cells .h5)  ~30 GB  -> x_end = 591.2 -->
+  <text x="195" y="319" text-anchor="end" font-size="13" fill="#333">Single-cell RNA matrix (~1M cells .h5)</text>
+  <rect x="200" y="305" width="391.2" height="20" fill="#d97706" opacity="0.9"
+        stroke="#b45309" stroke-width="0.6"/>
+  <text x="597" y="320" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">~30 GB</text>
+
+  <!-- 9. One Illumina NovaSeq S4 run (FASTQ)  ~6 TB  -> x_end = 697.4 -->
+  <text x="195" y="349" text-anchor="end" font-size="13" fill="#333">One Illumina NovaSeq S4 run (FASTQ)</text>
+  <rect x="200" y="335" width="497.4" height="20" fill="#c62828" opacity="0.9"
+        stroke="#7f0000" stroke-width="0.6"/>
+  <text x="703" y="350" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">~6 TB</text>
+
+  <!-- 10. UK Biobank whole-genome cohort  ~1 PB  -> x_end = 800 -->
+  <text x="195" y="379" text-anchor="end" font-size="13" fill="#333">UK Biobank whole-genome cohort</text>
+  <rect x="200" y="365" width="600" height="20" fill="#c62828" opacity="0.9"
+        stroke="#7f0000" stroke-width="0.6"/>
+  <text x="730" y="358" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">~1 PB</text>
+
+  <!-- ===== X-axis (log scale) ===== -->
+  <line x1="200" y1="430" x2="800" y2="430" stroke="#555" stroke-width="1.5"/>
+
+  <!-- Ticks at decade boundaries 1 KB, 1 MB, 1 GB, 1 TB, 1 PB -->
+  <line x1="246.15" y1="430" x2="246.15" y2="438" stroke="#555" stroke-width="1.2"/>
+  <text x="246.15" y="453" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">1 KB</text>
+
+  <line x1="384.6" y1="430" x2="384.6" y2="438" stroke="#555" stroke-width="1.2"/>
+  <text x="384.6" y="453" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">1 MB</text>
+
+  <line x1="523.05" y1="430" x2="523.05" y2="438" stroke="#555" stroke-width="1.2"/>
+  <text x="523.05" y="453" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">1 GB</text>
+
+  <line x1="661.5" y1="430" x2="661.5" y2="438" stroke="#555" stroke-width="1.2"/>
+  <text x="661.5" y="453" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">1 TB</text>
+
+  <line x1="800" y1="430" x2="800" y2="438" stroke="#555" stroke-width="1.2"/>
+  <text x="800" y="453" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">1 PB</text>
+
+  <text x="500" y="473" text-anchor="middle" font-size="12" fill="#333" font-style="italic">
+    dataset size (log scale)
+  </text>
+
+  <!-- ===== Bottom caption box ===== -->
+  <rect x="40" y="492" width="820" height="44" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="450" y="518" text-anchor="middle" font-size="16" font-weight="700" fill="#b45309">
+    Above the RAM line you must stream &#8212; slurping into memory is no longer an option.
+  </text>
+
+</svg>

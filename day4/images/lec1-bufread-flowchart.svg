@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-bf-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arrow-bf-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-bf-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    What .lines() actually does on a BufReader
+  </text>
+
+  <!-- ===== Top: file on disk as long horizontal byte strip ===== -->
+  <text x="50" y="68" font-size="13" font-weight="700" fill="#555">file on disk</text>
+  <rect x="50" y="78" width="800" height="34" rx="3" ry="3"
+        fill="#f0f0f0" stroke="#888" stroke-width="1.2"/>
+
+  <!-- show that small portion is currently buffered (orange band) -->
+  <rect x="120" y="78" width="120" height="34"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+
+  <!-- a few bytes shown across the whole strip -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#888">
+    <text x="60" y="100">@r0</text>
+    <text x="95" y="100">ACGT</text>
+    <text x="130" y="100" fill="#7a4a09">@r1</text>
+    <text x="165" y="100" fill="#7a4a09">ACGTACG</text>
+    <text x="220" y="100" fill="#7a4a09">@r2</text>
+    <text x="260" y="100">TTGCA</text>
+    <text x="320" y="100">@r3</text>
+    <text x="380" y="100">GGCATATGCC</text>
+    <text x="460" y="100">...</text>
+    <text x="500" y="100">...</text>
+    <text x="560" y="100">...</text>
+    <text x="620" y="100">...</text>
+    <text x="700" y="100">@rN</text>
+    <text x="780" y="100">(EOF)</text>
+  </g>
+  <text x="180" y="130" text-anchor="middle" font-size="11" fill="#d97706" font-weight="700">
+    currently buffered window (~64 KB)
+  </text>
+  <text x="550" y="130" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    the rest sits on disk until BufReader refills
+  </text>
+
+  <!-- arrow from buffered window down to buffer block -->
+  <line x1="180" y1="135" x2="180" y2="170"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-bf-dark)"/>
+  <text x="195" y="155" font-size="11" fill="#555" font-style="italic">fill buffer</text>
+
+  <!-- ===== Middle: BufReader 64 KB buffer ===== -->
+  <text x="450" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">
+    BufReader buffer (64 KB in RAM)
+  </text>
+  <rect x="50" y="190" width="800" height="50" rx="4" ry="4"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#7a4a09">
+    <text x="65" y="212">@r1</text>
+    <text x="100" y="212">ACGTACGT</text>
+    <text x="180" y="212">\n</text>
+    <text x="205" y="212">+</text>
+    <text x="225" y="212">!!!!!!!!</text>
+    <text x="305" y="212">\n</text>
+    <text x="330" y="212">@r2</text>
+    <text x="365" y="212">TTGCAATGCA</text>
+    <text x="465" y="212">\n</text>
+    <text x="490" y="212">+</text>
+    <text x="510" y="212">IIIIIIIIII</text>
+    <text x="610" y="212">\n</text>
+    <text x="635" y="212">@r3</text>
+    <text x="670" y="212">GGCATATGCC</text>
+    <text x="770" y="212">...</text>
+  </g>
+
+  <!-- highlight the next \n the reader will scan to -->
+  <rect x="178" y="195" width="22" height="40" rx="2" ry="2"
+        fill="none" stroke="#c62828" stroke-width="2"/>
+  <text x="189" y="258" text-anchor="middle" font-size="11" font-weight="700" fill="#c62828">
+    next \n
+  </text>
+
+  <!-- arrow down: scan and copy -->
+  <line x1="189" y1="263" x2="189" y2="305"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-bf-dark)"/>
+  <text x="200" y="288" font-size="11" fill="#555" font-style="italic">
+    scan to next \n, copy bytes into a fresh String
+  </text>
+
+  <!-- ===== fresh String yielded ===== -->
+  <rect x="50" y="315" width="320" height="50" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="210" y="337" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    String::from("@r1ACGTACGT")
+  </text>
+  <text x="210" y="356" text-anchor="middle" font-size="11" fill="#385a3c">
+    fresh heap allocation, owned by the loop
+  </text>
+
+  <!-- arrow yield -> your loop body -->
+  <line x1="375" y1="340" x2="455" y2="340"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-bf-green)"/>
+  <text x="415" y="330" text-anchor="middle" font-size="11" font-weight="600" fill="#2e7d32">
+    yielded
+  </text>
+
+  <!-- ===== your loop body ===== -->
+  <rect x="460" y="315" width="390" height="50" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="655" y="337" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    for line in reader.lines() { ... }
+  </text>
+  <text x="655" y="356" text-anchor="middle" font-size="11" fill="#444">
+    consume, then drop at end of iteration
+  </text>
+
+  <!-- arrow drop -> next iter (loops back upward) -->
+  <line x1="655" y1="375" x2="655" y2="408"
+        stroke="#888" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-bf-grey)"/>
+  <text x="665" y="395" font-size="11" fill="#666" font-style="italic">drop, next iter</text>
+
+  <!-- ===== Footer callout ===== -->
+  <rect x="50" y="418" width="800" height="65" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="450" y="442" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    At any moment ~64 KB of file is in memory; the rest is on disk.
+  </text>
+  <text x="450" y="466" text-anchor="middle" font-size="12" fill="#333">
+    The buffer refills lazily, only when the scan reaches its end.
+  </text>
+
+</svg>

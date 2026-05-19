@@ -101,7 +101,7 @@
     No "Recompute" button — the UI re-renders on every input event.
   </text>
   <text x="60" y="470" font-size="14" fill="#888">
-    use_state holds the textarea's value; reading it triggers gc_content / base_counts.
+    use_state holds the text; each read re-runs gc_content / base_counts.
   </text>
   <text x="60" y="490" font-size="14" fill="#888">
     Same Rust functions as days 1 and 2, now compiled to WebAssembly.

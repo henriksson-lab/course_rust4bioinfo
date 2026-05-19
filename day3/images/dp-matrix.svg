@@ -129,26 +129,26 @@
   </text>
 
   <!-- diag line -->
-  <text x="410" y="220" font-size="15" font-family="ui-monospace, monospace" fill="#555">
-    ↘  score[2][1] + s(G,C)  =   0 + (−1) = −1
+  <text x="410" y="220" font-size="14" font-family="ui-monospace, monospace" fill="#555">
+    ↘ s[2][1]+s(G,C) =  0+(−1) = −1
   </text>
   <!-- up line — chosen, green and bold -->
-  <text x="410" y="245" font-size="15" font-family="ui-monospace, monospace"
+  <text x="410" y="245" font-size="14" font-family="ui-monospace, monospace"
         fill="#2e7d32" font-weight="700">
-    ↓  score[2][2] + gap     =   2 + (−1) =  1
+    ↓ s[2][2]+gap    =  2+(−1) =  1
   </text>
-  <text x="700" y="245" font-size="14" fill="#2e7d32" font-weight="700">← chosen</text>
+  <text x="660" y="245" font-size="14" fill="#2e7d32" font-weight="700">← chosen</text>
   <!-- left line -->
-  <text x="410" y="270" font-size="15" font-family="ui-monospace, monospace" fill="#555">
-    →  score[3][1] + gap     =  −1 + (−1) = −2
+  <text x="410" y="270" font-size="14" font-family="ui-monospace, monospace" fill="#555">
+    → s[3][1]+gap    = −1+(−1) = −2
   </text>
   <text x="380" y="295" font-size="15" font-family="ui-monospace, monospace">)</text>
 
-  <text x="380" y="335" font-size="16" font-weight="600">
-    so score[3][2] = 1, and the traceback arrow points up.
+  <text x="380" y="335" font-size="14" font-weight="600">
+    score[3][2] = 1; traceback points up.
   </text>
-  <text x="380" y="358" font-size="14" fill="#555">
-    Walking arrows back from (n, m) recovers the alignment.
+  <text x="380" y="358" font-size="13" fill="#555">
+    Walking arrows back recovers the alignment.
   </text>
 
 </svg>

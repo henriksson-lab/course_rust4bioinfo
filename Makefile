@@ -28,6 +28,7 @@ help:
 
 gitaddall:
 	git add intro/*qmd
+	git add intro/images/
 	git add day*/*qmd
 	git add day*/README.md
 	git add day*/*/Cargo.toml

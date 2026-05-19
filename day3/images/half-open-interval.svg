@@ -68,14 +68,14 @@
   <!-- Arrow from text down-left to point at the end position (460, 170) -->
   <line x1="560" y1="240" x2="470" y2="180"
         stroke="#444" stroke-width="1.5" marker-end="url(#ah-anno)"/>
-  <text x="565" y="252" font-size="14" fill="#333">
+  <text x="535" y="252" font-size="14" fill="#333">
     the next interval
     <tspan font-family="ui-monospace, monospace" font-weight="700">[200, 300)</tspan>
   </text>
-  <text x="565" y="269" font-size="14" fill="#333">
+  <text x="535" y="269" font-size="14" fill="#333">
     starts here — no overlap,
   </text>
-  <text x="565" y="285" font-size="14" fill="#333">
+  <text x="535" y="285" font-size="14" fill="#333">
     no gap.
   </text>
 

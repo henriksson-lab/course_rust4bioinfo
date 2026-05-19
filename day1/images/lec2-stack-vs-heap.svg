@@ -73,8 +73,11 @@
   <!-- Holds: line -->
   <line x1="480" y1="370" x2="840" y2="370" stroke="#d97706" stroke-width="1" stroke-dasharray="3,3"/>
   <text x="480" y="392" font-size="14" font-weight="700" fill="#d97706">Holds:</text>
-  <text x="480" y="414" font-size="14" fill="#333">
-    anything whose size or lifetime isn't known at compile time
+  <text x="480" y="412" font-size="14" fill="#333">
+    anything whose size or lifetime
+  </text>
+  <text x="480" y="430" font-size="14" fill="#333">
+    isn't known at compile time
   </text>
 
   <!-- ===== Footer connecting line ===== -->

@@ -26,7 +26,6 @@ format:
 - Cargo's `[dependencies]` and how `crates.io` actually works
 - `noodles` for FASTA / FASTQ, `plotters` for plots, `zip` for bundles
 - Modules — splitting one crate across files
-- Written companion: [day 4 — Concepts](00-concepts.qmd)
 :::
 
 ::: notes
@@ -37,17 +36,9 @@ By the end of the lecture you should know how to add a crate to your project, wh
 
 ## Day 4 in one diagram
 
-Every exercise today follows the same shape: open a file with the standard library, hand the buffered reader to a crate, stream records, write something out.
+![](images/lec1-day4-overview.svg){fig-alt="The Day 4 pipeline: a FASTQ on disk flows into a BufReader, then a noodles Reader produces Record structs one at a time; from there branches go to plotters (chart SVG), to zip (archive), and back to the filesystem."}
 
-```text
-  Path  -->  File::open  -->  BufReader  -->  noodles::Reader  -->  for record in ...
-                                                                          |
-                                                                   plotters / zip
-                                                                          v
-                                                                    output file
-```
-
-Files in, structured records out, plots and archives out the other side.
+Files in, structured records out — the same five blocks reappear in every exercise.
 
 ::: notes
 This pipeline is the day-4 mental model. The same five blocks reappear in every exercise.
@@ -103,7 +94,7 @@ Rust does not do this automatically — you have to ask for it. The tool you ask
 
 ## `BufReader` — a small window onto a large file
 
-![A FASTQ on disk feeding through a 64 KB BufReader buffer to a lines iterator, with a red-bordered warning at the bottom showing the wrong way.](images/lec1-bufreader.svg){fig-alt="Diagram in three columns showing BufReader workflow. Left column titled 'On disk' shows a reads.fastq file labeled 10 GB containing FASTQ records (@read1, sequence, +, quality lines repeating). A dark arrow labeled '64 KB at a time' and 'one syscall per refill' leads to a middle column titled 'In RAM' showing a light-blue box labeled BufReader<File> with a 64 KB internal buffer holding the first few records as text. A green arrow labeled '.lines()' and 'one line at a time' leads to the right column titled 'Your code' showing a for-loop with successive String lines yielded into small boxes: '@read1', 'ACGTACGTAC', '+', '!!!!!!!!!!', noted as 'only one line lives at a time' with a bold 'O(1) memory' caption. A red-bordered footer panel titled 'The wrong way' shows the code 'let s = std::fs::read_to_string(\"reads.fastq\")?;' with a warning that a 10 GB FASTQ will not fit in RAM and the program will be killed by the OS."}
+![Stream through a 64 KB window; file size no longer matters.](images/lec1-bufreader.svg){fig-alt="Diagram in three columns showing BufReader workflow. Left column titled 'On disk' shows a reads.fastq file labeled 10 GB containing FASTQ records (@read1, sequence, +, quality lines repeating). A dark arrow labeled '64 KB at a time' and 'one syscall per refill' leads to a middle column titled 'In RAM' showing a light-blue box labeled BufReader<File> with a 64 KB internal buffer holding the first few records as text. A green arrow labeled '.lines()' and 'one line at a time' leads to the right column titled 'Your code' showing a for-loop with successive String lines yielded into small boxes: '@read1', 'ACGTACGTAC', '+', '!!!!!!!!!!', noted as 'only one line lives at a time' with a bold 'O(1) memory' caption. A red-bordered footer panel titled 'The wrong way' shows the code 'let s = std::fs::read_to_string(\"reads.fastq\")?;' with a warning that a 10 GB FASTQ will not fit in RAM and the program will be killed by the OS."}
 
 ::: notes
 This is the core picture for day 4. The file on disk is enormous. The buffer in RAM is small — 64 KB by default. The iterator your code touches yields one line at a time, and as soon as you stop using it, the line is dropped.
@@ -149,6 +140,8 @@ let writer = BufWriter::new(output);            // same for writes
 
 Always wrap a `File` in `BufReader` or `BufWriter`. The unbuffered version makes one syscall per byte.
 
+![A `File` provides byte-level access; `BufReader` wraps it and reads chunks.](images/lec1-file-bufreader-box.svg){fig-alt="An outer rounded box labelled BufReader contains a smaller rounded box labelled File, which contains an arrow into the kernel's file table. Annotation: 'BufReader holds a File and a buffer; the File holds an OS file descriptor.'"}
+
 ::: notes
 [`File::open`](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) opens an existing file for reading. [`File::create`](https://doc.rust-lang.org/std/fs/struct.File.html#method.create) creates a new file for writing, truncating it if it already exists. Both return `Result<File, io::Error>`, so a `?` propagates the failure.
 
@@ -173,6 +166,8 @@ for line in reader.lines() {
 ```
 
 [`.lines()`](https://doc.rust-lang.org/std/io/trait.BufRead.html#method.lines) is an iterator that yields one `Result<String>` per line. Use it for line-oriented formats: BED, TSV, plain FASTA headers.
+
+![From file bytes to your loop variable: BufRead fills a buffer, splits at newlines, hands you one line at a time.](images/lec1-bufread-flowchart.svg){fig-alt="Horizontal flow: raw file bytes → BufReader internal buffer (64 KB) → find next \\n → yield String (owned by you) → loop body consumes it → next iteration drops it. Annotation: at any moment ~64 KB is in memory; everything else is on disk."}
 
 ::: notes
 `BufRead` adds line-level convenience on top of byte-level `Read`. The method you will use most is `.lines()`, which yields one `Result<String>` for each line. The newline is stripped for you. The iterator is lazy — the file is only read as you advance.
@@ -205,7 +200,7 @@ The picture on the next slide visualises this as a fork in the road at every `?`
 
 ## `?` is a fork at every fallible call
 
-![A horizontal three-step pipeline File::open then BufReader::new then reader.lines().next(), with green Ok arrows continuing to the right and red Err arrows shooting up out of the function.](images/lec1-result-propagation.svg){fig-alt="Diagram titled 'The ? operator: a fork at every fallible call' with the function signature 'fn first_line(path: &Path) -> Result<String, io::Error>' at the top. Three steps shown horizontally: 1) File::open(path)? — may fail if file missing or permission denied; 2) BufReader::new(f) — infallible, no ? needed; 3) .lines().next() .ok_or(empty)?? — may fail on empty file or I/O error. Green Ok arrows connect each step left to right; red Err arrows shoot upward from each fallible step into a red top lane reading 'any ? hits Err -> caller sees Err(io::Error), function body never reaches Ok'. The happy path arrow leaves the third step downward to a green Ok(line) return box. At the bottom, the full function code is shown."}
+![Every ? routes Err out; the happy path reads top to bottom.](images/lec1-result-propagation.svg){fig-alt="Diagram titled 'The ? operator: a fork at every fallible call' with the function signature 'fn first_line(path: &Path) -> Result<String, io::Error>' at the top. Three steps shown horizontally: 1) File::open(path)? — may fail if file missing or permission denied; 2) BufReader::new(f) — infallible, no ? needed; 3) .lines().next() .ok_or(empty)?? — may fail on empty file or I/O error. Green Ok arrows connect each step left to right; red Err arrows shoot upward from each fallible step into a red top lane reading 'any ? hits Err -> caller sees Err(io::Error), function body never reaches Ok'. The happy path arrow leaves the third step downward to a green Ok(line) return box. At the bottom, the full function code is shown."}
 
 ::: notes
 Each `?` in the function body is a branch in disguise. The green arrows are what you read in the source — straight-line code. The red arrows are the implicit early returns. You do not see them in the source, but the compiler inserts them.
@@ -248,7 +243,7 @@ The standard library gives you bytes and lines. Bioinformatics formats are more 
 - Plots — pixels, axes, scales, colours
 - Archives — zip, tar, gzip
 
-Writing each by hand is months. We use **crates** instead.
+Writing each by hand is a lot of work. We use **crates** instead.
 
 ::: notes
 The standard library is intentionally small. It gives you the I/O traits, fundamental data structures, and enough text and bytes manipulation to bootstrap anything. It does not ship a FASTA parser, a plot library, or a zip writer.
@@ -260,7 +255,7 @@ Reaching for a well-maintained crate instead of writing one is the right default
 
 ## What `[dependencies]` actually does
 
-![A Cargo.toml with three dependency lines pointing through crates.io and the local registry cache into rustc, which links them into the output binary.](images/lec1-cargo-deps.svg){fig-alt="Diagram titled 'Cargo.toml to running binary' showing a flow from top-left to bottom-right. Top-left: a yellow Cargo.toml box with [package] and [dependencies] sections listing 'noodles-fasta = \"0.50\"', 'plotters = \"0.3\"', 'zip = \"0.6\"'. Grey dashed arrows from each dep line lead down to a blue cloud shape labeled 'crates.io public registry' captioned '\"0.50\" resolves to e.g. 0.50.3'. A grey arrow leads down to a grey box labeled '~/.cargo/registry/' captioned 'downloaded once, reused forever'. A green arrow labeled 'linked in' leads right to an orange 'rustc + linker' box (your code + crates = one binary). A green arrow labeled 'produces' leads down to a green 'target/debug/qc-report' box captioned 'contains every byte of every dep'. Footer: 'You add one line to Cargo.toml. Cargo handles fetching, version resolution, caching, and linking.'"}
+![One line of TOML, and Cargo does the rest — fetch, resolve, cache, link.](images/lec1-cargo-deps.svg){fig-alt="Diagram titled 'Cargo.toml to running binary' showing a flow from top-left to bottom-right. Top-left: a yellow Cargo.toml box with [package] and [dependencies] sections listing 'noodles-fasta = \"0.50\"', 'plotters = \"0.3\"', 'zip = \"0.6\"'. Grey dashed arrows from each dep line lead down to a blue cloud shape labeled 'crates.io public registry' captioned '\"0.50\" resolves to e.g. 0.50.3'. A grey arrow leads down to a grey box labeled '~/.cargo/registry/' captioned 'downloaded once, reused forever'. A green arrow labeled 'linked in' leads right to an orange 'rustc + linker' box (your code + crates = one binary). A green arrow labeled 'produces' leads down to a green 'target/debug/qc-report' box captioned 'contains every byte of every dep'. Footer: 'You add one line to Cargo.toml. Cargo handles fetching, version resolution, caching, and linking.'"}
 
 ::: notes
 This is the whole story behind `[dependencies]`. Three lines of TOML say "this project uses these crates". When you next run `cargo build`, Cargo reads the manifest, contacts `crates.io` to find a compatible version for each, downloads them once into `~/.cargo/registry`, builds them, and links them into your binary.
@@ -306,6 +301,8 @@ After you save the file, `cargo build` does the rest. No separate `pip install`,
 
 The exact resolved version goes into `Cargo.lock` — commit that file for applications.
 
+![Semver: major.minor.patch — break, add, fix.](images/lec1-semver-example.svg){fig-alt="Three example version transitions: 1.4.2 → 1.4.3 (patch — bug fix, drop-in safe), 1.4.2 → 1.5.0 (minor — new feature, backward compatible), 1.4.2 → 2.0.0 (major — breaking change, code may not compile). Cargo defaults to '^1.4.2' meaning 'compatible with 1.4.2, ≤ 2.0.0'."}
+
 ::: notes
 Crate versions follow [semantic versioning](https://semver.org): major.minor.patch. The rule is that breaking changes bump the major version, new backward-compatible features bump the minor, and bug fixes bump the patch.
 
@@ -327,6 +324,8 @@ https://docs.rs/noodles-fasta/             -> latest version
 https://docs.rs/noodles-fasta/0.50.3/      -> a specific version
 ```
 
+![crates.io hosts the packages; docs.rs renders the docs.](images/lec1-crates-docs.svg){fig-alt="Two boxes side by side: crates.io (the package registry — metadata, downloads counts, link to source), and docs.rs (auto-generated documentation for every published version, with searchable API). Arrow: every publish to crates.io triggers a docs.rs build."}
+
 ::: notes
 Two sites you will live in this week. `crates.io` is the registry — it is where crates are published, where you search for them, where the download counts and the README live. Think of it as PyPI for Rust.
 
@@ -335,28 +334,78 @@ Two sites you will live in this week. `crates.io` is the registry — it is wher
 Locally, `cargo doc --open` does the same thing for the dependencies of your project — useful when you are offline or want to read the docs for the exact version you pinned.
 :::
 
-## How to learn a new crate
+## How to learn a new crate — step 1: search crates.io
 
-1. Open `docs.rs/<crate-name>/`.
-2. Read the **crate-root** page — the long description at the top.
-3. Skim the **type list** in the left sidebar.
-4. Look at the `Examples` section of the most prominent type.
-5. Find a small working example (the README on GitHub usually has one).
-6. Copy. Modify. Compile. Iterate.
+![](images/lec1-crates-search.svg){fig-alt="A mock crates.io search results page for the query 'fasta', showing top hits with download counts: noodles-fasta (12M downloads), bio (3M), rust-bio (3M). Highlight on the most-downloaded result."}
 
-Crate docs follow a strict convention. Learn to read one and the others come for free.
+The downloads number is a rough proxy for "does the community trust this?"
 
 ::: notes
-This is the recipe I use every time I pick up a new crate. The pattern works because Rustdoc has a fixed structure: every crate has a root page, every module has its own page, every type has its own page with methods grouped underneath, every function has a signature and an `Examples` block.
+The first signal is "what's popular". A package nobody downloads has no track record.
+:::
 
-You will not understand the whole crate from one reading. Aim instead to find the one type that does what you want — usually `Reader` or `Writer` or `Client` or `Builder` — and the one method on it that fits your problem. Wire those into your code and let the compiler tell you what is missing.
+## How to learn a new crate — step 2: read the package page
 
-Today we will do this for `noodles-fasta`, `noodles-fastq`, `plotters`, and `zip`. Same recipe each time.
+![](images/lec1-crates-package.svg){fig-alt="A mock crates.io page for noodles-fasta showing description, version, license, repository link, and 'docs.rs' link in the sidebar."}
+
+Look at: license, last-updated date, repository link.
+
+::: notes
+You're checking that the package is alive and that its license is compatible with your project.
+:::
+
+## How to learn a new crate — step 3: open docs.rs
+
+![](images/lec1-docsrs-landing.svg){fig-alt="A mock docs.rs landing page for noodles-fasta, showing the module-level documentation with a short example and a list of submodules and types."}
+
+The top-of-page docs are usually a small working example.
+
+::: notes
+If the top of the docs doesn't show you a runnable example, that's a red flag.
+:::
+
+## How to learn a new crate — step 4: find an example you can paste
+
+![](images/lec1-docsrs-example.svg){fig-alt="A docs.rs code-example block showing a small noodles-fasta program: opening a file, creating a Reader, iterating records."}
+
+Copy it into your own project as a starting point.
+
+::: notes
+Practical workflow: get the canonical example running locally before customising. If the example doesn't work, the package is broken.
+:::
+
+## How to learn a new crate — step 5: add it to Cargo.toml
+
+![](images/lec1-cargo-toml-after.svg){fig-alt="A Cargo.toml file showing the new noodles-fasta = '0.40' line added to [dependencies], with cargo build running in a terminal below."}
+
+```toml
+[dependencies]
+noodles-fasta = "0.40"
+```
+
+`cargo build` does the rest: fetches, compiles, links.
+
+::: notes
+That's the full discovery-to-use loop. Most crates you'll ever use, you found this way.
 :::
 
 ## `noodles` — streaming records, constant memory
 
-![A FASTQ file feeding into a noodles fastq Reader that emits a single Record struct per iteration, with a callout that memory stays constant regardless of file size.](images/lec1-noodles-streaming.svg){fig-alt="Diagram titled 'noodles: streaming records, constant memory'. Left column: a sample.fastq file (3 GB on disk) containing multiple FASTQ records (@read1, @read2, @read3, ... with sequence and quality lines). A green arrow labeled 'BufRead' leads to the middle column: a light-blue box labeled fastq::io::Reader that parses one record at a time, containing code 'for r in reader.records() { let rec = r?; ... }'. A green arrow labeled 'yields' leads to the right column: a light-green box labeled fastq::Record with three white-bordered fields: 'name: \"read2\"', 'sequence: TTGCAATGCA', 'quality: IIIIIIIIII', captioned 'one record on the stack'. A grey dashed arrow labeled 'next iteration: dropped' loops back down. A bold green footer callout reads 'Constant memory regardless of file size' with subtext 'Each record is parsed, handed to your loop body, then dropped when the iteration ends. A 3 GB FASTQ uses the same RAM as a 3 KB one.'"}
+The reader holds a window into the file; you process one record at a time.
+
+::: {.fragment}
+![Step 1: open the file, the reader allocates a small buffer.](images/lec1-noodles-streaming-step1.svg){fig-alt="Step 1 of noodles streaming: a FASTQ file on disk; a Reader is constructed over a BufReader of the file, with an empty internal buffer ready to be filled."}
+:::
+
+::: {.fragment}
+![Step 2: reader fills the buffer with the first record, hands it to you.](images/lec1-noodles-streaming-step2.svg){fig-alt="Step 2 of noodles streaming: the Reader has read the first record from disk into its buffer and yielded a Record value to your loop body."}
+:::
+
+::: {.fragment}
+![Step 3: you drop the record, the reader fetches the next.](images/lec1-noodles-streaming-step3.svg){fig-alt="Step 3 of noodles streaming: the previous Record has been dropped (memory freed); the Reader fetches the next record from disk into the same buffer and yields it."}
+:::
+
+Memory stays roughly constant — independent of file size.
 
 ::: notes
 This is the unifying picture of how every `noodles` crate works. You give a `Reader` something that implements `BufRead`. It internally parses one record at a time and yields it to your loop. When the loop body finishes one iteration, the record is dropped — its memory goes back to the allocator before the next record is read.
@@ -385,6 +434,8 @@ fn count_records<R: BufRead>(reader: R) -> std::io::Result<usize> {
 
 [`fasta::io::Reader::new`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html) wraps any `BufRead`. [`.records()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html#method.records) yields `Result<Record>`.
 
+![Layered abstractions: BufReader wraps a File; noodles Reader wraps a BufReader; the records iterator wraps the Reader.](images/lec1-noodles-fasta-boxes.svg){fig-alt="Three nested rectangles, outermost to innermost: 'noodles_fasta::Reader' contains 'BufReader<File>' contains 'File' contains an OS file descriptor. Each layer's purpose annotated: File = bytes from disk; BufReader = chunked reads; noodles Reader = FASTA semantics."}
+
 ::: notes
 This is roughly the body of exercise 2 for today. Eight lines. Almost all the interesting work — parsing the header, joining wrapped sequence lines, handling CRLF, validating the format — happens inside `noodles_fasta`. Your job is to consume records and accumulate.
 
@@ -409,6 +460,8 @@ for result in reader.records() {
 ```
 
 Accessors return borrowed slices — no copying.
+
+![A noodles Record in memory: a struct holding owned String fields for name and sequence.](images/lec1-record-in-memory.svg){fig-alt="A `Record` struct on the stack with three fields (name: String, sequence: Sequence, description: Option<String>), each pointing to heap allocations holding the actual bytes. Annotation: the record owns its data — dropping it frees the heap allocations."}
 
 ::: notes
 What you get back from `noodles` is a `Record` struct. The methods on it — `.name()`, `.sequence()` — return borrowed slices that point into the record's own buffer. No allocations, no copies. The record lives for the iteration; after that, the slices are gone too.
@@ -441,6 +494,8 @@ fn filter<R: BufRead, W: Write>(reader: R, writer: W, min_len: usize)
 }
 ```
 
+![Streaming filter pipeline: reader produces records, filter keeps the good ones, writer emits them.](images/lec1-fastq-filter-flowchart.svg){fig-alt="Horizontal flow: source FASTQ file → noodles_fastq::Reader → filter (`record.sequence().len() >= min_len`) → noodles_fastq::Writer → destination FASTQ file. Records that fail the filter are dropped (red arrow). Annotation: constant memory; one record in flight at a time."}
+
 ::: notes
 Today's exercise 3 in one slide. Same shape as the FASTA reader. Add a `Writer` for the output, generic over `W: Write`. Iterate. Apply a predicate. Write the surviving records.
 
@@ -449,107 +504,11 @@ Notice how everything is generic. Real production code will call this with `BufR
 The two-counter return value is a common pattern: report what you did so the caller can log it or feed it to monitoring. Bioinformatics pipelines live or die on these counters.
 :::
 
-## `plotters` — data to image
-
-![A four-stage pipeline taking a Vec u64 of read lengths into binned counts into a ChartBuilder with bars into an SVG output file, with code skeleton at the bottom.](images/lec1-plotters-pipeline.svg){fig-alt="Diagram titled 'plotters: data to image' with four stages flowing left to right. Stage 1 (blue box): Vec<u64> read lengths shown as a stack of values 98, 102, 97, 150, 101, captioned '... 1M reads'. Green arrow labeled 'bin' leads to Stage 2 (yellow box): counts: [u32; N] with one count per bin: 'bin 0 (0-49): 12', 'bin 1 (50-99): 3201', 'bin 2 (100-149): 7842', 'bin 3 (150-199): 411', 'bin 4 (200-249): 38', 'bin 5 (250-299): 5'. Green arrow labeled 'draw' leads to Stage 3 (green box): ChartBuilder with axes and Rectangle bars rendered as a mini histogram with x-axis labeled 'read length'. Green arrow labeled 'present()' leads to Stage 4: a small .svg (or .png) file with a tiny histogram preview. A bottom code panel shows the five lines: SVGBackend::new(path, (800, 600)).into_drawing_area(); root.fill(&WHITE)?; ChartBuilder::on(&root).build_cartesian_2d; chart.draw_series with Rectangle::new and BLUE.filled(); root.present()?."}
-
-::: notes
-`plotters` is an imperative builder API — closer in spirit to matplotlib than to ggplot's layered grammar. You make a drawing area, you make a chart on it, you tell it about axes, you draw a series, you present.
-
-The pipeline in the diagram is exactly today's exercise 4. Read lengths come from a FASTQ stream. You bin them into a `Vec<u32>` of counts. You feed those counts into `ChartBuilder` as a series of `Rectangle` elements. You call `present()` to flush the image to the chosen backend — `SVGBackend` for SVG, `BitMapBackend` for PNG.
-
-The four stages in the diagram are the four conceptual steps. The five lines of code at the bottom are roughly the shape of what you will write.
-:::
-
-## `plotters` — a histogram in 12 lines
-
-```rust
-use plotters::prelude::*;
-use std::path::Path;
-
-fn plot_histogram(counts: &[u32], path: &Path)
-    -> Result<(), Box<dyn std::error::Error>>
-{
-    let root = SVGBackend::new(path, (800, 600)).into_drawing_area();
-    root.fill(&WHITE)?;
-    let max = *counts.iter().max().unwrap_or(&0);
-    let mut chart = ChartBuilder::on(&root)
-        .caption("Read length distribution", ("sans-serif", 24))
-        .build_cartesian_2d(0u32..counts.len() as u32, 0u32..(max + 1))?;
-    chart.configure_mesh().draw()?;
-    chart.draw_series(counts.iter().enumerate().map(|(b, &c)|
-        Rectangle::new([(b as u32, 0), (b as u32 + 1, c)], BLUE.filled())))?;
-    root.present()?;
-    Ok(())
-}
-```
-
-::: notes
-The whole thing. A drawing area on a backend, a chart on the drawing area, axes via `configure_mesh`, then one rectangle per bar via `draw_series`. The `?` at every step propagates any drawing or I/O failure out to the caller.
-
-`use plotters::prelude::*;` is the convention: each big crate ships a prelude module that pulls in the common names with one `use`. You will see the same pattern in `rayon`, `serde`, and most ecosystem crates.
-
-To switch from SVG to PNG output, change `SVGBackend` to `BitMapBackend`. Nothing else. The trait-based design hides the backend behind the same interface.
-:::
-
-## `zip` — bundle outputs into one archive
-
-```rust
-use std::io::Write;
-
-fn write_zip<W: Write + std::io::Seek>(writer: W,
-    entries: &[(&str, &[u8])]) -> zip::result::ZipResult<()>
-{
-    let mut zw = zip::ZipWriter::new(writer);
-    let options = zip::write::FileOptions::default();
-    for (name, body) in entries {
-        zw.start_file(*name, options)?;
-        zw.write_all(body)?;
-    }
-    zw.finish()?;
-    Ok(())
-}
-
-// Bundle a per-sample QC report: a stats table and a read-length plot.
-let stats_tsv: &[u8] = b"reads\tmean_len\tgc\n1000\t148.2\t0.412\n";
-let readlen_png: &[u8] = &std::fs::read("readlen.png")?;
-let out = File::create("report.zip")?;
-write_zip(out, &[("stats.tsv", stats_tsv), ("readlen.png", readlen_png)])?;
-```
-
-[`ZipWriter`](https://docs.rs/zip/0.6/zip/write/struct.ZipWriter.html) builds a `.zip` archive. Pair the histogram PNG + the stats TSV for a per-sample report.
-
-::: notes
-A `.zip` is the right container for "many files I want to hand to a collaborator". Each entry has a name, each entry is compressed independently. You can pull one file out without unpacking the rest.
-
-The API is small. Make a `ZipWriter` over any `Write + Seek`. For each entry, call `start_file` with a name and options, then write bytes. At the end, `finish()` writes the central directory.
-
-In the day-4 capstone you would combine all four exercises: read FASTQ with `noodles_fastq`, compute stats, render the histogram PNG with `plotters`, and bundle the TSV plus the PNG into a single `.zip` for handover. One small main function ties it all together.
-:::
-
-## `.gz` vs `.zip` — not the same thing
-
-| Format | What it is | Crate |
-|---|---|---|
-| `.gz` / `.bgz` | **one** compressed byte stream | [`flate2`](https://docs.rs/flate2/) |
-| `.zip` | **archive** of named entries | [`zip`](https://docs.rs/zip/) |
-| `.tar.gz` | many files concatenated, then gzipped | [`tar`](https://docs.rs/tar/) + `flate2` |
-
-`.fa.gz`, `.fastq.gz`, `.vcf.gz` are all gzip streams — **not** zip archives.
-
-::: notes
-This is the one source of constant confusion. Biologists call any compressed file "a zip", but the bioinformatics formats `.fa.gz`, `.fastq.gz`, `.vcf.gz` are gzip streams: a single stream of bytes that has been compressed. There is no directory inside, no list of entries.
-
-A `.zip` file is a directory of named entries, each compressed individually. That is the format the `zip` crate handles. It is the right tool when you want to bundle several output files together.
-
-To read a `.fa.gz`, wrap your file in `flate2::read::GzDecoder` before handing it to `noodles_fasta`. To make a `.zip` of your outputs, use the `zip` crate as on the previous slide. Different problems, different crates.
-:::
-
 ## Modules — splitting one crate across files
 
 A real project does not live in one `main.rs`. Use `mod` to split it.
 
-![A directory tree on the left with main.rs, parser.rs, and stats.rs; on the right, main.rs declaring 'mod parser' and 'use crate::parser::parse_record', with arrows down to a parser.rs file containing 'pub struct Record' and 'pub fn parse_record'.](images/lec1-modules.svg){fig-alt="Diagram titled 'Modules: split one crate across files'. Left side titled 'On disk' shows a directory tree: ex-fasta-stats/, Cargo.toml, src/, main.rs, parser.rs, stats.rs, captioned 'one source file per module'. Right side top: a blue box labeled 'src/main.rs' showing code 'mod parser;', 'mod stats;', 'use crate::parser::parse_record;', 'use crate::stats::ContigStat;', 'fn main() { /* ... */ }'. Right side bottom: a green box labeled 'src/parser.rs' showing code 'pub struct Record { pub name: String, pub sequence: Vec<u8>, }', 'pub fn parse_record(line: &str) -> Record { /* ... */ }', captioned 'pub = visible to other modules'. A grey dashed arrow labeled 'mod parser; -> look for parser.rs' connects the mod declaration to the parser.rs file. A green arrow labeled 'name lookup' connects the use statement to the pub function. Footer: 'mod declares a child module; pub controls what leaks out; use brings a name into scope.'"}
+![mod declares, pub exposes, use brings names into scope.](images/lec1-modules.svg){fig-alt="Diagram titled 'Modules: split one crate across files'. Left side titled 'On disk' shows a directory tree: ex-fasta-stats/, Cargo.toml, src/, main.rs, parser.rs, stats.rs, captioned 'one source file per module'. Right side top: a blue box labeled 'src/main.rs' showing code 'mod parser;', 'mod stats;', 'use crate::parser::parse_record;', 'use crate::stats::ContigStat;', 'fn main() { /* ... */ }'. Right side bottom: a green box labeled 'src/parser.rs' showing code 'pub struct Record { pub name: String, pub sequence: Vec<u8>, }', 'pub fn parse_record(line: &str) -> Record { /* ... */ }', captioned 'pub = visible to other modules'. A grey dashed arrow labeled 'mod parser; -> look for parser.rs' connects the mod declaration to the parser.rs file. A green arrow labeled 'name lookup' connects the use statement to the pub function. Footer: 'mod declares a child module; pub controls what leaks out; use brings a name into scope.'"}
 
 ::: notes
 The exercises so far have lived in a single `src/main.rs`. Real projects grow past that. Rust's tool for splitting code is the module system.
@@ -644,22 +603,17 @@ If you replace `BufReader<File>` with `BufReader<GzDecoder<File>>`, the same cod
 This is the picture you should carry into the exercises. Standard library does the I/O. Crates do the parsing. Your code does the logic.
 :::
 
-## To the exercises
+## To the next lectures
 
-- Reference: [day 4 — Concepts](00-concepts.qmd)
-- Start: [Exercise 1 — BED by hand](01-bed-parse.qmd) (no crates yet)
-- Then: [02 — FASTA with noodles](02-fasta-stats.qmd), [03 — FASTQ filter](03-fastq-filter.qmd)
-- [04 — plot read lengths](04-plot-readlen.qmd), [05 — zip bundle](05-zip-bundle.qmd)
+This was I/O and crates. Two more short lectures today:
 
-```bash
-cd day4/ex-bed-parse
-cargo test
-```
+- **`lec2-plotting`** — plotters, and how it compares to ggplot and matplotlib
+- **`lec3-archives`** — zip files, compression, and why DNA only needs 2 bits per base
+
+Then the exercises this afternoon: BED parse, FASTA stats, FASTQ filter, plot, zip bundle.
 
 ::: notes
-Five exercises, in order. The first one is intentionally crate-free — you parse a BED file with nothing but the standard library, so you feel what the crates are saving you from. The next four each introduce one ecosystem crate.
+Five exercises this afternoon, in order. The first one is intentionally crate-free — you parse a BED file with nothing but the standard library, so you feel what the crates are saving you from. The next four each introduce one ecosystem crate.
 
 You will spend more time reading `docs.rs` than typing today. That is a healthy ratio and one you should get used to.
-
-I will see you tomorrow for day 5 — testing, release builds, and Rust's story for parallelism.
 :::

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    Plot area: x from 100 to 800, y from 80 to 420.
+    Y axis: speedup 0..9, 9 units => 340 px => 1 unit = ~37.78 px (use 38)
+      y(value) = 420 - value * 38
+    X axis: 4 groups, group centers at x = 180, 340, 500, 660
+      bar widths 50, half-gap 8 => ideal bar at center-58..center-8, observed at center+8..center+58
+  -->
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Ideal linear scaling vs. observed sublinear scaling
+  </text>
+
+  <!-- Y axis -->
+  <line x1="100" y1="80" x2="100" y2="420" stroke="#444" stroke-width="1.5"/>
+  <line x1="100" y1="420" x2="800" y2="420" stroke="#444" stroke-width="1.5"/>
+
+  <!-- Y ticks and labels -->
+  <g font-size="12" font-family="ui-monospace, monospace" fill="#444" text-anchor="end">
+    <line x1="96" y1="420" x2="100" y2="420" stroke="#444"/>
+    <text x="92" y="424">0</text>
+    <line x1="96" y1="382" x2="100" y2="382" stroke="#444"/>
+    <text x="92" y="386">1x</text>
+    <line x1="96" y1="344" x2="100" y2="344" stroke="#444"/>
+    <text x="92" y="348">2x</text>
+    <line x1="96" y1="306" x2="100" y2="306" stroke="#444"/>
+    <text x="92" y="310">3x</text>
+    <line x1="96" y1="268" x2="100" y2="268" stroke="#444"/>
+    <text x="92" y="272">4x</text>
+    <line x1="96" y1="230" x2="100" y2="230" stroke="#444"/>
+    <text x="92" y="234">5x</text>
+    <line x1="96" y1="192" x2="100" y2="192" stroke="#444"/>
+    <text x="92" y="196">6x</text>
+    <line x1="96" y1="154" x2="100" y2="154" stroke="#444"/>
+    <text x="92" y="158">7x</text>
+    <line x1="96" y1="116" x2="100" y2="116" stroke="#444"/>
+    <text x="92" y="120">8x</text>
+    <line x1="96" y1="78" x2="100" y2="78" stroke="#444"/>
+    <text x="92" y="82">9x</text>
+  </g>
+
+  <!-- Y axis title -->
+  <text x="40" y="250" font-size="13" fill="#444" text-anchor="middle" transform="rotate(-90 40 250)">speedup factor</text>
+
+  <!-- X axis labels (under each group) -->
+  <g font-size="13" font-family="ui-monospace, monospace" fill="#333" text-anchor="middle">
+    <text x="180" y="442">1 core</text>
+    <text x="340" y="442">2 cores</text>
+    <text x="500" y="442">4 cores</text>
+    <text x="660" y="442">8 cores</text>
+  </g>
+
+  <!--
+    Bar heights:
+      y(1.0)=382, y(1.9)=347.8, y(2.0)=344, y(3.7)=279.4, y(4.0)=268, y(7.2)=146.4, y(8.0)=116
+    For ideal bars use grey w/ dashed outline.
+    For observed use #2e7d32 fill #c8e6c9.
+  -->
+
+  <!-- Group 1: 1 core. ideal=1.0, observed=1.0 -->
+  <rect x="122" y="382" width="50" height="38" fill="#e0e0e0"
+        stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="147" y="375" text-anchor="middle" font-size="12" font-weight="700" fill="#444"
+        font-family="ui-monospace, monospace">1.0x</text>
+  <rect x="188" y="382" width="50" height="38" fill="#c8e6c9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="213" y="375" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">1.0x</text>
+
+  <!-- Group 2: 2 cores. ideal=2.0 (y=344), observed=1.9 (y=347.8 ~ 348) -->
+  <rect x="282" y="344" width="50" height="76" fill="#e0e0e0"
+        stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="307" y="337" text-anchor="middle" font-size="12" font-weight="700" fill="#444"
+        font-family="ui-monospace, monospace">2.0x</text>
+  <rect x="348" y="348" width="50" height="72" fill="#c8e6c9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="373" y="341" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">1.9x</text>
+
+  <!-- Group 3: 4 cores. ideal=4.0 (y=268), observed=3.7 (y=279.4 ~ 279) -->
+  <rect x="442" y="268" width="50" height="152" fill="#e0e0e0"
+        stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="467" y="261" text-anchor="middle" font-size="12" font-weight="700" fill="#444"
+        font-family="ui-monospace, monospace">4.0x</text>
+  <rect x="508" y="279" width="50" height="141" fill="#c8e6c9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="533" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">3.7x</text>
+
+  <!-- Group 4: 8 cores. ideal=8.0 (y=116), observed=7.2 (y=146.4 ~ 146) -->
+  <rect x="602" y="116" width="50" height="304" fill="#e0e0e0"
+        stroke="#666" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="627" y="109" text-anchor="middle" font-size="12" font-weight="700" fill="#444"
+        font-family="ui-monospace, monospace">8.0x</text>
+  <rect x="668" y="146" width="50" height="274" fill="#c8e6c9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="693" y="139" text-anchor="middle" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">7.2x</text>
+
+  <!-- Dashed grey line connecting tops of ideal bars -->
+  <polyline points="147,382 307,344 467,268 627,116"
+            fill="none" stroke="#666" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+  <!-- Solid green line connecting tops of observed bars -->
+  <polyline points="213,382 373,348 533,279 693,146"
+            fill="none" stroke="#2e7d32" stroke-width="2"/>
+
+  <!-- Legend / line labels -->
+  <text x="740" y="118" font-size="12" fill="#666" font-style="italic">perfect linear scaling</text>
+  <text x="740" y="148" font-size="12" fill="#2e7d32" font-style="italic">observed (typical bioinfo)</text>
+
+  <!-- Annotation in upper right -->
+  <rect x="510" y="60" width="370" height="50" rx="6" fill="#fff3cd" stroke="#d97706"/>
+  <text x="695" y="78" text-anchor="middle" font-size="13" fill="#b45309">
+    The gap is Amdahl's law + memory bandwidth + thread overhead.
+  </text>
+  <text x="695" y="98" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">
+    7-8x on 8 cores is a healthy result.
+  </text>
+
+  <!-- Footer caption -->
+  <text x="450" y="478" text-anchor="middle" font-size="14" fill="#555" font-style="italic">
+    Grey dashed = the speedup you'd get with zero overhead. Green = what you actually measure.
+  </text>
+
+</svg>

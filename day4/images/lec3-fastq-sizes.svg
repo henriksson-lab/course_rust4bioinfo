@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    FASTQ compression — typical sizes
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="14" fill="#666">
+    one paired-end Illumina lane, order-of-magnitude
+  </text>
+
+  <!-- Axis -->
+  <!-- y-axis line -->
+  <line x1="220" y1="100" x2="220" y2="440" stroke="#444" stroke-width="1.5"/>
+  <!-- x-axis line -->
+  <line x1="220" y1="440" x2="850" y2="440" stroke="#444" stroke-width="1.5"/>
+
+  <!-- Scale: 12 GB = full width 600 px from x=220. So 1 GB = 50 px. -->
+
+  <!-- Tick marks on x-axis -->
+  <g font-size="11" fill="#666" font-family="ui-monospace, monospace">
+    <line x1="220" y1="440" x2="220" y2="446" stroke="#666"/>
+    <text x="220" y="460" text-anchor="middle">0</text>
+
+    <line x1="370" y1="440" x2="370" y2="446" stroke="#666"/>
+    <text x="370" y="460" text-anchor="middle">3 GB</text>
+
+    <line x1="520" y1="440" x2="520" y2="446" stroke="#666"/>
+    <text x="520" y="460" text-anchor="middle">6 GB</text>
+
+    <line x1="670" y1="440" x2="670" y2="446" stroke="#666"/>
+    <text x="670" y="460" text-anchor="middle">9 GB</text>
+
+    <line x1="820" y1="440" x2="820" y2="446" stroke="#666"/>
+    <text x="820" y="460" text-anchor="middle">12 GB</text>
+  </g>
+
+  <!-- Bars. Bar height 38, gap 18. Start y=110. -->
+
+  <!-- Uncompressed: 12 GB, red -->
+  <rect x="220" y="110" width="600" height="38" fill="#c62828" opacity="0.85"/>
+  <text x="215" y="134" text-anchor="end" font-size="13" font-weight="600" fill="#333">
+    Uncompressed FASTQ
+  </text>
+  <text x="828" y="134" font-size="13" font-weight="700" fill="#7a1010">12 GB</text>
+
+  <!-- gzip -6: 3 GB, orange -->
+  <rect x="220" y="166" width="150" height="38" fill="#ef6c00" opacity="0.85"/>
+  <text x="215" y="190" text-anchor="end" font-size="13" font-weight="600" fill="#333">
+    gzip -6 (default)
+  </text>
+  <text x="378" y="190" font-size="13" font-weight="700" fill="#7a3d00">3 GB</text>
+
+  <!-- bgzip: 3 GB, orange, annotated seekable -->
+  <rect x="220" y="222" width="150" height="38" fill="#ef6c00" opacity="0.85"/>
+  <text x="215" y="246" text-anchor="end" font-size="13" font-weight="600" fill="#333">
+    bgzip (block gzip)
+  </text>
+  <text x="378" y="246" font-size="13" font-weight="700" fill="#7a3d00">3 GB</text>
+  <text x="420" y="246" font-size="12" fill="#666" font-style="italic">+ seekable</text>
+
+  <!-- zstd -3: 2.5 GB, green -->
+  <rect x="220" y="278" width="125" height="38" fill="#2e7d32" opacity="0.85"/>
+  <text x="215" y="302" text-anchor="end" font-size="13" font-weight="600" fill="#333">
+    zstd -3
+  </text>
+  <text x="353" y="302" font-size="13" font-weight="700" fill="#1b5e20">~2.5 GB</text>
+  <text x="430" y="302" font-size="12" fill="#666" font-style="italic">faster decompression</text>
+
+  <!-- 2-bit packed: ~0.75 GB, green -->
+  <rect x="220" y="334" width="38" height="38" fill="#2e7d32" opacity="0.85"/>
+  <text x="215" y="358" text-anchor="end" font-size="13" font-weight="600" fill="#333">
+    2-bit packed (seq only)
+  </text>
+  <text x="266" y="358" font-size="13" font-weight="700" fill="#1b5e20">~750 MB</text>
+  <text x="370" y="358" font-size="12" fill="#888" font-style="italic">no quality scores</text>
+
+  <!-- Quality note -->
+  <rect x="60" y="395" width="170" height="40" rx="4" ry="4" fill="none"/>
+
+  <!-- Annotation box -->
+  <rect x="60" y="485" width="790" height="48" rx="6" ry="6"
+        fill="#fff3cd" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="455" y="506" text-anchor="middle" font-size="13" fill="#7a5a00" font-weight="600">
+    Quality scores are the bulk of an uncompressed FASTQ — and they don't compress as well as DNA.
+  </text>
+  <text x="455" y="524" text-anchor="middle" font-size="12" fill="#7a5a00" font-style="italic">
+    zstd handles quality lines best. CRAM and genozip do even better, with format-aware tricks.
+  </text>
+</svg>

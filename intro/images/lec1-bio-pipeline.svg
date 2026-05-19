@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Sequencing to variant call: where does the time go?
+  </text>
+
+  <!--
+    Layout: 7 stages in a row.
+    Each box: width = 108, height = 80, gap = 22.
+    Row total = 7*108 + 6*22 = 756 + 132 = 888  -> start x = 6.
+    Box y = 80, box bottom = 160.
+    Below each box: a bottleneck badge (y ~ 172 .. 195) and a time line (y ~ 212).
+    Italic notes wrap to ~14ch lines at y 228..262.
+    Data-size strip at y = 320 .. 410.
+    Caption at bottom around y = 488.
+  -->
+
+  <!-- ============================================================
+       Stage 1: Sample  (grey - trivially small)
+       x = 6
+       ============================================================ -->
+  <rect x="6" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#eeeeee" stroke="#888" stroke-width="1.5"/>
+  <text x="60" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    Sample
+  </text>
+  <text x="60" y="130" text-anchor="middle" font-size="12" fill="#555">
+    DNA in a tube
+  </text>
+  <text x="60" y="148" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    wet lab
+  </text>
+
+  <!-- bottleneck + time (below) -->
+  <text x="60" y="180" text-anchor="middle" font-size="11" fill="#666">
+    bottleneck: wet lab
+  </text>
+  <text x="60" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hours-days
+  </text>
+
+  <!-- arrow 1->2 -->
+  <line x1="116" y1="120" x2="134" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+
+  <!-- ============================================================
+       Stage 2: Sequencer  (orange - GPU-ish / instrument)
+       x = 136
+       ============================================================ -->
+  <rect x="136" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="190" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#8a4a09">
+    Sequencer
+  </text>
+  <text x="190" y="130" text-anchor="middle" font-size="12" fill="#555">
+    raw signal /
+  </text>
+  <text x="190" y="146" text-anchor="middle" font-size="12" fill="#555">
+    images
+  </text>
+
+  <text x="190" y="180" text-anchor="middle" font-size="11" fill="#666">
+    output: TB raw data
+  </text>
+  <text x="190" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hours
+  </text>
+
+  <!-- arrow 2->3 with label "raw signal" -->
+  <line x1="246" y1="120" x2="264" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="255" y="74" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#444">raw signal</text>
+
+  <!-- ============================================================
+       Stage 3: Basecalling  (orange - GPU-bound)
+       x = 266
+       ============================================================ -->
+  <rect x="266" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="320" y="108" text-anchor="middle" font-size="15" font-weight="700" fill="#8a4a09">
+    Basecalling
+  </text>
+  <text x="320" y="130" text-anchor="middle" font-size="12" fill="#555">
+    signal to
+  </text>
+  <text x="320" y="146" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">FASTQ</text>
+
+  <text x="320" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#8a4a09">
+    bottleneck: GPU
+  </text>
+  <text x="320" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hours
+  </text>
+  <text x="320" y="222" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    Illumina: on-instrument.
+  </text>
+  <text x="320" y="236" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    Nanopore: separate
+  </text>
+  <text x="320" y="250" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    GPU step (Dorado).
+  </text>
+
+  <!-- arrow 3->4 -->
+  <line x1="376" y1="120" x2="394" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="385" y="74" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#444">FASTQ</text>
+
+  <!-- ============================================================
+       Stage 4: Alignment  (blue - CPU+RAM)
+       x = 396
+       ============================================================ -->
+  <rect x="396" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="450" y="108" text-anchor="middle" font-size="16" font-weight="700" fill="#1565c0">
+    Alignment
+  </text>
+  <text x="450" y="130" text-anchor="middle" font-size="12" fill="#555">
+    FASTQ + ref to
+  </text>
+  <text x="450" y="146" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">SAM/BAM</text>
+
+  <text x="450" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#1565c0">
+    bottleneck: CPU + RAM
+  </text>
+  <text x="450" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hours
+  </text>
+  <text x="450" y="222" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    BWA-MEM, minimap2 -
+  </text>
+  <text x="450" y="236" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    8-32 GB RAM for
+  </text>
+  <text x="450" y="250" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    human reference.
+  </text>
+
+  <!-- arrow 4->5 -->
+  <line x1="506" y1="120" x2="524" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="515" y="74" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#444">BAM</text>
+
+  <!-- ============================================================
+       Stage 5: Sort + Dedup  (green - I/O bound)
+       x = 526
+       ============================================================ -->
+  <rect x="526" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="580" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    Sort + Dedup
+  </text>
+  <text x="580" y="126" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">samtools</text>
+  <text x="580" y="144" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">sort, markdup</text>
+
+  <text x="580" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#1b5e20">
+    bottleneck: I/O + CPU
+  </text>
+  <text x="580" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hour(s)
+  </text>
+  <text x="580" y="222" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    Streams the BAM
+  </text>
+  <text x="580" y="236" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    through disk many
+  </text>
+  <text x="580" y="250" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    times.
+  </text>
+
+  <!-- arrow 5->6 -->
+  <line x1="636" y1="120" x2="654" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="645" y="74" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#444">sorted.bam</text>
+
+  <!-- ============================================================
+       Stage 6: Variant calling  (orange - CPU or GPU)
+       x = 656
+       ============================================================ -->
+  <rect x="656" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="710" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#8a4a09">
+    Variant
+  </text>
+  <text x="710" y="122" text-anchor="middle" font-size="14" font-weight="700" fill="#8a4a09">
+    calling
+  </text>
+  <text x="710" y="144" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">BAM to VCF</text>
+
+  <text x="710" y="180" text-anchor="middle" font-size="11" font-weight="700" fill="#8a4a09">
+    bottleneck: CPU/GPU
+  </text>
+  <text x="710" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: hours
+  </text>
+  <text x="710" y="222" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    GATK, DeepVariant.
+  </text>
+  <text x="710" y="236" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    GPU (Parabricks)
+  </text>
+  <text x="710" y="250" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    cuts runtime ~5x.
+  </text>
+
+  <!-- arrow 6->7 -->
+  <line x1="766" y1="120" x2="784" y2="120"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-dark)"/>
+  <text x="775" y="74" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#444">VCF</text>
+
+  <!-- ============================================================
+       Stage 7: Annotation + report  (grey - trivial)
+       x = 786
+       ============================================================ -->
+  <rect x="786" y="80" width="108" height="80" rx="8" ry="8"
+        fill="#eeeeee" stroke="#888" stroke-width="1.5"/>
+  <text x="840" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    Annotation
+  </text>
+  <text x="840" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    + report
+  </text>
+  <text x="840" y="144" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">VCF to TSV</text>
+
+  <text x="840" y="180" text-anchor="middle" font-size="11" fill="#666">
+    bottleneck: tiny
+  </text>
+  <text x="840" y="196" text-anchor="middle" font-size="11" fill="#666">
+    time: minutes
+  </text>
+  <text x="840" y="222" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    Looks up variants
+  </text>
+  <text x="840" y="236" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    in ClinVar, dbSNP,
+  </text>
+  <text x="840" y="250" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    gnomAD.
+  </text>
+
+  <!-- ============================================================
+       Data-size funnel strip across the bottom
+       Layout (top to bottom):
+         y = 290       panel top
+         y = 308       panel title
+         y = 326       size labels row (bold)
+         y = 340-372   funnel polygon (tapers from ~32 tall to ~4 tall)
+         y = 388       stage-name row (italic grey)
+         y = 408       funnel direction hint
+         y = 418       panel bottom
+       ============================================================ -->
+  <rect x="6" y="290" width="888" height="128" rx="8" ry="8"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="450" y="308" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    Data size at each step (the funnel)
+  </text>
+
+  <!-- Size labels (above funnel) -->
+  <g font-size="11" text-anchor="middle">
+    <text x="60"  y="326" font-weight="700" fill="#666">KB</text>
+    <text x="190" y="326" font-weight="700" fill="#c62828">1-10 TB</text>
+    <text x="320" y="326" font-weight="700" fill="#c62828">100 GB - 1 TB</text>
+    <text x="450" y="326" font-weight="700" fill="#d97706">50-100 GB</text>
+    <text x="580" y="326" font-weight="700" fill="#d97706">50-100 GB</text>
+    <text x="710" y="326" font-weight="700" fill="#2e7d32">10-100 MB</text>
+    <text x="840" y="326" font-weight="700" fill="#2e7d32">1-10 MB</text>
+  </g>
+
+  <!--
+    Funnel polygon: tapers wide-to-narrow across the row.
+    Centered on y = 358. Half-heights at each anchor:
+      x=60   h=2  (sample metadata - effectively a line)
+      x=190  h=18 (raw signal - widest)
+      x=320  h=16 (FASTQ)
+      x=450  h=12 (BAM)
+      x=580  h=12 (sorted BAM)
+      x=710  h=5  (VCF)
+      x=840  h=3  (TSV)
+  -->
+  <polygon points="60,356 190,340 320,342 450,346 580,346 710,353 840,355
+                   840,361 710,363 580,370 450,370 320,374 190,376 60,360"
+           fill="#fde2e2" stroke="#c62828" stroke-width="1" opacity="0.55"/>
+
+  <!-- Stage-name row (below funnel) -->
+  <g font-size="11" fill="#777" font-style="italic" text-anchor="middle">
+    <text x="60"  y="392">metadata</text>
+    <text x="190" y="392">raw signal</text>
+    <text x="320" y="392">FASTQ</text>
+    <text x="450" y="392">BAM</text>
+    <text x="580" y="392">sorted BAM</text>
+    <text x="710" y="392">VCF</text>
+    <text x="840" y="392">annotated TSV</text>
+  </g>
+
+  <!-- Funnel direction hint -->
+  <text x="450" y="411" text-anchor="middle" font-size="11" fill="#666" font-style="italic">
+    Each step shrinks the data by orders of magnitude - reports fit on a laptop, raw signal does not.
+  </text>
+
+  <!-- ============================================================
+       Bottom caption
+       ============================================================ -->
+  <text x="450" y="464" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    Bottlenecks vary by sequencing tech (Illumina vs nanopore vs PacBio), reference size, and coverage depth -
+  </text>
+  <text x="450" y="481" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    but the order of magnitude is reliable.
+  </text>
+
+  <!-- ============================================================
+       Legend (compact horizontal strip, just under the title)
+       ============================================================ -->
+  <g transform="translate(180, 46)" font-size="11" fill="#333">
+    <text x="0" y="9" font-style="italic" fill="#666">colour =</text>
+    <rect x="60" y="0" width="14" height="11" fill="#e3f2fd" stroke="#1976d2" stroke-width="1"/>
+    <text x="78" y="9">CPU/RAM</text>
+    <rect x="148" y="0" width="14" height="11" fill="#fff3cd" stroke="#d97706" stroke-width="1"/>
+    <text x="166" y="9">GPU</text>
+    <rect x="208" y="0" width="14" height="11" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+    <text x="226" y="9">I/O</text>
+    <rect x="262" y="0" width="14" height="11" fill="#eeeeee" stroke="#888" stroke-width="1"/>
+    <text x="280" y="9">trivial</text>
+  </g>
+
+</svg>

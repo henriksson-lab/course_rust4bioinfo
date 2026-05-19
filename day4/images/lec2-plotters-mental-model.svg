@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="mm-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The plotters mental model
+  </text>
+  <text x="450" y="48" text-anchor="middle" font-size="13" fill="#666" font-style="italic">
+    three nested layers — canvas, axes, marks
+  </text>
+
+  <!-- ===== Outer: DrawingArea ===== -->
+  <rect x="40" y="80" width="430" height="380" rx="10" ry="10"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="60" y="108" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">
+    DrawingArea
+  </text>
+  <text x="60" y="126" font-size="12" fill="#1565c0" font-style="italic">
+    the canvas — pixels or SVG nodes
+  </text>
+  <text x="60" y="142" font-size="11" fill="#555">
+    backend: SVGBackend or BitMapBackend
+  </text>
+
+  <!-- ===== Middle: ChartContext ===== -->
+  <rect x="80" y="170" width="350" height="270" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+  <text x="100" y="198" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    ChartContext
+  </text>
+  <text x="100" y="216" font-size="12" fill="#8a5a07" font-style="italic">
+    axes + coordinate system
+  </text>
+  <text x="100" y="232" font-size="11" fill="#555">
+    built by ChartBuilder::on(&amp;root)
+  </text>
+
+  <!-- ===== Inner: Series ===== -->
+  <rect x="120" y="260" width="270" height="170" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+  <text x="140" y="288" font-size="15" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    Series
+  </text>
+  <text x="140" y="306" font-size="12" fill="#1b5e20" font-style="italic">
+    the marks
+  </text>
+  <text x="140" y="322" font-size="11" fill="#555">
+    Rectangle, Circle, LineSeries, ...
+  </text>
+
+  <!-- mini sample marks inside Series box -->
+  <g>
+    <rect x="145" y="345" width="14" height="70" fill="#1976d2" opacity="0.75"/>
+    <rect x="163" y="365" width="14" height="50" fill="#1976d2" opacity="0.75"/>
+    <rect x="181" y="380" width="14" height="35" fill="#1976d2" opacity="0.75"/>
+    <circle cx="220" cy="380" r="4" fill="#d97706"/>
+    <circle cx="240" cy="365" r="4" fill="#d97706"/>
+    <circle cx="260" cy="345" r="4" fill="#d97706"/>
+    <polyline points="290,400 305,375 320,385 335,355 350,360 370,340"
+              fill="none" stroke="#1b5e20" stroke-width="2"/>
+  </g>
+
+  <!-- ===== Right-side: code panel (build from outside in) ===== -->
+  <text x="510" y="105" font-size="14" font-weight="700" fill="#444">
+    Build from outside in
+  </text>
+
+  <!-- step 1 -->
+  <rect x="500" y="125" width="370" height="92" rx="6" ry="6"
+        fill="#fafafa" stroke="#1976d2" stroke-width="1.4"/>
+  <text x="510" y="148" font-size="12" font-weight="700" fill="#1976d2">
+    1. DrawingArea
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#222">
+    <text x="510" y="170">let root = SVGBackend::new(</text>
+    <text x="510" y="188">    path, (800, 600))</text>
+    <text x="510" y="206">    .into_drawing_area();</text>
+  </g>
+
+  <!-- arrow 1 -->
+  <line x1="685" y1="222" x2="685" y2="240" stroke="#2e7d32"
+        stroke-width="2" marker-end="url(#mm-arrow)"/>
+
+  <!-- step 2 -->
+  <rect x="500" y="245" width="370" height="80" rx="6" ry="6"
+        fill="#fafafa" stroke="#d97706" stroke-width="1.4"/>
+  <text x="510" y="268" font-size="12" font-weight="700" fill="#8a5a07">
+    2. ChartContext
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#222">
+    <text x="510" y="290">let mut chart = ChartBuilder::on(&amp;root)</text>
+    <text x="510" y="308">    .build_cartesian_2d(0..n, 0..max)?;</text>
+  </g>
+
+  <!-- arrow 2 -->
+  <line x1="685" y1="330" x2="685" y2="348" stroke="#2e7d32"
+        stroke-width="2" marker-end="url(#mm-arrow)"/>
+
+  <!-- step 3 -->
+  <rect x="500" y="353" width="370" height="80" rx="6" ry="6"
+        fill="#fafafa" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="510" y="376" font-size="12" font-weight="700" fill="#1b5e20">
+    3. Series
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#222">
+    <text x="510" y="398">chart.draw_series(counts.iter()</text>
+    <text x="510" y="416">    .map(|(b, c)| Rectangle::new(...)))?;</text>
+  </g>
+
+  <text x="450" y="480" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    Touching pixels? DrawingArea. Positioning data? ChartContext. A mark? Series.
+  </text>
+
+</svg>

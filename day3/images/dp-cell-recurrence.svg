@@ -56,40 +56,40 @@
 
   <!-- diag -->
   <text x="310" y="115" font-size="16" font-family="ui-monospace, monospace">↘</text>
-  <text x="335" y="115" font-size="15" font-family="ui-monospace, monospace">
+  <text x="335" y="115" font-size="13" font-family="ui-monospace, monospace">
     score[i−1][j−1] + s(a[i], b[j])
   </text>
-  <text x="335" y="133" font-size="14" fill="#555">
-    diagonal — align a[i] with b[j] (match or mismatch)
+  <text x="335" y="133" font-size="13" fill="#555">
+    diagonal — align a[i] with b[j]
   </text>
 
   <!-- up -->
   <text x="310" y="165" font-size="16" font-family="ui-monospace, monospace">↓</text>
-  <text x="335" y="165" font-size="15" font-family="ui-monospace, monospace">
+  <text x="335" y="165" font-size="13" font-family="ui-monospace, monospace">
     score[i−1][j]   + gap
   </text>
-  <text x="335" y="183" font-size="14" fill="#555">
+  <text x="335" y="183" font-size="13" fill="#555">
     up — gap in b, consume a[i]
   </text>
 
   <!-- left -->
   <text x="310" y="215" font-size="16" font-family="ui-monospace, monospace">→</text>
-  <text x="335" y="215" font-size="15" font-family="ui-monospace, monospace">
+  <text x="335" y="215" font-size="13" font-family="ui-monospace, monospace">
     score[i][j−1]   + gap
   </text>
-  <text x="335" y="233" font-size="14" fill="#555">
+  <text x="335" y="233" font-size="13" fill="#555">
     left — gap in a, consume b[j]
   </text>
 
   <!-- footer note -->
-  <text x="80" y="270" font-size="15" fill="#333">
+  <text x="80" y="270" font-size="13" fill="#333">
     Store which neighbour won in a second matrix — that is the traceback.
   </text>
-  <text x="80" y="292" font-size="15" fill="#333">
-    Fill the table top-left to bottom-right; each cell is computed exactly once.
+  <text x="80" y="292" font-size="13" fill="#333">
+    Fill the table top-left to bottom-right; each cell is computed once.
   </text>
-  <text x="80" y="314" font-size="14" fill="#777">
-    Naïve recursion would re-derive the same subproblem exponentially many times.
+  <text x="80" y="314" font-size="13" fill="#777">
+    Naïve recursion would re-derive the same subproblem many times.
   </text>
 
 </svg>

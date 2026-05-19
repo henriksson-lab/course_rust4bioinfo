@@ -78,7 +78,7 @@
   <text x="645" y="220" text-anchor="middle" font-size="20" font-weight="700">
     as <tspan font-family="ui-monospace, monospace" fill="#b45309">i8</tspan> (signed, two's complement)
   </text>
-  <text x="645" y="248" text-anchor="middle" font-size="15" fill="#555">
+  <text x="645" y="248" text-anchor="middle" font-size="14" fill="#555">
     MSB = 1 means negative; flip &amp; +1 to read magnitude
   </text>
   <text x="645" y="298" text-anchor="middle" font-size="17" font-family="ui-monospace, monospace">

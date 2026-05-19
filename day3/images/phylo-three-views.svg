@@ -91,10 +91,10 @@
   </text>
 
   <text x="445" y="240" font-size="14" fill="#555">
-    A pair of matched parentheses = an internal node.
+    A matched pair of parens = an internal node.
   </text>
   <text x="445" y="258" font-size="14" fill="#555">
-    The number after a node is the branch length leading to its parent.
+    Number after a node = its branch length.
   </text>
 
   <!-- ===========================================================

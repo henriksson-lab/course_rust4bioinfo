@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green-2bit" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    DNA at 2 bits per base
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="14" fill="#666">
+    four bases, log2(4) = 2 bits each
+  </text>
+
+  <!-- Base row -->
+  <text x="60" y="100" font-size="14" font-weight="600" fill="#444">8 DNA bases:</text>
+  <g>
+    <g font-family="ui-monospace, monospace" font-size="22" fill="#0d47a1" font-weight="700">
+      <text x="120" y="135">A</text>
+      <text x="190" y="135">C</text>
+      <text x="260" y="135">G</text>
+      <text x="330" y="135">T</text>
+      <text x="400" y="135">A</text>
+      <text x="470" y="135">C</text>
+      <text x="540" y="135">G</text>
+      <text x="610" y="135">T</text>
+    </g>
+    <!-- guide boxes -->
+    <g fill="none" stroke="#bbb" stroke-width="1">
+      <rect x="110" y="112" width="40" height="30" rx="3"/>
+      <rect x="180" y="112" width="40" height="30" rx="3"/>
+      <rect x="250" y="112" width="40" height="30" rx="3"/>
+      <rect x="320" y="112" width="40" height="30" rx="3"/>
+      <rect x="390" y="112" width="40" height="30" rx="3"/>
+      <rect x="460" y="112" width="40" height="30" rx="3"/>
+      <rect x="530" y="112" width="40" height="30" rx="3"/>
+      <rect x="600" y="112" width="40" height="30" rx="3"/>
+    </g>
+  </g>
+
+  <!-- text size hint -->
+  <text x="680" y="135" font-size="13" fill="#666" font-style="italic">= 8 bytes as text</text>
+
+  <!-- Encoding table -->
+  <rect x="60" y="160" width="780" height="60" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="80" y="183" font-size="14" font-weight="700" fill="#0d47a1">Encoding:</text>
+  <g font-family="ui-monospace, monospace" font-size="16" fill="#0d47a1">
+    <text x="180" y="183">A = 00</text>
+    <text x="320" y="183">C = 01</text>
+    <text x="460" y="183">G = 10</text>
+    <text x="600" y="183">T = 11</text>
+  </g>
+  <text x="450" y="208" text-anchor="middle" font-size="12" fill="#444" font-style="italic">
+    2 bits per base. 4 bases per byte.
+  </text>
+
+  <!-- Bit row -->
+  <text x="60" y="252" font-size="14" font-weight="600" fill="#444">As bits:</text>
+  <g font-family="ui-monospace, monospace" font-size="18" fill="#333">
+    <text x="120" y="280">00</text>
+    <text x="190" y="280">01</text>
+    <text x="260" y="280">10</text>
+    <text x="330" y="280">11</text>
+    <text x="400" y="280">00</text>
+    <text x="470" y="280">01</text>
+    <text x="540" y="280">10</text>
+    <text x="610" y="280">11</text>
+  </g>
+
+  <!-- Arrow down to packed bytes -->
+  <line x1="450" y1="295" x2="450" y2="325" stroke="#2e7d32"
+        stroke-width="2" marker-end="url(#arr-green-2bit)"/>
+  <text x="465" y="315" font-size="13" fill="#2e7d32" font-style="italic">pack 4 bases per byte</text>
+
+  <!-- Packed bytes -->
+  <text x="60" y="360" font-size="14" font-weight="600" fill="#444">Packed:</text>
+  <rect x="220" y="338" width="190" height="40" rx="4" ry="4"
+        fill="#fff3cd" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="315" y="363" text-anchor="middle" font-family="ui-monospace, monospace"
+        font-size="18" fill="#7a5a00" font-weight="700">
+    00 01 10 11
+  </text>
+  <text x="315" y="395" text-anchor="middle" font-size="12" fill="#666">byte 1: ACGT</text>
+
+  <rect x="490" y="338" width="190" height="40" rx="4" ry="4"
+        fill="#fff3cd" stroke="#b8860b" stroke-width="1.2"/>
+  <text x="585" y="363" text-anchor="middle" font-family="ui-monospace, monospace"
+        font-size="18" fill="#7a5a00" font-weight="700">
+    00 01 10 11
+  </text>
+  <text x="585" y="395" text-anchor="middle" font-size="12" fill="#666">byte 2: ACGT</text>
+
+  <text x="730" y="360" font-size="13" fill="#1b5e20" font-style="italic" font-weight="600">
+    = 2 bytes total
+  </text>
+
+  <!-- Big comparison callout -->
+  <rect x="60" y="415" width="780" height="50" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="450" y="437" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    8 bases as text = 8 bytes. As packed 2-bit = 2 bytes. 4x smaller.
+  </text>
+  <text x="450" y="455" text-anchor="middle" font-size="12" fill="#2e7d32">
+    Human genome (~3 Gb): packed = ~750 MB. Plain FASTA = ~3 GB.
+  </text>
+
+  <!-- Caveat -->
+  <rect x="60" y="480" width="780" height="42" rx="6" ry="6"
+        fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="450" y="502" text-anchor="middle" font-size="12" fill="#555">
+    FASTA still uses 1 byte/base — IUPAC ambiguity codes (N, R, Y, S, W, K, M, ...) need more than 2 bits,
+  </text>
+  <text x="450" y="517" text-anchor="middle" font-size="12" fill="#555">
+    and every aligner already speaks plain ASCII.
+  </text>
+</svg>

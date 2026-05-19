@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="km-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="26" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    100M k-mers, zero bytes of DNA duplicated
+  </text>
+
+  <!-- ============================================== -->
+  <!-- TOP band: the DNA, owned once                   -->
+  <!-- ============================================== -->
+  <text x="40" y="58" font-size="16" font-weight="700" fill="#333">
+    the DNA, owned once
+  </text>
+
+  <!-- A long horizontal rectangle of DNA cells -->
+  <g stroke="#888" stroke-width="0.8">
+    <!-- 40 cells x 20px = 800 px wide -->
+    <rect x="40"  y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="60"  y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="80"  y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="100" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="120" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="140" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="160" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="180" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="200" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="220" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="240" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="260" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="280" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="300" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="320" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="340" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="360" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="380" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="400" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="420" y="72" width="20" height="34" fill="#fff3cd"/>
+    <!-- gap for "..." -->
+    <rect x="600" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="620" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="640" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="660" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="680" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="700" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="720" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="740" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="760" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="780" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="800" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="820" y="72" width="20" height="34" fill="#fff3cd"/>
+    <rect x="840" y="72" width="20" height="34" fill="#fff3cd"/>
+  </g>
+
+  <!-- DNA letters in the visible cells -->
+  <g font-family="ui-monospace, monospace" font-size="14" font-weight="700"
+     fill="#333" text-anchor="middle">
+    <text x="50"  y="95">A</text>
+    <text x="70"  y="95">C</text>
+    <text x="90"  y="95">G</text>
+    <text x="110" y="95">T</text>
+    <text x="130" y="95">A</text>
+    <text x="150" y="95">A</text>
+    <text x="170" y="95">C</text>
+    <text x="190" y="95">G</text>
+    <text x="210" y="95">T</text>
+    <text x="230" y="95">T</text>
+    <text x="250" y="95">A</text>
+    <text x="270" y="95">C</text>
+    <text x="290" y="95">G</text>
+    <text x="310" y="95">C</text>
+    <text x="330" y="95">A</text>
+    <text x="350" y="95">T</text>
+    <text x="370" y="95">G</text>
+    <text x="390" y="95">A</text>
+    <text x="410" y="95">C</text>
+    <text x="430" y="95">T</text>
+
+    <text x="610" y="95">G</text>
+    <text x="630" y="95">A</text>
+    <text x="650" y="95">T</text>
+    <text x="670" y="95">C</text>
+    <text x="690" y="95">G</text>
+    <text x="710" y="95">A</text>
+    <text x="730" y="95">A</text>
+    <text x="750" y="95">C</text>
+    <text x="770" y="95">G</text>
+    <text x="790" y="95">T</text>
+    <text x="810" y="95">T</text>
+    <text x="830" y="95">A</text>
+    <text x="850" y="95">C</text>
+  </g>
+
+  <!-- ... 100 megabases ... label -->
+  <text x="520" y="94" text-anchor="middle" font-size="13"
+        font-style="italic" fill="#555">
+    ... 100 megabases ...
+  </text>
+
+  <!-- Annotation for the DNA buffer -->
+  <text x="450" y="126" text-anchor="middle" font-size="14" fill="#d97706" font-weight="600">
+    <tspan font-family="ui-monospace, monospace">Vec&lt;u8&gt;</tspan>
+    &#8212; 100,000,000 bytes on the heap (owned once)
+  </text>
+
+  <!-- ============================================== -->
+  <!-- MIDDLE band: 100M slices, 16 bytes each         -->
+  <!-- ============================================== -->
+  <text x="40" y="158" font-size="16" font-weight="700" fill="#333">
+    100M sliding-window slices, each 16 bytes of metadata
+  </text>
+
+  <!-- Five representative fat-pointer triples -->
+  <!-- Slice 1: &seq[0..21] -->
+  <rect x="40" y="180" width="130" height="58" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="105" y="198" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[0..21]</text>
+  <text x="50" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
+  </text>
+  <text x="50" y="232" font-size="10" font-family="ui-monospace, monospace" fill="#777">
+    16 bytes
+  </text>
+
+  <!-- Slice 2: &seq[1..22] -->
+  <rect x="180" y="180" width="130" height="58" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="245" y="198" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[1..22]</text>
+  <text x="190" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
+  </text>
+  <text x="190" y="232" font-size="10" font-family="ui-monospace, monospace" fill="#777">
+    16 bytes
+  </text>
+
+  <!-- Slice 3: &seq[2..23] -->
+  <rect x="320" y="180" width="130" height="58" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="385" y="198" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[2..23]</text>
+  <text x="330" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
+  </text>
+  <text x="330" y="232" font-size="10" font-family="ui-monospace, monospace" fill="#777">
+    16 bytes
+  </text>
+
+  <!-- ... -->
+  <text x="500" y="218" text-anchor="middle" font-size="14" font-style="italic" fill="#555">
+    ... 100 million more arrows ...
+  </text>
+
+  <!-- Slice n-1 -->
+  <rect x="590" y="180" width="130" height="58" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="655" y="198" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[99_999_978..99_999_999]</text>
+  <text x="600" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
+  </text>
+  <text x="600" y="232" font-size="10" font-family="ui-monospace, monospace" fill="#777">
+    16 bytes
+  </text>
+
+  <!-- Slice n -->
+  <rect x="730" y="180" width="130" height="58" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="795" y="198" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[99_999_979..100_000_000]</text>
+  <text x="740" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
+  </text>
+  <text x="740" y="232" font-size="10" font-family="ui-monospace, monospace" fill="#777">
+    16 bytes
+  </text>
+
+  <!-- Arrows from each slice up into the DNA buffer -->
+  <line x1="80"  y1="180" x2="50"  y2="108" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#km-arrow)"/>
+  <line x1="220" y1="180" x2="70"  y2="108" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#km-arrow)"/>
+  <line x1="360" y1="180" x2="90"  y2="108" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#km-arrow)"/>
+  <line x1="630" y1="180" x2="810" y2="108" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#km-arrow)"/>
+  <line x1="770" y1="180" x2="830" y2="108" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#km-arrow)"/>
+
+  <!-- ============================================== -->
+  <!-- BOTTOM band: memory math                        -->
+  <!-- ============================================== -->
+  <rect x="40" y="262" width="820" height="178" fill="#fafafa"
+        stroke="#aaa" stroke-dasharray="6,4" stroke-width="1.5" rx="4"/>
+
+  <text x="60" y="285" font-size="16" font-weight="700" fill="#333">
+    memory math
+  </text>
+
+  <text x="60" y="312" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    DNA itself (shared):
+    <tspan fill="#2e7d32" font-weight="700">100,000,000 bytes  =  100 MB</tspan>
+  </text>
+  <text x="60" y="334" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    100M fat pointers &#215; 16 bytes:
+    <tspan fill="#2e7d32" font-weight="700">1,600,000,000 bytes  =  1.6 GB</tspan>
+  </text>
+  <text x="60" y="356" font-size="14" font-family="ui-monospace, monospace" fill="#333" font-weight="700">
+    Total: <tspan fill="#1565c0">~1.7 GB</tspan>
+  </text>
+
+  <line x1="60" y1="370" x2="840" y2="370" stroke="#aaa" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <text x="60" y="392" font-size="13" font-family="ui-monospace, monospace" fill="#c62828">
+    If we'd copied each k-mer: 100M &#215; 21 bytes = 2.1 GB OF DUPLICATED DNA
+  </text>
+  <text x="60" y="411" font-size="13" font-family="ui-monospace, monospace" fill="#c62828">
+    &#8212; and then still + 100 MB for the original.
+  </text>
+
+  <text x="60" y="432" font-size="13" fill="#333" font-style="italic">
+    Slices give you the views for free. Copying would cost twice the memory AND lose all cache locality.
+  </text>
+
+</svg>

@@ -73,7 +73,7 @@
   <text x="360" y="254" text-anchor="end" font-size="13" fill="#888">—</text>
 
   <!-- Footnote inside card -->
-  <text x="200" y="280" text-anchor="middle" font-size="12" fill="#888">
+  <text x="200" y="280" text-anchor="middle" font-size="10" fill="#888">
     PK = uniquely identifies a row;  NOT NULL = must be filled in
   </text>
 
@@ -87,7 +87,7 @@
     <!-- strain_id -->
     <rect x="410" y="88" width="40" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="430" y="106" text-anchor="middle" font-size="12" fill="#888"
+    <text x="430" y="106" text-anchor="middle" font-size="8" fill="#888"
           font-family="ui-monospace, monospace">strain_id</text>
     <text x="430" y="126" text-anchor="middle" font-size="16" font-weight="700"
           font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
@@ -95,9 +95,9 @@
     <!-- strain_name -->
     <rect x="450" y="88" width="100" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="500" y="106" text-anchor="middle" font-size="12" fill="#888"
+    <text x="500" y="106" text-anchor="middle" font-size="11" fill="#888"
           font-family="ui-monospace, monospace">strain_name</text>
-    <text x="500" y="126" text-anchor="middle" font-size="15"
+    <text x="500" y="126" text-anchor="middle" font-size="13"
           font-family="ui-monospace, monospace">K-12 MG1655</text>
 
     <!-- species -->
@@ -105,15 +105,15 @@
           stroke="#888" stroke-width="1.2"/>
     <text x="620" y="106" text-anchor="middle" font-size="12" fill="#888"
           font-family="ui-monospace, monospace">species</text>
-    <text x="620" y="126" text-anchor="middle" font-size="15"
+    <text x="620" y="126" text-anchor="middle" font-size="14"
           font-family="ui-monospace, monospace">Escherichia coli</text>
 
     <!-- isolation_source -->
     <rect x="690" y="88" width="90" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="735" y="106" text-anchor="middle" font-size="12" fill="#888"
+    <text x="735" y="106" text-anchor="middle" font-size="9" fill="#888"
           font-family="ui-monospace, monospace">isolation_source</text>
-    <text x="735" y="126" text-anchor="middle" font-size="15"
+    <text x="735" y="126" text-anchor="middle" font-size="13"
           font-family="ui-monospace, monospace">human gut</text>
 
     <!-- year_isolated -->
@@ -124,9 +124,9 @@
   <g>
     <rect x="410" y="146" width="78" height="48" fill="#f7faff"
           stroke="#888" stroke-width="1.2"/>
-    <text x="449" y="164" text-anchor="middle" font-size="12" fill="#888"
+    <text x="449" y="164" text-anchor="middle" font-size="10" fill="#888"
           font-family="ui-monospace, monospace">year_isolated</text>
-    <text x="449" y="184" text-anchor="middle" font-size="15"
+    <text x="449" y="184" text-anchor="middle" font-size="14"
           font-family="ui-monospace, monospace">1922</text>
   </g>
 
@@ -152,15 +152,15 @@
   <text x="410" y="232" font-size="15" font-weight="600" fill="#333">
     Inserting another row…
   </text>
-  <text x="410" y="252" font-size="14" fill="#555"
+  <text x="410" y="252" font-size="11" fill="#555"
         font-family="ui-monospace, monospace">
     INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
   </text>
-  <text x="410" y="270" font-size="14" fill="#555"
+  <text x="410" y="270" font-size="11" fill="#555"
         font-family="ui-monospace, monospace">
     VALUES ('DH5alpha', 'Escherichia coli', 'lab derivative', 1980);
   </text>
-  <text x="410" y="290" font-size="13" fill="#888">
+  <text x="410" y="290" font-size="12" fill="#888">
     strain_id is assigned automatically because it is INTEGER PRIMARY KEY.
   </text>
 

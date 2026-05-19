@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    8 distinct colours, used for the SAME items in both halves:
+      item 0 red          fill #ef9a9a stroke #c62828
+      item 1 orange       fill #ffcc80 stroke #d97706
+      item 2 yellow       fill #fff59d stroke #c8a64b
+      item 3 light green  fill #c8e6c9 stroke #66bb6a
+      item 4 dark green   fill #81c784 stroke #2e7d32
+      item 5 cyan         fill #b2ebf2 stroke #0097a7
+      item 6 blue         fill #90caf9 stroke #1565c0
+      item 7 purple       fill #ce93d8 stroke #7b1fa2
+  -->
+
+  <!-- Title -->
+  <text x="450" y="26" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Same eight items, one thread vs. four threads
+  </text>
+
+  <!-- =====================================================
+       Top: Sequential
+       ===================================================== -->
+  <text x="60" y="68" font-size="16" font-weight="700" fill="#c62828">
+    Sequential - 1 thread
+  </text>
+  <text x="60" y="86" font-size="13" fill="#666" font-style="italic">
+    items run one after another along a single timeline
+  </text>
+
+  <text x="50" y="124" text-anchor="end" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T0</text>
+
+  <!-- 8 blocks end-to-end, each 80 px wide, from x=60 to x=700, y=104..144 -->
+  <g>
+    <rect x="60"  y="104" width="80" height="40" fill="#ef9a9a" stroke="#c62828" stroke-width="1.5"/>
+    <text x="100" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 0</text>
+
+    <rect x="140" y="104" width="80" height="40" fill="#ffcc80" stroke="#d97706" stroke-width="1.5"/>
+    <text x="180" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 1</text>
+
+    <rect x="220" y="104" width="80" height="40" fill="#fff59d" stroke="#c8a64b" stroke-width="1.5"/>
+    <text x="260" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 2</text>
+
+    <rect x="300" y="104" width="80" height="40" fill="#c8e6c9" stroke="#66bb6a" stroke-width="1.5"/>
+    <text x="340" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 3</text>
+
+    <rect x="380" y="104" width="80" height="40" fill="#81c784" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="420" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 4</text>
+
+    <rect x="460" y="104" width="80" height="40" fill="#b2ebf2" stroke="#0097a7" stroke-width="1.5"/>
+    <text x="500" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 5</text>
+
+    <rect x="540" y="104" width="80" height="40" fill="#90caf9" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="580" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 6</text>
+
+    <rect x="620" y="104" width="80" height="40" fill="#ce93d8" stroke="#7b1fa2" stroke-width="1.5"/>
+    <text x="660" y="130" text-anchor="middle" font-size="14" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#333">item 7</text>
+  </g>
+
+  <!-- Sequential time axis -->
+  <line x1="60" y1="160" x2="700" y2="160" stroke="#444" stroke-width="1.5"/>
+  <line x1="60" y1="156" x2="60" y2="164" stroke="#444" stroke-width="1.5"/>
+  <line x1="700" y1="156" x2="700" y2="164" stroke="#444" stroke-width="1.5"/>
+  <text x="60" y="180" text-anchor="middle" font-size="13" fill="#444"
+        font-family="ui-monospace, monospace">t = 0</text>
+  <text x="700" y="180" text-anchor="middle" font-size="13" font-weight="700" fill="#c62828"
+        font-family="ui-monospace, monospace">t = 8 x t</text>
+
+  <text x="730" y="130" font-size="14" font-weight="700" fill="#c62828">
+    total = 8 x t
+  </text>
+
+  <!-- Caption between halves -->
+  <rect x="60" y="200" width="780" height="42" rx="6" fill="#f5fbf5" stroke="#2e7d32"/>
+  <text x="450" y="218" text-anchor="middle" font-size="14" font-weight="600" fill="#2e7d32">
+    Same items. Same colours. Same total work -
+  </text>
+  <text x="450" y="236" text-anchor="middle" font-size="14" font-weight="600" fill="#2e7d32">
+    but 4 threads finish in 1/4 the wall-clock time.
+  </text>
+
+  <!-- =====================================================
+       Bottom: Parallel - 4 threads
+       ===================================================== -->
+  <text x="60" y="270" font-size="16" font-weight="700" fill="#2e7d32">
+    Parallel - 4 threads
+  </text>
+  <text x="60" y="288" font-size="13" fill="#666" font-style="italic">
+    four lanes process items in parallel; colours match the items above
+  </text>
+
+  <!-- Thread labels -->
+  <text x="50" y="324" text-anchor="end" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T0</text>
+  <text x="50" y="364" text-anchor="end" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T1</text>
+  <text x="50" y="404" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T2</text>
+  <text x="50" y="444" text-anchor="end" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T3</text>
+
+  <!-- Each lane has 2 blocks, each 80 px wide; x=60..220 -->
+
+  <!-- T0: item 0 (red), item 4 (dark green) -->
+  <rect x="60"  y="304" width="80" height="40" fill="#ef9a9a" stroke="#c62828" stroke-width="1.5"/>
+  <text x="100" y="330" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 0</text>
+  <rect x="140" y="304" width="80" height="40" fill="#81c784" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="180" y="330" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 4</text>
+
+  <!-- T1: item 1 (orange), item 5 (cyan) -->
+  <rect x="60"  y="344" width="80" height="40" fill="#ffcc80" stroke="#d97706" stroke-width="1.5"/>
+  <text x="100" y="370" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 1</text>
+  <rect x="140" y="344" width="80" height="40" fill="#b2ebf2" stroke="#0097a7" stroke-width="1.5"/>
+  <text x="180" y="370" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 5</text>
+
+  <!-- T2: item 2 (yellow), item 6 (blue) -->
+  <rect x="60"  y="384" width="80" height="40" fill="#fff59d" stroke="#c8a64b" stroke-width="1.5"/>
+  <text x="100" y="410" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 2</text>
+  <rect x="140" y="384" width="80" height="40" fill="#90caf9" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="180" y="410" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 6</text>
+
+  <!-- T3: item 3 (light green), item 7 (purple) -->
+  <rect x="60"  y="424" width="80" height="40" fill="#c8e6c9" stroke="#66bb6a" stroke-width="1.5"/>
+  <text x="100" y="450" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 3</text>
+  <rect x="140" y="424" width="80" height="40" fill="#ce93d8" stroke="#7b1fa2" stroke-width="1.5"/>
+  <text x="180" y="450" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">item 7</text>
+
+  <!-- Parallel time axis -->
+  <line x1="60" y1="480" x2="700" y2="480" stroke="#444" stroke-width="1.5"/>
+  <line x1="60" y1="476" x2="60" y2="484" stroke="#444" stroke-width="1.5"/>
+  <line x1="220" y1="476" x2="220" y2="484" stroke="#444" stroke-width="1.5"/>
+  <line x1="700" y1="476" x2="700" y2="484" stroke="#444" stroke-width="1.5"/>
+  <text x="60" y="498" text-anchor="middle" font-size="13" fill="#444"
+        font-family="ui-monospace, monospace">t = 0</text>
+  <text x="220" y="498" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">t = 2 x t</text>
+  <text x="700" y="498" text-anchor="middle" font-size="11" fill="#aaa"
+        font-family="ui-monospace, monospace">(would-be t = 8 x t)</text>
+
+  <text x="730" y="370" font-size="14" font-weight="700" fill="#2e7d32">
+    total = 2 x t
+  </text>
+  <text x="730" y="390" font-size="13" fill="#444">
+    (4x speedup)
+  </text>
+
+</svg>

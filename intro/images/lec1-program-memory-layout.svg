@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="up-arrow" viewBox="0 0 10 10" refX="5" refY="0"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 10 L 5 0 L 10 10 z" fill="#d97706"/>
+    </marker>
+    <marker id="down-arrow" viewBox="0 0 10 10" refX="5" refY="10"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 5 10 L 10 0 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="300" y="26" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    What a running program looks like in memory
+  </text>
+
+  <!-- ===== Address axis (left of the column) ===== -->
+  <text x="60" y="60" text-anchor="middle" font-size="12" font-weight="700" fill="#555">
+    high
+  </text>
+  <text x="60" y="76" text-anchor="middle" font-size="12" fill="#555">
+    addr
+  </text>
+
+  <text x="60" y="490" text-anchor="middle" font-size="12" font-weight="700" fill="#555">
+    low
+  </text>
+  <text x="60" y="506" text-anchor="middle" font-size="12" fill="#555">
+    addr
+  </text>
+
+  <!-- Vertical address-axis line with small arrow heads -->
+  <line x1="60" y1="85" x2="60" y2="475" stroke="#888" stroke-width="1.5"/>
+  <line x1="55" y1="92" x2="60" y2="85" stroke="#888" stroke-width="1.5"/>
+  <line x1="65" y1="92" x2="60" y2="85" stroke="#888" stroke-width="1.5"/>
+  <line x1="55" y1="468" x2="60" y2="475" stroke="#888" stroke-width="1.5"/>
+  <line x1="65" y1="468" x2="60" y2="475" stroke="#888" stroke-width="1.5"/>
+
+  <!-- ===== Address-space column (tall rectangle composed of bands) ===== -->
+  <!-- Column: x=100, width=320, y from 60 (top) to 480 (bottom) -->
+
+  <!-- Band 7 (top): Kernel space -->
+  <rect x="100" y="60" width="320" height="35" fill="#cfcfcf"
+        stroke="#666" stroke-width="1.2"/>
+  <text x="113" y="82" font-size="13" font-weight="700" fill="#333">
+    Kernel space
+  </text>
+  <text x="435" y="78" font-size="11" fill="#555" font-style="italic">
+    Off-limits to your program
+  </text>
+  <text x="435" y="92" font-size="11" fill="#555" font-style="italic">
+    (the OS lives here)
+  </text>
+
+  <!-- Band 6: Stack -->
+  <rect x="100" y="95" width="320" height="75" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="113" y="116" font-size="14" font-weight="700" fill="#1b5e20">
+    Stack
+  </text>
+  <text x="113" y="135" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    function frames push here,
+  </text>
+  <text x="113" y="150" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    pop on return
+  </text>
+
+  <!-- Stack down-arrow (inside band, on right side) -->
+  <line x1="380" y1="105" x2="380" y2="160" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#down-arrow)"/>
+  <text x="435" y="125" font-size="11" fill="#2e7d32" font-weight="700">stack grows</text>
+  <text x="435" y="139" font-size="11" fill="#2e7d32">toward lower</text>
+  <text x="435" y="153" font-size="11" fill="#2e7d32">addresses</text>
+
+  <!-- Band 5: Big empty middle -->
+  <rect x="100" y="170" width="320" height="135" fill="white"
+        stroke="#888" stroke-dasharray="5,4" stroke-width="1"/>
+  <text x="260" y="225" text-anchor="middle" font-size="13" fill="#888" font-style="italic">
+    unused virtual address space
+  </text>
+  <text x="260" y="252" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
+    the empty gap is the safety margin
+  </text>
+  <text x="260" y="268" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
+    if they ever meet, you've overflowed
+  </text>
+
+  <!-- Band 4: Heap -->
+  <rect x="100" y="305" width="320" height="70" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="113" y="326" font-size="14" font-weight="700" fill="#b45309">
+    Heap
+  </text>
+  <text x="113" y="346" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    malloc, Box::new, Vec::push
+  </text>
+  <text x="113" y="361" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    allocate here
+  </text>
+
+  <!-- Heap up-arrow (inside band, on right side) -->
+  <line x1="380" y1="365" x2="380" y2="315" stroke="#d97706" stroke-width="2"
+        marker-end="url(#up-arrow)"/>
+  <text x="435" y="328" font-size="11" fill="#d97706" font-weight="700">heap grows</text>
+  <text x="435" y="342" font-size="11" fill="#d97706">toward higher</text>
+  <text x="435" y="356" font-size="11" fill="#d97706">addresses</text>
+
+  <!-- Band 3: Uninitialized data / .bss -->
+  <rect x="100" y="375" width="320" height="32" fill="#bbdefb"
+        stroke="#1565c0" stroke-width="1.2"/>
+  <text x="113" y="395" font-size="13" font-weight="700" fill="#0d47a1">
+    .bss
+  </text>
+  <text x="180" y="395" font-size="11" fill="#333">
+    globals that start at zero
+  </text>
+
+  <!-- Band 2: Initialized data / .data -->
+  <rect x="100" y="407" width="320" height="32" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.2"/>
+  <text x="113" y="427" font-size="13" font-weight="700" fill="#0d47a1">
+    .data
+  </text>
+  <text x="180" y="427" font-size="11" fill="#333">
+    globals with starting values
+  </text>
+
+  <!-- Band 1 (bottom): Code / .text -->
+  <rect x="100" y="439" width="320" height="40" fill="#e0e0e0"
+        stroke="#555" stroke-width="1.2"/>
+  <text x="113" y="458" font-size="13" font-weight="700" fill="#333">
+    .text  (code)
+  </text>
+  <text x="113" y="473" font-size="11" fill="#333">
+    machine instructions (read-only, from the binary)
+  </text>
+
+  <!-- ===== Footer caption ===== -->
+  <text x="300" y="510" text-anchor="middle" font-size="13" fill="#333">
+    Every process gets this layout. The OS gives it a fresh virtual address space;
+  </text>
+  <text x="300" y="528" text-anchor="middle" font-size="13" fill="#333">
+    the hardware translates virtual addresses to real RAM behind the scenes.
+  </text>
+
+</svg>

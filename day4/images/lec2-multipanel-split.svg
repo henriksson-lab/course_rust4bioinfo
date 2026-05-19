@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Splitting a canvas
+  </text>
+  <text x="450" y="48" text-anchor="middle" font-size="13" fill="#666" font-style="italic">
+    one DrawingArea becomes many — one chart per cell
+  </text>
+
+  <!-- ============ Left: split_evenly((2, 2)) ============ -->
+  <text x="200" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#1976d2"
+        font-family="ui-monospace, monospace">
+    root.split_evenly((2, 2))
+  </text>
+
+  <!-- outer drawing area -->
+  <rect x="60" y="95" width="280" height="280" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+
+  <!-- 2x2 grid: 4 cells -->
+  <!-- cell 0: top-left -->
+  <rect x="70"  y="105" width="125" height="125" fill="white" stroke="#1976d2" stroke-width="1.4"/>
+  <text x="132" y="124" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">cell 0</text>
+  <line x1="80" y1="220" x2="185" y2="220" stroke="#444" stroke-width="0.8"/>
+  <line x1="80" y1="140" x2="80"  y2="220" stroke="#444" stroke-width="0.8"/>
+  <rect x="88"  y="195" width="10" height="25" fill="#1976d2" opacity="0.75"/>
+  <rect x="100" y="170" width="10" height="50" fill="#1976d2" opacity="0.75"/>
+  <rect x="112" y="155" width="10" height="65" fill="#1976d2" opacity="0.75"/>
+  <rect x="124" y="180" width="10" height="40" fill="#1976d2" opacity="0.75"/>
+  <rect x="136" y="200" width="10" height="20" fill="#1976d2" opacity="0.75"/>
+
+  <!-- cell 1: top-right -->
+  <rect x="205" y="105" width="125" height="125" fill="white" stroke="#1976d2" stroke-width="1.4"/>
+  <text x="267" y="124" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">cell 1</text>
+  <line x1="215" y1="220" x2="320" y2="220" stroke="#444" stroke-width="0.8"/>
+  <line x1="215" y1="140" x2="215" y2="220" stroke="#444" stroke-width="0.8"/>
+  <polyline points="218,210 235,180 252,165 270,150 290,160 310,140"
+            fill="none" stroke="#d97706" stroke-width="2"/>
+
+  <!-- cell 2: bottom-left -->
+  <rect x="70"  y="240" width="125" height="125" fill="white" stroke="#1976d2" stroke-width="1.4"/>
+  <text x="132" y="259" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">cell 2</text>
+  <line x1="80" y1="355" x2="185" y2="355" stroke="#444" stroke-width="0.8"/>
+  <line x1="80" y1="275" x2="80"  y2="355" stroke="#444" stroke-width="0.8"/>
+  <circle cx="95"  cy="335" r="3" fill="#2e7d32"/>
+  <circle cx="110" cy="320" r="3" fill="#2e7d32"/>
+  <circle cx="125" cy="305" r="3" fill="#2e7d32"/>
+  <circle cx="140" cy="295" r="3" fill="#2e7d32"/>
+  <circle cx="155" cy="285" r="3" fill="#2e7d32"/>
+  <circle cx="170" cy="278" r="3" fill="#2e7d32"/>
+
+  <!-- cell 3: bottom-right -->
+  <rect x="205" y="240" width="125" height="125" fill="white" stroke="#1976d2" stroke-width="1.4"/>
+  <text x="267" y="259" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">cell 3</text>
+  <line x1="215" y1="355" x2="320" y2="355" stroke="#444" stroke-width="0.8"/>
+  <line x1="215" y1="275" x2="215" y2="355" stroke="#444" stroke-width="0.8"/>
+  <polyline points="218,340 235,325 252,310 270,295 290,280 310,275"
+            fill="none" stroke="#1976d2" stroke-width="2"/>
+  <polyline points="218,300 235,310 252,320 270,330 290,340 310,348"
+            fill="none" stroke="#d97706" stroke-width="2"/>
+
+  <!-- code below left figure -->
+  <rect x="40" y="390" width="320" height="80" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#222">
+    <text x="50" y="412">let cells = root.split_evenly((2, 2));</text>
+    <text x="50" y="430">for cell in cells.iter() {</text>
+    <text x="50" y="448">    let mut chart = ChartBuilder::on(cell)</text>
+    <text x="50" y="464">        .build_cartesian_2d(...)?;</text>
+  </g>
+
+  <!-- ============ Right: split_horizontally(...) ============ -->
+  <text x="660" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706"
+        font-family="ui-monospace, monospace">
+    root.split_horizontally(280)
+  </text>
+
+  <!-- outer drawing area -->
+  <rect x="420" y="95" width="480" height="280" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+
+  <!-- left cell -->
+  <rect x="430" y="105" width="270" height="260" fill="white" stroke="#d97706" stroke-width="1.4"/>
+  <text x="565" y="124" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">left</text>
+  <line x1="445" y1="350" x2="690" y2="350" stroke="#444" stroke-width="0.8"/>
+  <line x1="445" y1="140" x2="445" y2="350" stroke="#444" stroke-width="0.8"/>
+  <rect x="455"  y="280" width="22" height="70" fill="#d97706" opacity="0.75"/>
+  <rect x="481"  y="240" width="22" height="110" fill="#d97706" opacity="0.75"/>
+  <rect x="507"  y="200" width="22" height="150" fill="#d97706" opacity="0.75"/>
+  <rect x="533"  y="170" width="22" height="180" fill="#d97706" opacity="0.75"/>
+  <rect x="559"  y="200" width="22" height="150" fill="#d97706" opacity="0.75"/>
+  <rect x="585"  y="240" width="22" height="110" fill="#d97706" opacity="0.75"/>
+  <rect x="611"  y="280" width="22" height="70" fill="#d97706" opacity="0.75"/>
+  <rect x="637"  y="310" width="22" height="40" fill="#d97706" opacity="0.75"/>
+  <rect x="663"  y="335" width="22" height="15" fill="#d97706" opacity="0.75"/>
+
+  <!-- right cell (narrower, margin plot) -->
+  <rect x="710" y="105" width="180" height="260" fill="white" stroke="#d97706" stroke-width="1.4"/>
+  <text x="800" y="124" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">right</text>
+  <line x1="725" y1="350" x2="875" y2="350" stroke="#444" stroke-width="0.8"/>
+  <line x1="725" y1="140" x2="725" y2="350" stroke="#444" stroke-width="0.8"/>
+  <polyline points="730,340 750,320 770,300 790,275 810,250 830,220 850,180 870,150"
+            fill="none" stroke="#1976d2" stroke-width="2.2"/>
+
+  <!-- code below right figure -->
+  <rect x="420" y="390" width="480" height="80" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#222">
+    <text x="430" y="412">let (left, right) = root.split_horizontally(280);</text>
+    <text x="430" y="430">// each side is itself a DrawingArea</text>
+    <text x="430" y="448">ChartBuilder::on(&amp;left) ...   // main panel</text>
+    <text x="430" y="464">ChartBuilder::on(&amp;right) ...  // margin panel</text>
+  </g>
+
+</svg>

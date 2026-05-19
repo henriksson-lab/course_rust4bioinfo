@@ -94,7 +94,7 @@ Numbers vary by hardware, by k, by how much of your hot loop is in NumPy versus 
 
 ## The performance gap — visualised
 
-![Wall-clock for k-mer counting (k = 21, 10 Mb genome) across four implementations, on a log time axis. Rust `--release` is the highlighted headline number; Rust + rayon on 8 cores is the green floor. Each bar is annotated with its wall-clock value.](images/lec1-perf-bars.svg){#fig-perf-bars fig-alt="Horizontal bar chart with a log-scale wall-clock axis from 0.1 s to 100 s. Four bars from top to bottom: CPython 3.12 at 44 seconds (grey), PyPy 3.10 at 7 seconds (grey), Rust release at 0.8 seconds (highlighted yellow with orange border), Rust plus rayon on 8 cores at 0.1 seconds (green). Tick labels at 0.1, 1, 10, 100 seconds. Footer notes speedups versus CPython of roughly 1x, 6x, 55x, 440x."}
+![Rust --release is ~50x CPython; rayon adds another ~8x.](images/lec1-perf-bars.svg){#fig-perf-bars fig-alt="Horizontal bar chart with a log-scale wall-clock axis from 0.1 s to 100 s. Four bars from top to bottom: CPython 3.12 at 44 seconds (grey), PyPy 3.10 at 7 seconds (grey), Rust release at 0.8 seconds (highlighted yellow with orange border), Rust plus rayon on 8 cores at 0.1 seconds (green). Tick labels at 0.1, 1, 10, 100 seconds. Footer notes speedups versus CPython of roughly 1x, 6x, 55x, 440x. Wall-clock for k-mer counting at k=21 on a 10 Mb genome, across four implementations."}
 
 ## Why this matters in bioinformatics
 

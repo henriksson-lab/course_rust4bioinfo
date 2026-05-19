@@ -102,7 +102,7 @@
 
   <!-- footer note -->
   <text x="360" y="410" text-anchor="middle" font-size="13" fill="#777">
-    Switching .iter() to .par_iter() — observed bars sit below ideal because of thread-pool overhead and Amdahl's law.
+    Switching .iter() to .par_iter() — bars fall below ideal due to overhead and Amdahl's law.
   </text>
 
 </svg>

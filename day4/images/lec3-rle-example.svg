@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 530"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green-rle" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Run-length encoding (RLE)
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="14" fill="#666">
+    write the count, then the byte
+  </text>
+
+  <!-- Input row -->
+  <text x="60" y="100" font-size="15" font-weight="600" fill="#444">Input (26 bytes):</text>
+  <g font-family="ui-monospace, monospace" font-size="18" fill="#0d47a1">
+    <text x="60" y="130" letter-spacing="3">A A A A A A A A C C C C C G G G G G G G G G G T T T</text>
+  </g>
+
+  <!-- Brackets / run markers -->
+  <g stroke="#888" stroke-width="1.2" fill="none">
+    <path d="M 60 145 L 60 152 L 207 152 L 207 145"/>
+    <path d="M 220 145 L 220 152 L 312 152 L 312 145"/>
+    <path d="M 325 145 L 325 152 L 510 152 L 510 145"/>
+    <path d="M 523 145 L 523 152 L 580 152 L 580 145"/>
+  </g>
+  <g font-size="12" fill="#666" font-style="italic">
+    <text x="133" y="170" text-anchor="middle">8 A</text>
+    <text x="266" y="170" text-anchor="middle">5 C</text>
+    <text x="417" y="170" text-anchor="middle">10 G</text>
+    <text x="551" y="170" text-anchor="middle">3 T</text>
+  </g>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="185" x2="450" y2="215" stroke="#2e7d32"
+        stroke-width="2" marker-end="url(#arr-green-rle)"/>
+  <text x="465" y="205" font-size="13" fill="#2e7d32" font-style="italic">encode</text>
+
+  <!-- Output row -->
+  <text x="60" y="245" font-size="15" font-weight="600" fill="#444">Output (8 bytes):</text>
+  <g font-family="ui-monospace, monospace" font-size="20" fill="#1b5e20">
+    <text x="60" y="280" letter-spacing="6">8 A   5 C   1 0 G   3 T</text>
+  </g>
+  <text x="60" y="305" font-size="13" fill="#666" font-style="italic">
+    26 bytes -> 8 bytes. About 3.2x smaller.
+  </text>
+
+  <!-- Mapping table -->
+  <rect x="500" y="100" width="350" height="195" rx="6" ry="6"
+        fill="#f5f5f5" stroke="#aaa" stroke-width="1"/>
+  <text x="675" y="122" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    Run -> token
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#333">
+    <text x="520" y="148">AAAAAAAA</text>
+    <text x="660" y="148">-></text>
+    <text x="700" y="148" fill="#1b5e20" font-weight="700">8A</text>
+
+    <text x="520" y="174">CCCCC</text>
+    <text x="660" y="174">-></text>
+    <text x="700" y="174" fill="#1b5e20" font-weight="700">5C</text>
+
+    <text x="520" y="200">GGGGGGGGGG</text>
+    <text x="660" y="200">-></text>
+    <text x="700" y="200" fill="#1b5e20" font-weight="700">10G</text>
+
+    <text x="520" y="226">TTT</text>
+    <text x="660" y="226">-></text>
+    <text x="700" y="226" fill="#1b5e20" font-weight="700">3T</text>
+  </g>
+  <text x="520" y="265" font-size="12" fill="#444" font-style="italic">Decoder reads "8A" and writes</text>
+  <text x="520" y="282" font-size="12" fill="#444" font-style="italic">eight A's. Exact reverse.</text>
+
+  <!-- Lossless callout -->
+  <rect x="60" y="335" width="790" height="50" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="455" y="357" text-anchor="middle" font-size="14" fill="#1b5e20" font-weight="600">
+    Lossless: encode then decode gives back exactly the original bytes.
+  </text>
+  <text x="455" y="375" text-anchor="middle" font-size="12" fill="#2e7d32" font-style="italic">
+    No A becomes a C. No length changes. This property is non-negotiable for DNA.
+  </text>
+
+  <!-- Warning footer -->
+  <rect x="60" y="410" width="790" height="80" rx="6" ry="6"
+        fill="#fff3cd" stroke="#c62828" stroke-width="1.2"/>
+  <text x="455" y="434" text-anchor="middle" font-size="14" fill="#7a1010" font-weight="600">
+    RLE only helps when there are runs.
+  </text>
+  <text x="455" y="456" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#333">
+    ACGTACGTACGT  -&gt;  1A 1C 1G 1T 1A 1C 1G 1T 1A 1C 1G 1T
+  </text>
+  <text x="455" y="478" text-anchor="middle" font-size="12" fill="#7a1010" font-style="italic">
+    Random DNA: 12 bytes in, 24 bytes out. RLE made it worse. Use DEFLATE.
+  </text>
+</svg>

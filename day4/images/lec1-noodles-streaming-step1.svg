@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-s1-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-s1-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Streaming records, step 1 of 3
+  </text>
+
+  <!-- ===== File on disk (top horizontal strip) ===== -->
+  <text x="50" y="68" font-size="13" font-weight="700" fill="#555">file on disk</text>
+  <rect x="50" y="78" width="800" height="60" rx="4" ry="4"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+
+  <!-- 6 record blocks evenly spaced -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#333">
+    <!-- record 1 -->
+    <rect x="60" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="65" y="98">@r1</text>
+    <text x="65" y="110">ACGTACGT</text>
+    <text x="65" y="122">+</text>
+    <text x="120" y="98">qual</text>
+    <!-- record 2 -->
+    <rect x="190" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="195" y="98">@r2</text>
+    <text x="195" y="110">TTGCAATG</text>
+    <text x="195" y="122">+</text>
+    <text x="250" y="98">qual</text>
+    <!-- record 3 -->
+    <rect x="320" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="325" y="98">@r3</text>
+    <text x="325" y="110">GGCATATG</text>
+    <text x="325" y="122">+</text>
+    <text x="380" y="98">qual</text>
+    <!-- record 4 -->
+    <rect x="450" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="455" y="98">@r4</text>
+    <text x="455" y="110">CGTACGTA</text>
+    <text x="455" y="122">+</text>
+    <text x="510" y="98">qual</text>
+    <!-- record 5 -->
+    <rect x="580" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="585" y="98">@r5</text>
+    <text x="585" y="110">AATGGCTA</text>
+    <text x="585" y="122">+</text>
+    <text x="640" y="98">qual</text>
+    <!-- record 6 -->
+    <rect x="710" y="84" width="120" height="48" fill="white" stroke="#aaa"/>
+    <text x="715" y="98">@r6</text>
+    <text x="715" y="110">TATGCAAT</text>
+    <text x="715" y="122">+</text>
+    <text x="770" y="98">qual</text>
+  </g>
+
+  <!-- ===== BufReader 64 KB buffer band (empty in step 1) ===== -->
+  <text x="50" y="178" font-size="13" font-weight="700" fill="#d97706">
+    BufReader 64 KB buffer
+  </text>
+  <rect x="50" y="188" width="800" height="50" rx="4" ry="4"
+        fill="white" stroke="#d97706" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <text x="450" y="218" text-anchor="middle" font-size="13" fill="#888" font-style="italic">
+    (empty)
+  </text>
+
+  <!-- ===== your code box ===== -->
+  <rect x="50" y="270" width="800" height="80" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="450" y="298" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    for record in reader.records() { ... }
+  </text>
+  <text x="450" y="320" text-anchor="middle" font-size="12" fill="#385a3c" font-style="italic">
+    has not started iterating yet
+  </text>
+  <text x="450" y="340" text-anchor="middle" font-size="12" fill="#888">
+    (no record in flight)
+  </text>
+
+  <!-- ===== Caption ===== -->
+  <rect x="50" y="375" width="800" height="55" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="400" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a07">
+    Step 1: file opened. Buffer empty.
+  </text>
+  <text x="450" y="420" text-anchor="middle" font-size="12" fill="#555">
+    Nothing has been read yet. The reader is sitting at byte 0.
+  </text>
+
+</svg>

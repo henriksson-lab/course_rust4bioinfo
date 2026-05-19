@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="cpy-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="cpy-arrow-sm" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Same value, very different memory: C vs Python
+  </text>
+
+  <!-- Column divider (subtle) -->
+  <line x1="450" y1="50" x2="450" y2="370" stroke="#ddd" stroke-width="1"/>
+
+  <!-- ===== Column headers (code lines) ===== -->
+  <text x="225" y="60" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    C:  int x = 42;
+  </text>
+  <text x="675" y="60" text-anchor="middle" font-size="16" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    Python:  x = 42
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- Left column: C                                                -->
+  <!-- ============================================================ -->
+
+  <!-- Region label -->
+  <text x="225" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#1565c0">
+    Stack
+  </text>
+
+  <!-- Stack region tinted -->
+  <rect x="60" y="96" width="330" height="110" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+
+  <!-- Single 4-byte cell labeled x containing 42 -->
+  <rect x="135" y="118" width="180" height="70" fill="white"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="148" y="142" font-size="14" font-family="ui-monospace, monospace" fill="#555">
+    x =
+  </text>
+  <text x="300" y="170" text-anchor="end" font-size="32" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">
+    42
+  </text>
+  <text x="225" y="200" text-anchor="middle" font-size="11" fill="#888"
+        font-family="ui-monospace, monospace">
+    (4 bytes)
+  </text>
+
+  <!-- Annotation: 4 bytes total -->
+  <text x="225" y="240" text-anchor="middle" font-size="18" font-weight="700" fill="#2e7d32">
+    4 bytes total
+  </text>
+
+  <text x="225" y="262" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    the value sits on the stack;
+  </text>
+  <text x="225" y="278" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    no heap, no metadata
+  </text>
+
+  <!-- Comparison helper -->
+  <rect x="60" y="300" width="330" height="60" fill="#f5f5f5"
+        stroke="#888" stroke-width="1" rx="3"/>
+  <text x="225" y="322" text-anchor="middle" font-size="12" font-weight="700" fill="#333">
+    100 of these in a row = 400 bytes
+  </text>
+  <text x="225" y="340" text-anchor="middle" font-size="12" fill="#555">
+    contiguous (fits in L1 cache)
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- Right column: Python                                         -->
+  <!-- ============================================================ -->
+
+  <!-- Region labels -->
+  <text x="540" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#1565c0">
+    Stack
+  </text>
+  <text x="760" y="86" text-anchor="middle" font-size="13" font-weight="600" fill="#d97706">
+    Heap
+  </text>
+
+  <!-- Stack box: x with pointer -->
+  <rect x="475" y="100" width="130" height="44" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="490" y="129" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    x
+  </text>
+  <circle cx="582" cy="122" r="5" fill="#1565c0"/>
+
+  <!-- Heap region tinted -->
+  <rect x="650" y="96" width="220" height="170" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+
+  <!-- PyLongObject box -->
+  <rect x="662" y="110" width="195" height="145" fill="white"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="671" y="129" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    PyLongObject
+  </text>
+  <line x1="662" y1="136" x2="857" y2="136" stroke="#d97706"
+        stroke-width="0.6" stroke-dasharray="3,2"/>
+
+  <!-- refcount row -->
+  <text x="671" y="158" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    refcount: 1
+  </text>
+
+  <!-- ob_type row with arrow -->
+  <text x="671" y="184" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    ob_type:
+  </text>
+  <circle cx="755" cy="180" r="4" fill="#888"/>
+  <line x1="759" y1="180" x2="848" y2="180" stroke="#888" stroke-width="1.5"
+        marker-end="url(#cpy-arrow-sm)"/>
+  <text x="775" y="200" font-size="10" font-family="ui-monospace, monospace" fill="#888" font-style="italic">
+    int
+  </text>
+
+  <!-- value row -->
+  <text x="671" y="234" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    value:
+  </text>
+  <text x="850" y="237" text-anchor="end" font-size="22" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">
+    42
+  </text>
+
+  <!-- Separate PyType_int box, drawn off to the right -->
+  <rect x="700" y="280" width="120" height="32" fill="white"
+        stroke="#d97706" stroke-width="1"/>
+  <text x="760" y="301" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    PyType_int
+  </text>
+
+  <!-- Connector from ob_type arrow to PyType_int (visual hint) -->
+  <line x1="848" y1="184" x2="820" y2="280" stroke="#888" stroke-width="1"
+        stroke-dasharray="3,3"/>
+
+  <!-- Arrow from stack x to heap box -->
+  <line x1="588" y1="122" x2="658" y2="160"
+        stroke="#1565c0" stroke-width="2" marker-end="url(#cpy-arrow)"/>
+
+  <!-- Annotation: ~36 bytes -->
+  <text x="675" y="340" text-anchor="middle" font-size="15" font-weight="700" fill="#d97706">
+    ~28 bytes/integer + 8 byte pointer = ~36 bytes
+  </text>
+
+  <text x="675" y="362" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    every integer is a heap allocation with bookkeeping
+  </text>
+
+  <!-- Comparison helper (right) -->
+  <rect x="475" y="300" width="395" height="0" fill="none"/>
+
+  <!-- ============================================================ -->
+  <!-- Bottom callout (full width)                                  -->
+  <!-- ============================================================ -->
+  <rect x="30" y="390" width="840" height="100" fill="#f5f5f5"
+        stroke="#888" stroke-width="1.2" rx="4"/>
+
+  <!-- Comparison-helper line for Python (inside bottom callout, top) -->
+  <text x="450" y="412" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    Same conceptual value. ~9x the memory in Python, plus pointer chasing.
+  </text>
+
+  <text x="450" y="440" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    100 Python ints = ~3600 bytes, scattered across the heap (cache-hostile).
+    This is the cost of dynamic typing and automatic garbage collection.
+  </text>
+  <text x="450" y="458" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    For a few scalars, it's free. For millions of bases or k-mers, it dominates.
+  </text>
+  <text x="450" y="480" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    Rust gives you C's directness with safety. That's what the rest of the course is about.
+  </text>
+
+</svg>

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="cc-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    A multi-core CPU die
+  </text>
+
+  <!-- CPU package outer rounded rectangle -->
+  <rect x="30" y="50" width="560" height="320" rx="14" ry="14"
+        fill="#fafafa" stroke="#333" stroke-width="2"/>
+  <text x="310" y="74" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    CPU package
+  </text>
+
+  <!-- 2 rows x 4 cols of cores. Each core 120x70, gap 12 -->
+  <!-- Row 1: y=90 -->
+  <g>
+    <rect x="50"  y="90" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="110" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 0</text>
+    <text x="110" y="142" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="182" y="90" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="242" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 1</text>
+    <text x="242" y="142" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="314" y="90" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="374" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 2</text>
+    <text x="374" y="142" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="446" y="90" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="506" y="120" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 3</text>
+    <text x="506" y="142" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+
+  <!-- Row 2: y=174 -->
+  <g>
+    <rect x="50"  y="174" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="110" y="204" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 4</text>
+    <text x="110" y="226" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="182" y="174" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="242" y="204" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 5</text>
+    <text x="242" y="226" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="314" y="174" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="374" y="204" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 6</text>
+    <text x="374" y="226" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+  <g>
+    <rect x="446" y="174" width="120" height="70" rx="4" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="506" y="204" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">Core 7</text>
+    <text x="506" y="226" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">ALU + L1/L2</text>
+  </g>
+
+  <!-- L3 cache band -->
+  <rect x="50" y="260" width="516" height="50" rx="4" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5"/>
+  <text x="308" y="282" text-anchor="middle" font-size="14" font-weight="700" fill="#b45309">
+    L3 cache
+  </text>
+  <text x="308" y="300" text-anchor="middle" font-size="12" fill="#b45309">
+    shared across all cores
+  </text>
+
+  <!-- Arrow leaving chip to RAM -->
+  <line x1="308" y1="320" x2="308" y2="395"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#cc-arrow)"/>
+  <text x="320" y="345" font-size="14" font-weight="600" fill="#1565c0" font-style="italic">
+    to RAM
+  </text>
+
+  <!-- Right side annotations -->
+  <text x="620" y="100" font-size="15" font-weight="700" fill="#333">Typical core counts</text>
+  <line x1="620" y1="108" x2="880" y2="108" stroke="#888" stroke-width="1"/>
+
+  <text x="620" y="142" font-size="16" fill="#333">Laptop:</text>
+  <text x="620" y="162" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#1565c0">
+    4 - 12 cores
+  </text>
+
+  <text x="620" y="200" font-size="16" fill="#333">Workstation:</text>
+  <text x="620" y="220" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#2e7d32">
+    12 - 32 cores
+  </text>
+
+  <text x="620" y="258" font-size="16" fill="#333">Server:</text>
+  <text x="620" y="278" font-size="16" font-weight="700" font-family="ui-monospace, monospace" fill="#d97706">
+    32 - 128 cores
+  </text>
+
+  <!-- Footer -->
+  <text x="450" y="430" text-anchor="middle" font-size="16" fill="#333" font-style="italic">
+    rayon spreads independent work across all of them - one line of code change.
+  </text>
+
+</svg>

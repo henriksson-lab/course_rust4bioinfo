@@ -44,6 +44,7 @@ website:
             href: authors.md
       - section: "Before you start"
         contents:
+          - intro/lec1-how-computers-work.qmd
           - intro/install.qmd
           - intro/install-sqlite.qmd
       - section: "Day 1 — toolchain & syntax"
@@ -67,7 +68,9 @@ website:
       - section: "Day 3 — structs, enums, recursion"
         contents:
           - day3/00-concepts.qmd
-          - day3/lec1-structs-enums-recursion.qmd
+          - day3/lec1-structs-enums.qmd
+          - day3/lec2-recursion-and-trees.qmd
+          - day3/lec3-dynamic-programming.qmd
           - day3/01-genomic-interval.qmd
           - day3/02-parse-region.qmd
           - day3/03-codon-table.qmd
@@ -78,6 +81,8 @@ website:
         contents:
           - day4/00-concepts.qmd
           - day4/lec1-io-and-crates.qmd
+          - day4/lec2-plotting.qmd
+          - day4/lec3-archives.qmd
           - day4/01-bed-parse.qmd
           - day4/02-fasta-stats.qmd
           - day4/03-fastq-filter.qmd

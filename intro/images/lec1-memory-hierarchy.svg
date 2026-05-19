@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="mh-arrow-up" viewBox="0 0 10 10" refX="5" refY="0"
+            markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 10 L 5 0 L 10 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="mh-arrow-down" viewBox="0 0 10 10" refX="5" refY="10"
+            markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 0 L 5 10 L 10 0 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    The memory hierarchy &#8212; eight levels, eight orders of magnitude
+  </text>
+
+  <!-- ============================================================
+       Pyramid: 8 horizontal layers, top to bottom.
+       Centred at x = 430. Width grows linearly with depth.
+       Top layer (Registers):   width 160, x = 350
+       Bottom layer (Network):  width 620, x = 120
+       Per-layer step: width grows by (620-160)/7 = ~65.7 per layer
+       Each layer height = 40, y starts at 60 (top), step 42
+   ============================================================ -->
+
+  <!-- Layer 1: Registers (top, smallest, darkest green) -->
+  <rect x="350" y="60" width="160" height="40" fill="#1b5e20" stroke="#0d3d10" stroke-width="1"/>
+  <text x="345" y="86" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">Registers</text>
+  <text x="430" y="86" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">~16 &#215; 64 bits</text>
+  <text x="515" y="86" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">0.3 ns</text>
+  <text x="515" y="100" font-size="11" font-style="italic" fill="#555">
+    directly in CPU
+  </text>
+
+  <!-- Layer 2: L1 cache -->
+  <rect x="317" y="102" width="226" height="40" fill="#2e7d32" stroke="#0d3d10" stroke-width="1"/>
+  <text x="312" y="128" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">L1 cache</text>
+  <text x="430" y="128" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">32 KB per core</text>
+  <text x="548" y="128" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">1 ns</text>
+  <text x="548" y="142" font-size="11" font-style="italic" fill="#555">
+    on-die
+  </text>
+
+  <!-- Layer 3: L2 cache -->
+  <rect x="284" y="144" width="292" height="40" fill="#558b2f" stroke="#33691e" stroke-width="1"/>
+  <text x="279" y="170" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">L2 cache</text>
+  <text x="430" y="170" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">256 KB per core</text>
+  <text x="581" y="170" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#33691e">3 ns</text>
+
+  <!-- Layer 4: L3 cache -->
+  <rect x="251" y="186" width="358" height="40" fill="#9e9d24" stroke="#827717" stroke-width="1"/>
+  <text x="246" y="212" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#827717">L3 cache</text>
+  <text x="430" y="212" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">8 MB shared</text>
+  <text x="614" y="212" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#827717">10 ns</text>
+
+  <!-- Layer 5: RAM -->
+  <rect x="218" y="228" width="424" height="40" fill="#f9a825" stroke="#b45309" stroke-width="1"/>
+  <text x="213" y="254" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">RAM (DDR4/5)</text>
+  <text x="430" y="254" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">16 GB</text>
+  <text x="647" y="254" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">100 ns</text>
+
+  <!-- Layer 6: NVMe SSD -->
+  <rect x="185" y="270" width="490" height="40" fill="#ef6c00" stroke="#b45309" stroke-width="1"/>
+  <text x="180" y="296" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">NVMe SSD</text>
+  <text x="430" y="296" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">1 TB</text>
+  <text x="680" y="296" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">100 &#181;s</text>
+  <text x="680" y="310" font-size="10" font-style="italic" fill="#888">
+    (100,000 ns)
+  </text>
+
+  <!-- Layer 7: HDD -->
+  <rect x="152" y="312" width="556" height="40" fill="#d84315" stroke="#a52a13" stroke-width="1"/>
+  <text x="147" y="338" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#a52a13">HDD (spinning)</text>
+  <text x="430" y="338" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">4 TB</text>
+  <text x="713" y="338" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#a52a13">10 ms</text>
+  <text x="713" y="352" font-size="10" font-style="italic" fill="#888">
+    (10,000,000 ns)
+  </text>
+
+  <!-- Layer 8: Network -->
+  <rect x="120" y="354" width="620" height="40" fill="#b71c1c" stroke="#7f0000" stroke-width="1"/>
+  <text x="115" y="380" text-anchor="end" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b71c1c">Network (LAN/cloud)</text>
+  <text x="430" y="380" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">basically unlimited</text>
+  <text x="745" y="380" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b71c1c">0.5&#8211;100 ms</text>
+
+  <!-- ============================================================
+       Side arrows: faster/smaller (up), bigger/slower (down)
+   ============================================================ -->
+
+  <!-- Up arrow: faster, smaller (green, on the far right) -->
+  <line x1="830" y1="380" x2="830" y2="70"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#mh-arrow-up)"/>
+  <text x="852" y="225" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32"
+        transform="rotate(-90 852 225)">
+    faster, smaller
+  </text>
+
+  <!-- Down arrow: bigger, slower (red, on the far left) -->
+  <line x1="50" y1="70" x2="50" y2="380"
+        stroke="#c62828" stroke-width="2.5" marker-end="url(#mh-arrow-down)"/>
+  <text x="28" y="180" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828"
+        transform="rotate(-90 28 180)">
+    bigger, slower
+  </text>
+  <text x="46" y="275" text-anchor="middle" font-size="10" font-style="italic" fill="#888"
+        transform="rotate(-90 46 275)">
+    (and slower in absolute terms &#8212;
+  </text>
+  <text x="62" y="275" text-anchor="middle" font-size="10" font-style="italic" fill="#888"
+        transform="rotate(-90 62 275)">
+    read the next slide)
+  </text>
+
+  <!-- ============================================================
+       Footer caption
+   ============================================================ -->
+  <rect x="40" y="425" width="820" height="90" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.5" rx="4"/>
+  <text x="450" y="456" text-anchor="middle" font-size="16" font-weight="700" fill="#1b5e20">
+    Each level is a compromise between size, speed, and cost.
+  </text>
+  <text x="450" y="482" text-anchor="middle" font-size="15" fill="#1b5e20">
+    Software that respects this hierarchy is fast;
+  </text>
+  <text x="450" y="502" text-anchor="middle" font-size="15" fill="#1b5e20">
+    software that ignores it isn't.
+  </text>
+
+</svg>

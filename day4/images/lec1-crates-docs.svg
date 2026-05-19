@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-cd-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Two sites you will live on: crates.io and docs.rs
+  </text>
+
+  <!-- ===== LEFT panel: crates.io (orange) ===== -->
+  <rect x="30" y="65" width="380" height="380" rx="10" ry="10"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+
+  <!-- browser-style title bar -->
+  <rect x="30" y="65" width="380" height="28" rx="10" ry="10" fill="#ffe0b2"/>
+  <rect x="30" y="83" width="380" height="10" fill="#ffe0b2"/>
+  <circle cx="48" cy="79" r="4" fill="#ff5f56"/>
+  <circle cx="62" cy="79" r="4" fill="#ffbd2e"/>
+  <circle cx="76" cy="79" r="4" fill="#27c93f"/>
+  <text x="220" y="84" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    crates.io/crates/noodles-fasta
+  </text>
+
+  <!-- package title -->
+  <text x="55" y="130" font-size="20" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    noodles-fasta
+  </text>
+
+  <!-- version badge -->
+  <rect x="55" y="148" width="80" height="24" rx="4" ry="4"
+        fill="#d97706"/>
+  <text x="95" y="166" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="white">
+    0.40.0
+  </text>
+
+  <!-- downloads -->
+  <text x="150" y="166" font-size="12" fill="#555" font-style="italic">
+    ~12M downloads
+  </text>
+
+  <!-- short description -->
+  <text x="55" y="200" font-size="14" fill="#333">
+    FASTA format reader and writer
+  </text>
+  <text x="55" y="220" font-size="14" fill="#333">
+    for the noodles ecosystem.
+  </text>
+
+  <!-- divider -->
+  <line x1="55" y1="240" x2="385" y2="240" stroke="#d97706" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- metadata block -->
+  <g font-size="12" fill="#444">
+    <text x="55" y="262"><tspan font-weight="700">License:</tspan> MIT</text>
+    <text x="55" y="282"><tspan font-weight="700">Repository:</tspan> github.com/zaeleus/noodles</text>
+    <text x="55" y="302"><tspan font-weight="700">Latest release:</tspan> 3 weeks ago</text>
+  </g>
+
+  <!-- Documentation link button -->
+  <rect x="55" y="330" width="190" height="40" rx="6" ry="6"
+        fill="white" stroke="#1565c0" stroke-width="2"/>
+  <text x="150" y="356" text-anchor="middle" font-size="14" font-weight="700"
+        fill="#1565c0">
+    Documentation -&gt;
+  </text>
+
+  <!-- caption -->
+  <text x="220" y="410" text-anchor="middle" font-size="11" fill="#7a4a09" font-style="italic">
+    "What versions exist? Who depends on this?
+  </text>
+  <text x="220" y="426" text-anchor="middle" font-size="11" fill="#7a4a09" font-style="italic">
+    Is it still maintained?"
+  </text>
+
+  <!-- ===== Curved arrow from doc link to right panel ===== -->
+  <path d="M 250 350 C 380 350, 380 240, 500 240"
+        fill="none" stroke="#1565c0" stroke-width="2.5"
+        marker-end="url(#arrow-cd-dark)"/>
+  <text x="370" y="305" font-size="12" font-weight="600" fill="#1565c0" font-style="italic">
+    docs link
+  </text>
+
+  <!-- ===== RIGHT panel: docs.rs (blue) ===== -->
+  <rect x="490" y="65" width="380" height="380" rx="10" ry="10"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+
+  <!-- browser-style title bar -->
+  <rect x="490" y="65" width="380" height="28" rx="10" ry="10" fill="#bbdefb"/>
+  <rect x="490" y="83" width="380" height="10" fill="#bbdefb"/>
+  <circle cx="508" cy="79" r="4" fill="#ff5f56"/>
+  <circle cx="522" cy="79" r="4" fill="#ffbd2e"/>
+  <circle cx="536" cy="79" r="4" fill="#27c93f"/>
+  <text x="680" y="84" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    docs.rs/noodles-fasta/0.40.0
+  </text>
+
+  <!-- module name -->
+  <text x="515" y="130" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    Crate noodles_fasta
+  </text>
+
+  <!-- sidebar -->
+  <rect x="515" y="150" width="100" height="220" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1"/>
+  <g font-size="12" fill="#1565c0">
+    <text x="525" y="172" font-weight="700">Modules</text>
+    <text x="535" y="190">io</text>
+    <text x="535" y="206">record</text>
+    <text x="535" y="222">repository</text>
+  </g>
+  <line x1="525" y1="232" x2="605" y2="232" stroke="#1565c0" stroke-width="0.8"/>
+  <g font-size="12" fill="#1565c0">
+    <text x="525" y="250" font-weight="700">Structs</text>
+    <text x="535" y="268">Reader</text>
+    <text x="535" y="284">Writer</text>
+    <text x="535" y="300">Record</text>
+  </g>
+  <line x1="525" y1="310" x2="605" y2="310" stroke="#1565c0" stroke-width="0.8"/>
+  <g font-size="12" fill="#1565c0">
+    <text x="525" y="328" font-weight="700">Functions</text>
+    <text x="535" y="346">read</text>
+    <text x="535" y="362">write</text>
+  </g>
+
+  <!-- code example -->
+  <rect x="625" y="150" width="230" height="160" rx="4" ry="4"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <text x="635" y="170" font-size="11" font-weight="700" fill="#1565c0">
+    Examples
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#333">
+    <text x="635" y="190">use noodles_fasta as fasta;</text>
+    <text x="635" y="208">use std::fs::File;</text>
+    <text x="635" y="226">use std::io::BufReader;</text>
+    <text x="635" y="248">let mut r = fasta::Reader</text>
+    <text x="635" y="262">    ::new(BufReader::new(</text>
+    <text x="635" y="276">      File::open("x.fa")?));</text>
+    <text x="635" y="294">for rec in r.records() {</text>
+  </g>
+
+  <!-- function signature panel -->
+  <rect x="625" y="324" width="230" height="46" rx="4" ry="4"
+        fill="white" stroke="#1565c0" stroke-width="1"/>
+  <text x="635" y="342" font-size="11" font-weight="700" fill="#0d47a1">
+    fn Reader::records(&amp;mut self)
+  </text>
+  <text x="635" y="358" font-size="11"
+        font-family="ui-monospace, monospace" fill="#444">
+    -&gt; Records&lt;'_, R&gt;
+  </text>
+
+  <!-- caption -->
+  <text x="680" y="410" text-anchor="middle" font-size="11" fill="#1565c0" font-style="italic">
+    "How do I actually use this?
+  </text>
+  <text x="680" y="426" text-anchor="middle" font-size="11" fill="#1565c0" font-style="italic">
+    What types and functions exist?"
+  </text>
+
+  <!-- ===== Bottom band ===== -->
+  <text x="450" y="480" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    crates.io = the shop window. docs.rs = the manual. Every release of every public crate gets both, for free.
+  </text>
+
+</svg>

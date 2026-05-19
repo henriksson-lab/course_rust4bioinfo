@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-red-zip" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arr-grey-zip" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#666"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Inside a .zip file
+  </text>
+  <text x="450" y="54" text-anchor="middle" font-size="14" fill="#666">
+    entries first, table of contents at the end
+  </text>
+
+  <!-- The zip file as a tall column -->
+  <rect x="220" y="80" width="280" height="380" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.5"/>
+  <text x="360" y="100" text-anchor="middle" font-size="13" fill="#666" font-style="italic">
+    report.zip on disk
+  </text>
+
+  <!-- Entry 1 -->
+  <rect x="232" y="112" width="256" height="58" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="360" y="132" text-anchor="middle" font-size="14" font-weight="600" fill="#0d47a1">
+    local header: "stats.tsv"
+  </text>
+  <text x="360" y="152" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    + compressed bytes (entry 1)
+  </text>
+  <text x="240" y="166" font-size="11" fill="#666" font-style="italic">offset 0</text>
+
+  <!-- Entry 2 -->
+  <rect x="232" y="180" width="256" height="58" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="360" y="200" text-anchor="middle" font-size="14" font-weight="600" fill="#0d47a1">
+    local header: "readlen.png"
+  </text>
+  <text x="360" y="220" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    + compressed bytes (entry 2)
+  </text>
+  <text x="240" y="234" font-size="11" fill="#666" font-style="italic">offset 412</text>
+
+  <!-- Entry 3 -->
+  <rect x="232" y="248" width="256" height="58" rx="4" ry="4"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="360" y="268" text-anchor="middle" font-size="14" font-weight="600" fill="#0d47a1">
+    local header: "summary.txt"
+  </text>
+  <text x="360" y="288" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    + compressed bytes (entry 3)
+  </text>
+  <text x="240" y="302" font-size="11" fill="#666" font-style="italic">offset 9824</text>
+
+  <!-- Central directory -->
+  <rect x="232" y="320" width="256" height="90" rx="4" ry="4"
+        fill="#fff3cd" stroke="#b8860b" stroke-width="1.5"/>
+  <text x="360" y="340" text-anchor="middle" font-size="14" font-weight="700" fill="#7a5a00">
+    Central directory
+  </text>
+  <text x="360" y="360" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    stats.tsv    -> 0
+  </text>
+  <text x="360" y="376" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    readlen.png  -> 412
+  </text>
+  <text x="360" y="392" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    summary.txt  -> 9824
+  </text>
+
+  <!-- EOCD -->
+  <rect x="232" y="420" width="256" height="34" rx="4" ry="4"
+        fill="#ffe0b2" stroke="#c62828" stroke-width="1.5"/>
+  <text x="360" y="442" text-anchor="middle" font-size="13" font-weight="700" fill="#7a1010">
+    End-of-central-directory (points up)
+  </text>
+
+  <!-- Arrows from central directory back to entries -->
+  <path d="M 232 350 Q 170 350 170 141 L 230 141"
+        stroke="#666" stroke-width="1.3" fill="none"
+        marker-end="url(#arr-grey-zip)" stroke-dasharray="3 3"/>
+  <path d="M 232 376 Q 150 376 150 209 L 230 209"
+        stroke="#666" stroke-width="1.3" fill="none"
+        marker-end="url(#arr-grey-zip)" stroke-dasharray="3 3"/>
+  <path d="M 232 392 Q 130 392 130 277 L 230 277"
+        stroke="#666" stroke-width="1.3" fill="none"
+        marker-end="url(#arr-grey-zip)" stroke-dasharray="3 3"/>
+
+  <!-- EOCD arrow to central directory -->
+  <path d="M 490 437 Q 560 437 560 365 L 492 365"
+        stroke="#c62828" stroke-width="1.6" fill="none"
+        marker-end="url(#arr-red-zip)"/>
+  <text x="640" y="395" font-size="12" fill="#7a1010" font-style="italic">EOCD records</text>
+  <text x="640" y="410" font-size="12" fill="#7a1010" font-style="italic">where the directory</text>
+  <text x="640" y="425" font-size="12" fill="#7a1010" font-style="italic">starts</text>
+
+  <!-- Top arrow showing read order -->
+  <text x="540" y="120" font-size="12" fill="#666">to extract one file:</text>
+  <text x="540" y="138" font-size="12" fill="#666">1. seek to end, read EOCD</text>
+  <text x="540" y="156" font-size="12" fill="#666">2. read central directory</text>
+  <text x="540" y="174" font-size="12" fill="#666">3. find your entry's offset</text>
+  <text x="540" y="192" font-size="12" fill="#666">4. seek there, decompress</text>
+
+  <!-- Footer -->
+  <text x="450" y="490" text-anchor="middle" font-size="13" fill="#444">
+    Random access. Append-friendly. One header per entry, one row per entry.
+  </text>
+  <text x="450" y="510" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+    tar.gz has no central directory — you must stream from the start.
+  </text>
+</svg>

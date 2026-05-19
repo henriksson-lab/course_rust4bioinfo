@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="arr-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600">
+    Three ways to handle an Option&lt;T&gt;
+  </text>
+
+  <!-- ===== Set-up at the top (shared input) ===== -->
+  <rect x="120" y="50" width="660" height="44" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="450" y="78" text-anchor="middle" font-size="15"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    let pos: Option&lt;usize&gt; = first_g(seq);   // maybe a G, maybe not
+  </text>
+
+  <!-- ===== Panel 1: match ===== -->
+  <rect x="20" y="110" width="280" height="340" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="160" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    match
+  </text>
+
+  <!-- code -->
+  <text x="32" y="158" font-size="13" font-family="ui-monospace, monospace">match pos {</text>
+  <text x="32" y="176" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;Some(i) =&gt; println!(</text>
+  <text x="48" y="194" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;"first G at {i}"),</text>
+  <text x="32" y="212" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;None    =&gt; println!(</text>
+  <text x="48" y="230" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;"no G found"),</text>
+  <text x="32" y="248" font-size="13" font-family="ui-monospace, monospace">}</text>
+
+  <!-- mini flowchart: Option value box, two arrows out -->
+  <rect x="100" y="270" width="120" height="34" rx="17" ry="17"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="160" y="292" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">pos</text>
+
+  <!-- left arrow: Some(i) green -->
+  <line x1="130" y1="304" x2="70" y2="350"
+        stroke="#2e7d32" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text x="78" y="324" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">Some(i)</text>
+
+  <!-- right arrow: None grey -->
+  <line x1="190" y1="304" x2="250" y2="350"
+        stroke="#888" stroke-width="2.2" marker-end="url(#arr-grey)"/>
+  <text x="230" y="324" font-size="12" font-weight="700" fill="#888"
+        font-family="ui-monospace, monospace">None</text>
+
+  <!-- use i box -->
+  <rect x="30" y="355" width="100" height="40" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="80" y="372" text-anchor="middle" font-size="12" fill="#1b5e20">use i</text>
+  <text x="80" y="388" text-anchor="middle" font-size="11" fill="#555">print index</text>
+
+  <!-- fallback box -->
+  <rect x="190" y="355" width="100" height="40" rx="6" ry="6"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <text x="240" y="372" text-anchor="middle" font-size="12" fill="#555">fallback</text>
+  <text x="240" y="388" text-anchor="middle" font-size="11" fill="#555">print "no G"</text>
+
+  <text x="160" y="425" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    both cases handled
+  </text>
+  <text x="160" y="441" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    explicitly
+  </text>
+
+  <!-- ===== Panel 2: if let ===== -->
+  <rect x="310" y="110" width="280" height="340" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="450" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    if let
+  </text>
+
+  <!-- code -->
+  <text x="322" y="158" font-size="13" font-family="ui-monospace, monospace">if let Some(i) = pos {</text>
+  <text x="322" y="176" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;println!(</text>
+  <text x="338" y="194" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;"first G at {i}");</text>
+  <text x="322" y="212" font-size="13" font-family="ui-monospace, monospace">}</text>
+  <text x="322" y="240" font-size="12" font-family="ui-monospace, monospace" fill="#888">// None case: do nothing</text>
+
+  <!-- mini flowchart: Option value box, one arrow into if-let box -->
+  <rect x="390" y="270" width="120" height="34" rx="17" ry="17"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="450" y="292" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">pos</text>
+
+  <!-- single green arrow down -->
+  <line x1="450" y1="304" x2="450" y2="350"
+        stroke="#2e7d32" stroke-width="2.2" marker-end="url(#arr-green)"/>
+  <text x="465" y="330" font-size="12" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">Some(i)</text>
+
+  <!-- if let Some(i) box -->
+  <rect x="370" y="355" width="160" height="40" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="450" y="372" text-anchor="middle" font-size="12" fill="#1b5e20"
+        font-family="ui-monospace, monospace">if let Some(i)</text>
+  <text x="450" y="388" text-anchor="middle" font-size="11" fill="#555">run body</text>
+
+  <text x="450" y="425" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    None case is implicit
+  </text>
+  <text x="450" y="441" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    — do nothing
+  </text>
+
+  <!-- ===== Panel 3: unwrap_or ===== -->
+  <rect x="600" y="110" width="280" height="340" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1.2"/>
+  <text x="740" y="132" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    unwrap_or
+  </text>
+
+  <!-- code -->
+  <text x="612" y="158" font-size="13" font-family="ui-monospace, monospace">let i = pos</text>
+  <text x="612" y="176" font-size="13" font-family="ui-monospace, monospace">&#160;&#160;.unwrap_or(seq.len());</text>
+  <text x="612" y="208" font-size="12" font-family="ui-monospace, monospace" fill="#888">// i is plain usize now</text>
+
+  <!-- mini flowchart: Option value -> unwrap_or -> usize -->
+  <rect x="680" y="240" width="120" height="34" rx="17" ry="17"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="740" y="262" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">pos</text>
+
+  <line x1="740" y1="274" x2="740" y2="298"
+        stroke="#1565c0" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+
+  <!-- unwrap_or box -->
+  <rect x="630" y="300" width="220" height="44" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="740" y="320" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#7c4a00">unwrap_or(seq.len())</text>
+  <text x="740" y="336" text-anchor="middle" font-size="11" fill="#555">use value or default</text>
+
+  <line x1="740" y1="344" x2="740" y2="368"
+        stroke="#1565c0" stroke-width="2.2" marker-end="url(#arr-blue)"/>
+
+  <!-- usize result -->
+  <rect x="660" y="370" width="160" height="40" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="740" y="387" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#0d47a1">i: usize</text>
+  <text x="740" y="402" text-anchor="middle" font-size="11" fill="#555">no more Option</text>
+
+  <text x="740" y="435" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    one-line collapse to T
+  </text>
+
+  <!-- Bottom caption -->
+  <text x="450" y="478" text-anchor="middle" font-size="14" fill="#333" font-style="italic">
+    All three styles work; pick the one that reads cleanest at the call site.
+  </text>
+
+</svg>

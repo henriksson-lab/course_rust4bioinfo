@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    Log scale: x-position for value v (ns) is:
+      x = X0 + LOG_SCALE * (log10(v) - log10(0.1))
+    Plot domain: 0.1 ns to 1e9 ns (10 decades).
+    Plot region: x0 = 200, x1 = 860  -> width = 660 -> 66 px per decade.
+    A bar starts at x0 and extends to x(value).
+
+    Decade tick x positions (decade index 0 = 0.1 ns):
+      0.1 ns  -> 200
+      1 ns    -> 266
+      10 ns   -> 332
+      100 ns  -> 398
+      1 us (1e3)   -> 464
+      10 us (1e4)  -> 530
+      100 us (1e5) -> 596
+      1 ms (1e6)   -> 662
+      10 ms (1e7)  -> 728
+      100 ms (1e8) -> 794
+      1 s (1e9)    -> 860
+  -->
+
+  <!-- ===== Title and subtitle ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    How long it takes to read one byte
+  </text>
+  <text x="450" y="48" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+    Latency at each level of the storage hierarchy (approximate, modern hardware) - log scale
+  </text>
+
+  <!-- ===== Y-axis labels (bar names) and bars ===== -->
+  <!-- Bar geometry: rows at y = 80, 110, 140, ... step 30. Bar height = 20. -->
+  <!-- 9 bars top to bottom from slowest to fastest. -->
+
+  <!-- Row helper styles in inline form -->
+
+  <!-- 1. Network overseas ping: 100 ms = 1e8 ns -> x = 794 -->
+  <text x="195" y="95" text-anchor="end" font-size="12" fill="#333">Network: overseas ping</text>
+  <rect x="200" y="82" width="594" height="20" fill="#c62828" opacity="0.85"/>
+  <text x="800" y="97" font-size="11" font-weight="700" fill="#c62828">100 ms</text>
+
+  <!-- 2. Network local LAN: 0.5 ms = 5e5 ns -> log10(5e5) = 5.699 -> decade 5 + 0.699 -> 596 + 66*0.699 = 642.1 -->
+  <text x="195" y="125" text-anchor="end" font-size="12" fill="#333">Network: local LAN</text>
+  <rect x="200" y="112" width="442" height="20" fill="#c62828" opacity="0.85"/>
+  <text x="648" y="127" font-size="11" font-weight="700" fill="#c62828">0.5 ms (500 us)</text>
+
+  <!-- 3. HDD seek: 10 ms = 1e7 ns -> x = 728 -->
+  <text x="195" y="155" text-anchor="end" font-size="12" fill="#333">HDD seek</text>
+  <rect x="200" y="142" width="528" height="20" fill="#ef6c00" opacity="0.85"/>
+  <text x="734" y="157" font-size="11" font-weight="700" fill="#ef6c00">10 ms</text>
+
+  <!-- 4. SSD read: 0.1 ms = 1e5 ns -> x = 596 -->
+  <text x="195" y="185" text-anchor="end" font-size="12" fill="#333">SSD read</text>
+  <rect x="200" y="172" width="396" height="20" fill="#ef6c00" opacity="0.85"/>
+  <text x="602" y="187" font-size="11" font-weight="700" fill="#ef6c00">0.1 ms (100 us)</text>
+
+  <!-- 5. RAM access: 100 ns -> x = 398 -->
+  <text x="195" y="215" text-anchor="end" font-size="12" fill="#333">RAM access</text>
+  <rect x="200" y="202" width="198" height="20" fill="#2e7d32" opacity="0.85"/>
+  <text x="404" y="217" font-size="11" font-weight="700" fill="#2e7d32">100 ns</text>
+
+  <!-- 6. L3 cache: 10 ns -> x = 332 -->
+  <text x="195" y="245" text-anchor="end" font-size="12" fill="#333">L3 cache</text>
+  <rect x="200" y="232" width="132" height="20" fill="#2e7d32" opacity="0.85"/>
+  <text x="338" y="247" font-size="11" font-weight="700" fill="#2e7d32">10 ns</text>
+
+  <!-- 7. L2 cache: 3 ns -> log10(3) = 0.477 -> decade 1 + 0.477 -> 266 + 66*0.477 = 297.5 -->
+  <text x="195" y="275" text-anchor="end" font-size="12" fill="#333">L2 cache</text>
+  <rect x="200" y="262" width="98" height="20" fill="#1b5e20" opacity="0.85"/>
+  <text x="304" y="277" font-size="11" font-weight="700" fill="#1b5e20">3 ns</text>
+
+  <!-- 8. L1 cache: 1 ns -> x = 266 -->
+  <text x="195" y="305" text-anchor="end" font-size="12" fill="#333">L1 cache</text>
+  <rect x="200" y="292" width="66" height="20" fill="#1b5e20" opacity="0.85"/>
+  <text x="272" y="307" font-size="11" font-weight="700" fill="#1b5e20">1 ns</text>
+
+  <!-- 9. CPU register: 0.3 ns -> log10(0.3) = -0.523 -> decade -1 + 0.477 -> 200 + 66*0.477 = 231.5 (relative to 0.1ns) -->
+  <text x="195" y="335" text-anchor="end" font-size="12" fill="#333">CPU register</text>
+  <rect x="200" y="322" width="31" height="20" fill="#1b5e20" opacity="0.85"/>
+  <text x="237" y="337" font-size="11" font-weight="700" fill="#1b5e20">0.3 ns</text>
+
+  <!-- ===== X-axis (log scale) ===== -->
+  <line x1="200" y1="360" x2="860" y2="360" stroke="#555" stroke-width="1.5"/>
+
+  <!-- Tick marks and labels -->
+  <!-- 1 ns -->
+  <line x1="266" y1="360" x2="266" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="266" y="383" text-anchor="middle" font-size="10" fill="#555">1 ns</text>
+
+  <!-- 10 ns -->
+  <line x1="332" y1="360" x2="332" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="332" y="383" text-anchor="middle" font-size="10" fill="#555">10 ns</text>
+
+  <!-- 100 ns -->
+  <line x1="398" y1="360" x2="398" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="398" y="383" text-anchor="middle" font-size="10" fill="#555">100 ns</text>
+
+  <!-- 1 us -->
+  <line x1="464" y1="360" x2="464" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="464" y="383" text-anchor="middle" font-size="10" fill="#555">1 us</text>
+
+  <!-- 10 us -->
+  <line x1="530" y1="360" x2="530" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="530" y="383" text-anchor="middle" font-size="10" fill="#555">10 us</text>
+
+  <!-- 100 us -->
+  <line x1="596" y1="360" x2="596" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="596" y="383" text-anchor="middle" font-size="10" fill="#555">100 us</text>
+
+  <!-- 1 ms -->
+  <line x1="662" y1="360" x2="662" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="662" y="383" text-anchor="middle" font-size="10" fill="#555">1 ms</text>
+
+  <!-- 10 ms -->
+  <line x1="728" y1="360" x2="728" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="728" y="383" text-anchor="middle" font-size="10" fill="#555">10 ms</text>
+
+  <!-- 100 ms -->
+  <line x1="794" y1="360" x2="794" y2="368" stroke="#555" stroke-width="1.2"/>
+  <text x="794" y="383" text-anchor="middle" font-size="10" fill="#555">100 ms</text>
+
+  <!-- Axis label -->
+  <text x="530" y="403" text-anchor="middle" font-size="12" fill="#333" font-style="italic">
+    latency (log scale)
+  </text>
+
+  <!-- ===== Span annotation: 8 orders of magnitude ===== -->
+  <line x1="231" y1="438" x2="794" y2="438" stroke="#333" stroke-width="1.5"/>
+  <line x1="231" y1="432" x2="231" y2="444" stroke="#333" stroke-width="1.5"/>
+  <line x1="794" y1="432" x2="794" y2="444" stroke="#333" stroke-width="1.5"/>
+  <text x="513" y="458" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    8 orders of magnitude - from CPU register to overseas ping
+  </text>
+  <text x="513" y="476" text-anchor="middle" font-size="11" fill="#666" font-style="italic">
+    A factor of ~300 million. If a register access took one heartbeat, an overseas round-trip would take 10 years.
+  </text>
+
+</svg>

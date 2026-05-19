@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arr-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="24" text-anchor="middle" font-size="22" font-weight="600">
+    Why exhaustiveness matters in clinical software
+  </text>
+
+  <!-- Set-up (full width) -->
+  <rect x="20" y="38" width="860" height="42" rx="6" ry="6"
+        fill="#eeeeee" stroke="#888"/>
+  <text x="450" y="58" text-anchor="middle" font-size="13" fill="#333" font-style="italic">
+    A variant caller reports zygosity for each position:
+  </text>
+  <text x="450" y="74" text-anchor="middle" font-size="13" fill="#333" font-style="italic">
+    heterozygous (Het), homozygous alternate (HomAlt), or homozygous reference (HomRef).
+  </text>
+
+  <!-- ===========================================================
+       LEFT panel: Python (red border, silent bug)
+       =========================================================== -->
+  <rect x="20" y="92" width="425" height="340" rx="6" ry="6"
+        fill="#fff5f5" stroke="#c62828" stroke-width="2"/>
+  <text x="232" y="114" text-anchor="middle" font-size="15" font-weight="700" fill="#c62828">
+    Python — silent bug
+  </text>
+
+  <!-- code block -->
+  <rect x="32" y="126" width="400" height="130" rx="4" ry="4"
+        fill="white" stroke="#c62828" stroke-width="1"/>
+  <text x="42" y="144" font-size="12" font-family="ui-monospace, monospace">def annotate(zygosity):</text>
+  <text x="42" y="160" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;if zygosity == "het":</text>
+  <text x="42" y="176" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "potential disease variant"</text>
+  <text x="42" y="192" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;elif zygosity == "hom_alt":</text>
+  <text x="42" y="208" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "likely pathogenic — confirm in lab"</text>
+  <text x="42" y="226" font-size="12" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# what about "hom_ref"?</text>
+  <text x="42" y="242" font-size="12" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# the function returns None.</text>
+
+  <!-- sample row -->
+  <rect x="32" y="270" width="220" height="32" rx="4" ry="4"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <text x="142" y="290" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">
+    sample 7: zygosity = "hom_ref"
+  </text>
+
+  <!-- arrow from sample row up into code -->
+  <line x1="252" y1="286" x2="320" y2="240"
+        stroke="#c62828" stroke-width="2" marker-end="url(#arr-red)"/>
+
+  <!-- returns None -->
+  <text x="335" y="290" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">
+    returns None
+  </text>
+
+  <!-- patient report column (empty) -->
+  <rect x="32" y="316" width="400" height="46" rx="4" ry="4"
+        fill="white" stroke="#888" stroke-width="1"/>
+  <text x="42" y="334" font-size="12" font-weight="600" fill="#555">patient report:</text>
+  <text x="42" y="352" font-size="12" font-family="ui-monospace, monospace" fill="#888" font-style="italic">
+    annotation = &lt; empty &gt;     quietly missed
+  </text>
+
+  <!-- Big red banner at the bottom of the panel -->
+  <rect x="32" y="378" width="400" height="44" rx="6" ry="6"
+        fill="#c62828" stroke="#7f1d1d" stroke-width="1.5"/>
+  <text x="232" y="406" text-anchor="middle" font-size="15" font-weight="700" fill="white">
+    Sample silently dropped from report
+  </text>
+
+  <!-- ===========================================================
+       RIGHT panel: Rust (green border, compile-time error)
+       =========================================================== -->
+  <rect x="455" y="92" width="425" height="340" rx="6" ry="6"
+        fill="#f5fbf5" stroke="#2e7d32" stroke-width="2"/>
+  <text x="667" y="114" text-anchor="middle" font-size="15" font-weight="700" fill="#2e7d32">
+    Rust — compile-time error
+  </text>
+
+  <!-- code block -->
+  <rect x="467" y="126" width="400" height="146" rx="4" ry="4"
+        fill="white" stroke="#2e7d32" stroke-width="1"/>
+  <text x="477" y="144" font-size="12" font-family="ui-monospace, monospace">enum Zygosity { Het, HomAlt, HomRef }</text>
+  <text x="477" y="162" font-size="12" font-family="ui-monospace, monospace"></text>
+  <text x="477" y="178" font-size="12" font-family="ui-monospace, monospace">fn annotate(z: Zygosity) -&gt; &amp;'static str {</text>
+  <text x="477" y="194" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;match z {</text>
+  <text x="477" y="210" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::Het    =&gt; "potential disease variant",</text>
+  <text x="477" y="226" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::HomAlt =&gt; "likely pathogenic — confirm in lab",</text>
+  <text x="477" y="242" font-size="12" font-family="ui-monospace, monospace" fill="#c62828">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;// forgot Zygosity::HomRef</text>
+  <text x="477" y="258" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;}</text>
+
+  <!-- compiler error box -->
+  <rect x="467" y="284" width="400" height="92" rx="4" ry="4"
+        fill="#1a1a1a" stroke="#c62828" stroke-width="1.5"/>
+  <text x="477" y="302" font-size="11" font-family="ui-monospace, monospace" fill="#ff6b6b">
+    error[E0004]: non-exhaustive patterns:
+  </text>
+  <text x="477" y="316" font-size="11" font-family="ui-monospace, monospace" fill="#ff6b6b">
+    &#160;&#160;`HomRef` not covered
+  </text>
+  <text x="477" y="332" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">
+    &#160;&#160;--&gt; src/main.rs:5:11
+  </text>
+  <text x="477" y="346" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">
+    &#160;&#160; |
+  </text>
+  <text x="477" y="360" font-size="11" font-family="ui-monospace, monospace" fill="#e0e0e0">
+    &#160;5 |&#160;&#160;&#160;&#160;match z {
+  </text>
+  <text x="477" y="372" font-size="11" font-family="ui-monospace, monospace" fill="#ff6b6b">
+    &#160;&#160; |&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;^ pattern `HomRef` not covered
+  </text>
+
+  <!-- Big green banner -->
+  <rect x="467" y="383" width="400" height="40" rx="6" ry="6"
+        fill="#2e7d32" stroke="#1b5e20" stroke-width="1.5"/>
+  <text x="667" y="409" text-anchor="middle" font-size="15" font-weight="700" fill="white">
+    Compiler refuses to build the pipeline
+  </text>
+
+  <!-- ===== Bottom caption (full width) ===== -->
+  <text x="450" y="458" text-anchor="middle" font-size="14" font-style="italic" fill="#333">
+    In the clinic, a silently missed case is a misdiagnosis.
+  </text>
+  <text x="450" y="478" text-anchor="middle" font-size="14" font-style="italic" fill="#333">
+    Rust moves that class of bug from runtime to compile-time.
+  </text>
+
+</svg>

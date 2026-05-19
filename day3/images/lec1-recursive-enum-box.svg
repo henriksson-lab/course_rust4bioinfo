@@ -62,11 +62,15 @@
   <!-- ===========================================================
        Right panel: Box gives a fixed-size pointer
        =========================================================== -->
-  <text x="675" y="68" text-anchor="middle" font-size="12" font-weight="700"
+  <text x="675" y="60" text-anchor="middle" font-size="12" font-weight="700"
         font-family="ui-monospace, monospace" fill="#2e7d32">
-    enum Node { Internal { left: Box&lt;Node&gt;, right: Box&lt;Node&gt; }, Leaf }
+    enum Node { Internal { left: Box&lt;Node&gt;,
   </text>
-  <text x="675" y="86" text-anchor="middle" font-size="12" fill="#2e7d32" font-style="italic">
+  <text x="675" y="78" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    right: Box&lt;Node&gt; }, Leaf }
+  </text>
+  <text x="675" y="98" text-anchor="middle" font-size="12" fill="#2e7d32" font-style="italic">
     Box&lt;T&gt; is a heap pointer — always 8 bytes
   </text>
 

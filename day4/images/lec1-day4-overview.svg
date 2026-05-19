@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-d4-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-d4-dark" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+    <marker id="arrow-d4-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Day 4: from a FASTQ on disk to charts and archives
+  </text>
+
+  <!-- ===== 1. FASTQ on disk (left) ===== -->
+  <rect x="20" y="120" width="130" height="100" rx="8" ry="8"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <text x="85" y="146" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    On disk
+  </text>
+  <text x="85" y="170" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">
+    reads.fastq
+  </text>
+  <text x="85" y="190" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    many GB
+  </text>
+  <text x="85" y="208" text-anchor="middle" font-size="11" fill="#777" font-style="italic">
+    millions of records
+  </text>
+
+  <!-- arrow disk -> BufReader -->
+  <line x1="153" y1="170" x2="208" y2="170"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-d4-dark)"/>
+  <text x="180" y="160" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    open
+  </text>
+
+  <!-- ===== 2. BufReader (light blue) ===== -->
+  <rect x="210" y="130" width="130" height="80" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="275" y="156" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    BufReader
+  </text>
+  <text x="275" y="174" text-anchor="middle" font-size="11" fill="#555">
+    64 KB buffer
+  </text>
+  <text x="275" y="192" text-anchor="middle" font-size="11" fill="#555">
+    std::io
+  </text>
+
+  <!-- arrow BufReader -> noodles Reader -->
+  <line x1="343" y1="170" x2="398" y2="170"
+        stroke="#444" stroke-width="2" marker-end="url(#arrow-d4-dark)"/>
+  <text x="370" y="160" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    BufRead
+  </text>
+
+  <!-- ===== 3. noodles Reader (yellow) ===== -->
+  <rect x="400" y="130" width="140" height="80" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.8"/>
+  <text x="470" y="155" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    fastq::Reader
+  </text>
+  <text x="470" y="174" text-anchor="middle" font-size="11" fill="#555">
+    parses records
+  </text>
+  <text x="470" y="192" text-anchor="middle" font-size="11" fill="#555">
+    noodles-fastq
+  </text>
+
+  <!-- arrow Reader -> records -->
+  <line x1="543" y1="170" x2="598" y2="170"
+        stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrow-d4-green)"/>
+  <text x="570" y="160" text-anchor="middle" font-size="11" font-weight="600" fill="#2e7d32">
+    .records()
+  </text>
+
+  <!-- ===== 4. Stream of Record structs ===== -->
+  <g font-family="ui-monospace, monospace" font-size="12">
+    <rect x="600" y="135" width="100" height="22" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="650" y="151" text-anchor="middle" fill="#1b5e20">Record</text>
+    <rect x="600" y="160" width="100" height="22" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="650" y="176" text-anchor="middle" fill="#1b5e20">Record</text>
+    <rect x="600" y="185" width="100" height="22" fill="#e8f5e9" stroke="#2e7d32"/>
+    <text x="650" y="201" text-anchor="middle" fill="#1b5e20">Record</text>
+  </g>
+  <text x="650" y="225" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    one at a time
+  </text>
+
+  <!-- branches from records: split into plotters and zip -->
+  <!-- branch (a) upward to plotters -->
+  <line x1="703" y1="148" x2="758" y2="105"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-d4-green)"/>
+  <text x="752" y="95" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="600">
+    (a) chart
+  </text>
+
+  <!-- branch (b) downward to zip -->
+  <line x1="703" y1="195" x2="758" y2="240"
+        stroke="#2e7d32" stroke-width="2" marker-end="url(#arrow-d4-green)"/>
+  <text x="752" y="258" text-anchor="middle" font-size="11" fill="#2e7d32" font-weight="600">
+    (b) archive
+  </text>
+
+  <!-- ===== 5a. plotters ===== -->
+  <rect x="760" y="65" width="125" height="60" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.8"/>
+  <text x="822" y="88" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    plotters
+  </text>
+  <text x="822" y="106" text-anchor="middle" font-size="11" fill="#555">
+    SVG / PNG chart
+  </text>
+  <text x="822" y="120" text-anchor="middle" font-size="10" fill="#777" font-style="italic">
+    plotters crate
+  </text>
+
+  <!-- ===== 5b. zip archive ===== -->
+  <rect x="760" y="225" width="125" height="60" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.8"/>
+  <text x="822" y="248" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    zip writer
+  </text>
+  <text x="822" y="266" text-anchor="middle" font-size="11" fill="#555">
+    bundle outputs
+  </text>
+  <text x="822" y="280" text-anchor="middle" font-size="10" fill="#777" font-style="italic">
+    zip crate
+  </text>
+
+  <!-- ===== outputs back to disk (right column) ===== -->
+  <rect x="760" y="320" width="125" height="105" rx="8" ry="8"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.5"/>
+  <text x="822" y="343" text-anchor="middle" font-size="13" font-weight="700" fill="#333">
+    Back to disk
+  </text>
+  <text x="822" y="368" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">
+    qc.svg
+  </text>
+  <text x="822" y="388" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">
+    report.zip
+  </text>
+  <text x="822" y="412" text-anchor="middle" font-size="10" fill="#777" font-style="italic">
+    final deliverables
+  </text>
+
+  <!-- wrap (a) -> disk -->
+  <line x1="822" y1="127" x2="822" y2="318"
+        stroke="#888" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-d4-grey)"/>
+  <!-- wrap (b) -> disk -->
+  <line x1="855" y1="287" x2="855" y2="318"
+        stroke="#888" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arrow-d4-grey)"/>
+
+  <!-- ===== Footer band: layers explanation ===== -->
+  <rect x="20" y="370" width="720" height="105" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="380" y="395" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
+    The stack we build today
+  </text>
+  <g font-size="13" fill="#222">
+    <text x="40" y="418">
+      <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#1565c0">std::io</tspan>
+      <tspan> &#8212; File, BufReader, the byte-level plumbing.</tspan>
+    </text>
+    <text x="40" y="438">
+      <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#8a5a07">noodles</tspan>
+      <tspan> &#8212; FASTA/FASTQ/SAM parsers that turn bytes into typed Records.</tspan>
+    </text>
+    <text x="40" y="458">
+      <tspan font-family="ui-monospace, monospace" font-weight="700" fill="#8a5a07">plotters + zip</tspan>
+      <tspan> &#8212; turn typed data into deliverables.</tspan>
+    </text>
+  </g>
+
+</svg>
