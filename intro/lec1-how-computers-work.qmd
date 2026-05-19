@@ -1,6 +1,5 @@
 ---
 title: "How a computer works"
-subtitle: "Intro lecture, before day 1"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
@@ -20,12 +19,7 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
-- A ground-up tour of **what is inside the machine** that runs your scripts
-- Aimed at biologists who have written a Python loop and want to understand why some loops are fast and others are slow
-- **No prior CS background assumed** — no compilers, no assembly, no jargon you haven't met
-- We will meet the **CPU, RAM, cache, disk, network, and the OS** — and how a program lives inside them
-:::
+A ground-up tour of what is inside the machine that runs your scripts.
 
 ::: notes
 This is the very first lecture of the course. We have not started Rust yet. The goal of the next forty-five minutes is to give you a mental picture of what a computer actually does when you press run. Almost every design decision in Rust is a response to one of the facts in this lecture, so it pays to have the picture first. If you already know what a cache line is, you can sit back; if you do not, this is for you.
@@ -33,19 +27,21 @@ This is the very first lecture of the course. We have not started Rust yet. The 
 
 ## The big picture — a computer is gears that move bits
 
-A computer is a small box of components, all wired to a central chip that does arithmetic very fast, with several layers of memory and a few peripherals.
+One chip does the work; everything else feeds it or stores its results.
 
-![](images/lec1-computer-overview.svg){#fig-overview fig-alt="A motherboard rectangle containing labelled components: a CPU box with caches at upper centre, two narrow DDR4 RAM modules to its right, an NVMe SSD and a network card on the far right, a long GPU board across the lower half, and a power supply on the left. Thick and thin lines connect components, labelled memory bus 100 ns, PCIe 10 microseconds, and PCIe NIC varies. Schematic of a typical desktop or laptop: motherboard with CPU socket, RAM DIMM slots, NVMe storage, GPU, network card, and PSU, connected by buses of varying speed."}
+![](images/lec1-computer-overview.svg){#fig-overview width="85%" fig-alt="A motherboard rectangle containing labelled components: a CPU box with caches at upper centre, two narrow DDR4 RAM modules to its right, an NVMe SSD and a network card on the far right, a long GPU board across the lower half, and a power supply on the left. Thick and thin lines connect components, labelled memory bus 100 ns, PCIe 10 microseconds, and PCIe NIC varies. Schematic of a typical desktop or laptop: motherboard with CPU socket, RAM DIMM slots, NVMe storage, GPU, network card, and PSU, connected by buses of varying speed."}
+
+![A real motherboard — the same components as the schematic, in the wild. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-photo.jpg){width="70%" fig-alt="Photograph of an ASRock K7VT4A Pro motherboard top-down, showing the CPU socket, RAM slots, chipset heatsink, PCI and AGP expansion slots, capacitors, and rear I/O ports; provided as a real-world complement to the abstract schematic above."}
 
 ::: notes
 Forget desktop computers for a moment. Phones, laptops, HPC nodes — they are all the same recipe. One chip that does the work. Some fast memory it can read from quickly. Some slower memory that survives a power-off. A way to talk to the outside world. Everything else is detail. We are going to walk through each box on this diagram in turn.
 :::
 
-## The CPU — arithmetic + decisions, billions per second
+## The CPU — arithmetic + decisions
 
 The central processing unit is the one component that actually *runs* code. Everything else just feeds it or stores its results.
 
-![](images/lec1-cpu-schematic.svg){#fig-cpu fig-alt="A schematic showing the inside of a single CPU core, with labelled blocks for instruction fetch, decode, the arithmetic logic unit, a small bank of registers, and tiered caches L1, L2, L3 to the side."}
+![From registers to RAM in nanoseconds — what the CPU actually waits on.](images/lec1-latency-ladder.svg){fig-alt="A horizontal flow chart from register → L1 → L2 → L3 → RAM with each transition labelled with its access latency in nanoseconds. Each level coloured from green (fast) to red (slow)."}
 
 ::: notes
 A modern CPU core does on the order of a few billion simple operations per second. Add two numbers, compare them, branch — that is what an operation is. The hardware tricks that make this possible (pipelining, out-of-order execution, branch prediction, superscalar issue) are fascinating but out of scope; for our purposes, the CPU is a very fast arithmetic-and-decisions box. Modern laptops have 4 to 16 of these cores running in parallel.
@@ -62,20 +58,24 @@ Registers are the tiny storage slots **inside** the CPU. The CPU can only do ari
 | program counter (`rip`) | 64 bits | 1 |
 | stack pointer (`rsp`) | 64 bits | 1 |
 
+![The von Neumann architecture: the CPU has a small set of registers that exchange data with main memory over a bus.](images/lec1-von-neumann.svg){fig-alt="Schematic of the von Neumann architecture: a CPU block containing ALU, control unit, and a register file, connected to a Memory block by a bidirectional data bus; an I/O block also connected to the bus."}
+
 ::: notes
 A register access is the fastest thing a CPU can do — under a nanosecond. But there are very few of them: about a dozen general-purpose ones on an x86-64 chip. Everything else lives further away in memory and takes longer to reach. This scarcity is why compilers work so hard to keep the most-used variables in registers; we will see in a couple of slides why that matters.
 :::
 
 ## RAM — where the program lives while it runs
 
-When you launch a program, the operating system loads its code and data into RAM (random access memory). RAM is fast electronic storage that **loses its contents when you power off** — that is why you save files to disk, not to RAM.
+RAM holds the running program and its working data.
 
-A typical laptop in 2026 has **16 to 64 GB** of RAM. Servers can have a terabyte. When people say "memory" without qualification, they almost always mean RAM.
+- **Gigabytes** — laptop: 16–64 GB; server: up to 1 TB
+- **Volatile** — contents vanish on power-off (save to disk)
+- Much faster than disk, much slower than the CPU
 
-*Working sizes in bioinformatics: the human reference genome + BWA index is ~8 GB in RAM; a single-cell expression matrix can be 30+ GB; a pangenome graph index for population-scale variation is 100+ GB.*
+*Working sizes in bioinformatics: human reference + BWA index ~8 GB; single-cell expression matrix 30+ GB; pangenome graph index 100+ GB.*
 
 ::: notes
-RAM is the workbench. It is large enough to hold a running program and its working data — your variables, your loaded FASTA file, your matrix — but small enough that it is much faster than disk. The word "random" in random access memory means the CPU can read any byte at any address in roughly the same time, unlike a tape drive where you would have to spool to the right position.
+RAM is the workbench. It is large enough to hold a running program and its working data — your variables, your loaded FASTA file, your matrix — but small enough that it is much faster than disk. The word "random" in random access memory means the CPU can read any byte at any address in roughly the same time, unlike a tape drive where you would have to spool to the right position. When people say "memory" without qualification, they almost always mean RAM.
 :::
 
 ## The memory hierarchy — fast & small, or big & slow
@@ -114,12 +114,10 @@ This is the deep reason caches exist, and why memory layout matters so much for 
 
 A **cache** is a small block of fast memory inside the CPU that automatically holds copies of recently-used (and likely-soon-to-be-used) bytes from RAM. You never ask for it explicitly; the hardware just does it.
 
-::: {.incremental}
 - **L1 cache** — ~32 KB per core, ~1 ns access
 - **L2 cache** — ~256 KB to 1 MB per core, ~3 ns
 - **L3 cache** — ~8 to 64 MB shared across cores, ~10 ns
 - All three together are still **thousands of times smaller** than RAM
-:::
 
 ::: notes
 Caches are completely invisible to your program. You never write code that says "put this in L1". The CPU decides what to keep based on what you have touched recently. The implication is huge: the order in which you visit memory determines whether you hit cache (1 ns) or miss and go to RAM (100 ns). Sequential access patterns win; jumping all over memory loses. We will use this fact on day 2.
@@ -127,9 +125,19 @@ Caches are completely invisible to your program. You never write code that says 
 
 ## A cache line — 64 bytes at a time
 
-When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line, on the assumption that you will want neighbouring bytes too.
+When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line.
 
-![Ask for one byte, get 64 — use them or waste them.](images/lec1-cache-line.svg){#fig-line fig-alt="A horizontal strip of 64 small square cells representing one cache line. One cell, near the middle, is highlighted as the byte the program requested. An arrow shows the whole strip being fetched from RAM in one go."}
+::: {.fragment}
+![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
+:::
+
+::: {.fragment}
+![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
+:::
+
+::: {.fragment}
+![Step 3: nearby byte reads are cache hits, fast and free.](images/lec1-cache-line-step3.svg){fig-alt="Subsequent reads from adjacent bytes within the same 64-byte line are served from the cache, marked as fast cache hits."}
+:::
 
 ::: notes
 This is why iterating over an array in order is so much faster than jumping around: each cache line fetch costs about a hundred nanoseconds, but it gives you 64 bytes' worth of data essentially for free if you use them in sequence. A Python list of integers does the opposite — each integer is a separate heap allocation, so each one is a fresh cache line miss. A Rust `Vec<i32>` is one contiguous block, four bytes per integer, sixteen integers per cache line. Same algorithm, very different speed.
@@ -154,27 +162,12 @@ SSDs replaced HDDs in laptops because they are about a hundred times faster for 
 
 ## GPU — thousands of small workers (briefly)
 
-A GPU is **thousands of small, simple cores** versus a CPU's small number of large, complex ones. It shines when the same operation runs on millions of independent values — matrix multiply, image filters, neural nets — and is poor at branching code with lots of decisions, which is a CPU's job.
+A GPU is **thousands of small, simple cores** versus a CPU's small number of large ones. It shines when the same operation runs on millions of independent values, and is poor at branching code with lots of decisions.
 
-In bioinformatics, nanopore basecalling (Dorado) runs roughly 100x faster on GPU than CPU; AlphaFold and ESMFold predict protein structure in hours instead of weeks; and DeepVariant uses a CNN for variant calling.
-
-![](images/lec1-gpu-bio-uses.svg){fig-alt="Three GPU-accelerated bioinformatics tools: nanopore basecalling (Dorado), protein structure prediction (AlphaFold/ESMFold), and variant calling (DeepVariant)."}
+![A modern GPU has thousands of small cores, all running the same instruction on different data — perfect for image rendering, deep learning, and bioinformatics basecalling.](images/lec1-gpu-many-cores.svg){fig-alt="Schematic of a modern NVIDIA-style GPU: a large grid of small core squares (e.g. 16 x 32 = 512+ shown), grouped into Streaming Multiprocessors, with shared L2 cache and HBM/GDDR memory at the edges."}
 
 ::: notes
-GPUs entered general computing through deep learning, but they have been used in bioinformatics for sequence alignment and variant calling too. The programming model is very different from CPU code — you write a small kernel and the runtime fans it out across thousands of threads. For this course we stay on the CPU; just be aware that the GPU exists and that it is sometimes the right tool when you have a very regular, data-parallel inner loop.
-:::
-
-## Network card — packets in and out (briefly)
-
-::: {.incremental}
-- The **NIC** moves bytes between this machine and other machines, in fixed-size packets
-- Within a data centre: tens of microseconds round-trip — slower than RAM, faster than disk
-- Across the internet: tens to hundreds of milliseconds — the slowest thing on the latency chart
-- *Downloading the human reference genome (~3 GB) from Ensembl. Fetching an SRA dataset (50–500 GB per study). GISAID syncing millions of SARS-CoV-2 sequences for surveillance. Distributed alignment across an HPC cluster (low-latency MPI).*
-:::
-
-::: notes
-You meet the network whenever you download a FASTQ from SRA, hit a REST API, or read a file from a shared filesystem on a cluster — even an "NFS file open" is really a network round-trip. The orders-of-magnitude latency gap between local SSD and cross-continent ping is why "cache it locally if you will use it twice" is universally good advice.
+GPUs entered general computing through deep learning, but they have been used in bioinformatics for sequence alignment and variant calling too. Nanopore basecalling (Dorado) runs roughly 100x faster on GPU than CPU; AlphaFold and ESMFold predict protein structure in hours instead of weeks; DeepVariant uses a CNN for variant calling. The programming model is very different from CPU code — you write a small kernel and the runtime fans it out across thousands of threads. For this course we stay on the CPU; just be aware that the GPU exists and that it is sometimes the right tool when you have a very regular, data-parallel inner loop.
 :::
 
 ## A running program in memory
@@ -189,67 +182,64 @@ Every running program sees this layout, regardless of language. The OS gives eac
 
 ## Stack — fast, structured, automatic
 
-The **stack** is a fast, last-in-first-out region used for function calls. Every time you call a function, a fresh frame is pushed on top; when it returns, the frame is popped. Everything on the stack has a fixed size known at compile time.
+The **stack** is a fast, last-in-first-out region used for function calls. Every time you call a function, a fresh frame is pushed on top; when it returns, the frame is popped.
 
-```text
-push  frame for main()
-push  frame for count_kmers()
-push  frame for inner loop
-                              <-- top of stack
+```python
+def gc_count(seq):
+    return sum(1 for b in seq if b in "GC")
+
+def main():
+    seq = "ACGTACGT"
+    n = gc_count(seq)      # push gc_count frame
+    print(n)               # gc_count returned, pop
+
+main()
 ```
 
-Allocating on the stack is essentially free — the CPU just moves a pointer. There is no bookkeeping.
+::: {.fragment}
+![Step 1: main() running — one frame on the stack.](images/lec1-stack-frames-step1.svg){fig-alt="A stack diagram with a single frame for main() containing the local variable seq."}
+:::
+
+::: {.fragment}
+![Step 2: main() calls compute(seq) — a new frame is pushed on top.](images/lec1-stack-frames-step2.svg){fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
+:::
+
+::: {.fragment}
+![Step 3: compute() returns — its frame is popped; main() continues with the result.](images/lec1-stack-frames-step3.svg){fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
+:::
 
 ::: notes
-The stack is small — typically one to eight megabytes total — but extremely fast and managed for you. Local variables live on the stack. Function arguments live on the stack. When a function returns, all its locals are gone instantly. You never have to ask. The price: stack values must have a size the compiler knows up-front. A 5-element array, yes. A string of unknown length read from a file, no — that one has to live on the heap.
+The stack is small — typically one to eight megabytes total — but extremely fast and managed for you. Local variables live on the stack. Function arguments live on the stack. When a function returns, all its locals are gone instantly. You never have to ask. The price: stack values must have a size the compiler knows up-front. A 5-element array, yes. A string of unknown length read from a file, no — that one has to live on the heap. Allocating on the stack is essentially free — the CPU just moves a pointer.
 
 *Streaming a 10 GB BAM file with samtools uses only ~100 MB RAM — the records flow through the stack, processed and dropped. Slurping it into a Python list of dicts would need 10–30 GB of heap.*
 :::
 
 ## Heap — flexible, slower, you manage the lifetime
 
-The **heap** is a large region for data whose size or lifetime isn't known at compile time. To use it, your program asks the allocator for `n` bytes, gets back a pointer, and is responsible for telling the allocator when it's done.
+A large region for data whose size or lifetime isn't known at compile time.
 
-Heap allocations are **slower** than stack pushes (the allocator has to find a free chunk of the right size) but **much more flexible**. A string of unknown length, a vector that grows over time, a graph of nodes — all heap.
+- Ask the allocator for `n` bytes, get a pointer back
+- **Slower** than stack pushes, but **flexible** — growing vectors, unknown-length strings, graphs
+- Someone must decide when to free it: you (C), a garbage collector (Python), or the compiler (Rust)
 
 ::: notes
-Different languages manage the heap differently. C asks you to call malloc and free by hand. Python and Java use a garbage collector that figures out when something is unreachable and frees it for you. Rust uses ownership — the compiler proves at build time when each value can be freed, with no runtime garbage collector. We will see all of this on day 2. For now, just know that "on the heap" means "your program asked for it" and "on the stack" means "the compiler decided".
+The heap is asked for, not assumed. C asks you to call malloc and free by hand. Python and Java use a garbage collector that figures out when something is unreachable and frees it for you. Rust uses ownership — the compiler proves at build time when each value can be freed, with no runtime garbage collector. We will see all of this on day 2. For now, just know that "on the heap" means "your program asked for it" and "on the stack" means "the compiler decided". Heap allocations are slower because the allocator has to find a free chunk of the right size.
 :::
 
-## C: values are stored directly
+## Boxed vs unboxed — what the value actually costs
 
-In C, a small value like an integer lives **directly** in the variable's slot — usually on the stack.
+In C or Rust, a small value like `42` lives directly in its 4-byte slot. In Python, the variable is a pointer; the value is wrapped in a small heap-allocated object that also stores a type tag and a reference count.
 
-```c
-int x = 42;     // 4 bytes on the stack, holds the literal value 42
-```
+![Same `42`, very different memory: C/Rust store the 4 bytes directly; Python wraps it in a heap-allocated object with type tag and refcount.](images/lec1-boxed-vs-unboxed.svg){fig-alt="Two columns. Left: C/Rust shows a single 4-byte box holding 42 directly. Right: Python shows a small pointer on the stack pointing into the heap to a larger object containing a type tag, a reference count, and the value 42."}
 
-That's all of it. Four bytes. No header, no type tag, no reference count. When `x` goes out of scope, the four bytes are reclaimed by popping the stack frame — free.
+- One Python integer is tens of bytes; one C/Rust integer is 4 bytes
+- Each Python value needs a pointer hop — bad news for the cache
+- A million-int list: ~60 MB in Python vs ~4 MB in C/Rust
 
 ::: notes
-C is the bare-metal baseline. An int is four bytes and nothing more. No boxing, no indirection. This is why C is fast: the machine touches exactly the bytes that represent the value, with no extra hops. The cost is that you, the programmer, are responsible for everything — if you ever need a string that grows, you call malloc and you remember to free it. Rust gives you the same direct layout while taking the freeing-it responsibility off your hands.
+This is the price of Python's convenience. Because Python lets you write x = 42 today and x = "hello" tomorrow and the runtime has to handle either, every value carries a type tag and a refcount. The smallest integer in Python is about 28 bytes — seven times the size of a C int. Multiply by the number of vectors in a genomics pipeline; this is where Python loses an order of magnitude.
 
 *This is why `samtools` (written in C) processes 10 million BAM reads in seconds while the same loop in pure Python takes hours. The Python rewrite isn't slow because Python is poorly implemented — it's slow because every base is wrapped in a heap object.*
-:::
-
-## Python: every value is wrapped (boxed)
-
-In Python, the variable is a pointer; the value lives in a small object on the heap, with a header for type info and reference count.
-
-![Same value, ~7x the memory in Python.](images/lec1-c-vs-python-memory.svg){#fig-cpython fig-alt="Two columns. Left: 'C: int x = 42;' shows a single 4-byte box on the stack containing 42. Right: 'Python: x = 42' shows a small pointer box on the stack with an arrow pointing into the heap, where a larger 28-byte PyLongObject box contains a refcount, a type pointer, and the value 42."}
-
-::: notes
-This is the price of Python's convenience. Because Python lets you write x = 42 today and x = "hello" tomorrow and the runtime has to handle either, every value carries a type tag and a refcount. The smallest integer in Python is about 28 bytes — seven times the size of a C int. A million-integer list is roughly 60 megabytes in Python versus 4 megabytes in C or Rust. Multiply by the number of vectors in a genomics pipeline; this is where Python loses an order of magnitude.
-:::
-
-## R: bulk-boxed — header per vector, not per element
-
-R takes a middle path. **Each value is still wrapped**, but R is built around vectors, so the wrapper (the SEXP header) is paid **once per vector**, not once per element.
-
-A million-element R numeric vector is roughly: 32-byte header + 1 000 000 × 8 bytes = ~8 MB. The header overhead is negligible. This is why R is competitive on vectorised code and slow on scalar loops — exactly what you'd predict.
-
-::: notes
-The R rule of thumb you have heard — vectorise everything, never write a for-loop over individual elements — comes directly from this layout. Each scalar still gets the full SEXP treatment if you treat it as one; but a numeric vector is essentially a C array with a small header out front. NumPy in Python plays the same trick. The lesson generalises: you want your data in big contiguous arrays of plain values, not in millions of little boxed objects.
 :::
 
 ## The operating system — referee and gatekeeper
@@ -257,6 +247,8 @@ The R rule of thumb you have heard — vectorise everything, never write a for-l
 Your program is not alone on the machine. The OS decides which process gets the CPU when, hands out memory, and is the only thing allowed to touch hardware directly.
 
 ![Only the kernel touches hardware; user code goes through syscalls.](images/lec1-kernel-userspace.svg){#fig-os fig-alt="Three stacked bands: top labelled User space containing three process boxes firefox, vim, your_program; middle band Kernel space labelled Linux/macOS/Windows kernel containing process scheduler, file system, memory manager, network stack; bottom band Hardware containing CPU, RAM, disk, network. Downward arrows from each user-space process into the kernel labelled with example syscalls open data fa, mmap 8 MiB, send packet, then thick arrows from kernel to each hardware box."}
+
+![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
 
 ::: notes
 This is the model that every modern OS — Linux, macOS, Windows — implements. The kernel runs in privileged mode and can touch hardware. Your program runs in unprivileged user mode and cannot. Every interaction with the outside world — opening a file, allocating a large buffer, sending a network packet — goes through a syscall, a controlled doorway into the kernel. This is what stops your buggy Python script from crashing the whole machine.
@@ -271,6 +263,8 @@ let f = File::open("data.fa")?;
 ```
 
 what actually happens is: the Rust standard library makes a syscall — `open("data.fa", O_RDONLY)` — which is a controlled jump from user mode into the kernel. The kernel checks permissions, locates the file, returns a file descriptor. Then control comes back to your code.
+
+![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
 
 ::: notes
 Every interesting thing a program does crosses this boundary. Opening a file. Allocating heap memory (eventually). Reading from the network. Even printing to the screen. The syscall is the only legal way down. Crossing the boundary costs about a microsecond — much more than a function call within your program, much less than a disk read. This is why "do one big syscall not a million small ones" is universally good advice. Buffer your reads.
@@ -292,26 +286,19 @@ That whole sequence happens in a few milliseconds. It involves the disk, the OS,
 
 ## Why this matters for bioinformatics
 
-::: {.incremental}
-- Our inputs are **huge**: $10^8$ to $10^{12}$ bytes per dataset
-- Our inner loops are **tight**: a few simple operations repeated billions of times
-- **Memory layout** decides whether a loop runs at cache speed (~1 ns) or RAM speed (~100 ns) — a 100x gap
-- The **deployment story** matters: scripts that need a perfectly-configured Python environment do not survive contact with HPC and cluster reality
-- These pressures are exactly what Rust is built to handle
-:::
+- **Research** (BWA, minimap2): big indexes, tight loops
+- **Clinical** (DeepVariant, GATK): hours not days per patient
+- **Environmental** (Kraken2): TB-scale metagenomes, streaming
+- **Public health** (Nextstrain): thousands of samples per week
 
 ![Different pipeline stages stress different parts of the machine.](images/lec1-bio-pipeline.svg){fig-alt="A horizontal flow from sample to VCF. Each stage labeled with its resource bottleneck: alignment is CPU+RAM bound; basecalling can use GPU; sort/dedup is I/O bound; variant calling can use GPU."}
 
-**Research bioinformatics**: large indexes, tight inner loops — Rust + C win.
-
-**Clinical diagnostics**: variant calling pipelines that must return a result in hours (rare disease, cancer panel turnaround) — language choice affects whether a patient waits days or hours.
-
-**Environmental / metagenomics**: soil and ocean microbiome sequencing produces TB-scale datasets — streaming and parallelism are non-negotiable.
-
-**Public health surveillance**: SARS-CoV-2 sequencing scaled to thousands of samples per week; pipelines designed for cache-friendly streaming.
-
 ::: notes
-This is the pitch for the course in one slide. Bioinformatics workloads sit precisely where the architectural facts of this lecture bite hardest: lots of data, simple per-item operations, run on shared compute where reproducibility matters. A language that lets you write code with the cache in mind, that produces a single static binary, and that catches concurrency bugs at compile time, is going to pay back the time you spend learning it.
+This is the pitch for the course in one slide. Our inputs are huge ($10^8$ to $10^{12}$ bytes per dataset). Our inner loops are tight: a few simple operations repeated billions of times. Memory layout decides whether a loop runs at cache speed (~1 ns) or RAM speed (~100 ns) — a 100x gap. The deployment story matters too: scripts that need a perfectly-configured Python environment do not survive contact with HPC and cluster reality.
+
+Research bioinformatics: large indexes, tight inner loops — Rust + C win. Clinical diagnostics: variant calling pipelines that must return a result in hours (rare disease, cancer panel turnaround) — language choice affects whether a patient waits days or hours. Environmental / metagenomics: soil and ocean microbiome sequencing produces TB-scale datasets — streaming and parallelism are non-negotiable. Public health surveillance: SARS-CoV-2 sequencing scaled to thousands of samples per week; pipelines designed for cache-friendly streaming.
+
+Bioinformatics workloads sit precisely where the architectural facts of this lecture bite hardest. A language that lets you write code with the cache in mind, that produces a single static binary, and that catches concurrency bugs at compile time, is going to pay back the time you spend learning it.
 :::
 
 ## What's next

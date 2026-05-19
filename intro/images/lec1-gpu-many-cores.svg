@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Inside a modern GPU: thousands of small cores
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- GPU package (outer rectangle)                                -->
+  <!-- 4 SM clusters x 32 cores each = 128 cores total              -->
+  <!-- Each SM is a 4x8 grid of cores; SMs stacked side by side      -->
+  <!-- ============================================================ -->
+  <rect x="30" y="55" width="560" height="395" fill="#fafafa"
+        stroke="#333" stroke-width="2" rx="6"/>
+  <text x="310" y="78" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    GPU package
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- 4 Streaming Multiprocessors (SM), arranged in a 2x2 grid      -->
+  <!-- Each SM = 4 rows x 8 cols = 32 cores                          -->
+  <!-- SM dimensions: 260 wide, 130 tall                             -->
+  <!-- Core square: 24x24, gap 4. 8 cols = 8*24 + 7*4 = 220 wide      -->
+  <!-- ============================================================ -->
+
+  <!-- ===== SM 0: top-left ===== -->
+  <g>
+    <rect x="50" y="92" width="260" height="148" fill="#e3f2fd"
+          stroke="#1565c0" stroke-width="1.5" rx="4"/>
+    <text x="180" y="108" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+      SM 0
+    </text>
+    <!-- 4x8 grid of cores (32 cores) -->
+    <g fill="#1565c0" stroke="#0d3d10" stroke-width="0.4">
+      <!-- row 0 -->
+      <rect x="64" y="116" width="24" height="20"/>
+      <rect x="92" y="116" width="24" height="20"/>
+      <rect x="120" y="116" width="24" height="20"/>
+      <rect x="148" y="116" width="24" height="20"/>
+      <rect x="176" y="116" width="24" height="20"/>
+      <rect x="204" y="116" width="24" height="20"/>
+      <rect x="232" y="116" width="24" height="20"/>
+      <rect x="260" y="116" width="24" height="20"/>
+      <!-- row 1 -->
+      <rect x="64" y="140" width="24" height="20"/>
+      <rect x="92" y="140" width="24" height="20"/>
+      <rect x="120" y="140" width="24" height="20"/>
+      <rect x="148" y="140" width="24" height="20"/>
+      <rect x="176" y="140" width="24" height="20"/>
+      <rect x="204" y="140" width="24" height="20"/>
+      <rect x="232" y="140" width="24" height="20"/>
+      <rect x="260" y="140" width="24" height="20"/>
+      <!-- row 2 -->
+      <rect x="64" y="164" width="24" height="20"/>
+      <rect x="92" y="164" width="24" height="20"/>
+      <rect x="120" y="164" width="24" height="20"/>
+      <rect x="148" y="164" width="24" height="20"/>
+      <rect x="176" y="164" width="24" height="20"/>
+      <rect x="204" y="164" width="24" height="20"/>
+      <rect x="232" y="164" width="24" height="20"/>
+      <rect x="260" y="164" width="24" height="20"/>
+      <!-- row 3 -->
+      <rect x="64" y="188" width="24" height="20"/>
+      <rect x="92" y="188" width="24" height="20"/>
+      <rect x="120" y="188" width="24" height="20"/>
+      <rect x="148" y="188" width="24" height="20"/>
+      <rect x="176" y="188" width="24" height="20"/>
+      <rect x="204" y="188" width="24" height="20"/>
+      <rect x="232" y="188" width="24" height="20"/>
+      <rect x="260" y="188" width="24" height="20"/>
+    </g>
+    <!-- SM shared cache band -->
+    <rect x="60" y="214" width="240" height="18" fill="#bbdefb"
+          stroke="#1565c0" stroke-width="1"/>
+    <text x="180" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">
+      shared L1 / scratchpad
+    </text>
+  </g>
+
+  <!-- ===== SM 1: top-right ===== -->
+  <g>
+    <rect x="320" y="92" width="260" height="148" fill="#e3f2fd"
+          stroke="#1565c0" stroke-width="1.5" rx="4"/>
+    <text x="450" y="108" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+      SM 1
+    </text>
+    <g fill="#1565c0" stroke="#0d3d10" stroke-width="0.4">
+      <rect x="334" y="116" width="24" height="20"/>
+      <rect x="362" y="116" width="24" height="20"/>
+      <rect x="390" y="116" width="24" height="20"/>
+      <rect x="418" y="116" width="24" height="20"/>
+      <rect x="446" y="116" width="24" height="20"/>
+      <rect x="474" y="116" width="24" height="20"/>
+      <rect x="502" y="116" width="24" height="20"/>
+      <rect x="530" y="116" width="24" height="20"/>
+
+      <rect x="334" y="140" width="24" height="20"/>
+      <rect x="362" y="140" width="24" height="20"/>
+      <rect x="390" y="140" width="24" height="20"/>
+      <rect x="418" y="140" width="24" height="20"/>
+      <rect x="446" y="140" width="24" height="20"/>
+      <rect x="474" y="140" width="24" height="20"/>
+      <rect x="502" y="140" width="24" height="20"/>
+      <rect x="530" y="140" width="24" height="20"/>
+
+      <rect x="334" y="164" width="24" height="20"/>
+      <rect x="362" y="164" width="24" height="20"/>
+      <rect x="390" y="164" width="24" height="20"/>
+      <rect x="418" y="164" width="24" height="20"/>
+      <rect x="446" y="164" width="24" height="20"/>
+      <rect x="474" y="164" width="24" height="20"/>
+      <rect x="502" y="164" width="24" height="20"/>
+      <rect x="530" y="164" width="24" height="20"/>
+
+      <rect x="334" y="188" width="24" height="20"/>
+      <rect x="362" y="188" width="24" height="20"/>
+      <rect x="390" y="188" width="24" height="20"/>
+      <rect x="418" y="188" width="24" height="20"/>
+      <rect x="446" y="188" width="24" height="20"/>
+      <rect x="474" y="188" width="24" height="20"/>
+      <rect x="502" y="188" width="24" height="20"/>
+      <rect x="530" y="188" width="24" height="20"/>
+    </g>
+    <rect x="330" y="214" width="240" height="18" fill="#bbdefb"
+          stroke="#1565c0" stroke-width="1"/>
+    <text x="450" y="227" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">
+      shared L1 / scratchpad
+    </text>
+  </g>
+
+  <!-- ===== SM 2: bottom-left ===== -->
+  <g>
+    <rect x="50" y="248" width="260" height="148" fill="#e3f2fd"
+          stroke="#1565c0" stroke-width="1.5" rx="4"/>
+    <text x="180" y="264" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+      SM 2
+    </text>
+    <g fill="#1565c0" stroke="#0d3d10" stroke-width="0.4">
+      <rect x="64" y="272" width="24" height="20"/>
+      <rect x="92" y="272" width="24" height="20"/>
+      <rect x="120" y="272" width="24" height="20"/>
+      <rect x="148" y="272" width="24" height="20"/>
+      <rect x="176" y="272" width="24" height="20"/>
+      <rect x="204" y="272" width="24" height="20"/>
+      <rect x="232" y="272" width="24" height="20"/>
+      <rect x="260" y="272" width="24" height="20"/>
+
+      <rect x="64" y="296" width="24" height="20"/>
+      <rect x="92" y="296" width="24" height="20"/>
+      <rect x="120" y="296" width="24" height="20"/>
+      <rect x="148" y="296" width="24" height="20"/>
+      <rect x="176" y="296" width="24" height="20"/>
+      <rect x="204" y="296" width="24" height="20"/>
+      <rect x="232" y="296" width="24" height="20"/>
+      <rect x="260" y="296" width="24" height="20"/>
+
+      <rect x="64" y="320" width="24" height="20"/>
+      <rect x="92" y="320" width="24" height="20"/>
+      <rect x="120" y="320" width="24" height="20"/>
+      <rect x="148" y="320" width="24" height="20"/>
+      <rect x="176" y="320" width="24" height="20"/>
+      <rect x="204" y="320" width="24" height="20"/>
+      <rect x="232" y="320" width="24" height="20"/>
+      <rect x="260" y="320" width="24" height="20"/>
+
+      <rect x="64" y="344" width="24" height="20"/>
+      <rect x="92" y="344" width="24" height="20"/>
+      <rect x="120" y="344" width="24" height="20"/>
+      <rect x="148" y="344" width="24" height="20"/>
+      <rect x="176" y="344" width="24" height="20"/>
+      <rect x="204" y="344" width="24" height="20"/>
+      <rect x="232" y="344" width="24" height="20"/>
+      <rect x="260" y="344" width="24" height="20"/>
+    </g>
+    <rect x="60" y="370" width="240" height="18" fill="#bbdefb"
+          stroke="#1565c0" stroke-width="1"/>
+    <text x="180" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">
+      shared L1 / scratchpad
+    </text>
+  </g>
+
+  <!-- ===== SM 3: bottom-right ===== -->
+  <g>
+    <rect x="320" y="248" width="260" height="148" fill="#e3f2fd"
+          stroke="#1565c0" stroke-width="1.5" rx="4"/>
+    <text x="450" y="264" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+      SM 3
+    </text>
+    <g fill="#1565c0" stroke="#0d3d10" stroke-width="0.4">
+      <rect x="334" y="272" width="24" height="20"/>
+      <rect x="362" y="272" width="24" height="20"/>
+      <rect x="390" y="272" width="24" height="20"/>
+      <rect x="418" y="272" width="24" height="20"/>
+      <rect x="446" y="272" width="24" height="20"/>
+      <rect x="474" y="272" width="24" height="20"/>
+      <rect x="502" y="272" width="24" height="20"/>
+      <rect x="530" y="272" width="24" height="20"/>
+
+      <rect x="334" y="296" width="24" height="20"/>
+      <rect x="362" y="296" width="24" height="20"/>
+      <rect x="390" y="296" width="24" height="20"/>
+      <rect x="418" y="296" width="24" height="20"/>
+      <rect x="446" y="296" width="24" height="20"/>
+      <rect x="474" y="296" width="24" height="20"/>
+      <rect x="502" y="296" width="24" height="20"/>
+      <rect x="530" y="296" width="24" height="20"/>
+
+      <rect x="334" y="320" width="24" height="20"/>
+      <rect x="362" y="320" width="24" height="20"/>
+      <rect x="390" y="320" width="24" height="20"/>
+      <rect x="418" y="320" width="24" height="20"/>
+      <rect x="446" y="320" width="24" height="20"/>
+      <rect x="474" y="320" width="24" height="20"/>
+      <rect x="502" y="320" width="24" height="20"/>
+      <rect x="530" y="320" width="24" height="20"/>
+
+      <rect x="334" y="344" width="24" height="20"/>
+      <rect x="362" y="344" width="24" height="20"/>
+      <rect x="390" y="344" width="24" height="20"/>
+      <rect x="418" y="344" width="24" height="20"/>
+      <rect x="446" y="344" width="24" height="20"/>
+      <rect x="474" y="344" width="24" height="20"/>
+      <rect x="502" y="344" width="24" height="20"/>
+      <rect x="530" y="344" width="24" height="20"/>
+    </g>
+    <rect x="330" y="370" width="240" height="18" fill="#bbdefb"
+          stroke="#1565c0" stroke-width="1"/>
+    <text x="450" y="383" text-anchor="middle" font-size="10" font-weight="700" fill="#1565c0">
+      shared L1 / scratchpad
+    </text>
+  </g>
+
+  <!-- ===== L2 cache band ===== -->
+  <rect x="50" y="402" width="530" height="20" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="315" y="416" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">
+    L2 cache (shared across all SMs)
+  </text>
+
+  <!-- ===== Memory band ===== -->
+  <rect x="50" y="424" width="530" height="20" fill="#ffe0b2"
+        stroke="#d97706" stroke-width="1.2"/>
+  <text x="315" y="438" text-anchor="middle" font-size="12" font-weight="700" fill="#b45309">
+    GDDR6 / HBM memory
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- Annotation panel (right of package)                          -->
+  <!-- ============================================================ -->
+  <rect x="610" y="92" width="270" height="304" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.2" rx="4"/>
+  <text x="745" y="116" text-anchor="middle" font-size="14" font-weight="700" fill="#b45309">
+    Real GPU core counts
+  </text>
+  <line x1="630" y1="124" x2="860" y2="124" stroke="#d97706" stroke-width="0.8"/>
+
+  <text x="624" y="148" font-size="13" font-weight="700" fill="#333">
+    RTX 4090 (consumer):
+  </text>
+  <text x="624" y="166" font-size="13" font-family="ui-monospace, monospace" fill="#1565c0">
+    16,384 CUDA cores
+  </text>
+
+  <text x="624" y="196" font-size="13" font-weight="700" fill="#333">
+    A100 (datacenter):
+  </text>
+  <text x="624" y="214" font-size="13" font-family="ui-monospace, monospace" fill="#1565c0">
+    6,912 CUDA cores
+  </text>
+  <text x="624" y="230" font-size="13" font-family="ui-monospace, monospace" fill="#1565c0">
+    + 432 tensor cores
+  </text>
+
+  <text x="624" y="262" font-size="12" fill="#555" font-style="italic">
+    Each core is simpler and
+  </text>
+  <text x="624" y="278" font-size="12" fill="#555" font-style="italic">
+    slower than a CPU core
+  </text>
+  <text x="624" y="294" font-size="12" fill="#555" font-style="italic">
+    -- but you get thousands.
+  </text>
+
+  <text x="624" y="328" font-size="11" fill="#888" font-style="italic">
+    (Diagram simplified to 4 SMs
+  </text>
+  <text x="624" y="342" font-size="11" fill="#888" font-style="italic">
+    x 32 cores = 128.)
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- Footer caption                                               -->
+  <!-- ============================================================ -->
+  <rect x="30" y="460" width="850" height="34" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.2" rx="4"/>
+  <text x="455" y="482" text-anchor="middle" font-size="13" fill="#1b5e20">
+    GPUs win when the same simple operation must run on millions of independent data points: pixels, neural-net weights, k-mers, base-call probabilities.
+  </text>
+
+</svg>

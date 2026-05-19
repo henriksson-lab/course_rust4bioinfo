@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="pain2-arrow-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The pain, step 2 of 3: duplicate rows disagree
+  </text>
+
+  <!-- =========================================================
+       SHARED BASE LAYOUT (matches pain-step1)
+       ========================================================= -->
+
+  <text x="50" y="62" font-size="13" font-weight="700" fill="#555"
+        font-family="ui-monospace, monospace">strains.tsv</text>
+
+  <!-- Outer card -->
+  <rect x="30" y="68" width="490" height="212" fill="white"
+        stroke="#888" stroke-width="1.4"/>
+
+  <!-- Header band -->
+  <rect x="30" y="68" width="490" height="28" fill="#e3f2fd" stroke="#888"/>
+  <text x="100" y="87" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="240" y="87" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="375" y="87" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_source</text>
+  <text x="480" y="87" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">year_isolated</text>
+
+  <!-- Column dividers -->
+  <line x1="170" y1="68" x2="170" y2="280" stroke="#bbb"/>
+  <line x1="310" y1="68" x2="310" y2="280" stroke="#bbb"/>
+  <line x1="440" y1="68" x2="440" y2="280" stroke="#bbb"/>
+
+  <!-- Row 1 (original K-12 MG1655) — highlight in faint orange as the OTHER duplicate -->
+  <rect x="30" y="96" width="490" height="46" fill="#fff7e6" stroke="#bbb"/>
+  <text x="100" y="124" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">K-12 MG1655</text>
+  <text x="240" y="124" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="375" y="124" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">human gut</text>
+  <text x="480" y="124" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">1922</text>
+
+  <!-- Row 2 -->
+  <rect x="30" y="142" width="490" height="46" fill="white" stroke="#bbb"/>
+  <text x="100" y="170" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="240" y="170" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="375" y="170" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">lab derivative</text>
+  <text x="480" y="170" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">1980</text>
+
+  <!-- Row 3 — DUPLICATE of row 1 with conflicting isolation_source, ORANGE -->
+  <rect x="30" y="188" width="490" height="46" fill="#fff3cd"
+        stroke="#d97706" stroke-width="2"/>
+  <text x="100" y="216" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">K-12 MG1655</text>
+  <text x="240" y="216" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="375" y="216" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">mouse gut</text>
+  <text x="480" y="216" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">1922</text>
+
+  <!-- Row 4 -->
+  <rect x="30" y="234" width="490" height="46" fill="white" stroke="#bbb"/>
+  <text x="100" y="262" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">168</text>
+  <text x="240" y="262" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">Bacillus subtilis</text>
+  <text x="375" y="262" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">hay infusion</text>
+  <text x="480" y="262" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">1872</text>
+
+  <!-- Arrows pointing at the two K-12 rows from a callout on the right -->
+  <path d="M 600 119 C 560 119, 545 119, 525 119"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#pain2-arrow-orange)"/>
+  <path d="M 600 211 C 560 211, 545 211, 525 211"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#pain2-arrow-orange)"/>
+
+  <!-- ===== Right panel: callout box highlighting the conflict ===== -->
+  <rect x="605" y="80" width="265" height="156" rx="8" ry="8"
+        fill="#fff7e6" stroke="#d97706" stroke-width="1.5"/>
+  <text x="737" y="104" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a07">
+    Same strain, two records
+  </text>
+  <text x="737" y="128" text-anchor="middle" font-size="13" fill="#555">
+    Both rows say K-12 MG1655,
+  </text>
+  <text x="737" y="146" text-anchor="middle" font-size="13" fill="#555">
+    but isolation_source disagrees:
+  </text>
+  <text x="737" y="174" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">
+    human gut
+  </text>
+  <text x="737" y="194" text-anchor="middle" font-size="13" fill="#555">vs</text>
+  <text x="737" y="214" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">
+    mouse gut
+  </text>
+
+  <!-- ===== Footer banner ===== -->
+  <rect x="30" y="305" width="840" height="60" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="450" y="330" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a07">
+    Which row is right?
+  </text>
+  <text x="450" y="352" text-anchor="middle" font-size="13" fill="#555">
+    The TSV file has no opinion. Nothing enforces that strain_name is unique.
+  </text>
+
+</svg>

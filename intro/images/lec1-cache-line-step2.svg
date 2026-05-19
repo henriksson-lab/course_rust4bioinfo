@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="cls2-arrow-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+    <marker id="cls2-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Cache line, step 2 of 3
+  </text>
+
+  <!-- ===== Bracket above bytes 0..63 ===== -->
+  <line x1="50" y1="78" x2="658" y2="78" stroke="#d97706" stroke-width="2"/>
+  <line x1="50" y1="78" x2="50" y2="92" stroke="#d97706" stroke-width="2"/>
+  <line x1="658" y1="78" x2="658" y2="92" stroke="#d97706" stroke-width="2"/>
+  <text x="354" y="70" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">
+    cache line: 64 bytes &#8212; fetched together
+  </text>
+
+  <!-- ===== RAM strip (shared coords) ===== -->
+  <text x="50" y="108" font-size="16" font-weight="700" fill="#1565c0">
+    Main memory (RAM)
+  </text>
+  <text x="220" y="108" font-size="13" font-style="italic" fill="#888">
+    (each cell = 1 byte)
+  </text>
+
+  <rect x="50" y="120" width="760" height="34" fill="white"
+        stroke="#888" stroke-width="1"/>
+
+  <!-- Bytes 0..63 tinted orange to show the cache line being fetched -->
+  <rect x="50" y="120" width="608" height="34" fill="#fff3cd" stroke="none"/>
+
+  <!-- 80 cell outlines -->
+  <g stroke="#bbb" stroke-width="0.6" fill="none">
+    <rect x="50" y="120" width="9.5" height="34"/>
+    <rect x="59.5" y="120" width="9.5" height="34"/>
+    <rect x="69" y="120" width="9.5" height="34"/>
+    <rect x="78.5" y="120" width="9.5" height="34"/>
+    <rect x="88" y="120" width="9.5" height="34"/>
+    <rect x="97.5" y="120" width="9.5" height="34"/>
+    <rect x="107" y="120" width="9.5" height="34"/>
+    <rect x="116.5" y="120" width="9.5" height="34"/>
+    <rect x="126" y="120" width="9.5" height="34"/>
+    <rect x="135.5" y="120" width="9.5" height="34"/>
+    <rect x="145" y="120" width="9.5" height="34"/>
+    <rect x="154.5" y="120" width="9.5" height="34"/>
+    <rect x="164" y="120" width="9.5" height="34"/>
+    <rect x="173.5" y="120" width="9.5" height="34"/>
+    <rect x="183" y="120" width="9.5" height="34"/>
+    <rect x="192.5" y="120" width="9.5" height="34"/>
+    <rect x="202" y="120" width="9.5" height="34"/>
+    <rect x="211.5" y="120" width="9.5" height="34"/>
+    <rect x="221" y="120" width="9.5" height="34"/>
+    <rect x="230.5" y="120" width="9.5" height="34"/>
+    <rect x="240" y="120" width="9.5" height="34"/>
+    <rect x="249.5" y="120" width="9.5" height="34"/>
+    <rect x="259" y="120" width="9.5" height="34"/>
+    <rect x="268.5" y="120" width="9.5" height="34"/>
+    <rect x="278" y="120" width="9.5" height="34"/>
+    <rect x="287.5" y="120" width="9.5" height="34"/>
+    <rect x="297" y="120" width="9.5" height="34"/>
+    <rect x="306.5" y="120" width="9.5" height="34"/>
+    <rect x="316" y="120" width="9.5" height="34"/>
+    <rect x="325.5" y="120" width="9.5" height="34"/>
+    <rect x="335" y="120" width="9.5" height="34"/>
+    <rect x="344.5" y="120" width="9.5" height="34"/>
+    <rect x="354" y="120" width="9.5" height="34"/>
+    <rect x="363.5" y="120" width="9.5" height="34"/>
+    <rect x="373" y="120" width="9.5" height="34"/>
+    <rect x="382.5" y="120" width="9.5" height="34"/>
+    <rect x="392" y="120" width="9.5" height="34"/>
+    <rect x="401.5" y="120" width="9.5" height="34"/>
+    <rect x="411" y="120" width="9.5" height="34"/>
+    <rect x="420.5" y="120" width="9.5" height="34"/>
+    <rect x="430" y="120" width="9.5" height="34"/>
+    <rect x="439.5" y="120" width="9.5" height="34"/>
+    <rect x="449" y="120" width="9.5" height="34"/>
+    <rect x="458.5" y="120" width="9.5" height="34"/>
+    <rect x="468" y="120" width="9.5" height="34"/>
+    <rect x="477.5" y="120" width="9.5" height="34"/>
+    <rect x="487" y="120" width="9.5" height="34"/>
+    <rect x="496.5" y="120" width="9.5" height="34"/>
+    <rect x="506" y="120" width="9.5" height="34"/>
+    <rect x="515.5" y="120" width="9.5" height="34"/>
+    <rect x="525" y="120" width="9.5" height="34"/>
+    <rect x="534.5" y="120" width="9.5" height="34"/>
+    <rect x="544" y="120" width="9.5" height="34"/>
+    <rect x="553.5" y="120" width="9.5" height="34"/>
+    <rect x="563" y="120" width="9.5" height="34"/>
+    <rect x="572.5" y="120" width="9.5" height="34"/>
+    <rect x="582" y="120" width="9.5" height="34"/>
+    <rect x="591.5" y="120" width="9.5" height="34"/>
+    <rect x="601" y="120" width="9.5" height="34"/>
+    <rect x="610.5" y="120" width="9.5" height="34"/>
+    <rect x="620" y="120" width="9.5" height="34"/>
+    <rect x="629.5" y="120" width="9.5" height="34"/>
+    <rect x="639" y="120" width="9.5" height="34"/>
+    <rect x="648.5" y="120" width="9.5" height="34"/>
+    <rect x="658" y="120" width="9.5" height="34"/>
+    <rect x="667.5" y="120" width="9.5" height="34"/>
+    <rect x="677" y="120" width="9.5" height="34"/>
+    <rect x="686.5" y="120" width="9.5" height="34"/>
+    <rect x="696" y="120" width="9.5" height="34"/>
+    <rect x="705.5" y="120" width="9.5" height="34"/>
+    <rect x="715" y="120" width="9.5" height="34"/>
+    <rect x="724.5" y="120" width="9.5" height="34"/>
+    <rect x="734" y="120" width="9.5" height="34"/>
+    <rect x="743.5" y="120" width="9.5" height="34"/>
+    <rect x="753" y="120" width="9.5" height="34"/>
+    <rect x="762.5" y="120" width="9.5" height="34"/>
+    <rect x="772" y="120" width="9.5" height="34"/>
+    <rect x="781.5" y="120" width="9.5" height="34"/>
+    <rect x="791" y="120" width="9.5" height="34"/>
+    <rect x="800.5" y="120" width="9.5" height="34"/>
+  </g>
+
+  <!-- Highlight byte 5 (still yellow) -->
+  <rect x="97.5" y="120" width="9.5" height="34"
+        fill="#ffeb3b" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Byte index hints under strip -->
+  <text x="54" y="168" font-size="10" font-family="ui-monospace, monospace" fill="#888">0</text>
+  <text x="610" y="168" text-anchor="middle" font-size="10" font-family="ui-monospace, monospace" fill="#888">63</text>
+  <text x="805" y="168" text-anchor="end" font-size="10" font-family="ui-monospace, monospace" fill="#888">79</text>
+
+  <!-- ===== Arrow RAM -> L1 (one slow RAM trip) ===== -->
+  <line x1="354" y1="195" x2="354" y2="237"
+        stroke="#1565c0" stroke-width="3" marker-end="url(#cls2-arrow-blue)"/>
+  <text x="364" y="210" font-size="13" font-weight="700" fill="#1565c0">
+    one slow RAM trip
+  </text>
+  <text x="364" y="227" font-size="12" font-style="italic" fill="#1565c0">
+    (~100 ns)
+  </text>
+
+  <!-- ===== L1 cache box (shared coords) - now FILLED ===== -->
+  <text x="50" y="228" font-size="16" font-weight="700" fill="#d97706">
+    L1 cache (64 bytes)
+  </text>
+  <rect x="50" y="240" width="608" height="34" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.8"/>
+
+  <!-- Show some representative cells inside as visual texture -->
+  <g stroke="#d97706" stroke-width="0.6" fill="none" opacity="0.45">
+    <line x1="126" y1="240" x2="126" y2="274"/>
+    <line x1="202" y1="240" x2="202" y2="274"/>
+    <line x1="278" y1="240" x2="278" y2="274"/>
+    <line x1="354" y1="240" x2="354" y2="274"/>
+    <line x1="430" y1="240" x2="430" y2="274"/>
+    <line x1="506" y1="240" x2="506" y2="274"/>
+    <line x1="582" y1="240" x2="582" y2="274"/>
+  </g>
+
+  <!-- Byte 5 highlighted inside the cache too (same x as RAM) -->
+  <rect x="97.5" y="240" width="9.5" height="34"
+        fill="#ffeb3b" stroke="#d97706" stroke-width="2"/>
+
+  <text x="354" y="262" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#8a5a07">
+    bytes 0&#8211;63 (one cache line)
+  </text>
+
+  <!-- ===== CPU box (shared coords) ===== -->
+  <rect x="50" y="350" width="200" height="90" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="150" y="378" text-anchor="middle" font-size="18" font-weight="700" fill="#1565c0">
+    CPU
+  </text>
+  <text x="150" y="402" text-anchor="middle" font-size="13" fill="#333">
+    got byte at
+  </text>
+  <text x="150" y="420" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    offset 5
+  </text>
+
+  <!-- Arrow from L1 cache down to CPU (byte 5 served from cache) -->
+  <path d="M 102 274 C 102 310, 150 320, 150 350"
+        fill="none" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#cls2-arrow-orange)" stroke-dasharray="4,3"/>
+
+  <!-- ===== Caption at bottom (shared y) ===== -->
+  <rect x="280" y="350" width="580" height="90" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="570" y="380" text-anchor="middle" font-size="16" font-weight="700" fill="#8a5a07">
+    Step 2: the whole 64-byte line is pulled in.
+  </text>
+  <text x="570" y="406" text-anchor="middle" font-size="14" fill="#555">
+    One RAM trip copies bytes 0&#8211;63 into L1. The CPU gets byte 5.
+  </text>
+  <text x="570" y="426" text-anchor="middle" font-size="13" fill="#888" font-style="italic">
+    The other 63 bytes came along for free.
+  </text>
+
+</svg>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    The DOM — the browser's in-memory tree of nodes
+  </text>
+
+  <!-- Header above tree -->
+  <text x="450" y="58" text-anchor="middle" font-size="14" fill="#555" font-style="italic">
+    Built once from the HTML, then mutated as the page changes.
+  </text>
+
+  <!-- ====== Tree edges (drawn first, behind nodes) ====== -->
+  <!-- document -> html -->
+  <line x1="450" y1="100" x2="450" y2="140" stroke="#888" stroke-width="1.5"/>
+  <!-- html -> body -->
+  <line x1="450" y1="170" x2="450" y2="210" stroke="#888" stroke-width="1.5"/>
+  <!-- body -> h1 -->
+  <line x1="450" y1="240" x2="300" y2="280" stroke="#888" stroke-width="1.5"/>
+  <!-- body -> div -->
+  <line x1="450" y1="240" x2="600" y2="280" stroke="#888" stroke-width="1.5"/>
+  <!-- div -> textarea -->
+  <line x1="600" y1="310" x2="520" y2="360" stroke="#888" stroke-width="1.5"/>
+  <!-- div -> p -->
+  <line x1="600" y1="310" x2="700" y2="360" stroke="#888" stroke-width="1.5"/>
+
+  <!-- ====== Nodes ====== -->
+  <!-- document (root) -->
+  <rect x="385" y="74" width="130" height="36" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="450" y="98" text-anchor="middle" font-size="15" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#b45309">document</text>
+
+  <!-- html -->
+  <rect x="405" y="140" width="90" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="450" y="161" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">html</text>
+
+  <!-- body -->
+  <rect x="405" y="210" width="90" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="450" y="231" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">body</text>
+
+  <!-- h1 -->
+  <rect x="240" y="280" width="120" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="300" y="301" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">h1</text>
+  <!-- h1 text content (italic underneath) -->
+  <text x="300" y="332" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    "Sequence inspector"
+  </text>
+
+  <!-- div -->
+  <rect x="555" y="280" width="90" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="600" y="301" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">div</text>
+
+  <!-- textarea -->
+  <rect x="460" y="360" width="120" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="520" y="381" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">textarea</text>
+
+  <!-- p -->
+  <rect x="670" y="360" width="70" height="32" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="705" y="381" text-anchor="middle" font-size="14" font-weight="600"
+        font-family="ui-monospace, monospace" fill="#1565c0">p</text>
+  <!-- p text content -->
+  <text x="705" y="412" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    "GC content: 50%"
+  </text>
+
+  <!-- ====== Bottom annotation ====== -->
+  <rect x="60" y="440" width="780" height="50" rx="8" ry="8"
+        fill="#fafafa" stroke="#888" stroke-dasharray="6,4" stroke-width="1.5"/>
+  <text x="450" y="462" text-anchor="middle" font-size="13" fill="#333">
+    Every dynamic UI library — JavaScript, jQuery, React, Yew — works by manipulating this tree.
+  </text>
+  <text x="450" y="480" text-anchor="middle" font-size="13" fill="#555">
+    Add a node → element appears.  Change text → text updates.
+  </text>
+
+</svg>

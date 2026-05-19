@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-de" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arr-ser" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    JSON ↔ Rust struct — serde does both directions
+  </text>
+
+  <!-- ===== Left column: JSON ===== -->
+  <rect x="40" y="60" width="350" height="220" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="215" y="86" text-anchor="middle" font-size="16" font-weight="600" fill="#b45309">
+    JSON (on the wire)
+  </text>
+
+  <text x="60" y="118" font-size="15" font-family="ui-monospace, monospace" fill="#333">{</text>
+  <text x="60" y="142" font-size="15" font-family="ui-monospace, monospace" fill="#333">  "id": 42,</text>
+  <text x="60" y="170" font-size="15" font-family="ui-monospace, monospace" fill="#333">  "name": "K-12 MG1655",</text>
+  <text x="60" y="198" font-size="15" font-family="ui-monospace, monospace" fill="#333">  "species": "Escherichia coli",</text>
+  <text x="60" y="226" font-size="15" font-family="ui-monospace, monospace" fill="#333">  "sequence": "ACGTACGT..."</text>
+  <text x="60" y="254" font-size="15" font-family="ui-monospace, monospace" fill="#333">}</text>
+
+  <!-- ===== Right column: Rust struct ===== -->
+  <rect x="510" y="60" width="350" height="220" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="685" y="86" text-anchor="middle" font-size="16" font-weight="600" fill="#2e7d32">
+    Rust struct
+  </text>
+
+  <text x="530" y="114" font-size="14" font-family="ui-monospace, monospace" fill="#333">#[derive(Serialize, Deserialize)]</text>
+  <text x="530" y="134" font-size="14" font-family="ui-monospace, monospace" fill="#333">struct SampleRecord {</text>
+  <text x="530" y="160" font-size="14" font-family="ui-monospace, monospace" fill="#333">    id: u32,</text>
+  <text x="530" y="186" font-size="14" font-family="ui-monospace, monospace" fill="#333">    name: String,</text>
+  <text x="530" y="212" font-size="14" font-family="ui-monospace, monospace" fill="#333">    species: String,</text>
+  <text x="530" y="238" font-size="14" font-family="ui-monospace, monospace" fill="#333">    sequence: String,</text>
+  <text x="530" y="262" font-size="14" font-family="ui-monospace, monospace" fill="#333">}</text>
+
+  <!-- ===== Connecting lines (4 colours) ===== -->
+  <!-- id (blue) -->
+  <path d="M 200 138 C 350 138, 380 156, 530 156"
+        fill="none" stroke="#1565c0" stroke-width="1.8" stroke-dasharray="5,4"/>
+  <!-- name (orange/red) -->
+  <path d="M 250 166 C 380 166, 400 182, 530 182"
+        fill="none" stroke="#d97706" stroke-width="1.8" stroke-dasharray="5,4"/>
+  <!-- species (red) -->
+  <path d="M 290 194 C 400 194, 420 208, 530 208"
+        fill="none" stroke="#c62828" stroke-width="1.8" stroke-dasharray="5,4"/>
+  <!-- sequence (green) -->
+  <path d="M 290 222 C 400 222, 420 234, 530 234"
+        fill="none" stroke="#2e7d32" stroke-width="1.8" stroke-dasharray="5,4"/>
+
+  <!-- ===== Bottom annotation strip ===== -->
+  <rect x="40" y="320" width="820" height="100" rx="8" ry="8"
+        fill="#fafafa" stroke="#888" stroke-dasharray="6,4" stroke-width="1.5"/>
+
+  <!-- deserialize arrow (right -> left, JSON -> Rust) -->
+  <line x1="600" y1="350" x2="300" y2="350" stroke="#2e7d32" stroke-width="2.5"
+        marker-end="url(#arr-de)"/>
+  <text x="450" y="342" text-anchor="middle" font-size="14" font-weight="600" fill="#2e7d32">
+    serde_json::from_str(&amp;body)   (deserialize)
+  </text>
+
+  <!-- serialize arrow (left -> right, Rust -> JSON) -->
+  <line x1="300" y1="395" x2="600" y2="395" stroke="#2e7d32" stroke-width="2.5"
+        marker-end="url(#arr-ser)"/>
+  <text x="450" y="412" text-anchor="middle" font-size="14" font-weight="600" fill="#2e7d32">
+    serde_json::to_string(&amp;record)   (serialize)
+  </text>
+
+  <!-- Footer caption -->
+  <text x="450" y="460" text-anchor="middle" font-size="14" fill="#555">
+    Same struct definition; serde generates both encoder and decoder from
+  </text>
+  <text x="450" y="480" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#555">
+    #[derive].
+  </text>
+
+</svg>

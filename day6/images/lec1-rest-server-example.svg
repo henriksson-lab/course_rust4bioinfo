@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rse-arrow-solid" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="rse-arrow-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="rse-arrow-dashed" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a4a09"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    GET /gc — request through the stack
+  </text>
+
+  <!--
+    Three lifelines:
+      curl client    : x = 130
+      axum runtime   : x = 450
+      gc() handler   : x = 770
+    Header boxes at y = 60..100. Lifelines from y = 100 to y = 460.
+  -->
+
+  <!-- ===== Lifeline header boxes ===== -->
+  <!-- curl client -->
+  <rect x="50" y="60" width="160" height="44" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="130" y="80" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    curl
+  </text>
+  <text x="130" y="96" text-anchor="middle" font-size="11" fill="#1565c0">
+    (client)
+  </text>
+
+  <!-- axum runtime -->
+  <rect x="370" y="60" width="160" height="44" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.8"/>
+  <text x="450" y="80" text-anchor="middle" font-size="14" font-weight="700" fill="#8a4a09">
+    axum runtime
+  </text>
+  <text x="450" y="96" text-anchor="middle" font-size="11" fill="#8a4a09">
+    (routes requests)
+  </text>
+
+  <!-- gc() handler -->
+  <rect x="690" y="60" width="160" height="44" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+  <text x="770" y="80" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1b5e20">
+    gc() handler
+  </text>
+  <text x="770" y="96" text-anchor="middle" font-size="11" fill="#1b5e20">
+    (your function)
+  </text>
+
+  <!-- ===== Lifelines (dashed verticals) ===== -->
+  <line x1="130" y1="104" x2="130" y2="464"
+        stroke="#1565c0" stroke-width="1.4" stroke-dasharray="4,4"/>
+  <line x1="450" y1="104" x2="450" y2="464"
+        stroke="#8a4a09" stroke-width="1.4" stroke-dasharray="4,4"/>
+  <line x1="770" y1="104" x2="770" y2="464"
+        stroke="#2e7d32" stroke-width="1.4" stroke-dasharray="4,4"/>
+
+  <!-- "time" axis hint -->
+  <text x="30" y="120" font-size="11" fill="#888" font-style="italic">time</text>
+  <line x1="30" y1="124" x2="30" y2="450"
+        stroke="#bbb" stroke-width="1" stroke-dasharray="3,3"/>
+  <polygon points="26,450 30,460 34,450" fill="#bbb"/>
+
+  <!-- ============================================================
+       Step 1: curl -> axum: GET /gc?seq=...
+       y = 138
+       ============================================================ -->
+  <line x1="130" y1="138" x2="450" y2="138"
+        stroke="#1565c0" stroke-width="2.2"
+        marker-end="url(#rse-arrow-solid)"/>
+  <rect x="160" y="116" width="260" height="18" rx="3" ry="3"
+        fill="white" stroke="#1565c0" stroke-width="1"/>
+  <text x="290" y="130" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    GET /gc?seq=ACGTACGTGGGG
+  </text>
+
+  <!-- ============================================================
+       Step 2: axum internal box - match route
+       y = 158..200
+       ============================================================ -->
+  <rect x="370" y="158" width="160" height="42" rx="4" ry="4"
+        fill="#fff8e1" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="175" text-anchor="middle" font-size="12" fill="#8a4a09">
+    match route
+  </text>
+  <text x="450" y="192" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#8a4a09">
+    /gc → gc(query)
+  </text>
+
+  <!-- ============================================================
+       Step 3: axum -> gc(): invoke
+       y = 220
+       ============================================================ -->
+  <line x1="450" y1="220" x2="770" y2="220"
+        stroke="#8a4a09" stroke-width="2.2"
+        marker-end="url(#rse-arrow-dashed)"/>
+  <rect x="540" y="200" width="140" height="18" rx="3" ry="3"
+        fill="white" stroke="#8a4a09" stroke-width="1"/>
+  <text x="610" y="214" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#8a4a09">
+    invoke
+  </text>
+
+  <!-- ============================================================
+       Step 4: gc() handler internal box - computation
+       y = 240..320
+       ============================================================ -->
+  <rect x="680" y="240" width="180" height="86" rx="4" ry="4"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+  <text x="770" y="260" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">
+    compute
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#1b5e20">
+    <text x="692" y="280">n = 12</text>
+    <text x="692" y="296">g = 8</text>
+    <text x="692" y="316">answer = { length: 12,</text>
+    <text x="715" y="328"> gc: 0.667 }</text>
+  </g>
+
+  <!-- ============================================================
+       Step 5: gc() -> axum: Json(answer)
+       y = 354
+       ============================================================ -->
+  <line x1="770" y1="354" x2="450" y2="354"
+        stroke="#2e7d32" stroke-width="2.2"
+        marker-end="url(#rse-arrow-green)"/>
+  <rect x="540" y="334" width="160" height="18" rx="3" ry="3"
+        fill="white" stroke="#2e7d32" stroke-width="1"/>
+  <text x="620" y="348" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#2e7d32">
+    Json(answer)
+  </text>
+
+  <!-- ============================================================
+       Step 6: axum -> curl: dashed return with 200 OK
+       y = 400
+       ============================================================ -->
+  <line x1="450" y1="400" x2="130" y2="400"
+        stroke="#1565c0" stroke-width="2.2" stroke-dasharray="6,4"
+        marker-end="url(#rse-arrow-solid)"/>
+  <rect x="155" y="378" width="280" height="20" rx="3" ry="3"
+        fill="white" stroke="#1565c0" stroke-width="1"/>
+  <text x="295" y="392" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#1565c0">
+    200 OK   {"length":12,"gc":0.667}
+  </text>
+
+  <!-- ============================================================
+       Lifeline foot caps
+       ============================================================ -->
+  <line x1="120" y1="464" x2="140" y2="464" stroke="#1565c0" stroke-width="2"/>
+  <line x1="440" y1="464" x2="460" y2="464" stroke="#8a4a09" stroke-width="2"/>
+  <line x1="760" y1="464" x2="780" y2="464" stroke="#2e7d32" stroke-width="2"/>
+
+  <!-- ============================================================
+       Footer caption
+       ============================================================ -->
+  <rect x="50" y="485" width="800" height="55" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="510" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5a07">
+    Same shape no matter what the handler does.
+  </text>
+  <text x="450" y="530" text-anchor="middle" font-size="13" fill="#555">
+    Add a route, write a handler, axum wires them up.
+  </text>
+
+</svg>

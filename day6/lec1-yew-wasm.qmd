@@ -18,13 +18,21 @@ format:
     menu: true
 ---
 
+## Visualising biological data — why we're building a web app
+
+The most useful tool you can give a biologist colleague is one they don't have to install. A web page in a browser is exactly that: paste a sequence, see GC content, click to load a sample, no setup.
+
+Today we build one — entirely in Rust, frontend and backend.
+
+::: notes
+The motivation for this whole day: shipping bioinformatics insights to non-programmers means the browser, period. Email a colleague a URL, they see your data. No conda env, no Docker, no "first install Python 3.11".
+:::
+
 ## What today is about
 
 ::: {.incremental}
 - A web app written **entirely in Rust** — frontend, backend, shared types
 - Frontend compiled to **WebAssembly**, runs in the browser
-- Backend is `axum` on `127.0.0.1:3000` serving JSON
-- We will build a sequence inspector — paste DNA, see stats live, fetch samples
 :::
 
 ::: notes
@@ -38,28 +46,230 @@ This lecture introduces the pieces of the pure-Rust web stack we use today. The 
 - `frontend` builds to `.wasm`, served by **trunk**
 - `backend` builds native, serves `/api/samples`
 - Both crates depend on `shared` — same Rust types on the wire
-- By the afternoon you are clicking a button, fetching a sequence, plotting GC content over a sliding window
+- After class you are clicking a button, fetching a sequence, plotting GC content over a sliding window
 :::
+
+![Today: foundations (HTML, HTTP, JSON, ports) → axum backend → Yew frontend compiled to WASM → integrated app.](images/lec1-shape-of-day.svg){fig-alt="A horizontal flow with four stages — Foundations (HTML, HTTP, JSON, ports), Backend (axum), Frontend (Yew, WASM), Integration (browser fetches from backend) — labelled with which exercise covers each."}
 
 ::: notes
 Today is structurally a "real" full-stack Rust application. The crates layout, the shared types, the dev proxy — these are not toy shortcuts. The same shape scales to a deployable product.
 :::
 
-## WebAssembly in one paragraph
+## Before we touch Rust: three things to know
 
-WebAssembly (**WASM**) is a compact, sandboxed bytecode format that runs in every modern browser.
+Most browser-based code rests on three building blocks. None of them is Rust-specific:
 
-It is a **compile target**, not a language — Rust, C, C++, Go can all produce `.wasm`.
+1. **HTML** — how a page is structured.
+2. **HTTP** — how the browser talks to a server.
+3. **JSON** — how structured data moves between the two.
 
-The browser loads a `.wasm` blob from a `<script>` tag and runs it in a virtual machine, with near-native performance and no JavaScript runtime cost on the hot path.
+Plus one more cross-cutting concept: **ports**.
 
 ::: notes
-The key sentence is "compile target". You do not learn a new language to use WebAssembly — you write Rust, you change the build target, you get a `.wasm` file. The browser already knows how to run it. Performance is within a small factor of native; the sandbox is the same one that protects you from any other page's JavaScript.
+If you've used the web — which is everyone — you've used all four implicitly. The lecture works better if you can name them.
+:::
+
+## HTML — a page is a tree of boxes
+
+HTML is just text marked up with tags. The browser turns those tags into nested boxes on the screen.
+
+```html
+<html>
+  <body>
+    <h1>Sequence inspector</h1>
+    <p>Paste DNA below:</p>
+    <div>
+      <textarea></textarea>
+      <p>GC content: 50%</p>
+    </div>
+  </body>
+</html>
+```
+
+The `<div>` is the workhorse: a generic box that can contain other boxes. Almost every interactive component you've seen on the web is a `<div>` (or a few `<div>`s) with style and code attached.
+
+![Same HTML, two views: the source on the left, the rendered page on the right.](images/lec1-html-and-divs.svg){fig-alt="Side-by-side comparison: HTML source on the left and the rendered nested-boxes layout on the right."}
+
+::: notes
+The audience has read HTML before but probably hasn't written it. Quick reorientation.
+:::
+
+## The DOM — the in-memory tree the browser builds
+
+When the browser parses your HTML, it builds an in-memory tree of nodes called the **DOM** (Document Object Model). Every box in the rendered page is a node in this tree.
+
+Everything that changes the page after load — JavaScript, jQuery, React, Yew — does so by **manipulating the DOM tree**: adding a node, removing one, changing the text inside one. The browser re-renders whatever changed.
+
+![The DOM tree mirrors the HTML structure.](images/lec1-dom-tree.svg){fig-alt="A tree diagram showing html as the root with body, h1, p, and div nodes as children, mirroring the HTML source."}
+
+::: notes
+This is the foundation for understanding what Yew actually does (next part of the lecture). Yew = "build me a virtual DOM in Rust, then diff against the real one and patch the differences".
+:::
+
+## HTTP — how the browser talks to a server
+
+When you click a link, the browser sends an **HTTP request** to a server somewhere. The server sends back an **HTTP response**.
+
+A request has:
+
+- a **method** (`GET`, `POST`, ...),
+- a **URL** (`https://api.example.com/samples/42`),
+- optional **headers** (auth, content type, ...),
+- optional **body** (for `POST` / `PUT`).
+
+A response has:
+
+- a **status code** (`200 OK`, `404 Not Found`, ...),
+- headers,
+- a body (HTML, JSON, an image, anything).
+
+![An HTTP request goes out; a response comes back.](images/lec1-http-request.svg){fig-alt="A browser on the left and a server on the right with arrows showing an HTTP request going out and a response coming back."}
+
+::: notes
+We'll use one `GET` and one `POST` in the exercises. The browser does this thousands of times per page; you barely notice.
+:::
+
+## Ports — finding the right service on a machine
+
+A single computer can run many services at once: a web server, a database, an SSH daemon, your dev backend. To direct traffic to the right one, every service listens on a **port** — a number from 0 to 65535.
+
+The browser combines IP + port to reach a service:
+
+```
+http://127.0.0.1:3000/api/samples/42
+       ───────────  ─── ──────────────
+       host         port   path
+```
+
+Common ports: `80` HTTP, `443` HTTPS, `22` SSH, `5432` PostgreSQL. Dev backends usually pick something high like `3000`, `8000`, or `8080` so they don't clash with real services.
+
+![One machine, many ports, one client connecting to one of them.](images/lec1-ports.svg){fig-alt="A single machine box with multiple numbered ports on its edge, a client connecting to one specific port number."}
+
+::: notes
+Today the axum backend runs on port 3000; the Yew frontend (via trunk) runs on port 8080. Two ports, one laptop.
+:::
+
+## JSON — how structured data crosses the wire
+
+HTTP bodies are bytes. When you want to send structured data — a list of samples, a record with named fields — the most common encoding is **JSON** (JavaScript Object Notation).
+
+```json
+{
+  "id": 42,
+  "name": "K-12 MG1655",
+  "species": "Escherichia coli",
+  "sequence": "ACGTACGT..."
+}
+```
+
+JSON has just six types: object, array, string, number, boolean, null. Almost every language can read and write it. That's why the web settled on it.
+
+::: notes
+We send and receive JSON between axum and Yew today. serde handles both directions automatically — next slide.
+:::
+
+## JSON ↔ Rust struct (serde, preview)
+
+`serde` is the Rust crate that converts back and forth between JSON and your structs — both directions, automatically, from one `#[derive]`:
+
+```rust
+#[derive(Serialize, Deserialize)]
+struct SampleRecord {
+    id: u32,
+    name: String,
+    species: String,
+    sequence: String,
+}
+```
+
+![JSON keys map to Rust struct fields; `serde` derives both directions from the struct definition.](images/lec1-json-rust-mapping.svg){fig-alt="A JSON object on the left and a Rust struct on the right, with arrows mapping each JSON key to its corresponding struct field."}
+
+`serde_json::to_string(&record)` → JSON.
+`serde_json::from_str(&body)` → `SampleRecord`.
+
+Same struct, both sides of the network call.
+
+::: notes
+We use this both in the backend (returning JSON) and the frontend (parsing JSON). Hit it again later in the lecture.
+:::
+
+## A REST server in 20 lines of axum
+
+Before adding a frontend, here's the smallest possible backend — it accepts a DNA sequence and returns its GC content:
+
+```rust
+use axum::{routing::get, Router, extract::Query};
+use serde::{Serialize, Deserialize};
+use std::net::SocketAddr;
+
+#[derive(Deserialize)]
+struct GcQuery { seq: String }
+
+#[derive(Serialize)]
+struct GcAnswer { length: usize, gc: f64 }
+
+async fn gc(Query(q): Query<GcQuery>) -> axum::Json<GcAnswer> {
+    let n = q.seq.len();
+    let g = q.seq.bytes().filter(|b| matches!(b, b'G' | b'C')).count();
+    axum::Json(GcAnswer { length: n, gc: g as f64 / n.max(1) as f64 })
+}
+
+#[tokio::main]
+async fn main() {
+    let app = Router::new().route("/gc", get(gc));
+    let addr: SocketAddr = "127.0.0.1:3000".parse().unwrap();
+    axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap();
+}
+```
+
+![The flow: client requests `GET /gc?seq=ACGT` → axum routes → `gc()` handler → JSON response.](images/lec1-rest-server-example.svg){fig-alt="A flow diagram showing a client sending GET /gc?seq=ACGT to axum, the router dispatching to the gc handler, and a JSON response being returned."}
+
+::: notes
+This is the bare minimum to convince yourself that "Rust on the backend" works. No frontend yet — we'll add Yew in a moment.
+:::
+
+## Calling it with curl
+
+You can hit any REST endpoint from the command line — no browser needed:
+
+```bash
+$ curl 'http://127.0.0.1:3000/gc?seq=ACGTACGTGGGG'
+{"length":12,"gc":0.6666666666666666}
+```
+
+`curl` is your sanity check: does the backend work? Yes? Then add the frontend.
+
+::: notes
+Test the backend in isolation before adding any frontend complexity. Saves you from chasing "is it the API or my JavaScript".
+:::
+
+## WebAssembly
+
+WebAssembly (or **wasm**) is a **portable executable** format. Any modern browser can run a `.wasm` file directly — it doesn't matter whether the file was originally written in Rust, C++, Go, or Zig. Think of it as "a compiled binary that runs in the browser".
+
+Through the same "portable executable" lens, the technical details:
+
+- A compact, sandboxed bytecode format that every modern browser knows how to load and execute.
+- A **compile target**, not a language — Rust, C, C++, Go can all produce `.wasm`.
+- The browser loads a `.wasm` blob from a `<script>` tag and runs it in a virtual machine, with near-native performance and no JavaScript runtime cost on the hot path.
+
+::: notes
+The key sentence is "portable executable". You do not learn a new language to use WebAssembly — you write Rust, you change the build target, you get a `.wasm` file. The browser already knows how to run it. Performance is within a small factor of native; the sandbox is the same one that protects you from any other page's JavaScript.
 :::
 
 ## The build pipeline
 
-![Rust compiles to wasm; the browser runs it in a sandbox.](images/lec1-wasm-build.svg){fig-alt="Pipeline diagram. Left: source box with main.rs, lib.rs, Cargo.toml. Arrow into cargo build --target wasm32-unknown-unknown. Arrow into wasm-bindgen. Arrow into Output box with app.wasm (binary), app.js (loader glue), index.html. A curved arrow drops into a browser window showing a JS VM box (runs app.js, fetches app.wasm, instantiates it) and a WASM VM box (runs app.wasm, sandboxed: no DOM, no filesystem, no network of its own). Two small arrows between the VMs labelled call and return. Footer: The .wasm runs beside the JS VM in the same browser process. JS glue bridges the two."}
+::: {.fragment}
+![Step 1: your Rust source.](images/lec1-build-pipeline-step1.svg){fig-alt="Step 1 of the build pipeline: Rust source files (main.rs, lib.rs, Cargo.toml) shown as the starting point."}
+:::
+
+::: {.fragment}
+![Step 2: cargo compiles to a .wasm; wasm-bindgen generates JS glue.](images/lec1-build-pipeline-step2.svg){fig-alt="Step 2 of the build pipeline: cargo compiles Rust source to a .wasm binary and wasm-bindgen emits accompanying JavaScript glue."}
+:::
+
+::: {.fragment}
+![Step 3: trunk bundles everything into a /dist directory the browser loads.](images/lec1-build-pipeline-step3.svg){fig-alt="Step 3 of the build pipeline: trunk bundles the .wasm, JS glue, index.html and assets into a /dist directory served to the browser."}
+:::
 
 ::: notes
 Three stages: the Rust compiler emits a `.wasm` binary, `wasm-bindgen` writes a small JavaScript shim that knows how to call into the wasm exports, and the browser loads both. The wasm runs in its own virtual machine inside the same browser process as the JavaScript VM — they share memory only through carefully typed bridges.
@@ -92,6 +302,8 @@ Pure WebAssembly only speaks integers and floats. It cannot return a `String` to
 - marshals strings, structs, closures across the JS↔WASM boundary
 - exposes browser APIs (DOM, `fetch`, `setTimeout`) to your Rust code
 - lets you `#[wasm_bindgen]` a Rust function and call it from JS
+
+wasm-bindgen is the bridge: it lets your Rust code in the `.wasm` file read and modify the DOM that the browser built from your HTML.
 
 You will rarely touch it directly — Yew and `gloo_net` use it under the hood.
 
@@ -171,7 +383,14 @@ Both `frontend` and `backend` depend on `shared`. **The same struct** is seriali
 This is the single most important architectural idea of the day. The struct is defined once, in the shared crate. Both ends derive Serialize and Deserialize from the same definition. There is no separate IDL file, no OpenAPI schema generator, no copy-pasted TypeScript interface to keep in sync. Rename a field — both crates fail to compile until they agree again. Schema drift becomes a compile error.
 :::
 
-## `serde` — one struct, both ends
+## serde helps you send a struct over the network
+
+You already saw the JSON ↔ Rust mapping in the foundations. On the wire, the same `#[derive]` powers both directions:
+
+- backend: `axum::Json<SampleRecord>` calls `serde` to serialise.
+- frontend: `resp.json::<SampleRecord>()` calls `serde` to deserialise.
+
+Define the struct **once** in the `shared` crate. Rename a field — both crates fail to compile until they agree again.
 
 ![Rename a field and both ends fail to compile until they agree.](images/lec1-serde-wire.svg){fig-alt="Three-panel diagram. Left: green backend panel with the struct SampleRecord (id: u32, name: String, sequence: String) and a #[derive(Serialize, Deserialize)] attribute. Middle: yellow JSON-on-the-wire panel containing the JSON object {id: 42, name: lambda, sequence: ACGT...}, labelled 'bytes over HTTP'. Right: blue frontend panel with the same struct definition. A green arrow labelled serialize / to_string runs backend to wire. A blue arrow labelled deserialize / from_str runs wire to frontend. Side annotations: axum::Json<SampleRecord> calls serde for you; resp.json::<SampleRecord>() calls serde for you. Footer callout: Define the struct once in the shared crate. Both sides derive Serialize/Deserialize from the same definition. Rename a field — both crates fail to compile until they agree again."}
 
@@ -193,9 +412,18 @@ use yew::prelude::*;
 
 #[function_component(App)]
 fn app() -> Html {
-    html! { <h1>{ "Sequence inspector" }</h1> }
+    let title = "Sequence inspector";
+    let length = 42;
+    html! {
+        <div>
+            <h1>{ title }</h1>
+            <p>{ format!("Loaded {} bases", length) }</p>
+        </div>
+    }
 }
 ```
+
+Yew renders a `<div>` containing an `<h1>` and a `<p>`. Inside `{ ... }` you put any Rust expression.
 
 ::: notes
 If you have used React, the model is identical. If you have not — a component is a function that returns a description of what the page should look like. The framework figures out how to update the actual DOM. You never call `document.querySelector(...).textContent = ...` yourself. You describe; Yew patches.
@@ -220,7 +448,9 @@ html! {
 }
 ```
 
-JSX-like syntax, compiled into Rust at macro-expansion time.
+The `html!` macro lets you write **HTML-shaped syntax** — the same `<div>`, `<h1>`, `<p>` tags you saw earlier — directly in your Rust source. The `{ ... }` slots let you embed any Rust expression for dynamic content.
+
+Differences from plain HTML you write by hand:
 
 - Every tag must be closed (`<br/>`, not `<br>`)
 - Text content goes inside `{ }`: `<p>{ "hi" }</p>` (bare text won't compile)
@@ -448,6 +678,8 @@ Extractors are how axum gets arguments into handlers. `Path<String>` extracts a 
 :::
 
 ## CORS — and why we usually avoid it
+
+Recall ports — your frontend on `:8080` calling your backend on `:3000` is technically two different origins. CORS is the browser's permission system for that.
 
 A browser blocks `fetch` calls from one origin (`localhost:8080`, trunk) to another (`localhost:3000`, axum) unless the server explicitly opts in.
 

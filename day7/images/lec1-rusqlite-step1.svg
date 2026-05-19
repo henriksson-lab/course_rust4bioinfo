@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rq-arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="rq-arr-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The rusqlite read pipeline, step 1 of 3
+  </text>
+
+  <!-- ===== 4 stage boxes (left column) ===== -->
+  <!-- Stage 1: Connection::open  (CURRENT - green) -->
+  <rect x="40" y="70" width="320" height="80" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="2" rx="4"/>
+  <text x="60" y="94" font-size="14" font-weight="700" fill="#2e7d32">
+    1. Connection::open
+  </text>
+  <text x="60" y="116" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    Connection::open("strains.db")
+  </text>
+  <text x="60" y="138" font-size="12" fill="#555" font-style="italic">
+    opens the .db file (creates if missing)
+  </text>
+
+  <!-- arrow 1 -> 2 -->
+  <line x1="200" y1="150" x2="200" y2="170" stroke="#bbb" stroke-width="1.5"
+        marker-end="url(#rq-arr)"/>
+
+  <!-- Stage 2: conn.prepare (future - grey) -->
+  <rect x="40" y="170" width="320" height="80" fill="#f5f5f5"
+        stroke="#bbb" stroke-width="1.2" rx="4"/>
+  <text x="60" y="194" font-size="14" font-weight="700" fill="#888">
+    2. conn.prepare
+  </text>
+  <text x="60" y="216" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    conn.prepare("SELECT ...")
+  </text>
+  <text x="60" y="238" font-size="12" fill="#aaa" font-style="italic">
+    compile SQL into a Statement
+  </text>
+
+  <!-- arrow 2 -> 3 -->
+  <line x1="200" y1="250" x2="200" y2="270" stroke="#bbb" stroke-width="1.5"
+        marker-end="url(#rq-arr)"/>
+
+  <!-- Stage 3: stmt.query_map (future) -->
+  <rect x="40" y="270" width="320" height="80" fill="#f5f5f5"
+        stroke="#bbb" stroke-width="1.2" rx="4"/>
+  <text x="60" y="294" font-size="14" font-weight="700" fill="#888">
+    3. stmt.query_map
+  </text>
+  <text x="60" y="316" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    stmt.query_map([], |row| ...)
+  </text>
+  <text x="60" y="338" font-size="12" fill="#aaa" font-style="italic">
+    bind params, run, return iterator
+  </text>
+
+  <!-- arrow 3 -> 4 -->
+  <line x1="200" y1="350" x2="200" y2="370" stroke="#bbb" stroke-width="1.5"
+        marker-end="url(#rq-arr)"/>
+
+  <!-- Stage 4: for loop (future) -->
+  <rect x="40" y="370" width="320" height="80" fill="#f5f5f5"
+        stroke="#bbb" stroke-width="1.2" rx="4"/>
+  <text x="60" y="394" font-size="14" font-weight="700" fill="#888">
+    4. for loop
+  </text>
+  <text x="60" y="416" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    for strain in rows { ... }
+  </text>
+  <text x="60" y="438" font-size="12" fill="#aaa" font-style="italic">
+    materialise each row as a struct
+  </text>
+
+  <!-- ===== Rust code panel (right) ===== -->
+  <text x="380" y="62" font-size="13" font-weight="700" fill="#555">
+    Rust code
+  </text>
+  <rect x="380" y="70" width="480" height="380" fill="#fafafa"
+        stroke="#888" stroke-width="1.2" rx="4"/>
+
+  <!-- Line 1: active (green) -->
+  <text x="400" y="100" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    let conn = Connection::open("strains.db")?;
+  </text>
+
+  <!-- Hint of future lines (greyed) -->
+  <text x="400" y="138" font-size="13" font-family="ui-monospace, monospace" fill="#ccc" font-style="italic">
+    // next: conn.prepare(sql)
+  </text>
+  <text x="400" y="160" font-size="13" font-family="ui-monospace, monospace" fill="#ccc" font-style="italic">
+    // then: stmt.query_map(params, row_fn)
+  </text>
+  <text x="400" y="182" font-size="13" font-family="ui-monospace, monospace" fill="#ccc" font-style="italic">
+    // then: for strain in rows { ... }
+  </text>
+
+  <!-- Visual: file icon being opened -->
+  <rect x="500" y="240" width="240" height="170" fill="white"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="620" y="265" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+    strains.db
+  </text>
+  <text x="620" y="290" text-anchor="middle" font-size="12" fill="#555">
+    (SQLite database file)
+  </text>
+  <!-- Pages -->
+  <rect x="540" y="305" width="160" height="20" fill="#e3f2fd" stroke="#888"/>
+  <text x="620" y="320" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">page 1 (schema)</text>
+  <rect x="540" y="328" width="160" height="20" fill="#e3f2fd" stroke="#888"/>
+  <text x="620" y="343" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">page 2 (strain rows)</text>
+  <rect x="540" y="351" width="160" height="20" fill="#e3f2fd" stroke="#888"/>
+  <text x="620" y="366" text-anchor="middle" font-size="11" fill="#555"
+        font-family="ui-monospace, monospace">page 3 (assay rows)</text>
+
+  <text x="620" y="395" text-anchor="middle" font-size="12" fill="#2e7d32" font-style="italic">
+    file handle is now open
+  </text>
+
+  <!-- Arrow from stage 1 to code line (visually link) -->
+  <line x1="365" y1="100" x2="395" y2="96" stroke="#2e7d32" stroke-width="1.5"
+        stroke-dasharray="3 3"/>
+
+  <!-- ===== Caption ===== -->
+  <rect x="40" y="475" width="820" height="60" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="500" text-anchor="middle" font-size="16" font-weight="700" fill="#8a5a07">
+    Step 1: Connection::open(path)
+  </text>
+  <text x="450" y="522" text-anchor="middle" font-size="13" fill="#555">
+    Connects to the database file. If the file doesn't exist, it's created (empty).
+  </text>
+
+</svg>

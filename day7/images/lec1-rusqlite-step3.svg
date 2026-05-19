@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rq-arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="rq-arr-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+    <marker id="rq-arr-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The rusqlite read pipeline, step 3 of 3
+  </text>
+
+  <!-- ===== 4 stage boxes (left column) ===== -->
+  <!-- Stage 1: Connection::open (DONE) -->
+  <rect x="40" y="70" width="320" height="80" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="60" y="94" font-size="14" font-weight="700" fill="#d97706">
+    1. Connection::open
+  </text>
+  <text x="60" y="116" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    Connection::open("strains.db")
+  </text>
+  <text x="60" y="138" font-size="12" fill="#555" font-style="italic">
+    opens the .db file (creates if missing)
+  </text>
+
+  <!-- arrow 1 -> 2 -->
+  <line x1="200" y1="150" x2="200" y2="170" stroke="#d97706" stroke-width="1.5"
+        marker-end="url(#rq-arr-orange)"/>
+
+  <!-- Stage 2: conn.prepare (DONE) -->
+  <rect x="40" y="170" width="320" height="80" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="60" y="194" font-size="14" font-weight="700" fill="#d97706">
+    2. conn.prepare
+  </text>
+  <text x="60" y="216" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    conn.prepare("SELECT ...")
+  </text>
+  <text x="60" y="238" font-size="12" fill="#555" font-style="italic">
+    compile SQL into a Statement
+  </text>
+
+  <!-- arrow 2 -> 3 -->
+  <line x1="200" y1="250" x2="200" y2="270" stroke="#d97706" stroke-width="1.5"
+        marker-end="url(#rq-arr-orange)"/>
+
+  <!-- Stage 3: stmt.query_map (CURRENT - green) -->
+  <rect x="40" y="270" width="320" height="80" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="2" rx="4"/>
+  <text x="60" y="294" font-size="14" font-weight="700" fill="#2e7d32">
+    3. stmt.query_map
+  </text>
+  <text x="60" y="316" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    stmt.query_map([], |row| ...)
+  </text>
+  <text x="60" y="338" font-size="12" fill="#555" font-style="italic">
+    bind params, run, return iterator
+  </text>
+
+  <!-- arrow 3 -> 4 (lightly hinted - dashed green) -->
+  <line x1="200" y1="350" x2="200" y2="370" stroke="#2e7d32" stroke-width="1.5"
+        stroke-dasharray="4 3" marker-end="url(#rq-arr-green)"/>
+
+  <!-- Stage 4: for loop (NEXT - hinted with light green border) -->
+  <rect x="40" y="370" width="320" height="80" fill="white"
+        stroke="#2e7d32" stroke-width="1.2" stroke-dasharray="5 3" rx="4"/>
+  <text x="60" y="394" font-size="14" font-weight="700" fill="#2e7d32" opacity="0.6">
+    4. for loop
+  </text>
+  <text x="60" y="416" font-size="13" font-family="ui-monospace, monospace" fill="#555" opacity="0.7">
+    for strain in rows { ... }
+  </text>
+  <text x="60" y="438" font-size="12" fill="#555" font-style="italic" opacity="0.7">
+    (next step)
+  </text>
+
+  <!-- ===== Rust code panel (right) ===== -->
+  <text x="380" y="62" font-size="13" font-weight="700" fill="#555">
+    Rust code
+  </text>
+  <rect x="380" y="70" width="480" height="380" fill="#fafafa"
+        stroke="#888" stroke-width="1.2" rx="4"/>
+
+  <!-- Lines 1: done (orange) -->
+  <text x="400" y="96" font-size="13" font-family="ui-monospace, monospace" fill="#d97706">
+    let conn = Connection::open("strains.db")?;
+  </text>
+
+  <!-- Lines 2-4: done (orange) -->
+  <text x="400" y="120" font-size="13" font-family="ui-monospace, monospace" fill="#d97706">
+    let mut stmt = conn.prepare(
+  </text>
+  <text x="400" y="140" font-size="13" font-family="ui-monospace, monospace" fill="#d97706">
+    &#160;&#160;&#160;&#160;"SELECT strain_id, strain_name FROM strain"
+  </text>
+  <text x="400" y="160" font-size="13" font-family="ui-monospace, monospace" fill="#d97706">
+    )?;
+  </text>
+
+  <!-- Lines 5-10: active query_map block (green) -->
+  <text x="400" y="194" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    let rows = stmt.query_map([], |row| {
+  </text>
+  <text x="400" y="214" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    &#160;&#160;&#160;&#160;Ok(Strain {
+  </text>
+  <text x="400" y="234" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;strain_id:&#160;&#160;&#160;row.get(0)?,
+  </text>
+  <text x="400" y="254" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    &#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;strain_name: row.get(1)?,
+  </text>
+  <text x="400" y="274" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    &#160;&#160;&#160;&#160;})
+  </text>
+  <text x="400" y="294" font-size="13" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    })?;
+  </text>
+
+  <!-- Visual: iterator output -->
+  <text x="620" y="335" text-anchor="middle" font-size="12" font-weight="700" fill="#555">
+    rows : Iterator&lt;Item = Result&lt;Strain&gt;&gt;
+  </text>
+
+  <g font-family="ui-monospace, monospace">
+    <rect x="430" y="350" width="120" height="36" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="490" y="365" text-anchor="middle" font-size="11" fill="#333">Ok(Strain{1, ...})</text>
+    <text x="490" y="380" text-anchor="middle" font-size="11" fill="#555">row 1</text>
+
+    <rect x="555" y="350" width="120" height="36" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="615" y="365" text-anchor="middle" font-size="11" fill="#333">Ok(Strain{2, ...})</text>
+    <text x="615" y="380" text-anchor="middle" font-size="11" fill="#555">row 2</text>
+
+    <rect x="680" y="350" width="120" height="36" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="740" y="365" text-anchor="middle" font-size="11" fill="#333">Ok(Strain{3, ...})</text>
+    <text x="740" y="380" text-anchor="middle" font-size="11" fill="#555">row 3</text>
+  </g>
+
+  <text x="620" y="410" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    nothing has run yet; the for loop drives the iterator
+  </text>
+
+  <!-- ===== Caption ===== -->
+  <rect x="40" y="475" width="820" height="60" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="500" text-anchor="middle" font-size="16" font-weight="700" fill="#8a5a07">
+    Step 3: query_map(params, row &#8594; struct)
+  </text>
+  <text x="450" y="522" text-anchor="middle" font-size="13" fill="#555">
+    Bind parameters, run the query, get an iterator of Result&lt;Strain&gt;.
+  </text>
+
+</svg>

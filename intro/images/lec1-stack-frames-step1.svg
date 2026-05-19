@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="sfs1-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Call stack, step 1 of 3
+  </text>
+
+  <!-- =====================================================
+       Python snippet on the LEFT (shared coords across steps)
+       Code box: x=40, y=70, width=460, height=210
+   ====================================================== -->
+  <rect x="40" y="70" width="460" height="210" rx="6" ry="6"
+        fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <text x="55" y="90" font-size="12" font-weight="700" fill="#555">
+    program.py
+  </text>
+
+  <!-- Code lines (font-size 14, monospace) -->
+  <g font-family="ui-monospace, monospace" font-size="14" fill="#333">
+    <text x="55" y="116">def gc_count(seq):</text>
+    <text x="55" y="138">    return sum(1 for b in seq if b in "GC")</text>
+    <text x="55" y="160"> </text>
+    <text x="55" y="182">def main():</text>
+    <text x="55" y="204">    seq = "ACGTACGT"</text>
+    <text x="55" y="226">    n = gc_count(seq)</text>
+    <text x="55" y="248">    print(n)</text>
+    <text x="55" y="270">main()</text>
+  </g>
+
+  <!-- Highlight the line: n = gc_count(seq) (about to call) -->
+  <rect x="48" y="212" width="380" height="20" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" opacity="0.65"/>
+  <text x="438" y="226" font-size="11" font-weight="700" fill="#d97706">
+    &#8592; about to call
+  </text>
+
+  <!-- =====================================================
+       Stack column on the RIGHT (shared coords)
+       Column box: x=550, y=80, width=220, height=320
+   ====================================================== -->
+  <text x="660" y="68" text-anchor="middle" font-size="12" font-weight="700" fill="#555">
+    top
+  </text>
+
+  <rect x="550" y="80" width="220" height="320" fill="white"
+        stroke="#888" stroke-width="1.5" rx="4"/>
+
+  <!-- main() frame at the BOTTOM of the stack column -->
+  <rect x="560" y="270" width="200" height="120" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.8" rx="3"/>
+  <text x="575" y="292" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1565c0">main()</text>
+  <line x1="568" y1="300" x2="752" y2="300" stroke="#1565c0" stroke-width="0.6" opacity="0.5"/>
+  <text x="575" y="320" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    seq = "ACGTACGT"
+  </text>
+  <text x="575" y="340" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    n   = ???
+  </text>
+  <text x="575" y="360" font-size="11" fill="#888" font-style="italic">
+    (n reserved, not yet set)
+  </text>
+  <text x="660" y="382" text-anchor="middle" font-size="10" fill="#555" font-style="italic">
+    main frame
+  </text>
+
+  <!-- "bottom (older frames below)" label under the column -->
+  <text x="660" y="418" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    bottom (older frames below)
+  </text>
+
+  <!-- "CPU is here ->" arrow pointing to the active frame (main) -->
+  <text x="500" y="320" text-anchor="end" font-size="13" font-weight="700" fill="#1565c0">
+    CPU is here
+  </text>
+  <line x1="505" y1="325" x2="555" y2="325"
+        stroke="#1565c0" stroke-width="2.5" marker-end="url(#sfs1-arrow-blue)"/>
+
+  <!-- ===== Caption at bottom (shared coords) ===== -->
+  <rect x="40" y="440" width="820" height="50" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="450" y="465" text-anchor="middle" font-size="16" font-weight="700" fill="#8a5a07">
+    Step 1: main() is running. About to call gc_count(seq).
+  </text>
+  <text x="450" y="482" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    The stack has one frame. n is reserved but not yet set.
+  </text>
+
+</svg>

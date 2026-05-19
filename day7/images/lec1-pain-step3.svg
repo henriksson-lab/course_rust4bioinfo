@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="pain3-arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="pain3-arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The pain, step 3 of 3: concurrent edits, silent loss
+  </text>
+
+  <!-- =========================================================
+       LAYOUT
+         Two people on left/right with thought bubbles up top,
+         a save-arrow into the central TSV file.
+         File card uses same column boundaries as steps 1 & 2,
+         but positioned slightly inset so the two side icons fit.
+         Card x=200..700 (width 500), header y=200..228, rows below.
+       ========================================================= -->
+
+  <!-- ===== Person A (left) ===== -->
+  <!-- Body -->
+  <circle cx="80" cy="100" r="20" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.6"/>
+  <text x="80" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">A</text>
+  <!-- Laptop -->
+  <rect x="50" y="130" width="60" height="36" rx="3" ry="3"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.4"/>
+  <rect x="55" y="135" width="50" height="22" fill="white" stroke="#bbb"/>
+  <rect x="44" y="166" width="72" height="4" fill="#888"/>
+
+  <!-- Thought bubble A: what A THOUGHT they saved (added a new row) -->
+  <rect x="20" y="40" width="220" height="48" rx="10" ry="10"
+        fill="white" stroke="#1565c0" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <text x="130" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+    "I added a new row"
+  </text>
+  <text x="130" y="76" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">
+    BL21 | E. coli | lab | 1986
+  </text>
+  <!-- Bubble tail -->
+  <circle cx="60" cy="92" r="4" fill="white" stroke="#1565c0" stroke-width="1.2"/>
+  <circle cx="68" cy="88" r="3" fill="white" stroke="#1565c0" stroke-width="1.2"/>
+
+  <!-- ===== Person B (right) ===== -->
+  <circle cx="820" cy="100" r="20" fill="#fff3e0" stroke="#d97706" stroke-width="1.6"/>
+  <text x="820" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">B</text>
+  <!-- Laptop -->
+  <rect x="790" y="130" width="60" height="36" rx="3" ry="3"
+        fill="#f5f5f5" stroke="#888" stroke-width="1.4"/>
+  <rect x="795" y="135" width="50" height="22" fill="white" stroke="#bbb"/>
+  <rect x="784" y="166" width="72" height="4" fill="#888"/>
+
+  <!-- Thought bubble B: what B THOUGHT they saved (edited row 2 medium) -->
+  <rect x="660" y="40" width="220" height="48" rx="10" ry="10"
+        fill="white" stroke="#d97706" stroke-width="1.4" stroke-dasharray="4,3"/>
+  <text x="770" y="58" text-anchor="middle" font-size="12" font-weight="700" fill="#d97706">
+    "I fixed row 2's source"
+  </text>
+  <text x="770" y="76" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#333">
+    DH5alpha source -> cloning host
+  </text>
+  <!-- Bubble tail -->
+  <circle cx="840" cy="92" r="4" fill="white" stroke="#d97706" stroke-width="1.2"/>
+  <circle cx="832" cy="88" r="3" fill="white" stroke="#d97706" stroke-width="1.2"/>
+
+  <!-- ===== Save arrows into the file ===== -->
+  <path d="M 115 150 C 170 150, 180 195, 205 215"
+        fill="none" stroke="#555" stroke-width="2"
+        marker-end="url(#pain3-arrow-grey)"/>
+  <text x="135" y="190" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#555">save</text>
+
+  <path d="M 785 150 C 730 150, 720 195, 695 215"
+        fill="none" stroke="#555" stroke-width="2"
+        marker-end="url(#pain3-arrow-grey)"/>
+  <text x="745" y="190" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#555">save</text>
+
+  <!-- ===== TSV file (centre) — SHARED column layout with pain steps 1 & 2 ===== -->
+  <text x="220" y="195" font-size="13" font-weight="700" fill="#555"
+        font-family="ui-monospace, monospace">strains.tsv (after both saves)</text>
+
+  <!-- Outer card -->
+  <rect x="200" y="200" width="500" height="190" fill="white"
+        stroke="#888" stroke-width="1.4"/>
+
+  <!-- Header band -->
+  <rect x="200" y="200" width="500" height="28" fill="#e3f2fd" stroke="#888"/>
+  <text x="270" y="219" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="415" y="219" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="550" y="219" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_source</text>
+  <text x="660" y="219" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">year_isolated</text>
+
+  <!-- Column dividers (column boundaries: 200, 340, 480, 615, 700) -->
+  <line x1="340" y1="200" x2="340" y2="390" stroke="#bbb"/>
+  <line x1="480" y1="200" x2="480" y2="390" stroke="#bbb"/>
+  <line x1="615" y1="200" x2="615" y2="390" stroke="#bbb"/>
+
+  <!-- Row 1 -->
+  <rect x="200" y="228" width="500" height="38" fill="white" stroke="#bbb"/>
+  <text x="270" y="251" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="410" y="251" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="547" y="251" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">human gut</text>
+  <text x="658" y="251" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1922</text>
+
+  <!-- Row 2 — B's edit DID land (medium -> "cloning host") -->
+  <rect x="200" y="266" width="500" height="38" fill="#fff7e6"
+        stroke="#d97706" stroke-width="1.6"/>
+  <text x="270" y="289" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="410" y="289" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Escherichia coli</text>
+  <text x="547" y="289" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#d97706">cloning host</text>
+  <text x="658" y="289" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1980</text>
+
+  <!-- Row 3 -->
+  <rect x="200" y="304" width="500" height="38" fill="white" stroke="#bbb"/>
+  <text x="270" y="327" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">168</text>
+  <text x="410" y="327" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">Bacillus subtilis</text>
+  <text x="547" y="327" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">hay infusion</text>
+  <text x="658" y="327" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1872</text>
+
+  <!-- Row 4 — MISSING (A's new BL21 row was overwritten by B's save) -->
+  <rect x="200" y="342" width="500" height="38" fill="#fdecea"
+        stroke="#c62828" stroke-width="1.6" stroke-dasharray="6,4"/>
+  <text x="450" y="367" text-anchor="middle" font-size="13" font-style="italic"
+        fill="#c62828">
+    (A's BL21 row was here — overwritten, never saved)
+  </text>
+
+  <!-- ===== Footer banner ===== -->
+  <rect x="30" y="410" width="840" height="60" rx="8" ry="8"
+        fill="#fdecea" stroke="#c62828" stroke-width="1.5"/>
+  <text x="450" y="435" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828">
+    Two saves at once. The second one wins.
+  </text>
+  <text x="450" y="457" text-anchor="middle" font-size="13" fill="#555">
+    The first one's edit is gone — no warning, no error.
+  </text>
+
+</svg>

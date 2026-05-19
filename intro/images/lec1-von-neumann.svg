@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="vn-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="vn-arrow-start" viewBox="0 0 10 10" refX="1" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 10 0 L 0 5 L 10 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- ===== Title ===== -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    The von Neumann model
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- CPU block (upper-left)                                       -->
+  <!-- ============================================================ -->
+  <rect x="40" y="60" width="320" height="260" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="2" rx="6"/>
+  <text x="200" y="84" text-anchor="middle" font-size="18" font-weight="700" fill="#1565c0">
+    CPU
+  </text>
+
+  <!-- Control unit -->
+  <rect x="60" y="100" width="280" height="56" fill="white"
+        stroke="#1565c0" stroke-width="1.5" rx="3"/>
+  <text x="200" y="124" text-anchor="middle" font-size="16" font-weight="700" fill="#1565c0">
+    Control unit
+  </text>
+  <text x="200" y="144" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    fetch + decode + dispatch
+  </text>
+
+  <!-- ALU -->
+  <rect x="60" y="166" width="280" height="56" fill="white"
+        stroke="#1565c0" stroke-width="1.5" rx="3"/>
+  <text x="200" y="190" text-anchor="middle" font-size="16" font-weight="700" fill="#1565c0">
+    ALU
+  </text>
+  <text x="200" y="210" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    arithmetic + logic
+  </text>
+
+  <!-- Registers -->
+  <rect x="60" y="232" width="280" height="76" fill="white"
+        stroke="#1565c0" stroke-width="1.5" rx="3"/>
+  <text x="200" y="252" text-anchor="middle" font-size="14" font-weight="700" fill="#1565c0">
+    Registers
+  </text>
+  <!-- 6 small register slots -->
+  <g stroke="#1565c0" stroke-width="1">
+    <rect x="78" y="266" width="36" height="28" fill="#f5f9ff"/>
+    <rect x="120" y="266" width="36" height="28" fill="#f5f9ff"/>
+    <rect x="162" y="266" width="36" height="28" fill="#f5f9ff"/>
+    <rect x="204" y="266" width="36" height="28" fill="#f5f9ff"/>
+    <rect x="246" y="266" width="36" height="28" fill="#f5f9ff"/>
+    <rect x="288" y="266" width="36" height="28" fill="#f5f9ff"/>
+  </g>
+  <text x="96" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r0</text>
+  <text x="138" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r1</text>
+  <text x="180" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r2</text>
+  <text x="222" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r3</text>
+  <text x="264" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r4</text>
+  <text x="306" y="285" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace" fill="#333">r5</text>
+
+  <!-- ============================================================ -->
+  <!-- Memory block (upper-right)                                   -->
+  <!-- ============================================================ -->
+  <rect x="540" y="60" width="320" height="260" fill="#fff3cd"
+        stroke="#d97706" stroke-width="2" rx="6"/>
+  <text x="700" y="84" text-anchor="middle" font-size="18" font-weight="700" fill="#b45309">
+    Main memory
+  </text>
+
+  <!-- Memory cells: simulate a stack of memory rows -->
+  <g stroke="#d97706" stroke-width="1">
+    <rect x="570" y="104" width="260" height="22" fill="white"/>
+    <rect x="570" y="126" width="260" height="22" fill="white"/>
+    <rect x="570" y="148" width="260" height="22" fill="white"/>
+    <rect x="570" y="170" width="260" height="22" fill="white"/>
+    <rect x="570" y="192" width="260" height="22" fill="white"/>
+    <rect x="570" y="214" width="260" height="22" fill="white"/>
+    <rect x="570" y="236" width="260" height="22" fill="white"/>
+    <rect x="570" y="258" width="260" height="22" fill="white"/>
+  </g>
+  <!-- Labels showing code/data mixed -->
+  <text x="582" y="120" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">code: mov r0, 42</text>
+  <text x="582" y="142" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">code: add r1, r0</text>
+  <text x="582" y="164" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">code: jmp 0x1040</text>
+  <text x="582" y="186" font-size="11" font-family="ui-monospace, monospace" fill="#b45309">data: x = 0x002a</text>
+  <text x="582" y="208" font-size="11" font-family="ui-monospace, monospace" fill="#b45309">data: y = 0x00ff</text>
+  <text x="582" y="230" font-size="11" font-family="ui-monospace, monospace" fill="#1565c0">code: cmp r0, r1</text>
+  <text x="582" y="252" font-size="11" font-family="ui-monospace, monospace" fill="#b45309">data: "ACGT..."</text>
+  <text x="582" y="274" font-size="11" font-family="ui-monospace, monospace" fill="#888">...</text>
+
+  <text x="700" y="304" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    holds both program code and data
+  </text>
+
+  <!-- ============================================================ -->
+  <!-- BUS: thick horizontal band                                   -->
+  <!-- ============================================================ -->
+  <text x="450" y="346" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    data + addresses + control signals
+  </text>
+  <rect x="40" y="354" width="820" height="34" fill="#eeeeee"
+        stroke="#555" stroke-width="1.5" rx="4"/>
+  <text x="450" y="376" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">
+    SYSTEM BUS
+  </text>
+
+  <!-- Bidirectional arrows from each block to the bus -->
+  <!-- CPU <-> Bus -->
+  <line x1="200" y1="320" x2="200" y2="354" stroke="#1565c0" stroke-width="2.5"
+        marker-end="url(#vn-arrow)" marker-start="url(#vn-arrow-start)"/>
+  <!-- Memory <-> Bus -->
+  <line x1="700" y1="320" x2="700" y2="354" stroke="#1565c0" stroke-width="2.5"
+        marker-end="url(#vn-arrow)" marker-start="url(#vn-arrow-start)"/>
+
+  <!-- ============================================================ -->
+  <!-- I/O block (bottom-right)                                     -->
+  <!-- ============================================================ -->
+  <rect x="540" y="404" width="320" height="76" fill="#eeeeee"
+        stroke="#666" stroke-width="2" rx="6"/>
+  <text x="700" y="428" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    I/O
+  </text>
+  <text x="700" y="450" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    keyboard, screen, disk, network
+  </text>
+  <text x="700" y="468" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    the outside world
+  </text>
+
+  <!-- I/O <-> Bus -->
+  <line x1="700" y1="404" x2="700" y2="388" stroke="#1565c0" stroke-width="2.5"
+        marker-end="url(#vn-arrow)" marker-start="url(#vn-arrow-start)"/>
+
+  <!-- ============================================================ -->
+  <!-- Footer caption (lower-left, alongside the I/O block)         -->
+  <!-- ============================================================ -->
+  <rect x="40" y="404" width="480" height="76" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.2" rx="4"/>
+  <text x="280" y="427" text-anchor="middle" font-size="13" font-weight="700" fill="#1b5e20">
+    One CPU, one memory holding both
+  </text>
+  <text x="280" y="445" text-anchor="middle" font-size="13" font-weight="700" fill="#1b5e20">
+    code and data, connected by a shared bus.
+  </text>
+  <text x="280" y="468" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    Almost every modern computer is a variant of this.
+  </text>
+
+</svg>

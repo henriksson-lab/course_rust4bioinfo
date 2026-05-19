@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    Why tables reference each other
+  </text>
+
+  <!-- =================== LEFT PANEL — Bad =================== -->
+  <rect x="20" y="50" width="420" height="430" fill="white"
+        stroke="#c62828" stroke-width="2.5" rx="6" ry="6"/>
+
+  <text x="230" y="76" text-anchor="middle" font-size="16" font-weight="700" fill="#c62828">
+    Bad: one denormalised table
+  </text>
+  <text x="230" y="96" text-anchor="middle" font-size="14" fill="#888"
+        font-family="ui-monospace, monospace">assay_wide</text>
+
+  <!-- Wide table: 4 rows, columns: strain_name, species, source, year, medium, od -->
+  <!-- x=30..430, header y=110..134, rows of height 60 -->
+  <rect x="30" y="110" width="400" height="24" fill="#e3f2fd" stroke="#888"/>
+  <line x1="120" y1="110" x2="120" y2="374" stroke="#bbb"/>
+  <line x1="210" y1="110" x2="210" y2="374" stroke="#bbb"/>
+  <line x1="290" y1="110" x2="290" y2="374" stroke="#bbb"/>
+  <line x1="340" y1="110" x2="340" y2="374" stroke="#bbb"/>
+  <line x1="380" y1="110" x2="380" y2="374" stroke="#bbb"/>
+
+  <text x="75"  y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="165" y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="250" y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_src</text>
+  <text x="315" y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">year</text>
+  <text x="360" y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">medium</text>
+  <text x="405" y="127" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">od600</text>
+
+  <!-- Table outer -->
+  <rect x="30" y="110" width="400" height="264" fill="none" stroke="#888"/>
+
+  <!-- Row 1: K-12 MG1655, source = "human gut" -->
+  <rect x="30" y="134" width="400" height="60" fill="white" stroke="#bbb"/>
+  <text x="75"  y="168" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="165" y="168" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <!-- highlight cell -->
+  <rect x="210" y="134" width="80" height="60" fill="#fff3cd" stroke="#c62828" stroke-width="1.8"/>
+  <text x="250" y="168" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">human gut</text>
+  <text x="315" y="168" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">1922</text>
+  <text x="360" y="168" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">LB</text>
+  <text x="405" y="168" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">0.85</text>
+
+  <!-- Row 2: K-12 MG1655 again, source = "human-gut" -->
+  <rect x="30" y="194" width="400" height="60" fill="white" stroke="#bbb"/>
+  <text x="75"  y="228" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="165" y="228" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <rect x="210" y="194" width="80" height="60" fill="#fff3cd" stroke="#c62828" stroke-width="1.8"/>
+  <text x="250" y="228" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">human-gut</text>
+  <text x="315" y="228" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">1922</text>
+  <text x="360" y="228" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">M9</text>
+  <text x="405" y="228" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">0.42</text>
+
+  <!-- Row 3: DH5alpha -->
+  <rect x="30" y="254" width="400" height="60" fill="white" stroke="#bbb"/>
+  <text x="75"  y="288" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="165" y="288" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="250" y="288" text-anchor="middle" font-size="11"
+        font-family="ui-monospace, monospace">lab derivative</text>
+  <text x="315" y="288" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">1980</text>
+  <text x="360" y="288" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">LB</text>
+  <text x="405" y="288" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">0.78</text>
+
+  <!-- Row 4: 168 -->
+  <rect x="30" y="314" width="400" height="60" fill="white" stroke="#bbb"/>
+  <text x="75"  y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">168</text>
+  <text x="165" y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">B. subtilis</text>
+  <text x="250" y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">soil</text>
+  <text x="315" y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">1947</text>
+  <text x="360" y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">BHI</text>
+  <text x="405" y="348" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">1.25</text>
+
+  <!-- Red banner -->
+  <rect x="30" y="400" width="400" height="64" fill="#ffebee" stroke="#c62828" stroke-width="1.5" rx="4"/>
+  <text x="230" y="425" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828">
+    Same strain, two records disagree.
+  </text>
+  <text x="230" y="448" text-anchor="middle" font-size="14" fill="#c62828">
+    Which is right?
+  </text>
+
+  <!-- =================== RIGHT PANEL — Good =================== -->
+  <rect x="460" y="50" width="420" height="430" fill="white"
+        stroke="#2e7d32" stroke-width="2.5" rx="6" ry="6"/>
+
+  <text x="670" y="76" text-anchor="middle" font-size="16" font-weight="700" fill="#2e7d32">
+    Good: two normalised tables
+  </text>
+
+  <!-- strain mini-table -->
+  <text x="670" y="98" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">strain</text>
+
+  <rect x="470" y="106" width="400" height="86" fill="white" stroke="#888"/>
+  <rect x="470" y="106" width="400" height="22" fill="#e3f2fd" stroke="#888"/>
+  <rect x="470" y="106" width="70" height="22" fill="#e8f5e9" stroke="#888"/>
+
+  <line x1="540" y1="106" x2="540" y2="192" stroke="#bbb"/>
+  <line x1="640" y1="106" x2="640" y2="192" stroke="#bbb"/>
+  <line x1="740" y1="106" x2="740" y2="192" stroke="#bbb"/>
+
+  <text x="505" y="122" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</text>
+  <text x="590" y="122" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="690" y="122" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="805" y="122" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_src</text>
+
+  <!-- strain row 1 -->
+  <rect x="470" y="128" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <rect x="470" y="128" width="70" height="32" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="505" y="149" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
+  <text x="590" y="149" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="690" y="149" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="805" y="149" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">human gut</text>
+
+  <!-- strain row 2 -->
+  <rect x="470" y="160" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <rect x="470" y="160" width="70" height="32" fill="#e8f5e9" stroke="#bbb"/>
+  <text x="505" y="181" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">2</text>
+  <text x="590" y="181" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="690" y="181" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="805" y="181" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace">lab derivative</text>
+
+  <!-- FK arrow connecting strain_id columns -->
+  <defs>
+    <marker id="fk2-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+  <path d="M 505 200 C 505 212, 590 212, 590 220"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#fk2-arrow)"/>
+  <text x="640" y="216" font-size="11" fill="#d97706" font-weight="700"
+        font-family="ui-monospace, monospace">FK</text>
+
+  <!-- assay mini-table -->
+  <text x="670" y="240" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">assay</text>
+
+  <rect x="470" y="248" width="400" height="152" fill="white" stroke="#888"/>
+  <rect x="470" y="248" width="400" height="22" fill="#e3f2fd" stroke="#888"/>
+  <rect x="470" y="248" width="70" height="22" fill="#e8f5e9" stroke="#888"/>
+  <rect x="540" y="248" width="80" height="22" fill="#e8f5e9" stroke="#888"/>
+
+  <line x1="540" y1="248" x2="540" y2="400" stroke="#bbb"/>
+  <line x1="620" y1="248" x2="620" y2="400" stroke="#bbb"/>
+  <line x1="750" y1="248" x2="750" y2="400" stroke="#bbb"/>
+
+  <text x="505" y="264" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">assay_id</text>
+  <text x="580" y="264" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</text>
+  <text x="685" y="264" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">medium</text>
+  <text x="810" y="264" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">od600_24h</text>
+
+  <!-- assay rows -->
+  <rect x="470" y="270" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <text x="505" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">101</text>
+  <text x="580" y="291" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
+  <text x="685" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">LB</text>
+  <text x="810" y="291" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.85</text>
+
+  <rect x="470" y="302" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <text x="505" y="323" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">102</text>
+  <text x="580" y="323" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1</text>
+  <text x="685" y="323" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">M9-glucose</text>
+  <text x="810" y="323" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.42</text>
+
+  <rect x="470" y="334" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <text x="505" y="355" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">103</text>
+  <text x="580" y="355" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">2</text>
+  <text x="685" y="355" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">LB</text>
+  <text x="810" y="355" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">0.78</text>
+
+  <rect x="470" y="366" width="400" height="32" fill="#f7faff" stroke="#bbb"/>
+  <text x="505" y="387" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">104</text>
+  <text x="580" y="387" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">2</text>
+  <text x="685" y="387" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">BHI</text>
+  <text x="810" y="387" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">1.18</text>
+
+  <!-- Green banner -->
+  <rect x="470" y="412" width="400" height="52" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5" rx="4"/>
+  <text x="670" y="435" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32">
+    Each strain stored once.
+  </text>
+  <text x="670" y="455" text-anchor="middle" font-size="14" fill="#2e7d32">
+    One source of truth.
+  </text>
+
+</svg>

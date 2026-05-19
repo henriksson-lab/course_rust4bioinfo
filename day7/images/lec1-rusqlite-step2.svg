@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 550"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="rq-arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <marker id="rq-arr-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    The rusqlite read pipeline, step 2 of 3
+  </text>
+
+  <!-- ===== 4 stage boxes (left column) ===== -->
+  <!-- Stage 1: Connection::open (DONE) -->
+  <rect x="40" y="70" width="320" height="80" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="60" y="94" font-size="14" font-weight="700" fill="#d97706">
+    1. Connection::open
+  </text>
+  <text x="60" y="116" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    Connection::open("strains.db")
+  </text>
+  <text x="60" y="138" font-size="12" fill="#555" font-style="italic">
+    opens the .db file (creates if missing)
+  </text>
+
+  <!-- arrow 1 -> 2 -->
+  <line x1="200" y1="150" x2="200" y2="170" stroke="#d97706" stroke-width="1.5"
+        marker-end="url(#rq-arr-orange)"/>
+
+  <!-- Stage 2: conn.prepare (CURRENT - green) -->
+  <rect x="40" y="170" width="320" height="80" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="2" rx="4"/>
+  <text x="60" y="194" font-size="14" font-weight="700" fill="#2e7d32">
+    2. conn.prepare
+  </text>
+  <text x="60" y="216" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    conn.prepare("SELECT ...")
+  </text>
+  <text x="60" y="238" font-size="12" fill="#555" font-style="italic">
+    compile SQL into a Statement
+  </text>
+
+  <!-- arrow 2 -> 3 -->
+  <line x1="200" y1="250" x2="200" y2="270" stroke="#bbb" stroke-width="1.5"
+        marker-end="url(#rq-arr)"/>
+
+  <!-- Stage 3: stmt.query_map (future) -->
+  <rect x="40" y="270" width="320" height="80" fill="#f5f5f5"
+        stroke="#bbb" stroke-width="1.2" rx="4"/>
+  <text x="60" y="294" font-size="14" font-weight="700" fill="#888">
+    3. stmt.query_map
+  </text>
+  <text x="60" y="316" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    stmt.query_map([], |row| ...)
+  </text>
+  <text x="60" y="338" font-size="12" fill="#aaa" font-style="italic">
+    bind params, run, return iterator
+  </text>
+
+  <!-- arrow 3 -> 4 -->
+  <line x1="200" y1="350" x2="200" y2="370" stroke="#bbb" stroke-width="1.5"
+        marker-end="url(#rq-arr)"/>
+
+  <!-- Stage 4: for loop (future) -->
+  <rect x="40" y="370" width="320" height="80" fill="#f5f5f5"
+        stroke="#bbb" stroke-width="1.2" rx="4"/>
+  <text x="60" y="394" font-size="14" font-weight="700" fill="#888">
+    4. for loop
+  </text>
+  <text x="60" y="416" font-size="13" font-family="ui-monospace, monospace" fill="#aaa">
+    for strain in rows { ... }
+  </text>
+  <text x="60" y="438" font-size="12" fill="#aaa" font-style="italic">
+    materialise each row as a struct
+  </text>
+
+  <!-- ===== Rust code panel (right) ===== -->
+  <text x="380" y="62" font-size="13" font-weight="700" fill="#555">
+    Rust code
+  </text>
+  <rect x="380" y="70" width="480" height="380" fill="#fafafa"
+        stroke="#888" stroke-width="1.2" rx="4"/>
+
+  <!-- Line 1: done (orange) -->
+  <text x="400" y="100" font-size="14" font-family="ui-monospace, monospace" fill="#d97706">
+    let conn = Connection::open("strains.db")?;
+  </text>
+
+  <!-- Lines 2-4: active prepare block (green) -->
+  <text x="400" y="138" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    let mut stmt = conn.prepare(
+  </text>
+  <text x="400" y="160" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    &#160;&#160;&#160;&#160;"SELECT strain_id, strain_name FROM strain"
+  </text>
+  <text x="400" y="182" font-size="14" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    )?;
+  </text>
+
+  <!-- Hint -->
+  <text x="400" y="218" font-size="13" font-family="ui-monospace, monospace" fill="#ccc" font-style="italic">
+    // next: stmt.query_map(params, row_fn)
+  </text>
+
+  <!-- Visual: SQL string -> Statement -->
+  <rect x="400" y="250" width="200" height="60" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <text x="500" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#1565c0">
+    SQL string
+  </text>
+  <text x="500" y="294" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+    "SELECT ... FROM strain"
+  </text>
+
+  <line x1="600" y1="280" x2="660" y2="280" stroke="#d97706" stroke-width="2"
+        marker-end="url(#rq-arr-orange)"/>
+  <text x="630" y="270" text-anchor="middle" font-size="11" fill="#d97706" font-weight="700">
+    parse + compile
+  </text>
+
+  <rect x="660" y="250" width="180" height="60" fill="#fff3cd"
+        stroke="#d97706" stroke-width="1.5" rx="4"/>
+  <text x="750" y="272" text-anchor="middle" font-size="12" font-weight="700" fill="#d97706">
+    Statement
+  </text>
+  <text x="750" y="294" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    (compiled query)
+  </text>
+
+  <text x="620" y="350" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    Reusable: prepare once, run many times
+  </text>
+
+  <text x="620" y="380" text-anchor="middle" font-size="11" fill="#888">
+    Errors here = SQL syntax / unknown column / etc.
+  </text>
+
+  <!-- ===== Caption ===== -->
+  <rect x="40" y="475" width="820" height="60" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+  <text x="450" y="500" text-anchor="middle" font-size="16" font-weight="700" fill="#8a5a07">
+    Step 2: conn.prepare(sql)
+  </text>
+  <text x="450" y="522" text-anchor="middle" font-size="13" fill="#555">
+    Parse and compile the query into a reusable Statement.
+  </text>
+
+</svg>

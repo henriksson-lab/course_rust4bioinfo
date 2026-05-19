@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    NATURAL JOIN — shared column names become the join key
+  </text>
+
+  <!-- =================== strain (left) =================== -->
+  <text x="200" y="76" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">strain</text>
+
+  <rect x="40" y="90" width="320" height="200" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <!-- Header band -->
+  <rect x="40" y="90" width="320" height="200" fill="#f7faff" stroke="#888"/>
+
+  <!-- Column rows (stacked) — only headers, no data -->
+  <text x="200" y="118" text-anchor="middle" font-size="11" fill="#888">
+    columns
+  </text>
+
+  <!-- 5 columns as horizontal pills -->
+  <!-- col 1: strain_id (shared!) -->
+  <rect x="60" y="132" width="280" height="30" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5" rx="4"/>
+  <text x="200" y="153" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</text>
+
+  <!-- col 2 -->
+  <rect x="60" y="166" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="200" y="185" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">strain_name</text>
+
+  <!-- col 3 -->
+  <rect x="60" y="196" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="200" y="215" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">species</text>
+
+  <!-- col 4 -->
+  <rect x="60" y="226" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="200" y="245" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">isolation_source</text>
+
+  <!-- col 5 -->
+  <rect x="60" y="256" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="200" y="275" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">year_isolated</text>
+
+  <!-- =================== assay (right) =================== -->
+  <text x="700" y="76" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">assay</text>
+
+  <rect x="540" y="90" width="320" height="200" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <rect x="540" y="90" width="320" height="200" fill="#f7faff" stroke="#888"/>
+
+  <text x="700" y="118" text-anchor="middle" font-size="11" fill="#888">
+    columns
+  </text>
+
+  <!-- col 1: assay_id -->
+  <rect x="560" y="132" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="700" y="151" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">assay_id</text>
+
+  <!-- col 2: strain_id (shared!) -->
+  <rect x="560" y="162" width="280" height="30" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2.5" rx="4"/>
+  <text x="700" y="183" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</text>
+
+  <!-- col 3 -->
+  <rect x="560" y="196" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="700" y="215" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">medium</text>
+
+  <!-- col 4 -->
+  <rect x="560" y="226" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="700" y="245" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">od600_24h</text>
+
+  <!-- col 5 -->
+  <rect x="560" y="256" width="280" height="26" fill="#e3f2fd" stroke="#888" rx="4"/>
+  <text x="700" y="275" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace">date_measured</text>
+
+  <!-- =================== Connecting arrow between strain_id pills =================== -->
+  <path d="M 340 147 C 400 147, 500 177, 560 177"
+        fill="none" stroke="#2e7d32" stroke-width="2.5"/>
+  <!-- Label box on the connector -->
+  <rect x="385" y="135" width="130" height="22" fill="#e8f5e9"
+        stroke="#2e7d32" stroke-width="1.2" rx="11"/>
+  <text x="450" y="151" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">shared column</text>
+  <text x="450" y="172" text-anchor="middle" font-size="11" fill="#2e7d32">
+    NATURAL JOIN auto-joins here
+  </text>
+
+  <!-- =================== Caption =================== -->
+  <rect x="40" y="305" width="820" height="80" fill="#fafafa" stroke="#bbb" rx="4"/>
+  <text x="450" y="328" text-anchor="middle" font-size="14" font-weight="700" fill="#333">
+    NATURAL JOIN matches on every column with the same name. Here that is just
+    <tspan font-family="ui-monospace, monospace" fill="#2e7d32">strain_id</tspan>.
+  </text>
+  <text x="450" y="352" text-anchor="middle" font-size="13" fill="#c62828">
+    Beware: add a column later named
+    <tspan font-family="ui-monospace, monospace">created_at</tspan>
+    to both tables, and the join silently changes.
+  </text>
+  <text x="450" y="372" text-anchor="middle" font-size="13" fill="#555">
+    Prefer the explicit form:
+    <tspan font-family="ui-monospace, monospace">strain JOIN assay USING (strain_id)</tspan>.
+  </text>
+
+</svg>

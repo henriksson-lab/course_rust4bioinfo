@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 450"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    SELECT — filter rows and columns
+  </text>
+
+  <!-- =================== LEFT: input table =================== -->
+  <text x="260" y="68" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">strain</text>
+
+  <!-- Outer card -->
+  <rect x="20" y="80" width="480" height="218" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <!-- Header band -->
+  <rect x="20" y="80" width="480" height="28" fill="#e3f2fd" stroke="#888"/>
+
+  <!-- column dividers -->
+  <line x1="80"  y1="80" x2="80"  y2="298" stroke="#bbb"/>
+  <line x1="200" y1="80" x2="200" y2="298" stroke="#bbb"/>
+  <line x1="320" y1="80" x2="320" y2="298" stroke="#bbb"/>
+  <line x1="420" y1="80" x2="420" y2="298" stroke="#bbb"/>
+
+  <text x="50"  y="100" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">strain_id</text>
+  <text x="140" y="100" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="260" y="100" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+  <text x="370" y="100" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">isolation_src</text>
+  <text x="460" y="100" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">year_iso.</text>
+
+  <!-- Row 1: 1922, NOT matched (grey) -->
+  <rect x="20" y="108" width="480" height="46" fill="white" stroke="#bbb"/>
+  <text x="50"  y="136" text-anchor="middle" font-size="13" fill="#888"
+        font-family="ui-monospace, monospace">1</text>
+  <text x="140" y="136" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">K-12 MG1655</text>
+  <text x="260" y="136" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="370" y="136" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">human gut</text>
+  <text x="460" y="136" text-anchor="middle" font-size="13" fill="#888"
+        font-family="ui-monospace, monospace">1922</text>
+
+  <!-- Row 2: 1989, MATCHED (green highlight) -->
+  <rect x="20" y="154" width="480" height="46" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="50"  y="182" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">2</text>
+  <text x="140" y="182" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="260" y="182" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="370" y="182" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">lab deriv.</text>
+  <text x="460" y="182" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1989</text>
+
+  <!-- Row 3: 1947, NOT matched (grey) -->
+  <rect x="20" y="200" width="480" height="46" fill="white" stroke="#bbb"/>
+  <text x="50"  y="228" text-anchor="middle" font-size="13" fill="#888"
+        font-family="ui-monospace, monospace">3</text>
+  <text x="140" y="228" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">168</text>
+  <text x="260" y="228" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">B. subtilis</text>
+  <text x="370" y="228" text-anchor="middle" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">soil</text>
+  <text x="460" y="228" text-anchor="middle" font-size="13" fill="#888"
+        font-family="ui-monospace, monospace">1947</text>
+
+  <!-- Row 4: 1980 ... wait, must be >1980. We need a 4th row that matches. -->
+  <!-- Row 4: BL21(DE3), 1986, MATCHED -->
+  <rect x="20" y="246" width="480" height="46" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="50"  y="274" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">4</text>
+  <text x="140" y="274" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace">BL21(DE3)</text>
+  <text x="260" y="274" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">E. coli</text>
+  <text x="370" y="274" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">protein exp.</text>
+  <text x="460" y="274" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">1986</text>
+
+  <!-- =================== MIDDLE: query arrow =================== -->
+  <rect x="510" y="120" width="170" height="160" fill="#fafafa"
+        stroke="#bbb" rx="4"/>
+  <text x="595" y="142" text-anchor="middle" font-size="12" font-weight="700" fill="#555">
+    query
+  </text>
+  <text x="520" y="166" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">SELECT</text>
+  <text x="520" y="184" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">  strain_name,</text>
+  <text x="520" y="202" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">  species</text>
+  <text x="520" y="220" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">FROM strain</text>
+  <text x="520" y="238" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">WHERE year_isolated</text>
+  <text x="520" y="256" font-size="11" fill="#222"
+        font-family="ui-monospace, monospace">      &gt; 1980;</text>
+
+  <!-- Arrow -->
+  <path d="M 500 200 L 510 200" fill="none" stroke="#555" stroke-width="2"/>
+  <path d="M 680 200 L 700 200" fill="none" stroke="#555" stroke-width="2"/>
+  <path d="M 692 194 L 700 200 L 692 206 Z" fill="#555"/>
+
+  <!-- =================== RIGHT: output table =================== -->
+  <text x="790" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#555">
+    result
+  </text>
+
+  <rect x="700" y="80" width="180" height="158" fill="white"
+        stroke="#888" stroke-width="1.2"/>
+
+  <!-- Header band -->
+  <rect x="700" y="80" width="180" height="28" fill="#e3f2fd" stroke="#888"/>
+
+  <line x1="790" y1="80" x2="790" y2="238" stroke="#bbb"/>
+
+  <text x="745" y="100" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">strain_name</text>
+  <text x="835" y="100" text-anchor="middle" font-size="12" font-weight="700"
+        font-family="ui-monospace, monospace">species</text>
+
+  <!-- Output row 1: DH5alpha -->
+  <rect x="700" y="108" width="180" height="65" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="745" y="148" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">DH5alpha</text>
+  <text x="835" y="148" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">E. coli</text>
+
+  <!-- Output row 2: BL21(DE3) -->
+  <rect x="700" y="173" width="180" height="65" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="745" y="213" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace">BL21(DE3)</text>
+  <text x="835" y="213" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace">E. coli</text>
+
+  <!-- =================== Caption =================== -->
+  <rect x="20" y="330" width="860" height="100" fill="#fafafa" stroke="#bbb" rx="4"/>
+  <text x="450" y="358" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
+    SELECT shrinks both dimensions
+  </text>
+  <text x="450" y="386" text-anchor="middle" font-size="15" fill="#555">
+    WHERE filters rows (kept 2 of 4); the column list filters columns (kept 2 of 5).
+  </text>
+  <text x="450" y="410" text-anchor="middle" font-size="14" fill="#888">
+    The result is a smaller table — same shape kind, fewer rows and fewer columns.
+  </text>
+
+</svg>

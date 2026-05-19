@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arr-conn" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1565c0"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+    One machine, many ports
+  </text>
+
+  <!-- ===== The machine (centre/right) ===== -->
+  <rect x="380" y="60" width="460" height="350" rx="12" ry="12"
+        fill="#fafafa" stroke="#666" stroke-width="2"/>
+  <text x="610" y="90" text-anchor="middle" font-size="16" font-weight="600" fill="#333"
+        font-family="ui-monospace, monospace">
+    127.0.0.1   (your laptop)
+  </text>
+
+  <!-- service boxes -->
+  <!-- :22 SSH -->
+  <rect x="410" y="110" width="400" height="42" rx="6" ry="6"
+        fill="white" stroke="#888" stroke-width="1.2"/>
+  <text x="425" y="137" font-size="15" font-family="ui-monospace, monospace" fill="#333">
+    :22    — SSH daemon
+  </text>
+
+  <!-- :80 web -->
+  <rect x="410" y="162" width="400" height="42" rx="6" ry="6"
+        fill="white" stroke="#888" stroke-width="1.2"/>
+  <text x="425" y="189" font-size="15" font-family="ui-monospace, monospace" fill="#333">
+    :80    — web server
+  </text>
+
+  <!-- :3000 axum backend -->
+  <rect x="410" y="214" width="400" height="42" rx="6" ry="6"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="425" y="241" font-size="15" font-family="ui-monospace, monospace" fill="#2e7d32">
+    :3000  — your axum backend
+  </text>
+
+  <!-- :5432 postgres -->
+  <rect x="410" y="266" width="400" height="42" rx="6" ry="6"
+        fill="white" stroke="#888" stroke-width="1.2"/>
+  <text x="425" y="293" font-size="15" font-family="ui-monospace, monospace" fill="#333">
+    :5432  — PostgreSQL
+  </text>
+
+  <!-- :8080 yew frontend -->
+  <rect x="410" y="318" width="400" height="42" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="425" y="345" font-size="15" font-family="ui-monospace, monospace" fill="#1565c0">
+    :8080  — your Yew frontend (trunk dev server)
+  </text>
+
+  <!-- ===== Clients on the left ===== -->
+  <!-- Browser tab A -->
+  <rect x="50" y="118" width="170" height="48" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+  <text x="135" y="138" text-anchor="middle" font-size="14" font-weight="600" fill="#1565c0">
+    Browser tab A
+  </text>
+  <text x="135" y="156" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    the Yew app
+  </text>
+
+  <!-- Browser tab B -->
+  <rect x="50" y="216" width="170" height="48" rx="8" ry="8"
+        fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="135" y="236" text-anchor="middle" font-size="14" font-weight="600" fill="#2e7d32">
+    Browser tab B
+  </text>
+  <text x="135" y="254" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    JSON endpoint
+  </text>
+
+  <!-- Terminal (curl) -->
+  <rect x="50" y="314" width="170" height="48" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="135" y="334" text-anchor="middle" font-size="14" font-weight="600" fill="#b45309">
+    Terminal (curl)
+  </text>
+  <text x="135" y="352" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    poking the API
+  </text>
+
+  <!-- ===== Arrows from clients to ports ===== -->
+  <!-- Browser tab A -> :8080 (yew frontend) -->
+  <path d="M 220 142 C 300 142, 320 339, 408 339"
+        fill="none" stroke="#1565c0" stroke-width="2"
+        marker-end="url(#arr-conn)"/>
+
+  <!-- Browser tab B -> :3000 (axum backend) -->
+  <path d="M 220 240 C 320 240, 340 235, 408 235"
+        fill="none" stroke="#2e7d32" stroke-width="2"
+        marker-end="url(#arr-conn)"/>
+
+  <!-- Terminal (curl) -> :3000 -->
+  <path d="M 220 338 C 310 338, 340 240, 408 240"
+        fill="none" stroke="#d97706" stroke-width="2"
+        marker-end="url(#arr-conn)"/>
+
+  <!-- ===== Bottom caption ===== -->
+  <text x="450" y="445" text-anchor="middle" font-size="14" fill="#555">
+    IP address + port = a single service.  Well-known ports: 80 HTTP, 443 HTTPS, 22 SSH.
+  </text>
+  <text x="450" y="465" text-anchor="middle" font-size="14" fill="#555">
+    Dev backends pick high numbers like 3000 or 8080 to avoid clashing.
+  </text>
+
+</svg>
