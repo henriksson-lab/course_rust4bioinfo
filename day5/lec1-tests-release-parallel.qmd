@@ -35,32 +35,34 @@ The concepts page has the same material in written form with links to the Rust B
 
 # Part 1 — Tests
 
-## Why bother writing tests?
+## Why bother writing tests — a concrete regression
 
-Would you trust this still works after a small edit?
+A **regression** [a change that silently breaks behaviour that used to work] is the bug class tests are built for.
 
-```python
-# Python — what does this do?  Will the next person to edit it understand?
-def parse_fastq_id(s):
-    m = re.match(r'^@([^\s:]+):(\d+):([^:]+):(\d+):(\d+):(\d+):(\d+)\s+([12]):([YN]):(\d+):([ACGTN+]+)$', s)
-    return {f: m.group(i+1) for i, f in enumerate(['inst','run','fc','lane','tile','x','y','read','filt','ctrl','idx'])}
-```
+- Today `gc_content(b"ACGT")` returns 0.5.
+- Next year someone "optimises" it and now N bases change the denominator → it returns 0.4.
+- A one-line `assert_eq!(gc_content(b"ACGT"), 0.5)` would have caught it the moment they pushed.
 
-This works today. What happens when next year someone adds a new field, or the sequencer firmware changes the format slightly? Without tests, you find out months later when a downstream report comes back wrong.
+::: notes
+The argument for tests is not "you might write bugs", though you will. The argument is that small edits to working code silently change its behaviour, and an automated check is the only thing that catches that before the user does.
+:::
 
-Tests catch the silent regressions you didn't expect. If `gc_content` returns 0.5 for `ACGT` today and someone "optimises" it next year so it now returns 0.4 because they changed how N bases are counted — your downstream pipeline silently produces different numbers. A test that asserts `gc_content(b"ACGT") == 0.5` would have failed the moment they pushed the change.
+## Why bother writing tests — code outlives its author
+
+Real bioinformatics code lives for years. The person who wrote it has moved on by the time it breaks.
 
 ::: {.incremental}
-- Tests are the only thing that says "you broke `reverse_complement` on the N base"
-- Real bioinformatics code lives for years; the original author moves on
-- Test suites are the institutional memory of "what this is supposed to do"
+- Tests are the institutional memory of "what this function is supposed to do"
+- Without them, you find out from a user a year later that your published pipeline gives different numbers on the same input
 :::
 
 ::: notes
-The argument for tests is not "you might write bugs", though you will. The argument is that code outlives its author's memory. Six months from now, when you change a helper to make a different caller happy, your tests are what tells you whether you also broke the original use case. Without tests, you find out from a user a year later when a published pipeline gives different numbers on the same input.
+Six months from now, when you change a helper to make a different caller happy, your tests are what tells you whether you also broke the original use case. The **test suite** [collection of automated checks that run on every build] is the only durable record of the function's intended contract.
 :::
 
 ## The anatomy of a Rust test
+
+A **unit test** [a small test that exercises one function in isolation] in Rust is just a function with a `#[test]` attribute and an **assertion** [a runtime check that aborts the test if the condition is false].
 
 ```rust
 /// Fraction of bases that are G or C, in 0.0 ..= 1.0.
@@ -78,10 +80,10 @@ mod tests {
 }
 ```
 
-- `#[cfg(test)]` — only compile this module when running `cargo test`
-- `mod tests` — a sub-module living in the same file as the code it tests
-- `use super::*;` — pull in everything from the surrounding file
 - `#[test]` — mark this function for the test harness to discover
+- `assert_eq!` — fail the test (with a useful message) if the two sides differ
+
+The `#[cfg(test)]` / `mod tests` / `use super::*;` scaffolding is the same for every file; the starter projects already wire it up.
 
 ::: notes
 This is the canonical layout for unit tests in Rust: a module at the bottom of the same source file as the code under test, gated by `cfg(test)` so the test code does not ship in the production binary.
@@ -172,35 +174,9 @@ Docs: [Book chapter 11.2 — Controlling How Tests Are Run](https://doc.rust-lan
 
 ## A property-style test in three lines
 
-```rust
-#[test]
-fn revcomp_round_trip() {
-    for seq in [b"A".as_slice(), b"ACGT", b"NACGTN", b""] {
-        let twice = reverse_complement(&reverse_complement(seq));
-        assert_eq!(&twice[..], seq, "round trip failed for {:?}", seq);
-    }
-}
-```
-
-A property test asserts an invariant for **many inputs**, not one specific output.
-
-More invariants you can assert the same way:
+A **property-based test** [a test that asserts an invariant that should hold for *any* input, not one specific input/output pair] using [`proptest`](https://docs.rs/proptest/) [a Rust crate that generates hundreds of random inputs and, on failure, shrinks them to a minimal example]:
 
 ```rust
-// Commutativity: order of summation doesn't matter
-proptest!(|(a: f64, b: f64)| {
-    assert_eq!(a + b, b + a);
-});
-
-// Reverse-complement preserves GC content
-proptest!(|(seq: Vec<u8>)| {
-    let filtered: Vec<u8> = seq.iter().copied()
-        .filter(|b| matches!(b, b'A' | b'C' | b'G' | b'T'))
-        .collect();
-    assert_eq!(gc_content(&filtered), gc_content(&reverse_complement(&filtered)));
-});
-
-// Reverse twice = original
 proptest!(|(seq: Vec<u8>)| {
     let mut v = seq.clone();
     v.reverse();
@@ -209,14 +185,12 @@ proptest!(|(seq: Vec<u8>)| {
 });
 ```
 
-Property tests find edge cases you'd never write by hand. They run hundreds of randomly-generated inputs per test.
+The property here is `f(f(x)) == x` for ANY x — proptest generates hundreds of random `x` for you.
 
 For *random* inputs with automatic shrinking, use [`proptest`](https://docs.rs/proptest/) (teaser, not today).
 
 ::: notes
-Property-based tests check relationships, not specific input-output pairs. The classic invariant for reverse-complement is "doing it twice gives you back the original". One test, four inputs, one assertion.
-
-The optional message at the end of `assert_eq!` is shown only on failure. Including the value of `seq` makes it obvious which iteration broke.
+Property-based tests check relationships, not specific input-output pairs. Classic invariants for bioinformatics: `reverse_complement(reverse_complement(seq)) == seq`, `gc_content(revcomp(seq)) == gc_content(seq)`, `a + b == b + a`.
 
 Real property-testing libraries — [proptest](https://docs.rs/proptest/) and [quickcheck](https://docs.rs/quickcheck/) — generate hundreds of random inputs and, when one fails, shrink it to the smallest input that still triggers the failure. Very effective for bioinformatics, where the input space is enormous and hand-picked test cases miss most of it. Out of scope today; bookmark them.
 :::
@@ -235,7 +209,7 @@ my-crate/
 ```
 
 - **Unit tests** — alongside the code, see private items
-- **Integration tests** — in `tests/`, only the public API, like a real user
+- **Integration tests** [tests that exercise your crate from the outside, the way a downstream user would] — in `tests/`, only the public API, like a real user
 
 ::: notes
 Rust ships with two flavours of test, distinguished by where the files live.
@@ -280,9 +254,9 @@ cargo run             # same: debug profile
 cargo test            # same: debug profile
 ```
 
-Debug builds prioritise **fast compile time** and **good error messages**, not runtime speed.
+A **debug build** [the default cargo profile, optimised for fast compilation and helpful panics] prioritises **fast compile time** and **good error messages**, not runtime speed.
 
-The single most important Rust performance flag:
+The single most important Rust performance flag flips this to a **release build** [the optimised profile cargo uses with `--release`, intended for shipping]:
 
 ```bash
 cargo build --release   # target/release/<crate>  — slow to compile, fast to run
@@ -319,9 +293,9 @@ You don't need to read assembly to write fast Rust. But knowing it exists and ro
 
 ## Function inlining — what release mode actually does
 
-A function **call** has overhead: pushing arguments, jumping to the function, returning. For tiny functions that run millions of times, that overhead matters.
+A function **call** has overhead: pushing arguments, jumping to the function, returning. For tiny functions that run inside a **hot loop** [a loop that the program spends most of its time in], that overhead matters.
 
-**Inlining** copies the function's body directly into the caller — no jump, no return.
+**Inlining** [copying a called function's body directly into the caller so there's no jump] removes the call entirely.
 
 ![Before: caller jumps to function and back. After: function body sits inside the caller, no jump at all.](images/lec1-function-inlining.svg){fig-alt="Two panels. Left panel: caller box with an arrow labelled 'call' going to a separate function box, and an arrow labelled 'return' coming back. Right panel: caller box with the function's contents copied inside it, no separate function box, no arrows. Annotation: release mode inlines small/hot functions automatically; sometimes 10x speedup."}
 
@@ -335,22 +309,24 @@ Same Rust source. Same machine. Different `--release` flag, different assembly.
 
 Try it yourself: paste any function into [godbolt.org](https://godbolt.org/), select `rustc`, toggle `-O` or `-C opt-level=3`, watch the right pane shrink.
 
-## What --release actually changes
+## What `--release` actually changes
 
 | Switch | Debug | Release |
 |---|---|---|
-| `opt-level` | 0 (none) | 3 (full) |
+| Optimisation passes[^optlevel] | off | full |
 | Array bounds checks | always | always |
 | Integer overflow checks | panic | wrap silently |
 | Debug info embedded | yes | no |
 | Function inlining | minimal | aggressive |
-| SIMD auto-vectorisation | rarely | yes |
+| Uses CPU's wide-math instructions (SIMD: single instruction, multiple data) | rarely | yes |
 | Typical k-mer workload | 40 s | 0.8 s |
 
 Bounds checks stay on in *both* — Rust does not give up memory safety for speed.
 
+[^optlevel]: The knob is `opt-level` in `Cargo.toml`; debug sets 0, release sets 3.
+
 ::: notes
-The big-ticket items are opt-level going from 0 to 3, which enables every LLVM optimisation pass; debug info getting stripped, which makes the binary smaller; and inlining plus auto-vectorisation, which together account for most of the 50x speed-up on simple loops.
+The big-ticket items are LLVM's full optimisation passes turning on, debug info getting stripped (smaller binary), and inlining plus auto-**vectorisation** [rewriting a scalar loop to use SIMD instructions so one CPU instruction processes 4, 8, or 16 elements at once] together accounting for most of the 50x speed-up on simple loops.
 
 Bounds checks deserve special mention. They are kept in both profiles. The Rust team's stance is that bounds checks are too cheap to skip and the safety benefit is too large. So `seq[i]` in a release build still panics on out-of-range index — it does not return random memory the way C does. The optimiser does, however, often prove that an index is in range and remove the check at compile time.
 :::
@@ -401,7 +377,7 @@ Two seconds of typing for a 50x speed-up is the best return on investment in thi
 
 ## Why parallelism
 
-A modern laptop has 8 or more CPU cores. A single-threaded program uses one.
+A modern laptop has 8 or more CPU cores. A single-**threaded** [a thread is one independent stream of execution; one core can run one thread at a time] program uses one.
 
 Many bioinformatics workloads are **embarrassingly parallel**:
 
@@ -457,30 +433,27 @@ Docs: [rayon crate](https://docs.rs/rayon/), [`par_iter`](https://docs.rs/rayon/
 
 ## Where the threads come from
 
-`use rayon::prelude::*;` pulls in a runtime that owns a **thread pool**:
+Rayon creates one **thread pool** [a set of worker threads created once at startup and reused for every parallel call] sized to your CPU count. Override with the `RAYON_NUM_THREADS` env var if you need to.
 
-- Sized to the number of CPU cores at startup (override with `RAYON_NUM_THREADS=4`)
-- Each thread owns a queue ("deque") of tasks
-- When you call `.par_iter()`, rayon splits the work across the deques
-- Done once per process — the pool is reused for every `.par_iter()` you call
+```bash
+RAYON_NUM_THREADS=4 ./my-tool
+```
 
 You never call `spawn` or `join` yourself.
-
-| How the pool gets sized | When |
-|---|---|
-| `RAYON_NUM_THREADS=8 ./my-tool` | env var, set by the user at launch |
-| `num_cpus::get()` fallback | automatic, if the env var is unset |
-| `ThreadPoolBuilder::new().num_threads(N).build_global()` | manual, called once at startup |
 
 ::: notes
 Spinning up an OS thread takes milliseconds and they cost memory. Doing it per `.par_iter()` would be unusable. Rayon instead creates one pool of long-lived threads when the program starts and parks them on a condition variable when idle.
 
-`RAYON_NUM_THREADS` is the only knob most people ever set, usually to pin scheduling for a benchmark.
+Each worker owns a queue (a deque) of tasks; `.par_iter()` splits the work across those deques. The next slide on **work-stealing** [idle workers steal pending tasks from busy workers, so no central scheduler is needed] covers the mechanism that keeps every core busy.
+
+`RAYON_NUM_THREADS` is the only knob most people ever set, usually to pin scheduling for a benchmark. The fully manual route is `ThreadPoolBuilder::new().num_threads(N).build_global()` called once at startup.
 
 Docs: [`ThreadPoolBuilder`](https://docs.rs/rayon/latest/rayon/struct.ThreadPoolBuilder.html).
 :::
 
 ## Work-stealing keeps every core busy
+
+**Work-stealing** [idle worker threads grab pending tasks from busy workers' queues, so the load balances itself without any central scheduler]:
 
 ![Idle workers steal from busy ones — no scheduling needed.](images/lec1-work-stealing-clear.svg){fig-alt="Three worker columns. T0 in blue shows a deque with one remaining item seq 7 and a caption 'busy: 6 items done'. T1 in green shows an empty deque captioned 'idle: looks for work'. T2 in orange shows a deque of five items seq 11 through seq 15 with the bottom item seq 15 (the tail) highlighted in a darker shade and labelled 'tail'; caption 'backlog of 5 items'. A curved orange arrow runs from T1's column down and back up to seq 15 in T2's deque, with the label 'T1 steals seq 15 from T2's tail'. A footer reads: No manual scheduling. Rayon's runtime balances the load while your code says only .par_iter()."}
 
@@ -493,6 +466,8 @@ This is the same algorithm used in Cilk and the JVM's ForkJoin pool. Rayon is th
 :::
 
 ## Without Send/Sync — the race condition you'd get
+
+A **race condition** [two threads accessing the same memory at the same time, where at least one is writing, with no coordination — the result depends on which thread "wins" each time] is the bug class Rust's `Send` and `Sync` traits prevent.
 
 Two threads, both updating a shared counter:
 
@@ -515,8 +490,10 @@ In C/C++ this compiles, runs, gives wrong answers, and is famously hard to debug
 
 ![Two marker traits make data races a compile error.](images/lec1-send-sync.svg){fig-alt="Diagram with two large panels side by side. Left panel in blue is titled Send: T can be moved to another thread, with a small diagram showing a value moving from a Thread A box to a Thread B box along a green 'move' arrow; an examples list shows Vec<u8>, String, HashMap as OK (green) and Rc<u8>, *mut T as NO (red), with side notes 'DNA sequences travel freely', 'non-atomic refcount would race', 'raw pointer, no safety analysis'. Right panel in green is titled Sync: &T can be shared between threads, with a value box and two arrows out to Thread A and Thread B both carrying '&value'; examples show &[u8], &Vec<u8>, Mutex<T> as OK and Cell<u8>, RefCell<T> as NO with side notes 'read-only is safe', 'guards its own state', 'mutation w/o sync', 'single-thread only'. Footer: 'Fearless concurrency': the compiler refuses code that would race, before it ever runs."}
 
+Rust refuses to compile code that would race (two threads writing the same data without coordination). The compiler tracks this with two marker traits called **`Send`** [the type `T` can be safely moved between threads] and **`Sync`** [`&T` can be safely shared between threads]. You almost never type these — just know that the borrow checker uses them to reject racy code at compile time.
+
 ::: notes
-These are two marker traits, automatically derived for almost every type you'll write. A type is `Send` if a value of that type can be moved to another thread without breaking its invariants. A type is `Sync` if a *shared reference* to a value of that type can be used from multiple threads.
+`Send` and `Sync` are marker traits, automatically derived for almost every type you'll write. A type is `Send` if a value of that type can be moved to another thread without breaking its invariants. A type is `Sync` if a *shared reference* to a value of that type can be used from multiple threads.
 
 `Vec<u8>` is both. So is `String`, `HashMap`, `[u8; N]`, and every primitive. The few non-Send-or-Sync types are single-thread tools: `Rc` (non-atomic reference counting), `Cell` and `RefCell` (interior mutability without synchronisation). Rayon refuses to compile any closure that captures one of those by shared reference, which is exactly the refusal that prevents data races.
 
@@ -553,9 +530,9 @@ Note the small caveat: parallel `.sum::<f64>()` is non-deterministic at the last
 
 ## When parallelism helps — and when it doesn't
 
-Spawning a thread isn't free. The OS pays a few microseconds per thread; rayon's pool amortises that — but the per-item work has to be larger than the per-item overhead.
+Handing one item to a worker thread isn't free. There's **per-task overhead** [the bookkeeping rayon does to enqueue a task, hand it to a worker, and merge the result back — typically a few microseconds] for every item. The per-item work has to be larger than that overhead, or you slow down.
 
-![Three bars on the same time scale: thread-startup overhead is roughly the same size as one GC computation on a short read, but tiny compared to one GC on a long read.](images/lec1-context-switch-vs-work.svg){fig-alt="Horizontal bar chart with three rows. Row 1 (red): 'one OS context switch' at ~1-10 µs. Row 2 (orange): 'gc_content on a 1000-bp read' at ~1 µs. Row 3 (green): 'gc_content on a 10000-bp read' at ~10 µs. Annotation: if each item is faster than the overhead, parallelism makes things slower."}
+![Three bars on the same time scale: per-task overhead is roughly the same size as one GC computation on a short read, but tiny compared to one GC on a long read.](images/lec1-context-switch-vs-work.svg){fig-alt="Horizontal bar chart with three rows. Row 1 (red): 'per-task overhead (~microseconds)' at ~1-10 µs. Row 2 (orange): 'gc_content on a 1000-bp read' at ~1 µs. Row 3 (green): 'gc_content on a 10000-bp read' at ~10 µs. Annotation: if each item is faster than the overhead, parallelism makes things slower."}
 
 **Rule of thumb:**
 - Per item < 1 µs of work → parallelism hurts. Batch first.
@@ -599,7 +576,7 @@ Two scaling shapes:
 ![Two scaling curves on the same axis. Linear (dashed grey): the ideal; rarely achieved in practice. Sublinear (solid green): what you actually measure on a real workload — the gap grows with core count because of memory bandwidth, cache contention, and Amdahl's law.](images/lec1-linear-vs-sublinear-scaling.svg){fig-alt="Bar chart with 4 groups (1, 2, 4, 8 cores). Each group has two bars side by side: 'ideal linear' (grey, heights 1, 2, 4, 8) and 'observed sublinear' (green, heights 1, 1.9, 3.7, 7.2). Dashed line above each green bar shows where linear would land."}
 
 - **Ideal linear** — what the textbook promises: N cores → N× speedup.
-- **Observed sublinear** — what you actually measure. The gap widens with core count: memory bandwidth is shared, caches contend, and there's a fixed serial fraction (Amdahl's law).
+- **Observed sublinear scaling** [you get a real speed-up, but less than N× on N cores] — what you actually measure. Some part of every program is unavoidably serial, so doubling cores never quite doubles speed. Threads also compete for the same path to memory, so even fully parallel work doesn't always scale linearly.
 
 For real bioinformatics workloads (per-record GC, per-read alignment), 7-8× on 8 cores is healthy. Stop tuning when you're within 20% of ideal.
 

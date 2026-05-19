@@ -35,8 +35,8 @@ Welcome to day 1 of the course. This is the first of two short lectures today. T
 
 ::: {style="font-size: 1.2em;"}
 - **10×–100×** — typical Rust speedup over Python on bioinformatics inner loops
-- **1 file** — a Rust binary's deployment dependency list
-- **0** — data races possible in safe Rust (enforced at compile time)
+- **1 file** — a Rust **binary** (the single executable file the compiler produces) has zero extra deployment dependencies
+- **0** — data races possible in safe Rust (enforced at **compile time** — checked when you build the program, before it ever runs)
 :::
 
 ::: notes
@@ -55,6 +55,26 @@ def count_kmers(seq: str, k: int) -> Counter:
 
 ::: notes
 Here is the kind of thing every bioinformatics tool does in its inner loop somewhere: count contiguous substrings of length k from a long DNA sequence. This is the Python version. Idiomatic, four lines, clear what it does. You could write it in 30 seconds.
+:::
+
+## What Rust looks like — a 3-line taste
+
+Before the dense version, here is the smallest possible Rust example: declare a counter, loop, print.
+
+```rust
+let mut count = 0;
+for base in "ACGTACGT".chars() {
+    if base == 'G' || base == 'C' { count += 1; }
+}
+println!("{}", count);
+```
+
+- `let mut count = 0;` — declare a mutable variable (Rust variables are read-only by default)
+- `for base in ...` — same shape as Python's for loop
+- `println!` — print; the `!` marks it as a macro, not a function
+
+::: notes
+This is what Rust looks like for a beginner. Three lines do the work. If you can read a Python for loop, you can read this. Notice mut: Rust makes you ask for mutability explicitly, which is one of the small habits the language pushes on you. The next slide jumps to a denser example using collections and slices; if any of it looks intimidating, remember we will spend day 1 and day 2 unpacking exactly these pieces.
 :::
 
 ## Same algorithm in Rust
@@ -156,10 +176,12 @@ This is one of the biggest practical advantages of Rust for our field. People yo
 
 ## Safety — what the word means here
 
+These are the bugs that make C programs crash unpredictably — Rust catches them before the program runs.
+
 ```rust
 let mut seq = vec![0u8; 100];
-let r = &seq[0];           // shared borrow of seq
-seq.push(b'A');            // try to mutate while borrowed
+let r = &seq[0];           // borrow a reference into seq
+seq.push(b'A');            // try to change seq while r still points in
 println!("{}", r);
 ```
 
@@ -177,9 +199,9 @@ error[E0502]: cannot borrow `seq` as mutable because it is also
 ```
 
 ::: notes
-When I say Rust is safe, I mean the compiler catches at compile time the class of bug that crashes C and C++ programs at runtime: dangling pointers, use-after-free, data races, buffer overruns.
+When I say Rust is safe, I mean the compiler catches at compile time the class of bug that crashes C and C++ programs at runtime (while the program is executing on a user's machine): dangling pointers, use-after-free, data races, buffer overruns.
 
-This is not a runtime check. There is no garbage collector. It is the compiler refusing to compile broken code. The error message you see here is the actual output for the snippet above — and notice the message tells you what is wrong, where, and why. We will have more to say about borrow checker errors on day 2.
+This is not a runtime check. There is no garbage collector (the background process Python and Java run to free unused memory automatically). It is the compiler refusing to compile broken code. The error message you see here is the actual output for the snippet above — and notice the message tells you what is wrong, where, and why. We will have more to say about borrow checker (the part of the Rust compiler that tracks who owns each piece of memory) errors on day 2.
 :::
 
 ## Safety in our context — parallel `count_kmers`

@@ -20,14 +20,14 @@ format:
 
 ## What this lecture is
 
-Why some recursive problems are too slow naive, and how dynamic programming fixes them — sequence alignment as the canonical example.
+Some recursions redo the same work over and over. We'll see one (alignment) and the fix (remember answers in a table).
 
 ::: notes
-In the previous lecture we wrote recursive code over a tree: one visit per node, total work proportional to the size of the tree. That works because each node is a distinct subproblem.
+In the previous lecture we wrote recursive code over a tree: one visit per node, total work proportional to the size of the tree. That works because each node is a distinct **subproblem** [a smaller version of the same problem, asked on part of the input].
 
-Some recursions don't have that property. The same subproblem is reached from many different paths in the recursion tree, and naive recursion ends up redoing the same work an exponential number of times. The fix is to compute each subproblem once and remember the answer.
+Some recursions don't have that property. The same subproblem is reached from many different paths in the recursion tree, and naive recursion ends up redoing the same work an **exponential** number of times [the work doubles, triples, or worse for every one extra unit of input — quickly becoming impossible]. The fix is to compute each subproblem once and remember the answer — turning the run time into a **polynomial** [grows like input-size to a fixed small power — e.g. n² — and stays tractable].
 
-That trick — "remember the answer" — is dynamic programming. It turns a class of exponential-time algorithms into polynomial-time ones, and it shows up all over bioinformatics: alignment, edit distance, RNA folding, hidden-Markov-model decoding.
+That trick — "remember the answer in a table" — is dynamic programming. It shows up all over bioinformatics: alignment, edit distance, RNA folding, hidden-Markov-model decoding.
 :::
 
 ## Sequence alignment — the problem
@@ -45,11 +45,40 @@ A small example: align `CACGT` against `CAGT`.
 Why we care: detecting orthologous genes, calling mutations from sequencing reads, searching a database for similar proteins, mapping reads to a reference genome — all variants of "find the best alignment".
 
 ::: notes
-This is one of the oldest and most-used algorithms in bioinformatics. The Needleman-Wunsch paper is from 1970; the BLAST family of database-search tools, minimap2, bwa, and essentially every read mapper either run this directly or run a faster heuristic that approximates it.
+This is one of the oldest and most-used algorithms in bioinformatics. Needleman-Wunsch (the classic global-alignment DP) was published in 1970; the BLAST family of database-search tools, minimap2, bwa, and essentially every read mapper either run this directly or run a faster heuristic that approximates it.
 
 For the example, we have `CACGT` and `CAGT`. The shorter sequence is missing one character compared to the longer one. The alignment above proposes that the missing character corresponds to position 3 of the longer sequence — that's the gap, written as a dash.
 
 There are many other possible alignments; the question we want to answer is which alignment is "best", under some scoring scheme that rewards matches and penalises mismatches and gaps.
+:::
+
+## The naive recursion — what we'd write first
+
+The obvious recursion follows the English: at every step, either align the last two characters, drop one from `a`, or drop one from `b`. Take the best of the three.
+
+```rust
+fn align_naive(a: &[u8], b: &[u8]) -> i32 {
+    if a.is_empty() || b.is_empty() {
+        return missing(a, b);
+    }
+    max3(
+        align_naive(&a[..a.len()-1], &b[..b.len()-1]) + score(a, b),
+        align_naive(&a[..a.len()-1], b) + GAP,
+        align_naive(a, &b[..b.len()-1]) + GAP,
+    )
+}
+```
+
+Each call makes three more calls. To compute `align("CA", "CA")` we end up computing `align("C", "C")` three different ways — and each of those branches three more times. The same little subproblem ["a subproblem is the same kind of question on smaller inputs"] is recomputed over and over.
+
+That's where the explosion comes from. The next slide quantifies it.
+
+::: notes
+This is the algorithm you'd write off the top of your head before knowing dynamic programming exists — and it's exactly what an exam paper would ask you to write. The structure is correct, the code is short, and the result it would compute (if it ever finished) is the true optimal alignment score.
+
+The problem is purely computational. Look at what happens for tiny inputs. To compute `align("CA", "CA")` we need three subproblems: `align("C", "C")` plus a diagonal score, `align("C", "CA")` minus a gap, `align("CA", "C")` minus a gap. The latter two each in turn need `align("C", "C")` as one of *their* three subcalls. So `align("C", "C")` gets recomputed three separate times — from each of the three callers — and that ratio compounds at every level.
+
+The fix on the next two slides is to compute each `(i, j)` subproblem exactly once and remember the answer in a table. That's dynamic programming.
 :::
 
 ## Why naive recursion is too slow
@@ -76,25 +105,44 @@ Real protein alignments are routinely 300–500 residues; whole-genome alignment
 
 ## Dynamic programming — the idea
 
-**Observation:** many of those exponential alignments share sub-problems. The optimal alignment of `CAC` vs `CA` is computed once but reused thousands of times in the naive recursion.
+**Observation:** many of those exponential alignments share subproblems. The optimal alignment of `CAC` vs `CA` is computed once but reused thousands of times in the naive recursion.
 
-**Idea:** define `score[i][j]` = the score of the best alignment of `a[..i]` against `b[..j]`. Compute each cell **exactly once**, in dependency order.
+**Idea:** define `score[i][j]` = the score of the best alignment of `a[..i]` against `b[..j]`. Compute each cell **exactly once**, in dependency order. This is called **memoisation** [storing computed answers in a table so you never compute the same subproblem twice].
 
-Each cell depends on three neighbours (diagonal, up, left) → $O(n \times m)$ total work, not exponential.
+Each cell depends on three neighbours (diagonal, up, left).
 
-This is the trick that turns naive recursion into a polynomial-time algorithm. The same trick reappears in: **edit distance**, **longest common subsequence**, **RNA secondary structure prediction**, **shortest path in a DAG**, **Viterbi decoding for HMMs**.
+For two length-50 sequences:
+
+- Naive recursion: about **7 × 10²³** alignments — longer than the age of the universe.
+- DP table: about **2500 cells**, each cheap.
 
 ::: notes
 The shift in perspective: instead of building the answer top-down by recursive case analysis (which revisits subproblems), build it bottom-up by filling a table (which visits each subproblem once).
 
 Each cell `score[i][j]` is one subproblem — "what is the best score for the prefix pair (a[..i], b[..j])?" There are exactly (n+1) × (m+1) such cells, and each is filled in constant time by looking at three already-filled neighbours.
 
-Total work: O(n × m). For n = m = 50, that's 2 500 cells — compared to 7 × 10²³ alignments. Many orders of magnitude.
-
-The same recipe — define one subproblem per table cell, fill the table once — works for an enormous range of problems beyond alignment. The list at the bottom is a small sample of the algorithms students will meet across a bioinformatics career.
+For n = m = 50: 51 × 51 ≈ 2 500 cells, compared to 7 × 10²³ alignments. The CS shorthand for this is O(n × m) work versus O(3^n) — but the concrete comparison is the more striking one. Many orders of magnitude separate "tractable on a wristwatch" from "impossible in any practical sense".
 :::
 
-## The recurrence
+## Where else this trick shows up
+
+The same recipe — define one subproblem per table cell, fill the table once — reappears in:
+
+- **edit distance** — how many single-character edits separate two strings
+- **longest common subsequence** — the `diff` algorithm
+- **RNA secondary structure prediction**
+- **shortest path in a directed acyclic graph**
+- **Viterbi decoding for HMMs** — basecalling, gene finding
+
+Once you've seen DP, you'll recognise it everywhere.
+
+::: notes
+The same skeleton — "define one subproblem per table cell, fill the table once" — works for an enormous range of problems beyond alignment. The list here is a small sample of the algorithms students will meet across a bioinformatics career, all of them written as a table-fill rather than a tree of recursive calls.
+
+We'll revisit this list at the end of the lecture once the alignment example is concrete.
+:::
+
+## The rule for filling one cell
 
 ![Fill once in dependency order; each subproblem solved exactly once.](images/dp-cell-recurrence.svg){fig-alt="A 2x2 grid showing four cells [i-1][j-1], [i-1][j], [i][j-1] in grey as predecessors, with the cell [i][j] highlighted in orange as the target. Three arrows from the predecessors converge on the target. A side panel lists three options being maximised: diagonal score[i-1][j-1] + s(a[i], b[j]) (match or mismatch), up score[i-1][j] + gap (gap in b), left score[i][j-1] + gap (gap in a). Footer notes that storing which neighbour won gives the traceback, the table fills top-left to bottom-right with each cell computed exactly once, and naïve recursion would re-derive the same subproblem exponentially many times."}
 
@@ -106,8 +154,10 @@ Three options for filling cell `[i][j]`:
 
 `score[i][j]` = the maximum of the three.
 
+*This rule (CS jargon: the **recurrence** [the formula that defines each cell in terms of smaller ones]) is the heart of the algorithm. We'll call it the "filling step" or "the rule" from here on.*
+
 ::: notes
-The recurrence is the heart of the algorithm. Each cell is filled from its three already-computed neighbours; the rule is the same in every cell.
+Each cell is filled from its three already-computed neighbours; the rule is the same in every cell.
 
 The function `s(a, b)` is the scoring function — typically +1 for a match, -1 for a mismatch, or in practice a substitution matrix like BLOSUM-62 for proteins. The gap penalty is some negative number that discourages introducing gaps.
 
@@ -116,29 +166,43 @@ There's a base case: the first row and first column are filled by "gap, gap, gap
 
 ## The filled matrix
 
-![Each cell maxes three neighbours; traceback recovers the alignment.](images/dp-matrix.svg){fig-alt="A worked Needleman–Wunsch matrix for a = ACGT and b = ACT with scoring match +1, mismatch -1, gap -1. The grid has columns labelled ε, A, C, T (b's letters) and rows labelled ε, A, C, G, T (a's letters). The first row reads 0, -1, -2, -3 and the first column reads 0, -1, -2, -3, -4. The cell (G, C) is highlighted in orange with the score 1. Three arrows converge on it: a grey diagonal arrow from the cell scoring 0, a grey left arrow from the cell scoring -1, and a thick green up arrow from the cell scoring 2 (chosen). A right-hand panel works through the recurrence: score[3][2] = max of ↘ 0 + (-1) = -1, ↓ 2 + (-1) = 1 (chosen), → -1 + (-1) = -2; so score[3][2] = 1 and the traceback arrow points up. A footer notes that walking arrows back from (n, m) recovers the alignment."}
+![The filled matrix for `ACGT` vs `ACT`. Each cell maxes three neighbours.](images/dp-matrix.svg){fig-alt="A worked Needleman–Wunsch matrix for a = ACGT and b = ACT with scoring match +1, mismatch -1, gap -1. The grid has columns labelled ε, A, C, T (b's letters) and rows labelled ε, A, C, G, T (a's letters). The first row reads 0, -1, -2, -3 and the first column reads 0, -1, -2, -3, -4. The cell (G, C) is highlighted in orange with the score 1. Three arrows converge on it: a grey diagonal arrow from the cell scoring 0, a grey left arrow from the cell scoring -1, and a thick green up arrow from the cell scoring 2 (chosen). A right-hand panel works through the recurrence: score[3][2] = max of ↘ 0 + (-1) = -1, ↓ 2 + (-1) = 1 (chosen), → -1 + (-1) = -2; so score[3][2] = 1 and the traceback arrow points up. A footer notes that walking arrows back from (n, m) recovers the alignment."}
+
+For the highlighted cell `score[3][2]` (row G, column C), the three options are:
+
+- diagonal: `0 + (-1) = -1`  (G vs C, mismatch)
+- up:       `2 + (-1) = 1`   (gap in `b`)  &larr; **chosen**
+- left:    `-1 + (-1) = -2`  (gap in `a`)
+
+So `score[3][2] = 1`. The bottom-right cell holds the score of the best alignment of the whole sequences.
 
 ::: notes
 This is the global alignment matrix for two short sequences with simple scoring: match +1, mismatch -1, gap -1. Each cell is the best alignment score for the prefix pair `(a[..i], b[..j])` — the max over the three options from the previous slide.
 
-The highlighted cell shows the recurrence in action: the diagonal predecessor gives 0 + (-1) = -1 (mismatch G vs C), the upper predecessor gives 2 + (-1) = 1 (gap), the left predecessor gives -1 + (-1) = -2 (gap). The maximum is 1, from the upper neighbour.
-
-The cell at the bottom-right of the matrix holds the score of the best global alignment of the whole sequences. The same recurrence — replace max with min, and use unit costs — gives edit distance instead of alignment score.
+The highlighted cell shows the filling rule in action. The same rule — replace max with min, and use unit costs — gives edit distance instead of alignment score.
 :::
 
 ## Traceback — recovering the alignment
 
 The score alone tells you how good the alignment is, not what it actually is.
 
-**Trick:** at each cell, also remember **which neighbour won** the max.
+**Trick:** at each cell, also remember **which neighbour won** the max. Walking those back-pointers from the bottom-right cell to the top-left reproduces the alignment — this walk is called the **traceback** [reading the choices back out of the filled table to recover the actual alignment, not just its score].
+
+![Same matrix, now read backwards: trace the arrows from the bottom-right cell to the top-left.](images/dp-matrix.svg){fig-alt="The same Needleman-Wunsch matrix as on the previous slide, reused here so the audience can mentally trace the back-pointers from (n, m) back to (0, 0)."}
+
+The path through the matrix for the worked `CACGT` vs `CAGT` example, with each step labelled by which neighbour won:
 
 ```text
-↘  diagonal won  (match or mismatch column)
-↓  up won        (gap in b)
-→  left won      (gap in a)
+                    ε  C  A  G  T
+                ε   0  ←  ←  ←  ←       legend
+                C   ↑  ↘  .  .  .         ↘  diagonal (match/mismatch)
+                A   ↑  .  ↘  .  .         ↑  up   (gap in b)
+                C   ↑  .  .  ↓  .         ←  left (gap in a)
+                G   ↑  .  .  .  ↘
+                T   ↑  .  .  .  ↘
 ```
 
-To recover the alignment: start at the bottom-right cell, walk the arrows back to the top-left, emitting one alignment column per step.
+Reading the chosen arrows along the path bottom-right → top-left gives:
 
 ```text
 walk:   ↘ ↘ ↓ ↘ ↘
@@ -160,23 +224,21 @@ For the exercise we ask for the score; the traceback is offered as a stretch goa
 The same skeleton — "define one subproblem per table cell, fill the table once" — powers:
 
 ::: {.incremental}
-- **Edit distance** — how many single-character edits separate two strings? (spell-checking)
-- **Longest common subsequence** — what's the longest sequence appearing in both inputs? (`diff`)
-- **Shortest path in a directed acyclic graph**
-- **RNA secondary structure prediction** — fold an RNA sequence to minimum free energy (Nussinov, Zuker)
-- **Viterbi decoding for HMMs** — most likely hidden-state sequence, used in basecalling and gene finding
+- **Edit distance** — how many single-character edits separate two strings (spell-checking, fuzzy matching)
+- **RNA secondary structure prediction** — fold an RNA sequence to minimum free energy
+- **Viterbi decoding for HMMs** — most likely hidden-state sequence; used in basecalling and gene finding
 :::
 
 Once you've seen DP, you'll recognise it everywhere.
 
 ::: notes
-The list is biased towards problems you'll meet in a bioinformatics career. Edit distance is essentially alignment with min instead of max; LCS is alignment with no mismatches allowed; shortest-path-in-a-DAG is alignment with arbitrary edge weights.
+The list is biased towards problems you'll meet in a bioinformatics career. Edit distance is essentially alignment with min instead of max; longest-common-subsequence is alignment with no mismatches allowed; shortest-path-in-a-DAG is alignment with arbitrary edge weights — all the same skeleton.
 
-RNA folding is interestingly different: the subproblems are intervals of one sequence rather than pairs of prefixes, so the table is indexed by `(i, j)` meaning "best fold of bases i through j". But the structure — "fill a table in dependency order" — is the same.
+RNA folding is interestingly different: the subproblems are intervals of one sequence rather than pairs of prefixes, so the table is indexed by `(i, j)` meaning "best fold of bases i through j". But the structure — "fill a table in dependency order" — is the same. Classical implementations include Nussinov and Zuker.
 
 Viterbi for hidden Markov models is the foundational algorithm behind Oxford Nanopore basecalling, behind a lot of older gene-finders (Genscan, Augustus), and behind protein-family annotation (HMMER). It's a DP over time × hidden-state, with the same fill-once-per-cell structure.
 
-The takeaway: when you spot a recurrence with overlapping subproblems, reach for a table.
+The takeaway: when you spot a rule with overlapping subproblems, reach for a table.
 :::
 
 ## To the exercise
@@ -190,7 +252,7 @@ cargo test
 ```
 
 ::: notes
-The exercise asks you to implement Needleman-Wunsch: fill the score matrix from the recurrence, return the bottom-right score. Test cases check a handful of small alignments by hand.
+The exercise asks you to implement Needleman-Wunsch: fill the score matrix from the filling rule, return the bottom-right score. Test cases check a handful of small alignments by hand.
 
 If you finish quickly, add traceback — store a 2D array of back-pointers alongside the score matrix, then walk back from the bottom-right corner to reconstruct the alignment as two equal-length byte strings with gaps.
 

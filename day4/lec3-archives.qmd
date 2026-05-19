@@ -20,11 +20,13 @@ format:
 
 ## What this lecture is
 
+An **archive** is one file that bundles many — e.g. `.zip`, `.tar`. Compression (e.g. gzip) is a separate concern, often combined with archiving.
+
 ::: {.incremental}
 - How a `.zip` file is actually laid out on disk
 - What "lossless compression" means and one tiny example you can do by hand
 - Why DNA can be stored at 2 bits per base, and why FASTA still uses 1 byte
-- Real numbers for FASTQ compression — gzip, bgzip, zstd
+- Real numbers for FASTQ compression — gzip, **bgzip** (block-gzip — seekable gzip used in bioinformatics for BAM/VCF), **zstd** (Zstandard — modern compressor, often faster and smaller than gzip)
 - How to read and write `.zip` and `.gz` from Rust
 :::
 
@@ -32,22 +34,6 @@ format:
 You have all used `.zip` files. You have all double-clicked one and watched it expand into a folder of pictures. What you probably have not done is think about what is actually inside that file, why the bytes shrink when you compress, and what that means for the multi-gigabyte FASTQs you handle every day.
 
 This lecture has three pieces. First, the structure of a ZIP archive — it is not magic, it is a list of compressed entries followed by a small table of contents at the end. Second, the idea of lossless compression — by the time we are done you will have done run-length encoding by hand. Third, the practical numbers for the formats you meet daily in bioinformatics.
-:::
-
-## You already know what a ZIP is
-
-Every student in this room has unzipped a folder of pictures, a code archive, or a downloaded dataset.
-
-What you probably have *not* done is think about:
-
-- what is inside the `.zip` on disk
-- how the bytes got smaller than the originals
-- why some files compress 10x and others barely at all
-
-Today we look at all three, and at the end we write and read a `.zip` in Rust.
-
-::: notes
-The framing for the lecture: nobody here needs to be convinced that ZIP files are useful. The point is to demystify them so that when you write code that produces or consumes one, you know what is happening underneath.
 :::
 
 ## What's inside a ZIP file
@@ -62,6 +48,8 @@ The reason the table goes at the end is historical and practical: it lets you gr
 
 ## Lossless compression — the idea
 
+**Lossless** = decoded output equals input, byte for byte. **Lossy** = decoded output is close but not identical (information thrown away).
+
 Two principles every lossless compressor follows:
 
 ::: {.incremental}
@@ -75,6 +63,17 @@ Contrast with **lossy** compression — JPEG, MP3, MP4:
 - The decoded image is *close* to the original, not identical
 - You throw away information the eye or ear will not notice
 - Wonderful for photos, **forbidden for DNA**
+:::
+
+::: {.fragment}
+Why "forbidden for DNA":
+
+```text
+original: ACCT
+decoded : ACGT   <- one base flipped C -> G
+```
+
+One byte changed in a quality-controlled FASTQ = one false variant call downstream. Variant callers cannot tell sequencing error from compressor error.
 :::
 
 ::: notes
@@ -127,10 +126,19 @@ Real compressors do not rely on runs alone. They find any repeated substring, no
 
 ## DEFLATE — what zip / gzip actually use
 
-The algorithm inside `.zip` and `.gz` is called **DEFLATE**. It combines two ideas:
+The algorithm inside `.zip` and `.gz` is called **DEFLATE** (a lossless compression algorithm — the standard one used by gzip and ZIP). It combines two plain-English ideas, each with a fancy name:
 
-- **LZ77** — when you see a substring you have seen before, write *"go back 200 bytes and copy 14"* instead of the bytes themselves.
-- **Huffman coding** — assign short bit-codes to common bytes (`A`, `C`, `G`, `T` in DNA) and long codes to rare ones.
+- **find repeats** — also known as **LZ77** — when a substring already appeared in the recent window, write a **back-reference** (an offset and length pointing into the recent past) instead of the bytes themselves
+- **give common letters shorter codes** — also known as **Huffman coding** — frequent bytes (`A`, `C`, `G`, `T` in DNA) get short bit-codes, rare ones get longer codes
+
+Worked example — find-repeats on a sliding window:
+
+```text
+input  : ACGTACGT ACGT ACGT
+              ^^^^ ^^^^ this substring already appeared 8 bytes ago
+
+encoded: ACGTACGT <go back 8, copy 4> <go back 8, copy 4>
+```
 
 You do not need to implement either. You just need to know: when you write `Cargo.toml` with `flate2 = "1"`, this is the algorithm doing the work.
 
@@ -154,13 +162,15 @@ A FASTA file uses 1 byte per base because it is plain ASCII text. That is four t
 
 ## 2-bit DNA in practice — `.2bit` files and beyond
 
+**IUPAC codes** are single letters that stand for ambiguity: `R` = "A or G", `Y` = "C or T", `S` = "G or C", `N` = "any / unknown", and so on — 15 codes in total.
+
 The UCSC `.2bit` format stores the human reference at literally 2 bits per base. It is small (~750 MB for hg38) and supports random access by coordinate.
 
 But FASTA stays at 1 byte per base in practice. Three reasons:
 
 ::: {.incremental}
 - **Tools.** Every aligner, variant caller, and parser reads FASTA. The ecosystem assumes ASCII.
-- **Ambiguity codes.** `N`, `R`, `Y`, `S`, `W`, `K`, `M`, ... — there are 15 IUPAC ambiguity codes, more than 2 bits can encode.
+- **Ambiguity codes.** `N`, `R`, `Y`, `S`, `W`, `K`, `M`, ... — 15 IUPAC codes, more than 2 bits can encode.
 - **"Good enough".** A FASTA.gz is roughly the same size as a 2-bit file (around 3-4x compression) with simpler tooling.
 :::
 
@@ -181,7 +191,7 @@ These are the order-of-magnitude numbers every bioinformatician carries in their
 
 The 2-bit number on the right is what you would get if you stored *only the sequence* — no quality scores, no read names. That is why it is so much smaller. In practice you cannot throw the quality scores away, so the realistic working size is 2.5-3 GB per lane.
 
-Quality scores are the awkward part of FASTQ. They are nearly as long as the sequence and they have higher entropy — they look more "random" to a compressor. Tools like CRAM and Genozip use quality-aware tricks that beat general-purpose compressors significantly.
+Quality scores are the awkward part of FASTQ. They are nearly as long as the sequence and they look more random / less repetitive to a compressor, so the compressor finds fewer patterns to shorten. Tools like CRAM and Genozip use quality-aware tricks that beat general-purpose compressors significantly.
 :::
 
 ## Why FASTQ compression matters
@@ -192,6 +202,17 @@ Three real costs at scale:
 - **Storage.** A sequencing core producing 50 lanes a week saves 450 GB/week by gzipping. Over a year that is 23 TB — real money.
 - **Network.** Moving 12 GB across a slow link takes hours. Moving 3 GB takes a quarter as long.
 - **IO bandwidth.** A pipeline that streams gzip on the fly often runs as fast as one that reads uncompressed files — the bottleneck is disk read, not CPU.
+:::
+
+::: {.fragment}
+Disk-read time on a single 12 GB lane (200 MB/s disk, 300 MB/s gzip decode):
+
+```text
+raw 12 GB  : ##############################  ~60 s
+gz   3 GB  : ########                        ~15 s  (read + decompress in parallel)
+```
+
+The compressed file is read and decoded in less time than the uncompressed file is read.
 :::
 
 ::: {.fragment}
@@ -251,6 +272,8 @@ for i in 0..archive.len() {
 ```
 
 [`ZipArchive::new`](https://docs.rs/zip/0.6/zip/read/struct.ZipArchive.html#method.new), [`by_index`](https://docs.rs/zip/0.6/zip/read/struct.ZipArchive.html#method.by_index), [`read_to_end`](https://doc.rust-lang.org/std/io/trait.Read.html#method.read_to_end).
+
+Gotcha: you can only hold **one entry open at a time** — the archive has a single internal cursor.
 
 ::: notes
 The read side mirrors the write side. Open the file, hand it to `ZipArchive::new`, then iterate over entries by index. Each entry implements `Read`, so the usual standard library methods work.

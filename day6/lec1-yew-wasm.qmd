@@ -28,6 +28,17 @@ Today we build one — entirely in Rust, frontend and backend.
 The motivation for this whole day: shipping bioinformatics insights to non-programmers means the browser, period. Email a colleague a URL, they see your data. No conda env, no Docker, no "first install Python 3.11".
 :::
 
+## Frontend, backend, full-stack — the words
+
+- **Frontend** [the code that runs in the user's browser — HTML + JS, or in our case Rust compiled to WASM (WebAssembly, a binary format browsers can execute)]
+- **Backend** [the code that runs on a server — receives requests, talks to databases, sends responses; ours is axum]
+- **Full-stack** [writing both ends]
+- Today we go full-stack, in Rust, end to end
+
+::: notes
+The three words appear in the next few slides; pin them down now so nobody has to guess. "Frontend" and "backend" sometimes get used loosely; for us today the split is literal — two crates, two processes, two ports.
+:::
+
 ## What today is about
 
 ::: {.incremental}
@@ -43,7 +54,7 @@ This lecture introduces the pieces of the pure-Rust web stack we use today. The 
 
 ::: {.incremental}
 - One workspace with three crates: `shared`, `frontend`, `backend`
-- `frontend` builds to `.wasm`, served by **trunk**
+- `frontend` builds to `.wasm`, served by **trunk** [a build tool and dev server for Rust web frontends — like webpack for Yew, with hot reload (auto-rebuild + browser refresh on save) built in]
 - `backend` builds native, serves `/api/samples`
 - Both crates depend on `shared` — same Rust types on the wire
 - After class you are clicking a button, fetching a sequence, plotting GC content over a sliding window
@@ -53,6 +64,25 @@ This lecture introduces the pieces of the pure-Rust web stack we use today. The 
 
 ::: notes
 Today is structurally a "real" full-stack Rust application. The crates layout, the shared types, the dev proxy — these are not toy shortcuts. The same shape scales to a deployable product.
+:::
+
+## This is what we're building
+
+![A mockup of the capstone: pick a sample, see the sequence, live GC stats, and an inline SVG plot.](images/reactive-stats-ui.svg){fig-alt="Mockup of the reactive sequence inspector UI: sample picker buttons at the top, a textarea showing the loaded DNA sequence, a stats panel showing length and GC content, and an inline SVG plot of GC content along a sliding window." width="80%"}
+
+::: notes
+Showing the destination up front. Every slide that follows is one ingredient of this UI. Refer back to this image when explaining where each piece lands.
+:::
+
+## Before you start — tooling checklist
+
+- `rustup target add wasm32-unknown-unknown` [one-time; teaches `rustc` (the Rust compiler) to emit WASM]
+- `cargo install trunk` [one-time; trunk is the build tool that runs the Yew dev server]
+- `curl` or HTTPie installed [for sanity-checking the backend from the command line]
+- Two terminals ready [one for the backend, one for trunk]
+
+::: notes
+Get the toolchain in place before the first exercise. Adding the wasm target and installing trunk are both one-time costs but they happen on the first attempt; do them now and they will not bite you mid-exercise.
 :::
 
 ## Before we touch Rust: three things to know
@@ -74,6 +104,7 @@ If you've used the web — which is everyone — you've used all four implicitly
 HTML is just text marked up with tags. The browser turns those tags into nested boxes on the screen.
 
 ```html
+<!-- HTML -->
 <html>
   <body>
     <h1>Sequence inspector</h1>
@@ -153,6 +184,8 @@ Today the axum backend runs on port 3000; the Yew frontend (via trunk) runs on p
 
 HTTP bodies are bytes. When you want to send structured data — a list of samples, a record with named fields — the most common encoding is **JSON** (JavaScript Object Notation).
 
+A JSON record on the wire:
+
 ```json
 {
   "id": 42,
@@ -173,6 +206,7 @@ We send and receive JSON between axum and Yew today. serde handles both directio
 `serde` is the Rust crate that converts back and forth between JSON and your structs — both directions, automatically, from one `#[derive]`:
 
 ```rust
+// Rust
 #[derive(Serialize, Deserialize)]
 struct SampleRecord {
     id: u32,
@@ -193,11 +227,41 @@ Same struct, both sides of the network call.
 We use this both in the backend (returning JSON) and the frontend (parsing JSON). Hit it again later in the lecture.
 :::
 
-## A REST server in 20 lines of axum
+## `async`/`await` — the minimum you need
 
-Before adding a frontend, here's the smallest possible backend — it accepts a DNA sequence and returns its GC content:
+An `async fn` [a function that does not block; it returns immediately] returns a **`Future`** [a description of work to be done later, not the result itself].
 
 ```rust
+// Rust
+async fn fetch_one() -> Result<SampleRecord, gloo_net::Error> {
+    let resp = Request::get("/api/samples/lambda").send().await?;
+    let data = resp.json::<SampleRecord>().await?;
+    Ok(data)
+}
+```
+
+`.await` [the operator that waits for a future to be ready] means: pause this task until the future is ready, let the **runtime** [the scheduler that decides which task runs when] do other work in the meantime.
+
+We **do not** teach `Future` internals today — treat it as a single pattern.
+
+::: notes
+This is the only part of day 6 that introduces a genuinely new language feature. We are deliberately keeping it shallow. You need to know: async functions return futures, `.await` waits for a future, you call `.await` on each step of a fetch. The deep dive — pinning, poll semantics, executors — is real and learnable, but you do not need it to ship today's app.
+:::
+
+## What `.await` actually does
+
+![.await yields; the runtime resumes you when the work is done.](images/lec1-async-future.svg){fig-alt="Sequence diagram with two lifelines: your async code (blue) on the left and browser runtime (yellow) on the right. The code is let resp = Request::get(url).send().await?;. Step 1: solid arrow from your code to browser runtime labelled .send() returns a Future, hand it to the runtime. Step 2: a yellow note on the left labelled .await pauses, this task yields. Step 3: the runtime is shown as active for a long span, annotated runtime is free to run other tasks (rendering, other awaits, animations). Step 4: a small self-call on the runtime lifeline labelled network response arrives. Step 5: dashed return arrow from runtime to your code labelled runtime polls the future, sees it is ready, resumes your task. Step 6: a green note labelled resp bound, next statement runs. A time arrow runs top to bottom. Footer: No threads, no blocking — the function pauses at .await and resumes when the work is done."}
+
+::: notes
+The picture is: at the `.await`, your function yields control. The browser keeps doing other work — rendering, animations, other concurrent awaits. When the awaited thing is ready, the runtime picks your task back up where it left off. There are no threads involved; this is cooperative concurrency inside a single thread.
+:::
+
+## A REST server in 20 lines of axum
+
+**REST** [Representational State Transfer — the convention of using HTTP verbs (GET, POST, ...) plus URL paths to access named resources]. Before adding a frontend, here's the smallest possible backend — it accepts a DNA sequence and returns its GC content. `axum` [a Rust web framework for building HTTP servers] is the backend library we use today:
+
+```rust
+// Rust
 use axum::{routing::get, Router, extract::Query};
 use serde::{Serialize, Deserialize};
 use std::net::SocketAddr;
@@ -233,6 +297,7 @@ This is the bare minimum to convince yourself that "Rust on the backend" works. 
 You can hit any REST endpoint from the command line — no browser needed:
 
 ```bash
+# bash
 $ curl 'http://127.0.0.1:3000/gc?seq=ACGTACGTGGGG'
 {"length":12,"gc":0.6666666666666666}
 ```
@@ -243,18 +308,25 @@ $ curl 'http://127.0.0.1:3000/gc?seq=ACGTACGTGGGG'
 Test the backend in isolation before adding any frontend complexity. Saves you from chasing "is it the API or my JavaScript".
 :::
 
-## WebAssembly
+## WebAssembly: a binary the browser can run
 
-WebAssembly (or **wasm**) is a **portable executable** format. Any modern browser can run a `.wasm` file directly — it doesn't matter whether the file was originally written in Rust, C++, Go, or Zig. Think of it as "a compiled binary that runs in the browser".
+**WebAssembly** (or **WASM**) [a portable, sandboxed (isolated execution environment) binary format that every modern browser can load and execute] is just that: a compiled binary the browser knows how to run.
 
-Through the same "portable executable" lens, the technical details:
-
-- A compact, sandboxed bytecode format that every modern browser knows how to load and execute.
-- A **compile target**, not a language — Rust, C, C++, Go can all produce `.wasm`.
-- The browser loads a `.wasm` blob from a `<script>` tag and runs it in a virtual machine, with near-native performance and no JavaScript runtime cost on the hot path.
+![Rust source compiled to a .wasm binary the browser loads.](images/lec1-wasm-build.svg){fig-alt="A diagram of the WebAssembly build flow: Rust source compiled by rustc into a .wasm binary, then loaded and executed by the browser."}
 
 ::: notes
-The key sentence is "portable executable". You do not learn a new language to use WebAssembly — you write Rust, you change the build target, you get a `.wasm` file. The browser already knows how to run it. Performance is within a small factor of native; the sandbox is the same one that protects you from any other page's JavaScript.
+The key sentence is "portable executable". The browser already knows how to load and run a `.wasm` file. The sandbox is the same one that protects you from any other page's JavaScript — wasm cannot read the disk or open arbitrary sockets.
+:::
+
+## Why it matters for us
+
+- Rust → `.wasm` → browser, with near-native performance
+- A **compile target**, not a language — Rust, C, C++, Go can all produce `.wasm`
+- We write Rust today, change the build target, get a `.wasm` file the browser runs
+- No JavaScript runtime cost on the hot path
+
+::: notes
+You do not learn a new language to use WebAssembly. The same Rust we have been writing all week now runs in a browser tab. Trunk and **wasm-bindgen** [a tool + crate that generates the JavaScript glue letting Rust call browser APIs and vice versa] handle the plumbing.
 :::
 
 ## The build pipeline
@@ -278,6 +350,7 @@ Three stages: the Rust compiler emits a `.wasm` binary, `wasm-bindgen` writes a 
 ## `wasm32-unknown-unknown`
 
 ```bash
+# bash
 rustup target add wasm32-unknown-unknown
 ```
 
@@ -316,6 +389,7 @@ A raw `.wasm` module can only push and pop numbers on a stack. To send a `String
 [Trunk](https://trunkrs.dev) is `cargo build` for web frontends:
 
 ```bash
+# bash
 cargo install trunk      # one-off
 trunk serve              # in the frontend/ directory
 ```
@@ -343,6 +417,7 @@ A workspace is one Cargo project with several member crates. The root `Cargo.tom
 ## What the workspace `Cargo.toml` looks like
 
 ```toml
+# TOML — root Cargo.toml
 [workspace]
 resolver = "2"
 members = ["shared", "frontend", "backend"]
@@ -355,6 +430,7 @@ serde  = { version = "1", features = ["derive"] }
 Each member crate references `shared` and `serde` with one line:
 
 ```toml
+# TOML — member Cargo.toml
 shared.workspace = true
 serde.workspace  = true
 ```
@@ -383,31 +459,16 @@ Both `frontend` and `backend` depend on `shared`. **The same struct** is seriali
 This is the single most important architectural idea of the day. The struct is defined once, in the shared crate. Both ends derive Serialize and Deserialize from the same definition. There is no separate IDL file, no OpenAPI schema generator, no copy-pasted TypeScript interface to keep in sync. Rename a field — both crates fail to compile until they agree again. Schema drift becomes a compile error.
 :::
 
-## serde helps you send a struct over the network
-
-You already saw the JSON ↔ Rust mapping in the foundations. On the wire, the same `#[derive]` powers both directions:
-
-- backend: `axum::Json<SampleRecord>` calls `serde` to serialise.
-- frontend: `resp.json::<SampleRecord>()` calls `serde` to deserialise.
-
-Define the struct **once** in the `shared` crate. Rename a field — both crates fail to compile until they agree again.
-
-![Rename a field and both ends fail to compile until they agree.](images/lec1-serde-wire.svg){fig-alt="Three-panel diagram. Left: green backend panel with the struct SampleRecord (id: u32, name: String, sequence: String) and a #[derive(Serialize, Deserialize)] attribute. Middle: yellow JSON-on-the-wire panel containing the JSON object {id: 42, name: lambda, sequence: ACGT...}, labelled 'bytes over HTTP'. Right: blue frontend panel with the same struct definition. A green arrow labelled serialize / to_string runs backend to wire. A blue arrow labelled deserialize / from_str runs wire to frontend. Side annotations: axum::Json<SampleRecord> calls serde for you; resp.json::<SampleRecord>() calls serde for you. Footer callout: Define the struct once in the shared crate. Both sides derive Serialize/Deserialize from the same definition. Rename a field — both crates fail to compile until they agree again."}
-
-::: notes
-serde is the Rust serialisation framework. `#[derive(Serialize, Deserialize)]` makes the compiler generate the code that turns the struct into JSON and back. axum's `Json<T>` and gloo_net's `resp.json::<T>()` both call serde under the hood — you almost never write the conversion calls yourself.
-:::
-
 ## Yew — Rust UI framework
 
-[Yew](https://yew.rs/) is modelled on React.
+[Yew](https://yew.rs/) is modelled on React [the dominant JavaScript UI library — Yew works similarly].
 
 - Components are **functions** that return `Html`
-- State lives in **hooks** (`use_state`, `use_effect_with`)
+- State lives in **hooks** [reusable functions starting with `use_` that hold per-component state across re-renders] like `use_state`, `use_effect_with`
 - The framework re-runs the function on every state change
-- It diffs the returned virtual DOM against the previous one and patches the real DOM
 
 ```rust
+// Rust
 use yew::prelude::*;
 
 #[function_component(App)]
@@ -431,6 +492,8 @@ If you have used React, the model is identical. If you have not — a component 
 
 ## The render loop
 
+Each render Yew builds a **virtual DOM** [an in-memory tree of the HTML you want, cheaper to construct and compare than the real browser DOM], then performs a **diff/patch** [compare the new vDOM to the previous one and apply only the minimal real-DOM changes] step.
+
 ![You describe the page; state changes drive the rerender.](images/lec1-yew-render-loop.svg){fig-alt="Four-step flow. Yellow state box (typed: String, held in use_state, survives rerenders) arrows into blue component fn box (fn app() -> Html, returns a virtual DOM, a tree of Html nodes) arrows into blue diff box (new vDOM vs previous vDOM, finds minimum change) arrows into green patch box (real DOM nodes update, minimal changes only). An orange curved arrow loops from patch back to state, labelled: event handler calls handle.set(new_value) (oninput, onclick, ...). State changes triggers Yew to re-run the function and the cycle repeats. Footer: Same model as React. Components are functions. State lives in hooks. Render returns a virtual DOM. The framework diffs and patches — you describe what the page should look like, not how to update it."}
 
 ::: notes
@@ -440,6 +503,7 @@ The function reruns on every render — Yew calls your `app()` again each time s
 ## The `html!` macro
 
 ```rust
+// Rust — html!{} looks like HTML but is parsed as Rust tokens
 html! {
     <div>
         <h1>{ "Sequence inspector" }</h1>
@@ -464,6 +528,7 @@ The macro looks like HTML but is actually Rust. Text content has to live inside 
 ## `#[function_component(App)]`
 
 ```rust
+// Rust
 #[function_component(App)]
 fn app() -> Html {
     let sequence = use_state(String::new);
@@ -482,11 +547,29 @@ The attribute turns a plain `fn` into a `Component` named `App`. `main` mounts i
 `#[function_component(App)]` is a procedural macro from Yew. It takes a function returning `Html` and generates a `struct App` plus the trait implementations Yew expects. You write your component as a function; Yew turns it into the component type. The `main` function does one thing: hand the root component to Yew's renderer.
 :::
 
+## Closures and `move` — 30 seconds
+
+A **closure** [an inline anonymous function that captures variables from its enclosing scope] looks like `|x| x + 1`. `move` [keyword that makes the closure take ownership of its captured variables] is needed when the closure outlives the scope — for example when an event handler runs later, after the surrounding function has returned.
+
+```rust
+// Rust
+let name = String::from("lambda");
+let say_hi = move |_| log::info!("hello, {name}");  // owns `name`
+// `say_hi` can now be stored in a Callback and called from an event
+```
+
+Event handlers in Yew are stored in the framework and called later — so the closures we hand them are almost always `move` closures.
+
+::: notes
+This single rule unblocks 90 percent of the borrow-checker confusion students hit in Yew. The closures are stored by Yew; they outlive the function that built them; therefore they need to own their captures. The clone-before-move dance in the next slides exists for exactly this reason.
+:::
+
 ## `use_state` — a value that survives re-renders
 
 ![The handle is stable across renders; only its value changes.](images/lec1-use-state.svg){fig-alt="Diagram of use_state. A code panel inside #[function_component(App)] shows let length = use_state(|| 0_usize); (closure called once on first render), let n: usize = *length; (read) and length.set(sequence.len()); (write — triggers rerender). A click handler reads Callback::from(move |_| { length.set(sequence.len()); }). The handle is the same on every render; only the value behind it changes."}
 
 ```rust
+// Rust
 let length = use_state(|| 0_usize);
 
 let on_click = {
@@ -496,37 +579,45 @@ let on_click = {
 };
 ```
 
+`Callback::from(...)` wraps a closure into a Yew **callback** [a closure stored by the framework, invoked when a DOM event (click, input, ...) fires].
+
 ::: notes
 `use_state(initial)` returns a handle. Dereference it to read the value, call `.set(new)` to write. The handle is cheap to clone — it is internally reference-counted — and you will clone it a lot, because closures that get moved into event handlers each need their own copy.
 :::
 
-## Controlled input — textarea bound to state
+## Controlled input — input bound to state
+
+A **controlled input** [a form element whose displayed value is read from state, and whose changes are written back to state] makes the Rust value the single source of truth.
 
 ```rust
+// Rust
 let typed = use_state(String::new);
 
 let on_input = {
     let typed = typed.clone();
     Callback::from(move |e: InputEvent| {
-        let target = e.target_unchecked_into::<web_sys::HtmlTextAreaElement>();
+        let target = e.target_unchecked_into::<web_sys::HtmlInputElement>();
         typed.set(target.value());
     })
 };
 
 html! {
-    <textarea value={(*typed).clone()} oninput={on_input} />
+    // deref the use_state handle to get the inner String, then clone it
+    // so the attribute value is owned
+    <input type="text" value={(*typed).clone()} oninput={on_input} />
 }
 ```
 
-The state **is** the textarea's value. Every keystroke writes; the value attribute reads.
+The state **is** the input's value. Every keystroke writes; the value attribute reads.
 
 ::: notes
-This is the textbook controlled-input pattern. The textarea's content lives in state, not in the DOM. The oninput callback writes the new value back to state, which triggers a rerender, which sets the textarea's value attribute to the new string. The "let typed = typed.clone()" line before the callback is necessary because the closure needs its own handle to move into.
+This is the textbook controlled-input pattern. The input's content lives in state, not in the DOM. The oninput callback writes the new value back to state, which triggers a rerender, which sets the input's value attribute to the new string. The "let typed = typed.clone()" line before the callback is necessary because the closure needs its own handle to move into. For the exercises you will use `<textarea>` and `HtmlTextAreaElement` in exactly the same shape — same pattern, different element type.
 :::
 
 ## `use_effect_with` — run something when deps change
 
 ```rust
+// Rust
 use_effect_with((), move |_| {
     // body runs once on mount, because deps = ()
     log::info!("sequence inspector mounted");
@@ -542,37 +633,10 @@ use_effect_with((), move |_| {
 Side effects — fetches, timers, event subscriptions — do not belong in the render function itself. `use_effect_with` is the hook for them. The first argument is a dependency tuple; the body runs whenever the deps change. Passing `()` means "deps never change", which means the body runs exactly once when the component first appears. The closing `|| ()` is the cleanup function — for today it does nothing.
 :::
 
-## `async`/`await` — the minimum you need
-
-An `async fn` returns a **`Future`** — a description of work, not the result.
-
-```rust
-async fn fetch_one() -> Result<SampleRecord, gloo_net::Error> {
-    let resp = Request::get("/api/samples/lambda").send().await?;
-    let data = resp.json::<SampleRecord>().await?;
-    Ok(data)
-}
-```
-
-`.await` means: pause this task until the future is ready, let the runtime do other work in the meantime.
-
-We **do not** teach `Future` internals today — treat it as a single pattern.
-
-::: notes
-This is the only part of day 6 that introduces a genuinely new language feature. We are deliberately keeping it shallow. You need to know: async functions return futures, `.await` waits for a future, you call `.await` on each step of a fetch. The deep dive — pinning, poll semantics, executors — is real and learnable, but you do not need it to ship today's app.
-:::
-
-## What `.await` actually does
-
-![.await yields; the runtime resumes you when the work is done.](images/lec1-async-future.svg){fig-alt="Sequence diagram with two lifelines: your async code (blue) on the left and browser runtime (yellow) on the right. The code is let resp = Request::get(url).send().await?;. Step 1: solid arrow from your code to browser runtime labelled .send() returns a Future, hand it to the runtime. Step 2: a yellow note on the left labelled .await pauses, this task yields. Step 3: the runtime is shown as active for a long span, annotated runtime is free to run other tasks (rendering, other awaits, animations). Step 4: a small self-call on the runtime lifeline labelled network response arrives. Step 5: dashed return arrow from runtime to your code labelled runtime polls the future, sees it is ready, resumes your task. Step 6: a green note labelled resp bound, next statement runs. A time arrow runs top to bottom. Footer: No threads, no blocking — the function pauses at .await and resumes when the work is done."}
-
-::: notes
-The picture is: at the `.await`, your function yields control. The browser keeps doing other work — rendering, animations, other concurrent awaits. When the awaited thing is ready, the runtime picks your task back up where it left off. There are no threads involved; this is cooperative concurrency inside a single thread.
-:::
-
 ## `spawn_local` — run an async block on the event loop
 
 ```rust
+// Rust
 use wasm_bindgen_futures::spawn_local;
 
 spawn_local(async move {
@@ -582,7 +646,7 @@ spawn_local(async move {
 });
 ```
 
-[`spawn_local`](https://docs.rs/wasm-bindgen-futures/latest/wasm_bindgen_futures/fn.spawn_local.html) hands an `async` block to the **browser's** event loop. From there it runs cooperatively, just like a JS promise.
+[`spawn_local`](https://docs.rs/wasm-bindgen-futures/latest/wasm_bindgen_futures/fn.spawn_local.html) [the function that schedules an async block on the browser's single-threaded event loop] hands an `async` block to the **browser's** event loop. From there it runs cooperatively, just like a JS promise.
 
 ::: notes
 A `.wasm` module has no threads. You cannot block on a synchronous fetch — there is nothing for it to "wait on". `spawn_local` is the bridge: it takes an async block and registers it with the browser's event loop, the same loop that drives `setTimeout` and DOM events. The block runs concurrently with rendering; when it hits `.await`, it yields back to the loop.
@@ -591,6 +655,7 @@ A `.wasm` module has no threads. You cannot block on a synchronous fetch — the
 ## Loading samples on mount
 
 ```rust
+// Rust
 {
     let samples = samples.clone();
     use_effect_with((), move |_| {
@@ -615,6 +680,7 @@ This composition shows all the pieces together. The outer scope clones `samples`
 ## `gloo_net::Request` — fetch from WASM
 
 ```rust
+// Rust
 use gloo_net::http::Request;
 
 let resp = Request::get("/api/samples").send().await?;
@@ -635,6 +701,7 @@ gloo_net is the WASM-side HTTP client. The shape mirrors JavaScript's fetch: sen
 ## axum — Rust HTTP server
 
 ```rust
+// Rust
 use axum::{routing::get, Json, Router};
 use shared::SampleSummary;
 
@@ -650,7 +717,7 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-[`axum`](https://docs.rs/axum/) is the standard Rust web framework for JSON APIs.
+[`axum`](https://docs.rs/axum/) is the standard Rust web framework for JSON APIs. A **route** [a mapping from URL path + HTTP method to a handler] is added with `Router::new().route(...)`. A **handler** [the async function axum calls when a route matches] is just an `async fn` that returns something serialisable.
 
 ::: notes
 A `Router` maps URL paths to handler functions. Each handler is async. `Json<T>` is a wrapper that does serde encoding automatically — return `Json(data)` and the client receives a JSON body with the right content-type. The `#[tokio::main]` attribute starts the Tokio async runtime, which is what schedules these futures across the server's thread pool.
@@ -659,6 +726,7 @@ A `Router` maps URL paths to handler functions. Each handler is async. `Json<T>`
 ## Path parameters and JSON bodies
 
 ```rust
+// Rust
 use axum::extract::Path;
 
 async fn get_sample(Path(id): Path<String>) -> Json<SampleRecord> {
@@ -671,7 +739,7 @@ let app = Router::new()
     .route("/api/samples/{id}", get(get_sample));
 ```
 
-`Path<T>` is an **extractor** — axum parses the URL segment for you and hands you the typed value.
+`Path<T>` is an **extractor** [a typed argument in a handler signature that tells axum what to pull out of the incoming request — the URL path, a query string, a JSON body, headers, ...] — axum parses the URL segment for you and hands you the typed value.
 
 ::: notes
 Extractors are how axum gets arguments into handlers. `Path<String>` extracts a URL path segment; there are also `Query` for `?key=value` parameters, `Json<T>` for request bodies, and many more. The handler signature itself tells axum what to extract.
@@ -679,7 +747,9 @@ Extractors are how axum gets arguments into handlers. `Path<String>` extracts a 
 
 ## CORS — and why we usually avoid it
 
-Recall ports — your frontend on `:8080` calling your backend on `:3000` is technically two different origins. CORS is the browser's permission system for that.
+An **origin** [the (scheme, host, port) triple — `http://localhost:8080` and `http://localhost:3000` differ in port, so they are different origins] is what the browser uses to decide who can talk to whom. **CORS** [Cross-Origin Resource Sharing — HTTP headers the server sends to opt in to cross-origin requests] is the permission system on top of that.
+
+Recall ports — your frontend on `:8080` calling your backend on `:3000` is technically two different origins. The browser's **Same-Origin Policy** [the default rule that scripts on page A cannot read responses from a different origin B] blocks the call unless the server explicitly opts in.
 
 A browser blocks `fetch` calls from one origin (`localhost:8080`, trunk) to another (`localhost:3000`, axum) unless the server explicitly opts in.
 
@@ -695,7 +765,7 @@ The Same-Origin Policy is the browser's main defence against malicious cross-sit
 ## The trunk dev proxy
 
 ```toml
-# frontend/Trunk.toml
+# TOML — frontend/Trunk.toml
 [[proxy]]
 rewrite = "/api/"
 backend = "http://127.0.0.1:3000/api/"

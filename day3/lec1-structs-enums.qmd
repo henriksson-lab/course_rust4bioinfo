@@ -102,19 +102,10 @@ impl GenomicInterval {
     fn length(&self) -> u64 {
         self.end - self.start
     }
-
-    fn shift(&mut self, by: u64) {
-        self.start += by;
-        self.end   += by;
-    }
-
-    fn new(chrom: String,
-           start: u64,
-           end: u64) -> Self {
-        Self { chrom, start, end }
-    }
 }
 ```
+
+`&self` is a read-only borrow of the value — the same borrow you saw yesterday, now used as the receiver of a method.
 :::
 
 ::: {.column width="45%"}
@@ -122,29 +113,51 @@ impl GenomicInterval {
 
 ```python
 class GenomicInterval:
-    def __init__(self, chrom, start, end):
-        self.chrom = chrom
-        self.start = start
-        self.end = end
-
     def length(self):
         return self.end - self.start
 ```
 
-Same idea — fields, methods, a `new`-equivalent — different syntax.
+Same idea — methods attached to a type — different syntax.
 :::
 :::
 
-Call sites: `iv.length()`, `iv.shift(100)`, `GenomicInterval::new(...)`.
+Call site: `iv.length()`.
 
 ::: notes
-Methods live in an `impl` block, separate from the data definition. The first parameter is one of `&self`, `&mut self`, or `self` — borrow read-only, borrow mutably, or consume the value. Same ownership rules you saw yesterday, now applied to method receivers.
+Methods live in an `impl` block, separate from the data definition. The first parameter is the receiver: one of `&self`, `&mut self`, or `self` — borrow read-only, borrow mutably, or consume the value. Same ownership rules you saw yesterday, now applied to method receivers.
 
-A function in an `impl` block with no `self` is an "associated function" — a constructor or helper attached to the type. The `Self` keyword inside the block means "the type we're implementing".
+The Python side shows the equivalent class. `self` in Python is the explicit first parameter, same as Rust. The big practical difference: Rust distinguishes read-only borrows (`&self`) from mutable borrows (`&mut self`) at the type level, where Python silently allows mutation everywhere.
 
-The Python side shows the equivalent class. `__init__` plays the role of our `new` associated function; `self` in Python is the explicit first parameter, same as Rust. The big practical difference: Rust distinguishes read-only borrows (`&self`) from mutable borrows (`&mut self`) at the type level, where Python silently allows mutation everywhere.
+The next slide adds a mutating method and a constructor.
+:::
 
-Call sites read naturally: `iv.length()` for the methods, `GenomicInterval::new(...)` for the constructor.
+## More methods — mutation and construction
+
+```rust
+impl GenomicInterval {
+    fn shift(&mut self, by: u64) {
+        self.start += by;
+        self.end   += by;
+    }
+
+    fn new(chrom: String, start: u64, end: u64) -> Self {
+        Self { chrom, start, end }
+    }
+}
+```
+
+- `&mut self` — mutable borrow; lets the method change the fields.
+- `new` takes no `self` — it's an **associated function** [a function attached to the type itself, not to an instance], called as `GenomicInterval::new(...)`.
+- `Self` inside the block is shorthand for "the type we're implementing".
+
+Call sites: `iv.shift(100)`, `GenomicInterval::new("chr1".to_string(), 1000, 2000)`.
+
+::: notes
+A method with `&mut self` can mutate the receiver — `shift` here moves both endpoints by the same offset.
+
+A function in an `impl` block with no `self` parameter is what Rust calls an "associated function" — it belongs to the type rather than to any particular instance. The conventional name for a constructor is `new`, but it's just a function — you can have several with different names (`from_string`, `with_strand`, etc.).
+
+`Self` (with a capital S) inside an impl block means "the type we're implementing". Writing `Self { ... }` is shorter and survives renames better than typing `GenomicInterval { ... }` every time.
 :::
 
 ## `#[derive(...)]` — the compiler writes the obvious code for you
@@ -158,13 +171,14 @@ struct GenomicInterval {
 }
 ```
 
-The compiler writes the obvious trait implementations for you — equality, debug printing, cloning — so you don't have to type them by hand every time.
+The compiler writes the obvious **trait** [a named bundle of methods a type can opt in to — like a Java interface, but more powerful] implementations for you — equality, debug printing, cloning — so you don't have to type them by hand every time.
 
 The four you will reach for this week:
 
 - **`Debug`** — `{:?}` printing, for diagnostics
 - **`Clone`** — explicit `.clone()` deep copy
 - **`Copy`** — assignment copies (only for stack-only types)
+  - only works if every field is also `Copy` — so not for anything holding a `String` or `Vec`
 - **`PartialEq`** / `Eq` — `==` and `!=`
 
 ::: notes
@@ -224,7 +238,7 @@ You write `Strand::Plus` at the use site, with the type name as a prefix. This i
 The Python side shows what we're avoiding. In Python you either pick magic strings — which silently accept any typo — or magic constants like `STRAND_PLUS = 0`, which lose readability and still don't prevent mixing them up with unrelated integer constants. Rust's enum is a type: passing the wrong type is a compile error, and adding a third variant later forces every match expression to be updated.
 :::
 
-## Enums with data — a sum type
+## Enums that carry data
 
 ```rust
 enum Variant {
@@ -235,6 +249,8 @@ enum Variant {
 ```
 
 Each variant carries its own fields. A `Variant` value is one of the three shapes — and the compiler tracks which.
+
+*Aside: in type-theory jargon this is a "sum type" or "algebraic data type" (ADT) [a value that is exactly one of several named shapes]. You'll see those names in papers and in other languages; in this course we'll just call them enums.*
 
 ::: notes
 This is the move that turns enum from "list of names" into "list of shapes". Each variant has its own fields, and a `Variant` value is exactly one of the three forms at a time.
@@ -248,8 +264,12 @@ Other languages call this an algebraic data type, a tagged union, or a sum type 
 
 ![Every enum value reserves room for its largest variant.](images/lec1-enum-tagged-union.svg){fig-alt="Two-panel diagram. Left panel: enum Strand { Plus, Minus } shown as a single tiny tag cell with values 0 = Plus, 1 = Minus, labelled 1 byte total and fits in a register. Right panel: enum Variant { Snp{..}, Insertion{..}, Deletion{..} } shown as a small tag cell plus a payload box. The payload box contains three stacked variant rows: Snp { pos: u64, alt: u8 } at ~16 B, Insertion { pos: u64, bases: Vec<u8> } at ~32 B highlighted in orange as the largest variant, Deletion { pos: u64, len: u64 } at 16 B. A brace and annotation explain the size is tag + size of the largest variant, ~40 bytes per Variant value. Footer notes a C-style enum is a tagged integer while a sum-type enum is a tag plus a union of payloads; the compiler reads the tag to know which match arm applies."}
 
+**In plain English:** every `Variant` value reserves room equal to its biggest case, plus 1 byte to remember which case.
+
 ::: notes
-The simple enum (`Strand`) compiles down to a single small integer tag. A sum-type enum is a tag plus a union of all variant payloads — every value reserves room for the largest variant. So even an `Snp` carries a slot the size of the `Insertion` payload, most of it unused.
+The simple enum (`Strand`) compiles down to a single small integer tag. The richer enum (`Variant`) is a tag plus a union of all variant payloads — every value reserves room for the largest variant. So even an `Snp` carries a slot the size of the `Insertion` payload, most of it unused.
+
+"Tagged union" is the traditional CS name for this layout — a memory region (the "union") that can hold one of several types, plus a small "tag" byte that records which type is currently in it. A C-style enum is just the tag part, with no payload.
 
 This is the cost of the abstraction. In return, you get a value that is provably one of N shapes, you cannot read fields from the wrong variant, and the compiler can check that every match expression handles every case.
 :::
@@ -363,12 +383,14 @@ fn first_g(seq: &[u8]) -> Option<usize> {
 }
 ```
 
-`Option<T>` replaces `null`. There is no other way to express absence in a typed value.
+`Option<T>` replaces `null`. There is no other way to express absence in a typed value. The `<T>` is a **generic parameter** [a placeholder for "any type" — fill it in at the use site, e.g. `Option<usize>` or `Option<&[u8]>`].
 
 ::: notes
 A function that might not have an answer returns `Option<T>` rather than a "magic" sentinel value or a nullable pointer. Some(value) is "yes, here is one"; None is "no answer".
 
 `<T>` is the generic parameter — Option works for any type. `Option<usize>` is "maybe an index"; `Option<&[u8]>` is "maybe a slice". The variant is the part that carries information about presence; the type parameter is the kind of thing that's optionally present.
+
+Generics are how Rust avoids writing one Option type per element type. The compiler does what's called "monomorphisation" [generates a specialised copy of the code for each concrete `T` you use] — so `Option<u64>` and `Option<String>` are separate machine-level types under the hood, but you only write the source once.
 
 Java has "Optional", Python has "Maybe" libraries, but in Rust this is *the* way — there is no separate nullable pointer construct. The standard library uses Option<T> for "no such key", "end of iteration", "first element of an empty slice", everywhere.
 :::
@@ -447,6 +469,27 @@ The second type parameter, `E`, is the error type. It can be anything: a string,
 
 ## The `?` operator — propagate errors
 
+A minimal example first — one fallible call, one `?`:
+
+```rust
+fn parse_count(s: &str) -> Result<u64, std::num::ParseIntError> {
+    let n: u64 = s.parse()?;   // if Err, return it; if Ok, bind n
+    Ok(n * 2)
+}
+```
+
+`?` means *if this is `Err`, return it; otherwise unwrap and continue*.
+
+For `?` to compile, the enclosing function must itself return `Result` (or `Option`).
+
+::: notes
+The question mark is Rust's shorthand for the four-line match you'd otherwise write at every fallible call site. On `Ok`, it pulls out the inner value and the next line runs as if nothing happened. On `Err`, it returns that Err from the enclosing function immediately.
+
+This minimal example uses the simplest case — a fallible call whose error type matches the function's declared error type. The next slide shows the two helpers (`ok_or`, `map_err`) that bridge between different option/result/error types in a real parser.
+:::
+
+## `?` in a real parser — `ok_or` and `map_err`
+
 ```rust
 fn parse_region(s: &str) -> Result<(String, u64, u64), ParseError> {
     let (chrom, rest)    = s.split_once(':').ok_or(ParseError::MissingColon)?;
@@ -457,14 +500,15 @@ fn parse_region(s: &str) -> Result<(String, u64, u64), ParseError> {
 }
 ```
 
-`?` means *if this is `Err`, return it; otherwise unwrap and continue*.
+- `ok_or(err)` turns `Option<T>` into `Result<T, E>` — `split_once` returns `Option`, but we want `?` to propagate a `ParseError`.
+- `map_err(|_| ...)` rewrites the error type — `s.parse()` returns the standard `ParseIntError`; we squeeze it into our own `ParseError`.
 
 ::: notes
-The question mark is Rust's shorthand for the four-line match you'd otherwise write at every fallible call site. On `Ok`, it pulls out the inner value and the next line runs as if nothing happened. On `Err`, it returns that Err from the enclosing function immediately.
+A real parser combines several fallible calls of different shapes. `split_once` returns `Option<(_, _)>` — Some if the separator is present, None if not. `parse()` returns `Result<u64, ParseIntError>` — the standard library's error type.
 
-For `?` to compile, the enclosing function must itself return Result (or Option). The error type you propagate has to convert into the function's declared error type — for today's exercises we make those the same type.
+To make `?` work uniformly, we convert both into our function's declared error type. `ok_or` is the Option-to-Result bridge; `map_err` is the error-rewriter. Together they let every `?` in the function speak the same error language.
 
-`ok_or` turns `Option<T>` into `Result<T, E>` so we can use `?` for the missing-colon case as well. `map_err` rewrites the error type, which is how we squeeze the standard `ParseIntError` into our custom `ParseError` enum.
+This is exercise 2 in shape — define a `ParseError` enum, use `?` to short-circuit on the first failure, return a typed result.
 :::
 
 ## `?` — control flow visualised
@@ -505,7 +549,7 @@ The genetic code is a small finite table, so a match expression is faster, small
 
 ## Iterators — describe, don't loop
 
-Iterators are **lazy**. Adaptors (`map`, `filter`, `take`) build a chain; **consumers** (`collect`, `count`, `sum`, `for`) drive it.
+Iterators are **lazy** [no work happens until something asks for an element — the chain just describes what to do]. Adaptors (`map`, `filter`, `take`) build a chain; **consumers** (`collect`, `count`, `sum`, `for`) drive it.
 
 ```rust
 let gc_count = seq.iter()
@@ -567,7 +611,7 @@ For DNA k-mer keys, `Vec<u8>` works but allocates per insertion. Smarter key typ
 
 ::: {.columns}
 ::: {.column width="55%"}
-**Rust**
+**Rust — two steps, made explicit**
 
 ```rust
 use std::collections::HashMap;
@@ -576,12 +620,14 @@ let mut counts:
     HashMap<Vec<u8>, usize> = HashMap::new();
 
 for window in seq.windows(k) {
-    *counts.entry(window.to_vec())
-           .or_insert(0) += 1;
+    let key = window.to_vec();
+    let slot = counts.entry(key).or_insert(0);
+    // step 1: get a &mut to the slot
+    //         (insert 0 if it wasn't there)
+    *slot += 1;
+    // step 2: deref the &mut and add one
 }
 ```
-
-`entry(key).or_insert(default)` returns `&mut V` — either the existing slot or a freshly-inserted one. Dereference and mutate in place.
 :::
 
 ::: {.column width="45%"}
@@ -601,6 +647,8 @@ The Rust entry API does the lookup, the maybe-insert, and the get-mut all in one
 :::
 :::
 
+Idiomatic one-liner once you're used to it: `*counts.entry(window.to_vec()).or_insert(0) += 1;`
+
 ![One lookup-or-insert per window builds the histogram.](images/kmer-counts.svg){fig-alt="Diagram showing 3-mer counts in ATGATGCAT — 7 windows total; ATG appears twice. The DNA sequence ATGATGCAT is shown at the top with a bracket below noting 7 windows of length 3 slide left to right; the first window ATG is outlined in orange. Below is a bar chart of counts for the six distinct 3-mers in alphabetical order: ATG has count 2, while CAT, GAT, GCA, TGA, and TGC each have count 1."}
 
 ::: notes
@@ -618,11 +666,13 @@ The Python side shows the two equivalent idioms. `dict.get(k, 0) + 1` does the s
 ```rust
 let threshold = 30;
 let high_quality = quals.iter()
-    .filter(|&&q| q >= threshold)         // captures `threshold` from outside
+    .filter(|q| *q >= threshold)          // captures `threshold` from outside
     .count();
 ```
 
 `|args| body`. Closures capture the variables they mention from the enclosing scope.
+
+The `*q` dereferences once: `quals.iter()` yields `&u8` (a reference to a byte), and `filter` passes a reference to *that* — so inside the closure `q` is a `&&u8` and `*q` reads the byte. You'll sometimes see the shorter `|&&q| q >= threshold` form that destructures both layers in the pattern; same meaning.
 
 ```rust
 // closure (anonymous, one-shot):
@@ -639,7 +689,7 @@ A closure is a function value you can pass around — like a Python `lambda`, bu
 
 What makes them "closures" rather than just "function literals" is capture: a closure can refer to variables in the surrounding scope, and the compiler arranges to keep those variables alive as long as the closure is. In the example, `threshold` is captured by the filter's closure.
 
-For iterator combinators you'll write a lot of one-liners with closures. The double ampersand `&&q` is destructuring two layers of reference at once — once because iter yields &T, once because filter passes a reference to that reference. Comes up often enough to memorise.
+The reference-layering is one of the small surprises Rust hands you in iterator chains. `iter()` yields `&T` so it doesn't copy or move elements; `filter` then borrows each element to look at it, which gives you a `&&T` inside the closure body. You either write `|q| *q >= threshold` (deref in the body) or `|&&q| q >= threshold` (destructure both layers in the pattern) — same compiled code.
 
 The named-function `bump` shows what the closure replaces when there are no captures: same body, more syntax, but a real top-level function you can call from anywhere. Pick the closure when the function is throwaway; pick the named function when it needs a stable name.
 :::

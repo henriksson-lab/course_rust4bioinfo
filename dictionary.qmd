@@ -1,0 +1,335 @@
+---
+title: "Course glossary"
+format:
+  html:
+    toc: true
+    toc-depth: 2
+---
+
+This page exists because the course uses computing jargon on purpose — students should hear the real words their colleagues will use — but most of those words are first-encounter for a biologist with one programming course behind them. Each term below is glossed in a single plain-English sentence, with a link to the lecture or exercise where it is first introduced. Use the page as a reference: skim it once, then come back when a term shows up that you do not yet recognise.
+
+## Memory & hardware
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| ALU | The arithmetic-and-logic unit inside the CPU that actually performs additions, comparisons, and bit operations. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| allocation | Asking the operating system or runtime for a chunk of memory big enough to hold a value. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| boxed | A value stored on the heap behind a pointer (so a small integer becomes a pointer plus extra header bytes). | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| cache | A small block of very fast memory inside the CPU that automatically keeps copies of recently used bytes from RAM. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| cache line | The 64-byte block the CPU always fetches at once when it reads from RAM. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| CPU core | One independent processor on the chip, capable of running its own stream of instructions. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| DOM | The in-memory tree of HTML nodes the browser builds from a web page, and that JavaScript or Yew can change to update what you see. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| free | Hand a previously allocated chunk of memory back so it can be reused. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| HDD | A spinning-disk hard drive — large, cheap per terabyte, slow for small random reads. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| heap | The large region of program memory used for values whose size or lifetime is not known at compile time. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| kernel | The privileged core of the operating system, the only software allowed to touch the hardware directly. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| memory wall | The growing gap between fast CPU speed and slow RAM latency that forces programs to care about cache. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| pointer | A number that stores the memory address of another value. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| RAM | Random-access main memory — fast working storage that loses its contents when power is cut. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| refcount | A small counter attached to a value that records how many references currently point at it. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| reference | A safe, language-checked pointer that lets you read or write a value without taking ownership. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| register | One of the tiny ultra-fast storage slots inside the CPU where arithmetic actually happens. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| segfault | A crash that happens when a program reads or writes memory it is not allowed to touch. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| SSD | A solid-state drive — persistent storage with no moving parts, much faster than an HDD. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| stack | A fast, last-in-first-out region of memory that holds one frame of locals per active function call. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| syscall | A controlled jump from your program into the kernel to ask the OS to do something (open a file, send a packet). | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| type tag | A small marker stored with a value at runtime so a dynamic language knows what kind of thing it is. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| unboxed | A value stored directly in its slot rather than behind a pointer (cheap and cache-friendly). | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| user space | The unprivileged mode where your own program runs, separated from the kernel by syscalls. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| von Neumann architecture | The classic computer design in which one memory holds both code and data and the CPU reads them over a shared bus. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+
+## Rust syntax & types
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| `&[u8]` | A borrowed view of a sequence of bytes — what we use for DNA throughout the course. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `&mut T` (mutable reference) | An exclusive, read-write borrow of a value; only one may exist at a time. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| `&str` | A borrowed slice of a UTF-8 text string. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `&T` (shared reference) | A read-only borrow of a value; any number may exist at once. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| `?` operator | Shorthand that returns early on `Err` and unwraps to the inner value on `Ok`. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| ADT | Algebraic data type — a type built by combining records and choices, like Rust's struct and enum. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| attribute | A piece of metadata in square brackets (e.g. `#[derive(Debug)]`) that asks the compiler to do something extra. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| borrow | Temporarily access a value through a reference without taking ownership of it. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| byte literal `b'A'` | A `u8` value whose contents are the ASCII code of the character inside the quotes. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| char | A four-byte Rust type that holds one Unicode character (overkill for DNA — prefer `u8`). | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| Clone | A trait that lets you make an explicit deep copy of a value with `.clone()`. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| Copy | A trait marking small value types that are duplicated automatically on assignment. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| derive | Asking the compiler to write a standard trait implementation (Debug, Clone, …) for you. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| enum | A type whose value is exactly one of a fixed list of named variants, each possibly carrying data. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| f64 | A 64-bit floating-point number with about 15 decimal digits of precision. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| fat pointer | A pointer that carries extra metadata alongside the address — for slices, the length. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| HashMap | The standard hash-table type that maps keys to values, with constant-time average lookup. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| i32 | A 32-bit signed integer, range about ±2.1 × 10⁹. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `let` | The keyword that binds a name to a value (immutably by default). | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `let mut` | The form of `let` that allows the variable to be reassigned afterwards. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| lifetime | The span of code during which a reference is guaranteed to point at valid data. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| lifetime elision | The compiler's habit of filling in obvious lifetimes for you so you do not have to type them. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| macro | A compile-time code generator invoked with a trailing `!` (e.g. `println!`, `vec!`). | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| move | The default behaviour of assignment for non-Copy types — ownership transfers and the old name becomes unusable. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| Option | An enum that wraps either `Some(value)` or `None` to express possibly-missing values. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| ownership | The Rust rule that every value has exactly one owner who is responsible for freeing it. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| Result | An enum that wraps either `Ok(value)` on success or `Err(error)` on failure. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| slice | A view of a contiguous range of elements in someone else's buffer — pointer plus length, no copy. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| String | An owned, growable, heap-allocated text string holding valid UTF-8. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| struct | A named record bundling several fields of fixed types into one value. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| sum type | A type whose value is one of several possible shapes — Rust's `enum` with data is one. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| tagged union | The memory layout of a sum type: a small tag saying which variant, plus enough room for the largest payload. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| usize | An unsigned integer the same width as a memory pointer; used for lengths and indices. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `Vec<T>` | The standard growable, owned, heap-backed array of values of type `T`. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+
+## Iterators, closures, traits
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| adapter | An iterator method that wraps one iterator into another (e.g. `map`, `filter`) without doing work yet. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| closure | An anonymous function value, written `\|args\| body`, that can capture variables from the surrounding scope. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| consumer | An iterator method that actually pulls elements through the chain (e.g. `count`, `sum`, `collect`). | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| dereference (`*`) | Follow a pointer or reference to get at the value it points to. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| deref coercion | The compiler automatically converting a reference type into a related one (e.g. `&Vec<T>` to `&[T]`). | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| entry API | A HashMap pattern that combines "look up or insert default" into one call returning a mutable reference to the slot. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| `Fn` / `FnMut` / `FnOnce` | Traits classifying closures by whether they can be called repeatedly, mutate captures, or run only once. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| generic | A type or function parameterised by a type variable so it works for many concrete types. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| `into` / `from` | Companion conversion traits — `T::from(x)` builds a `T` from an `x`; `x.into()` is the same conversion the other way. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| iterator | A value that produces a sequence of other values one at a time when asked. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| lazy | Iterator chains do no work until a consumer pulls on them — only what is needed is computed. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| monomorphisation | The compiler generating a separate specialised version of a generic function for each concrete type it is called with. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| trait | A named bundle of methods that types can implement — Rust's interface mechanism. | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| trait bound | A `T: Trait` constraint saying a generic parameter must implement a given trait. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+
+## I/O & files
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| ASCII | The 7-bit text encoding that gives each English letter and digit a number from 0 to 127. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `BufRead` | A trait extending `Read` with line-oriented and buffered conveniences. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| `BufReader` | A standard wrapper that buffers reads from a file so your code makes one syscall per chunk, not per byte. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| `BufWriter` | The counterpart of `BufReader` for writes — collects small writes into one large syscall. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| encoding | The mapping from bytes on disk to characters in memory (ASCII, UTF-8, etc.). | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| file descriptor | A small integer the kernel gives you to refer to an open file in subsequent syscalls. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| line | One unit of text ending at a newline character, the natural record boundary for many formats. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| mmap | Memory-mapping — letting the OS expose a file as a region of memory the program reads like an array. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| `Read` | The trait every readable byte source implements; gives you `read(buf)`. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| stderr | The standard error stream — where programs write diagnostic messages. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| stdin | The standard input stream — where programs read from the terminal or a piped command by default. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| stdout | The standard output stream — where programs write normal results by default. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| streaming | Reading or writing a file a small piece at a time so the whole thing never has to fit in memory. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| UTF-8 | A variable-width text encoding where ASCII is one byte and other characters take two to four. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `Write` | The trait every writable byte sink implements; gives you `write(buf)`. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+
+## Build, packaging, dependencies
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| `^` and `~` version specs | Cargo's shorthand for "compatible with this version" — `^` allows new minors, `~` allows only new patches. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| assembly | A human-readable form of the CPU's machine instructions — one operation per line. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| binary | A compiled executable file containing machine code you can run directly. | [day1/lec1-why-rust.qmd](day1/lec1-why-rust.qmd) |
+| `cargo` | Rust's build tool and package manager; the only one of the three Rust commands you usually type. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `Cargo.lock` | An auto-generated file recording the exact resolved version of every dependency for reproducible builds. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `Cargo.toml` | The manifest file declaring a project's name, version, and dependencies. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `clippy` | The official Rust linter — flags common style and correctness issues beyond what the compiler reports. | [intro/install.qmd](intro/install.qmd) |
+| crate | One Rust library or binary package — the unit cargo compiles and crates.io distributes. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| crates.io | The public registry where Rust crates are published and downloaded from. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| dependency | Another crate your project pulls in and uses. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| docs.rs | The site that auto-builds and hosts the documentation of every published crate. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| inlining | An optimisation that copies a small function's body into its caller to skip the call overhead. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| link | Stitching compiled object files and library code together into a final executable. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| LLVM | The compiler back-end Rust uses to turn its own intermediate code into optimised machine code. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| `opt-level` | The optimisation-level dial in a build profile — 0 means no optimisation, 3 means full. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| registry | A server that hosts publishable crates — by default this is crates.io. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| release vs debug | The two default Cargo build profiles — debug is fast to compile, release is fast to run. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| `rustfmt` | The official Rust code formatter; reformats source to the standard style. | [intro/install.qmd](intro/install.qmd) |
+| `rustup` | The Rust installer and toolchain manager — installs the compiler and updates it. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| semver | Semantic versioning: major.minor.patch, with breaking changes only on a major bump. | [day4/lec1-io-and-crates.qmd](day4/lec1-io-and-crates.qmd) |
+| SIMD | Single-instruction-multiple-data — one CPU instruction that processes several values at once. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| static linking | Bundling every library's code into the final binary so it has no external runtime dependencies. | [day1/lec1-why-rust.qmd](day1/lec1-why-rust.qmd) |
+| target directory | The `target/` folder where Cargo puts build artefacts; safe to delete, never edit. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+
+## Tests, profiling, parallelism
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| `#[cfg(test)]` | An attribute that makes a module compile only when running tests, so test code never ships in the release binary. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| `#[test]` | An attribute that marks a function as a test for `cargo test` to discover and run. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| Amdahl's law | The rule that the sequential fraction of a program puts a hard ceiling on how much parallelism can speed it up. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| assertion (`assert!`, `assert_eq!`) | A macro that checks a condition during a test and fails the test if it does not hold. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| channel | A typed in-memory pipe one thread writes into and another reads from. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| context switch | The OS saving one thread's state and loading another's so multiple threads can share a CPU core. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| criterion | The standard Rust benchmarking crate — measures functions statistically with warm-up and outlier detection. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| data race | Two threads accessing the same memory at the same time, with at least one writing — Rust prevents this at compile time. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| fixture | A pre-built piece of test data (a small file, a seeded database) used by one or more tests. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| `Instant` | A snapshot of a monotonic clock; subtract two to get an elapsed duration. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| integration test | A test in `tests/` that exercises a crate from the outside, using only its public API. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| mock | A stand-in object used in tests in place of a real dependency. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| mutex | A mutual-exclusion lock that lets only one thread at a time touch the data it guards. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| profile | A measurement of where a program spends its time, broken down by function. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| property-based test | A test that asserts an invariant holds for many randomly generated inputs rather than one specific case. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| race condition | A bug whose outcome depends on the unpredictable interleaving of concurrent operations. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| sampling profiler | A profiler that periodically interrupts a running program to record which function is on the stack. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| `Send` | A marker trait saying values of a type are safe to move between threads. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| sublinear scaling | The usual reality that doubling cores gives less than double the speed, because of shared memory and overhead. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| `Sync` | A marker trait saying it is safe for multiple threads to share an immutable reference to a value. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| thread | One independent stream of execution within a process. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| thread pool | A fixed set of worker threads created once and reused for many small tasks. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| unit test | A small test of a single function, usually sitting alongside the code in the same source file. | [day1/lec2-rust-syntax.qmd](day1/lec2-rust-syntax.qmd) |
+| vectorisation | The compiler rewriting a loop to use SIMD instructions that process several values per step. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| wall-clock time | The real elapsed time on a stopwatch, as opposed to CPU time. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+| work-stealing | A scheduler where idle threads grab pending tasks from the queues of busy threads to balance the load. | [day5/lec1-tests-release-parallel.qmd](day5/lec1-tests-release-parallel.qmd) |
+
+## Web & networking
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| async | A function marked `async` returns a future instead of running immediately. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| await | A keyword that pauses an `async` function until the future it is waiting on is ready. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| axum | The Rust web framework used in the course for the HTTP/JSON backend. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| backend | The server-side program that produces data (often via HTTP and JSON) for a frontend to display. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| body | The payload of an HTTP request or response — often JSON, HTML, or raw bytes. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| component | One reusable piece of UI in Yew — a function returning a chunk of HTML. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| controlled input | A form input whose displayed value is read from state, so the state and the input always agree. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| CORS | The browser rule that blocks cross-origin requests unless the server opts in with specific headers. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| deserialise | Turn bytes (e.g. JSON text) back into a typed value in memory. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| extractor | An axum mechanism that pulls a typed value (path segment, query, JSON body) out of an HTTP request for your handler. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| frontend | The code that runs in the user's browser to draw the UI and react to clicks. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| full-stack | Code that covers both frontend and backend, often (as in day 6) in one language. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| future | A value representing work that is in progress and will produce a result later — what `async` functions return. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| GET | The HTTP method browsers use to fetch a resource without changing server state. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| handler | A function in axum that produces the response for a particular route. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| header | A `Name: value` line on an HTTP request or response carrying metadata (content type, authentication, ...). | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| hook (`use_state`, `use_effect_with`) | A Yew function that stores state or schedules an effect for a component, surviving re-renders. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| HTTP | The text-and-bytes protocol browsers use to talk to web servers. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| JSON | A lightweight text format for nested objects, arrays, numbers, and strings — the lingua franca of web APIs. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| middleware | Code that wraps a request/response pipeline to add cross-cutting concerns (logging, auth, CORS). | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| origin | The combination of scheme, host, and port that the browser uses to scope security rules like CORS. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| port | A number identifying which service on a host an incoming TCP connection should reach. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| POST | The HTTP method used to send a body of data to the server, usually creating or updating something. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| request | A message from the browser to a server asking for something. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| response | The server's reply to an HTTP request — status, headers, body. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| REST | A common style of HTTP API where URLs name resources and HTTP methods describe actions on them. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| route | A mapping from a URL pattern to a handler function on the server. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| runtime | The background machinery (a thread pool plus a scheduler) that drives `async` futures to completion. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| serde | The Rust serialisation framework that converts structs to and from JSON (and other formats) via `#[derive]`. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| serialise | Turn a typed value in memory into bytes (often JSON text) for storage or transmission. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| status code | The three-digit number on an HTTP response (200 OK, 404 Not Found, ...). | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| `tokio` | The most common Rust async runtime, used by axum and many other server crates. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| trunk | The build tool that compiles a Yew app to WASM, bundles assets, and serves them in development. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| URL | The address (scheme, host, port, path, query) the browser uses to reach a resource. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| virtual DOM | A lightweight tree of HTML nodes built in memory; Yew diffs it against the previous one and patches the real DOM. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| WASM (WebAssembly) | A portable, sandboxed bytecode format every modern browser can run — a compile target Rust supports. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| wasm-bindgen | The glue layer that lets Rust code compiled to WASM talk to JavaScript and the browser. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+| Yew | A Rust UI framework, modelled on React, whose components run in the browser as WASM. | [day6/lec1-yew-wasm.qmd](day6/lec1-yew-wasm.qmd) |
+
+## Databases (SQL & SQLite)
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| ACID | The four classic transaction guarantees: atomicity, consistency, isolation, durability. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| aggregation | A query that collapses many rows into one summary value per group (count, average, sum). | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| atomicity | The transaction guarantee that all statements in a transaction succeed together or have no effect. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| B-tree | The branching-tree data structure most databases use for indexes, giving logarithmic lookup time. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| column | One named field, with a fixed type, that appears in every row of a table. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| `Connection` | The rusqlite handle to an open SQLite database. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| DELETE | The SQL statement that removes rows matching a `WHERE` clause. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| durability | The transaction guarantee that committed changes survive a crash or power loss. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| foreign key | A column in one table whose values must match the primary key of another table. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| fsync | The syscall that forces buffered file writes to be flushed to physical storage. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| GROUP BY | The SQL clause that buckets rows by a key so an aggregate produces one row per bucket. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| HAVING | The SQL clause that filters whole groups produced by `GROUP BY`. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| index | An auxiliary data structure that lets the database find rows matching a filter without scanning the whole table. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| INSERT | The SQL statement that adds a new row to a table. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| JOIN (INNER, LEFT, NATURAL) | SQL operations that combine rows from two tables — INNER keeps only matches, LEFT keeps every left row, NATURAL infers the join key from shared column names. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| LIMIT | The SQL clause that caps the result set at a given number of rows. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| normalisation | Designing tables so each fact lives in exactly one place, removing redundancy and update anomalies. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| NULL | The SQL marker for "no value" — distinct from zero or the empty string. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| ORDER BY | The SQL clause that sorts the result rows by one or more columns. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| parameter binding | Passing values to a query through `?` placeholders so user data can never be parsed as SQL. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| prepared statement | A SQL query that the database has parsed and compiled once and that you can run many times with different parameters. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| primary key | The column (or set of columns) that uniquely identifies each row in a table. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| `query_map` | The rusqlite method that runs a SELECT, calls your closure once per row, and yields the converted values. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| relational database | A database that stores data in tables of rows and columns and lets you join those tables together. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| row | One record in a table — one set of values, one per column. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| rusqlite | The Rust crate that wraps the SQLite C library so you can use SQLite from Rust. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| schema | The set of table definitions (names, columns, types, constraints) that describe a database's shape. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| SELECT | The SQL statement that reads rows from one or more tables. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| SQL injection | A bug class where untrusted input is pasted into a SQL string and ends up running as code; parameter binding prevents it. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| `Statement` | The rusqlite handle for a prepared SQL statement that you bind parameters into and execute. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| table | A named grid of rows and columns — the basic unit of storage in a relational database. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| three-valued logic | SQL's logic system where conditions can be true, false, or unknown because of `NULL`. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| transaction | A group of SQL statements that succeed or fail as one unit and become visible only on commit. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| tuple (DB sense) | A formal name for a row — an ordered set of column values. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| UPDATE | The SQL statement that changes existing rows that match a `WHERE` clause. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+| WHERE | The SQL clause that keeps only rows for which a condition is true. | [day7/lec1-relational-sqlite.qmd](day7/lec1-relational-sqlite.qmd) |
+
+## Algorithms & complexity
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| alignment | A way of lining up two sequences so similar parts stack, with gaps where one has extra characters. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| amortised | A cost averaged across many operations, even if individual operations occasionally cost more. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| base case | The non-recursive case of a recursive function — the place the recursion stops. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| Big-O notation | A shorthand for how a function's running time grows as the input grows (e.g. O(n²) = quadratic). | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| constant time (O(1)) | Time that does not grow with input size — looking up `seq[1000]` costs the same as `seq[1_000_000]`. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| dynamic programming | Solving a problem by computing each subproblem once and storing the answer in a table. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| edit distance | The minimum number of single-character edits to turn one string into another. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| exponential | Time that multiplies by a constant factor each time the input grows by one — quickly impossible. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| hot loop | The innermost loop of a program where most of its runtime is spent. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| hot path | The sequence of function calls a program runs most often — the place performance work pays off. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| linear time (O(n)) | Time that grows in proportion to the input size — touching each byte once. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| memoisation | Caching the result of a function call so the next call with the same arguments is instant. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| polynomial | Time that grows like a fixed power of the input size (linear, quadratic, cubic, ...). | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| quadratic time (O(n²)) | Time that grows like the square of the input — comparing every pair, often too slow. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| recurrence (rule) | A formula that defines the value of a cell or function in terms of smaller cases of itself. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| recursion | A function that calls itself on a smaller version of the problem. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| recursive case | The arm of a recursive function that calls the function again on a smaller subproblem. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| subproblem | A smaller instance of the same problem that a recursion or dynamic programming algorithm solves first. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| traceback | Walking the back-pointers of a filled DP matrix to recover the actual alignment, not just its score. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+
+## Compression
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| archive vs single-stream | An archive (zip, tar) bundles many named files; a single stream (gzip) compresses one byte stream. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| bgzip | A bioinformatics-specific gzip variant that compresses in 64 KB blocks so you can seek inside the file. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| DEFLATE | The compression algorithm used inside `.zip` and `.gz`, combining LZ77 and Huffman coding. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| dictionary coder | A compressor that replaces repeated substrings with short references to earlier occurrences. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| entropy | A measure of how unpredictable bytes are — the theoretical lower bound on how small a lossless compressor can make them. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| gzip | A widely used lossless compressor producing `.gz` files — single compressed stream, no archive layer. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| Huffman coding | A scheme that gives common bytes short bit-codes and rare bytes longer codes. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| lossless | Compression after which the decoder reproduces the original bytes exactly — required for DNA. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| lossy | Compression that throws away information the eye or ear will not notice — fine for photos, forbidden for DNA. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| LZ77 | A compression idea that replaces a substring with "go back N bytes and copy M" when it has been seen before. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| run-length encoding (RLE) | The simplest compressor — replace a run of identical bytes with a count and the byte. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| zip vs tar.gz | `.zip` is many compressed entries plus an index; `.tar.gz` is a tarball-of-files then a single gzip stream over the whole thing. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+| zstd | A modern lossless compressor, usually faster and slightly smaller than gzip. | [day4/lec3-archives.qmd](day4/lec3-archives.qmd) |
+
+## Bioinformatics formats & concepts
+
+| Term | In plain English | Where in the course |
+|---|---|---|
+| ASCII offset | The fixed integer (usually 33) added to a Phred score to turn it into a printable character. | [day1/04-phred.qmd](day1/04-phred.qmd) |
+| BAM | The binary, compressed counterpart of SAM — the standard format for aligned reads. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| basecalling | Turning the raw electrical or optical signal from a sequencer into a sequence of A, C, G, T calls. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| BED | A simple line-oriented text format listing genomic intervals (chrom, start, end, ...). | [day4/01-bed-parse.qmd](day4/01-bed-parse.qmd) |
+| branch length | The number on a phylogenetic tree edge, usually representing evolutionary distance to the parent node. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| codon | A group of three consecutive DNA or RNA bases coding for one amino acid (or a stop). | [day3/lec1-structs-enums.qmd](day3/lec1-structs-enums.qmd) |
+| complement | The base that pairs with a given DNA base (A↔T, C↔G). | [day1/02-complement.qmd](day1/02-complement.qmd) |
+| FASTA | A text format storing one or more named sequences, each with a `>` header line. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| FASTQ | A text format storing reads with per-base quality scores (`@name`, sequence, `+`, qualities). | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| GC content | The fraction of bases in a sequence that are G or C. | [day1/01-gc-content.qmd](day1/01-gc-content.qmd) |
+| internal node | A node of a phylogenetic tree that has children — usually an inferred common ancestor. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| IUPAC ambiguity codes | The standard one-letter codes (N, R, Y, S, W, ...) for "any of these bases". | [day1/03-base-counts.qmd](day1/03-base-counts.qmd) |
+| k-mer | A substring of length k taken from a sequence. | [day1/lec1-why-rust.qmd](day1/lec1-why-rust.qmd) |
+| k-mer index | A data structure mapping each k-mer to where it occurs, used by aligners and search tools. | [day3/04-kmer-counts.qmd](day3/04-kmer-counts.qmd) |
+| Needleman-Wunsch | The classic dynamic-programming algorithm for global sequence alignment. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| Newick format | The standard parenthesised text format for storing phylogenetic trees. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| pangenome | A collection of related genomes (e.g. many strains) treated as one referenceable graph or set. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| Phred+33 encoding | The convention of storing a Phred quality score as the ASCII character `score + 33`. | [day1/04-phred.qmd](day1/04-phred.qmd) |
+| Phred quality score | An integer error probability per base: Q = −10 · log₁₀(P_error). | [day1/04-phred.qmd](day1/04-phred.qmd) |
+| phylogeny / phylogenetic tree | A branching diagram representing the evolutionary relationships between species, genes, or strains. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| reverse complement | The complement of a sequence read in the opposite direction — what you get on the other DNA strand. | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| SAM | The text format for aligned sequencing reads — one line per alignment with reference position, flags, CIGAR, etc. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| sequence alignment (global / local) | Lining up two sequences end-to-end (global) or finding the best matching subregion (local). | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| single-cell expression matrix | A large table of how much each gene is expressed in each individual cell — millions of cells, tens of thousands of genes. | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |
+| sliding window | A fixed-size window that moves one position at a time across a sequence (e.g. for k-mers or per-window GC). | [day2/lec1-ownership-slices.qmd](day2/lec1-ownership-slices.qmd) |
+| Smith-Waterman | The classic dynamic-programming algorithm for local sequence alignment. | [day3/lec3-dynamic-programming.qmd](day3/lec3-dynamic-programming.qmd) |
+| tip / leaf | A node in a phylogenetic tree with no children — a present-day species, gene, or strain. | [day3/lec2-recursion-and-trees.qmd](day3/lec2-recursion-and-trees.qmd) |
+| VCF | The standard text format for variant calls (positions where a sample differs from the reference). | [intro/lec1-how-computers-work.qmd](intro/lec1-how-computers-work.qmd) |

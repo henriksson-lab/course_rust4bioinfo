@@ -194,7 +194,7 @@ When you actually do need a variable you can update — a loop counter, an accum
 
 The compiler reads the same `mut` keyword you do and knows this variable can change. So do other people reading your code. The keyword is information for both audiences.
 
-By the end of today you'll have a feel for when you actually need `mut`. The first guess is "almost never": iterator chains and recursive helpers usually beat mutable loops in Rust.
+By the end of today you'll have a feel for when you actually need `mut`. The first guess is "almost never": iterator (an object that yields a sequence of values, one at a time, when asked) chains and recursive helpers usually beat mutable loops in Rust.
 :::
 
 ## How computers store integers
@@ -226,31 +226,21 @@ Same number of bits. Same memory. Different interpretation. Which interpretation
 
 ## Rust's integer types
 
-| Type | Width | Signed | Range |
-|---|---:|:---:|---|
-| `u8`   | 8 bits  | no  | 0 ..= 255 |
-| `i8`   | 8 bits  | yes | -128 ..= 127 |
-| `u16`  | 16 bits | no  | 0 ..= 65 535 |
-| `i16`  | 16 bits | yes | ±32 767 |
-| `u32`  | 32 bits | no  | 0 ..= 4.29 × 10⁹ |
-| `i32`  | 32 bits | yes | ±2.15 × 10⁹ |
-| `u64`  | 64 bits | no  | 0 ..= 1.84 × 10¹⁹ |
-| `i64`  | 64 bits | yes | ±9.22 × 10¹⁸ |
+The four you'll see this week:
 
-Also `u128` / `i128`, rarely needed.
+| Type | Width | Signed | Use for |
+|---|---:|:---:|---|
+| `u8`    | 8 bits  | no  | one DNA base, one FASTQ quality byte |
+| `usize` | 64 bits | no  | lengths and indices (covered next slide) |
+| `i32`   | 32 bits | yes | values that can be negative — e.g. alignment scores |
+| `f64`   | 64 bits | —   | fractions, probabilities, GC content |
+
+Rust also has `i8`, `u16`, `i16`, `u32`, `u64`, `i64`, plus `u128` / `i128`. Same naming pattern (`u`/`i` + bit width). Full list and ranges on the [day 1 — Concepts](00-concepts.qmd) page.
 
 ::: notes
-Rust gives you every standard signed and unsigned width from 8 to 128 bits. The naming convention is consistent: the letter is signedness — u for unsigned, i for signed integer — and the number is the bit width.
+There is a whole family of fixed-width integer types in Rust — every signed and unsigned width from 8 to 128 bits — but you only need four of them to get through this week. u8 is one byte; that's what we use for a DNA base or a FASTQ quality byte. usize is the type for lengths and indices, which the next slide covers in detail. i32 is the natural signed integer for things like alignment scores. f64 is double-precision floating point, for fractions and probabilities.
 
-You don't have to memorize the ranges. Most of the time the right type is obvious. A few practical ones for our work:
-
-- u8 holds a single byte. ASCII characters, DNA bases, FASTQ quality bytes.
-- u16 holds about 65 thousand. A typical short read length fits easily.
-- u32 holds about 4 billion. Most chromosome coordinates fit; counts of reads fit.
-- i32 and i64 are the natural choices when negative values are possible — alignment scores, log ratios.
-- u64 holds positive numbers up to about 10 to the 19. For all practical purposes, infinite.
-
-Pick a type wide enough that overflow is impossible. We'll see overflow in a couple of slides.
+The rest of the family is named on the same pattern — `u` or `i` plus a bit width — and the concepts page lists them with their ranges. Don't memorize the table; reach for it when you need it.
 :::
 
 ## `usize` and `isize`
@@ -277,69 +267,28 @@ In practice, on the machine in front of you, usize is just u64 with a different 
 The rule: lengths and indices are usize. Always.
 :::
 
-## Stack and heap — two regions of program memory
+## Quick recap — where values live in Rust
 
-Every running program gets two pots of memory with very different rules.
+You saw stack vs heap in the intro. The one-line summary for Rust:
 
-![Fast and disciplined, or flexible and slower.](images/lec2-stack-vs-heap.svg){fig-alt="An outer dashed rectangle labelled 'your program's memory' contains two panels. Left panel, tinted light blue, is titled Stack. It shows an icon of four small boxes stacked vertically with 'top' marked at the bottom, then a bulleted list: fixed-size slots one per function call; allocate by pushing, free by popping (free is instant); compiler decides the size at build time; typical total size 1 to 8 MB. A 'Holds:' line reads: function arguments, local variables of fixed size. Right panel, tinted light orange, is titled Heap. It shows an icon of four scattered varied-size boxes with caption 'find a free chunk of the right size', then a bulleted list: variable-size chunks, allocated on request; allocate and free in any order (slower); size can be decided at runtime; limited only by RAM. A 'Holds:' line reads: anything whose size or lifetime isn't known at compile time. Footer below both panels: Most programming languages use both. Python hides the choice; Rust makes it explicit."}
+- **Scalars** (`u8`, `i32`, `f64`, `bool`) live directly on the stack.
+- **`Vec<T>` and `String`** are a **24-byte stack header** (ptr + len + cap) pointing at the bytes on the heap.
 
-::: notes
-This distinction is universal — every program in every language uses both regions. The key trade-off is fast and disciplined (stack) versus flexible and slower (heap). What differs between languages is how visible the choice is to you: Python hides it almost entirely, Rust makes it explicit in the type you choose.
-:::
-
-## The call stack — one frame per function call
-
-Calling a function pushes a frame; returning pops it. That's the whole mechanism.
-
-![Each call pushes a frame; return pops it.](images/lec2-call-stack.svg){fig-alt="Three vertical panels show the stack at three moments. Panel 1, labelled '1. before the call — main is running': the stack column shows a single blue main frame containing seq (a slice) and g (an f64 reserved but not yet set), with older frames as a dashed placeholder marked with three dots below. Panel 2, labelled '2. inside the call — gc_content is running; main is paused': an orange gc_content frame sits on top of the blue main frame; gc_content contains seq, gc=4, and a loop variable b, and is marked 'top of stack'; main is unchanged below, marked 'paused, waiting'. A green arrow labelled 'push frame' connects panel 1 to panel 2. Panel 3, labelled '3. after the call — main resumes with the result': only the main frame remains, with g now set to 0.5 in green ('received the return value'). An orange arrow labelled 'pop frame' connects panel 2 to panel 3. Footer: Allocating a frame is just moving the stack pointer — that's why let x = 42; is free."}
+![A 24-byte header points at the bytes on the heap.](images/lec2-vec-memory.svg){fig-alt="Two regions side by side. On the left, the stack contains a 3-field Vec<u8> struct with rows labelled ptr (8 bytes), len: 5, and cap: 8 - a 24-byte header. On the right, the heap contains an 8-cell allocation; the first five cells hold the DNA bytes b'A', b'C', b'G', b'T', b'A' and the last three cells are dim/empty. A bracket above the first 5 cells reads 'len = 5'; a bracket above all 8 cells reads 'cap = 8'. An arrow runs from the ptr row on the stack to the first cell on the heap. Footer: stack is 24 bytes (3 times 8), heap is 8 bytes; cheap to move because only the 24-byte header is copied and the data never moves with it."}
 
 ::: notes
-This mechanism is the same in every compiled language — C, C++, Rust, Go, Java internals. The frame size is decided at compile time from the function's locals, which is why fixed-size types are cheap. Too many nested calls overflows the stack — that's literally what 'stack overflow' means.
+Quick recap of stack vs heap, which the intro lecture covered in depth. In Rust, fixed-size scalars live on the stack — no heap allocation. Growable containers like Vec and String use a small stack header (24 bytes: a pointer, a length, and a capacity) that points at a heap allocation holding the actual data. That makes them cheap to pass around — only the header moves — and the heap allocation stays put. We'll see the consequences of this on Day 2 when we talk about ownership (the rule that says exactly one variable is responsible for cleaning up each piece of memory).
 :::
 
-## Python: stack holds references, heap holds the values
+## Recap — why Python is slower
 
-Python's simplicity comes from putting almost everything on the heap, including a `42`.
-
-![Every Python value is a heap object behind a pointer.](images/lec2-python-memory.svg){fig-alt="A small code panel at the top reads: x = 42; y = 'hello'; z = [1, 2, 3]. Below, a two-column diagram. Left column, tinted light blue, is titled Stack (current function's frame) and contains three small named-pointer boxes: x with an arrow leaving it, y with an arrow leaving it, and z with an arrow leaving it. Right column, tinted light orange, is titled Heap (Python objects) and contains three boxes. The first box is labelled PyLongObject with refcount: 1, type: int, value: 42, noted as about 28 bytes. The second is PyUnicodeObject with refcount: 1, type: str, value: 'hello', noted as about 54 bytes. The third is PyListObject with refcount: 1, type: list, items pointer leading to three small separate PyLongObject boxes containing 1, 2, 3, noted as '+ 3 separate int objects on heap'. Blue arrows run from each stack pointer box to its corresponding heap object. Bottom captions: every value in Python lives on the heap — even a small integer; variables on the stack hold references (pointers + refcount) to those heap objects; convenient, but costs about 10 to 30 times the memory of holding the value directly. A green contrast note at the very bottom reads: In Rust, let x: i32 = 42; stores the value 42 directly on the stack (4 bytes); heap is opt-in (Vec, String, Box)."}
-
-::: notes
-This is why pure-Python loops are slow: each integer access dereferences through a heap pointer, checks a type tag, and touches a refcount. It is also why NumPy and PyTorch exist — they store raw value arrays directly on the heap, without one Python object per element. When we get to Rust's i32 on the stack, students should recognise it as the opposite end of the spectrum from what they're used to.
-:::
-
-## A boxed value — the value plus its metadata
-
-Dynamic languages wrap every value in a small heap object — a 'box' — that carries the type tag and refcount the runtime needs.
+Python boxes every value (wraps it in a heap object with type tag + refcount). Rust stores scalars directly. That's where most of the speed gap comes from.
 
 ![One scalar, three storage costs.](images/lec2-boxed-value.svg){fig-alt="A wide diagram titled 'How 42 is stored — Rust vs Python vs R', with three equally-wide vertical columns separated by faint dividers. Column 1, headed 'Rust: let x: i32 = 42;', shows a light-blue Stack region containing a single small cell labelled 'x =' with a large monospace 42 inside, an italic note '(no heap allocation)' below, and beneath the column a bold green annotation '4 bytes total' followed by the footnote 'the value lives directly on the stack; no heap allocation'. Column 2, headed 'Python: x = 42', shows a small light-blue Stack box labelled x with a filled dot and an arrow leaving it that crosses into a light-orange Heap region; the heap region contains a white box labelled PyLongObject with three internal rows reading 'refcount: 1', 'ob_type:' followed by a dot and short arrow trailing off to the italic label 'PyLong_Type', and 'value: 42' with the 42 rendered larger; beneath the column a bold orange annotation '~28 bytes' with the subline '8 (pointer) + 8 (refcount) + 8 (type) + 4 (value) + alignment' and the footnote 'every integer, even 0, gets this treatment'. Column 3, headed 'R: x <- 42L', shows a similar light-blue Stack box labelled x with a dot and arrow leaving it into a light-orange Heap region; the heap box is labelled 'INTSXP (R integer vector)' and contains a lightly-tinted header band reading 'SEXP header (~32 bytes)', then 'length: 1', then 'data[0]: 42' with the 42 rendered larger; beneath the column a bold orange annotation '~40 bytes' with the subline 'every R scalar is a length-1 vector with a full SEXP header' and the footnote 'we'll come back to why this matters less than it looks'. Spanning the full width below all three columns is a light-green callout box reading in bold dark-green 'Same value, three storage layouts. The metadata isn't optional in Python/R — it's how those languages support dynamic typing and garbage collection.', with a smaller grey italic line below: 'Per-value overhead is fine for one scalar. The next slides show what happens when you have a million.'"}
 
 ::: notes
-This isn't a deficiency of Python or R — it's the price of dynamic typing and automatic memory management. Every value has to know its own type at runtime and has to be reachable for the garbage collector to count or trace it. The next two slides quantify the bulk-allocation impact: R fares better than it looks because a length-N vector pays the SEXP header only once, and Rust's Vec pays no per-element box at all.
+One-paragraph recap of the boxing story from the intro lecture. Python wraps every value — even an integer — in a small heap object that carries a type tag and a reference count. The runtime needs that metadata to support dynamic typing and garbage collection, but it costs you roughly an order of magnitude in memory and a cache miss on every access. Rust stores scalars directly on the stack; growable containers pay one header per container, not one per element. That's where most of the speed gap between pure-Python loops and equivalent Rust loops comes from. We come back to the ownership consequences tomorrow.
 :::
-
-## R: bulk-boxed — one header for a whole vector
-
-R sits between Python and Rust: every object has a header, but the elements inside an atomic vector are stored raw and contiguous.
-
-![R amortises the box across a whole vector.](images/lec2-r-vector.svg){fig-alt="Diagram titled 'R: bulk-boxed — one header per vector, not per element', split into two side-by-side panels comparing the same 5-element data c(1.1, 2.2, 3.3, 4.4, 5.5). Left panel, headed in red 'Python: [1.1, 2.2, 3.3, 4.4, 5.5] — list[float], per-element boxing': a light-blue Stack region holds a small box labelled xs with an arrow leaving it into a light-orange Heap region; the heap contains a PyListObject box with rows refcount: 1, ob_type: list, size: 5, and items pointing to an array of 5 small pointer cells; each pointer cell has an arrow to its own separate PyFloat box (with refcount, type, and value rows) holding 1.1, 2.2, 3.3, 4.4, and 5.5 respectively — seven distinct heap allocations in total; below the panel a tally reads '5 floats: ~24 (list hdr) + 40 (5 ptrs) + 5×24 (PyFloats) ≈ 184 bytes' with a grey italic subline 'for 5 doubles whose raw values are 40 bytes total'. A faint vertical divider in the centre carries stacked notes: red 'Python: per-element boxing', a grey 'vs.', and green 'R: per-vector boxing'. Right panel, headed in green 'R: c(1.1, 2.2, 3.3, 4.4, 5.5) — numeric vector, per-vector boxing': a light-blue Stack region holds a small box labelled xs with an arrow leaving it into a light-orange Heap region; the heap contains a single SEXP-headered box whose top band, tinted slightly darker, reads 'SEXP header (~32 bytes)' with 'type: REALSXP   length: 5' beneath, and below the header band sits a single contiguous row of 5 cells containing 1.1, 2.2, 3.3, 4.4, 5.5 in monospace; an italic note reads 'one allocation, one header, raw values'; below the panel a tally reads '5 doubles: ~32 (SEXP hdr) + 40 (5 × 8 bytes) ≈ 72 bytes' with a grey italic subline 'the header amortises — a vector of a million doubles is ~32 + 8 MB'. Spanning the full width below both panels is a light-blue callout box reading in bold 'R wins for one big numeric vector. R loses when you have many short vectors or use list() instead of an atomic vector.', with a smaller grey subline 'Bioinformatics-relevant pitfalls: list(seq1, seq2, ..., seqN) is N SEXP headers; row-wise data frames; mass c() concatenation. Atomic vectors and matrices stay fast.'"}
-
-::: notes
-R is efficient for big numeric and integer vectors, which is most of what statistics workflows actually do. The boxing tax shows up the moment you build many small objects: `list()` of scalars, lists of short character vectors, or row-at-a-time operations on data frames. Hadley Wickham's "vectorise" advice is partly about correctness and elegance, but it's also about avoiding exactly this per-object overhead.
-:::
-
-## What it costs in real bioinformatics work
-
-For one scalar the boxing tax is invisible. For ten million bases or a million k-mers, it dominates.
-
-![Boxing tax dominates at bioinformatics scale.](images/lec2-bio-memory.svg){fig-alt="A diagram titled 'Memory cost of two bioinformatics data structures' with two stacked groups of horizontal bars on a shared log-scale memory axis from 1 MB to 1000 MB. Group A, headed 'A. 10 Mb DNA sequence in memory — a single 10-megabase chromosome, just the bases', has five bars sorted largest to smallest: Python list[int] at 80 MB in blue, annotated '10M × 8-byte pointer; small-int cache reuses the int objects'; R integer vector at 40 MB in orange, annotated '10M × 4 bytes + ~32-byte SEXP header'; Python bytes at 10 MB in blue, annotated 'contiguous bytes, no per-element box (the smart Python choice)'; R raw vector at 10 MB in orange, annotated 'contiguous bytes, +~32-byte header (rare in practice)'; and Rust Vec<u8> at 10 MB in green, annotated 'contiguous bytes, +24-byte stack header'. A red callout box reading '8× the size' to the left of the bars has dashed arrows pointing at the top Python list[int] bar and the bottom Rust Vec<u8> bar, marking the contrast. Group B, headed 'B. Count of every 21-mer in 10 Mb — key = 21-byte k-mer, value = its count (~1M unique entries)', has three bars: Python dict[bytes, int] at 130 MB in blue, annotated 'every key a bytes (~54 B), every value a PyLong (~28 B) + dict slots'; R named list at 150 MB in orange, annotated 'named-list lookup is O(n); use environment or external packages for hashing'; and Rust HashMap<[u8;21], u32> at 32 MB in green, annotated 'key + value stored inline in each slot; one allocation for the whole table'. A green callout box reading '~4× smaller' to the left of the bars has dashed arrows pointing at the Rust HashMap bar and the largest Python dict bar. Both groups share the same logarithmic memory axis with ticks at 1 MB, 10 MB, 100 MB, and 1000 MB. A grey italic strip at the bottom reads: 'Approximate values — actual sizes vary with Python implementation (CPython 3.12 assumed), R version, allocator, and small-int caching. The orders of magnitude are reliable; the exact bytes are not.'"}
-
-::: notes
-The naive Python choice (list of ints) costs 8× more memory than the smart Python choice (bytes); the R integer vector is still 4× a bytes or Vec<u8> because each int is 4 bytes instead of 1. For k-mer counting the gap is bigger because each entry has its own object overhead — key, value, and dict slot. This is why most production bioinformatics tools — BLAST, minimap2, bwa, samtools — are written in C, C++, or Rust.
-:::
-
-## A Vec lives on the stack; its data lives on the heap
-
-![A 24-byte header points at the bytes on the heap.](images/lec2-vec-memory.svg){fig-alt="Two regions side by side. On the left, the stack contains a 3-field Vec<u8> struct with rows labelled ptr (8 bytes), len: 5, and cap: 8 - a 24-byte header. On the right, the heap contains an 8-cell allocation; the first five cells hold the DNA bytes b'A', b'C', b'G', b'T', b'A' and the last three cells are dim/empty. A bracket above the first 5 cells reads 'len = 5'; a bracket above all 8 cells reads 'cap = 8'. An arrow runs from the ptr row on the stack to the first cell on the heap. Footer: stack is 24 bytes (3 times 8), heap is 8 bytes; cheap to move because only the 24-byte header is copied and the data never moves with it."}
 
 ## Overflow
 
@@ -385,9 +334,20 @@ For today's exercises you'll mostly type u8 (for bases) and usize (for lengths a
 Don't agonize over the choice. If you pick wrong, the compiler will tell you when something doesn't fit, and you change the type. There is no runtime "I picked the wrong type" cost; you'll know at build time.
 :::
 
-## i64 vs f64 — same 8 bytes, two encodings
+## `f64` — fractions, but only ~15 digits of precision
 
-![Two 64-bit ribbons: i64 stores a sign bit plus 63 magnitude bits; f64 stores a sign bit, 11 exponent bits, and 52 mantissa bits.](images/lec2-int-vs-float.svg){fig-alt="Two horizontal 64-cell memory ribbons. Top ribbon (i64): one yellow sign-bit cell followed by 63 light-blue magnitude cells; range plus or minus 9.2e18; exact integer values. Bottom ribbon (f64, IEEE 754): one yellow sign-bit cell, 11 light-green exponent cells, 52 light-pink mantissa cells; range about plus or minus 1.8e308 with 15 to 17 decimal digits of precision; fractional values but not exact (0.1 + 0.2 not equal to 0.3). Below: a small code box showing let n: i64 = 1_000_000_000_000 (exact) and let g: f64 = 0.42 (approximate)."}
+`f64` stores fractional numbers in 8 bytes — same width as `i64`, different encoding. Two things to remember:
+
+- About 15 significant decimal digits of precision (good enough for almost any biological measurement).
+- Results are *approximate*: `0.1 + 0.2 != 0.3` in `f64`. Never compare floats with `==` — compare `(a - b).abs() < 1e-9`.
+
+::: notes
+f64 — IEEE 754 double precision — packs a sign, an exponent, and a fraction into 8 bytes. The internal layout doesn't matter for the course; two practical consequences do.
+
+First, you get about 15 significant decimal digits of precision. That's enough for any GC content, probability, alignment score, or fold-change you'll meet.
+
+Second, floating-point arithmetic is approximate. `0.1 + 0.2` does not exactly equal `0.3` in any language that uses IEEE 754 — Python, R, JavaScript, Rust, C, all the same. The standard guard is: don't compare floats with `==`. Compare the absolute difference against a small tolerance instead.
+:::
 
 ## Casting with `as`
 
@@ -576,6 +536,8 @@ The variable `i` is a fresh binding for each iteration — you don't have to dec
 
 ## `for` over a slice
 
+A **slice** (a borrowed view — i.e. read-only access without taking ownership — of a contiguous run of values; here, the bytes of a DNA sequence) is the natural thing to iterate over. We cover borrowing and ownership in depth tomorrow.
+
 ```rust
 for &b in seq {                     // iterate &[u8]; b is u8
     if b == b'G' || b == b'C' {
@@ -677,13 +639,13 @@ This shows what `match` actually does. The input value is `b'G'`. The arms are t
 
 ## Byte literals — `b'X'`
 
+A **literal** (a value written directly in source code, like `42` or `'A'`) prefixed with `b` is a **byte literal** — the character's raw byte value as a `u8`, fixed at compile time.
+
 ```rust
 b'A' == 65u8                                    // u8 with the ASCII value
 b"ACGT" == [b'A', b'C', b'G', b'T']             // an array of u8
 b"ACGT".as_slice()                              // a &[u8]
 ```
-
-The `b` prefix means: take the character's raw byte value as a `u8`.
 
 ::: notes
 Two related shorthands you'll write a lot today.
@@ -746,15 +708,21 @@ The wildcard `_` defeats this check. Use it when you really mean "any other"; do
 
 ## DNA is `&[u8]`, not `&str`
 
+A slice of bytes — `&[u8]` — is the right type for DNA. Every base is one ASCII byte, indexing is constant time, byte literals drop straight into patterns.
+
 ```rust
 let dna: &[u8] = b"ACGTACGT";          // a byte slice
 let len        = dna.len();             // O(1)
 let third      = dna[2];                // O(1), returns u8 = b'G'
 ```
 
-`&str` is **UTF-8** — indexing is O(*n*), and not every byte sequence is valid.
+::: notes
+DNA in this course is `&[u8]` — a borrowed slice of bytes. Three reasons in one breath: every DNA base is one ASCII byte, indexing into a byte slice is O(1), and byte literals like `b'G'` drop straight into match patterns with no conversion. The next slide explains what's wrong with the obvious-looking alternative, `&str`.
+:::
 
-`&[u8]` is **just bytes** — fast to index, fits ASCII DNA exactly.
+## Why not `&str`?
+
+`&str` is **UTF-8** (Unicode encoded as variable-width bytes — 1 byte for ASCII, 2-4 for accented letters, CJK, emoji). The type guarantees valid UTF-8 — so slicing into the middle of a character is rejected at runtime, and indexing is O(*n*) (the compiler has to walk from the start to find character boundaries).
 
 ```rust
 let s: &str = "café";
@@ -763,18 +731,14 @@ println!("{}", &s[0..2]);      // "ca"
 // println!("{}", &s[0..3]);   // PANICS — byte 3 is mid-character
 ```
 
-In UTF-8 most characters fit in 1 byte (the ASCII subset: A-Z, 0-9, etc.) but accented letters take 2 bytes, most CJK characters take 3, and emoji take 4. The `&str` type guarantees the bytes always form valid UTF-8 — so slicing into the middle of a character is rejected at runtime.
-
 ![One character is not always one byte.](images/lec2-str-utf8.svg){fig-alt="The string 'café' shown byte-by-byte: c=0x63, a=0x61, f=0x66, é=0xC3 0xA9 (two bytes). Below: the same as bytes in a Vec<u8>, where every byte stands alone. UTF-8 encodes most ASCII bytes as themselves, but accented and non-Latin characters span multiple bytes."}
 
 ::: notes
-Two of the most common types in Rust for working with text are `&str` and `String`. Both are UTF-8 — they're guaranteed to contain valid Unicode encoded in UTF-8 format. UTF-8 is a variable-width encoding: a single character can take from 1 to 4 bytes.
+`&str` is Rust's string slice type. It is guaranteed to contain valid UTF-8 — Unicode encoded as a variable-width byte sequence, with most ASCII characters taking one byte but accented letters, CJK, and emoji taking two to four. That guarantee costs you: indexing is O(n), because the compiler has to walk byte-by-byte to find character boundaries, and slicing into the middle of a multi-byte character panics at runtime.
 
-For DNA, that guarantee is wasted and the cost is real. DNA is plain ASCII — every character takes exactly one byte. And the UTF-8 invariant means indexing into a `&str` is O(n), because the compiler has to walk the bytes from the start to find character boundaries.
+The café example shows the trap. The string looks like four characters and prints as four characters, but its byte length is 5, and slicing `[0..3]` lands in the middle of the é and panics. For DNA — where every base is one ASCII byte — the UTF-8 invariant is pure tax. `&[u8]` has none of it.
 
-Better: use bytes directly. `&[u8]` is a slice of bytes — no UTF-8 invariant, indexing is O(1), and byte literals like `b'A'` drop into match patterns naturally.
-
-So in this course, DNA function signatures look like `fn f(seq: &[u8]) -> T`. Tomorrow we cover slices and ownership in much more depth.
+So DNA function signatures in this course look like `fn f(seq: &[u8]) -> T`. Tomorrow we cover slices and ownership in much more depth.
 :::
 
 ## Printing — `println!`
@@ -793,7 +757,7 @@ println is one of the things you'll write the most.
 
 The exclamation mark at the end is Rust's syntax for "this is a macro, not a function". Macros run at compile time and can do things a function can't — like checking the format string against the arguments. If you write `println!("{} and {}", x)` with only one argument when the format string expects two, you get a compile error, not a runtime crash.
 
-`{}` is the default formatter — what the type's `Display` trait says human output should look like.
+`{}` is the default formatter — what the type's `Display` trait (a trait is a named bundle of behaviour that any type can implement — think "interface" in other languages) says human output should look like.
 `{:?}` is the debug formatter — what the type's `Debug` trait says, intended for diagnostic output.
 `{:.2}` formats a float with two decimal places. There's a whole formatting mini-language for alignment, padding, hex, scientific notation, etc. You'll rarely need more than the basics.
 
@@ -845,7 +809,8 @@ mod tests {
 }
 ```
 
-Run with `cargo test`. Today: starter code ships with tests; **make them pass**.
+- Don't worry about `#[cfg(test)]` and `mod tests` — the starter projects already have them; you just add `#[test] fn ...` inside.
+- Run with `cargo test`. Today: starter code ships with tests; **make them pass**.
 
 ::: notes
 Tests in Rust live alongside the code they test.

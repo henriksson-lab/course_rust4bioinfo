@@ -36,6 +36,8 @@ website:
         contents:
           - text: Audience
             href: audience.md
+          - text: Glossary
+            href: dictionary.qmd
           - text: Learning outcomes
             href: elo.md
           - text: Design principles

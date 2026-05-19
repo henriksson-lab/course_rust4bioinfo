@@ -51,17 +51,14 @@ A modern CPU core does on the order of a few billion simple operations per secon
 
 Registers are the tiny storage slots **inside** the CPU. The CPU can only do arithmetic on values that are sitting in registers — everything else has to be loaded in first.
 
-| Slot name | Width | How many |
-|---|---|---|
-| general-purpose (e.g. `rax`, `rbx`) | 64 bits | ~16 |
-| floating-point / SIMD (e.g. `xmm0`) | 128–512 bits | ~16 |
-| program counter (`rip`) | 64 bits | 1 |
-| stack pointer (`rsp`) | 64 bits | 1 |
+- About **16 general-purpose slots**, 64 bits each — hold whatever the program is currently working with
+- A handful of special-purpose slots — one points at the next instruction, one points at the top of the stack
+- A separate set of wider slots for floating-point and vector maths
 
-![The von Neumann architecture: the CPU has a small set of registers that exchange data with main memory over a bus.](images/lec1-von-neumann.svg){fig-alt="Schematic of the von Neumann architecture: a CPU block containing ALU, control unit, and a register file, connected to a Memory block by a bidirectional data bus; an I/O block also connected to the bus."}
+![The von Neumann architecture (the standard design where code and data share the same memory, fetched into the CPU over a bus): the CPU has a small set of registers that exchange data with main memory over a bus.](images/lec1-von-neumann.svg){fig-alt="Schematic of the von Neumann architecture: a CPU block containing ALU, control unit, and a register file, connected to a Memory block by a bidirectional data bus; an I/O block also connected to the bus."}
 
 ::: notes
-A register access is the fastest thing a CPU can do — under a nanosecond. But there are very few of them: about a dozen general-purpose ones on an x86-64 chip. Everything else lives further away in memory and takes longer to reach. This scarcity is why compilers work so hard to keep the most-used variables in registers; we will see in a couple of slides why that matters.
+A register access is the fastest thing a CPU can do — under a nanosecond. But there are very few of them: about a dozen general-purpose ones on a typical chip. Everything else lives further away in memory and takes longer to reach. This scarcity is why compilers work so hard to keep the most-used variables in registers; we will see in a couple of slides why that matters.
 :::
 
 ## RAM — where the program lives while it runs
@@ -172,17 +169,33 @@ GPUs entered general computing through deep learning, but they have been used in
 
 ## A running program in memory
 
-When the OS launches your program, it sets up several distinct regions of memory for it. Each has a different lifetime and access pattern.
+When the OS launches your program, it sets up four distinct regions of memory for it.
+
+- **Code** — the program's instructions, loaded from your binary
+- **Data** — fixed values known before the program starts (constants, string literals)
+- **Heap** — a flexible pool the program asks for as it runs
+- **Stack** — a small fast region used for function calls and local variables
 
 ![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom 'text (machine code)', then 'static data', then a 'heap' band with an upward arrow, then a big empty middle, then mapped libraries, then 'stack' at the top with a downward arrow."}
 
 ::: notes
-Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code and constants at the bottom, the heap growing up, the stack growing down. The middle is empty and unmapped — touching it is what causes a segmentation fault. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
+Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code and constants at the bottom, the heap growing up, the stack growing down. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
+:::
+
+## When a program touches memory it doesn't own — segfault
+
+The middle of the address space is empty and unmapped. If your program tries to read or write there — say, by following a stale pointer or running off the end of an array — the kernel notices and kills the process.
+
+- **Segfault** (segmentation fault — what happens when a program touches memory it doesn't own) is the symptom you see in C and C++ when this goes wrong
+- Python and Rust are designed so you almost never see one: Python checks at runtime, Rust checks at compile time
+
+::: notes
+A segfault is the operating system slamming the door. The hardware (the memory management unit) compares every address your program touches against a map of what is allowed; an out-of-bounds access traps into the kernel, and the kernel sends your process a signal that, by default, terminates it. It is the single most common crash mode for C programs. One of the design goals of Rust is to make this class of bug impossible without a runtime cost — we will see how on day 2.
 :::
 
 ## Stack — fast, structured, automatic
 
-The **stack** is a fast, last-in-first-out region used for function calls. Every time you call a function, a fresh frame is pushed on top; when it returns, the frame is popped.
+The **stack** is a fast, last-in-first-out region used for function calls. Every time you call a function, a fresh **stack frame** (the slice of stack belonging to one call: its arguments and local variables) is pushed on top; when it returns, the frame is popped.
 
 ```python
 def gc_count(seq):
@@ -201,11 +214,11 @@ main()
 :::
 
 ::: {.fragment}
-![Step 2: main() calls compute(seq) — a new frame is pushed on top.](images/lec1-stack-frames-step2.svg){fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
+![Step 2: main() calls gc_count(seq) — a new stack frame (the slice of stack belonging to one call) is pushed on top.](images/lec1-stack-frames-step2.svg){fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
 :::
 
 ::: {.fragment}
-![Step 3: compute() returns — its frame is popped; main() continues with the result.](images/lec1-stack-frames-step3.svg){fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
+![Step 3: gc_count() returns — its frame is popped; main() continues with the result.](images/lec1-stack-frames-step3.svg){fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
 :::
 
 ::: notes
@@ -226,9 +239,9 @@ A large region for data whose size or lifetime isn't known at compile time.
 The heap is asked for, not assumed. C asks you to call malloc and free by hand. Python and Java use a garbage collector that figures out when something is unreachable and frees it for you. Rust uses ownership — the compiler proves at build time when each value can be freed, with no runtime garbage collector. We will see all of this on day 2. For now, just know that "on the heap" means "your program asked for it" and "on the stack" means "the compiler decided". Heap allocations are slower because the allocator has to find a free chunk of the right size.
 :::
 
-## Boxed vs unboxed — what the value actually costs
+## Boxed vs unboxed (boxed = wrapped in a heap object) — what the value actually costs
 
-In C or Rust, a small value like `42` lives directly in its 4-byte slot. In Python, the variable is a pointer; the value is wrapped in a small heap-allocated object that also stores a type tag and a reference count.
+In C or Rust, a small value like `42` lives directly in its 4-byte slot. In Python, the variable is a pointer; the value is wrapped in a small heap-allocated object that also stores a **type tag** (a label saying "this is an int, not a string") and a **refcount** (count of how many places refer to this object).
 
 ![Same `42`, very different memory: C/Rust store the 4 bytes directly; Python wraps it in a heap-allocated object with type tag and refcount.](images/lec1-boxed-vs-unboxed.svg){fig-alt="Two columns. Left: C/Rust shows a single 4-byte box holding 42 directly. Right: Python shows a small pointer on the stack pointing into the heap to a larger object containing a type tag, a reference count, and the value 42."}
 
@@ -246,6 +259,10 @@ This is the price of Python's convenience. Because Python lets you write x = 42 
 
 Your program is not alone on the machine. The OS decides which process gets the CPU when, hands out memory, and is the only thing allowed to touch hardware directly.
 
+- **Kernel** (the privileged core of the OS that can touch hardware) — runs the scheduler, file system, network stack
+- **User space** (where ordinary programs run, with no direct hardware access) — your browser, your Python script, your Rust tool
+- **Syscall** (a controlled jump from user space into the kernel) — the only legal way for your program to ask the kernel to do something
+
 ![Only the kernel touches hardware; user code goes through syscalls.](images/lec1-kernel-userspace.svg){#fig-os fig-alt="Three stacked bands: top labelled User space containing three process boxes firefox, vim, your_program; middle band Kernel space labelled Linux/macOS/Windows kernel containing process scheduler, file system, memory manager, network stack; bottom band Hardware containing CPU, RAM, disk, network. Downward arrows from each user-space process into the kernel labelled with example syscalls open data fa, mmap 8 MiB, send packet, then thick arrows from kernel to each hardware box."}
 
 ![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
@@ -256,13 +273,13 @@ This is the model that every modern OS — Linux, macOS, Windows — implements.
 
 ## OS vs software — syscalls are the doorway
 
-When your Rust code does:
+When your Python code does:
 
-```rust
-let f = File::open("data.fa")?;
+```python
+f = open("data.fa")
 ```
 
-what actually happens is: the Rust standard library makes a syscall — `open("data.fa", O_RDONLY)` — which is a controlled jump from user mode into the kernel. The kernel checks permissions, locates the file, returns a file descriptor. Then control comes back to your code.
+what actually happens is: the Python runtime makes a syscall — `open("data.fa", O_RDONLY)` — which is a controlled jump from user space into the kernel. The kernel checks permissions, locates the file, returns a file descriptor (a small integer the kernel hands back so your program can refer to the file later). Then control comes back to your code.
 
 ![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
 

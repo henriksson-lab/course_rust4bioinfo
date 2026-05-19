@@ -72,6 +72,16 @@ plotters is the youngest. It is closer to matplotlib than to ggplot2: you build 
 
 ## Anatomy of a chart
 
+The parts shown in the figure below:
+
+- **title** at the top
+- **drawing area** (the whole canvas, including margins)
+- **chart area** (the inner box where the data lives)
+- **axes** with **axis ticks** (the marks on each axis)
+- **axis labels** ("read length", "count")
+- **series** — the actual marks (bars, points, lines)
+- **legend** — names each series
+
 ![A generic chart has the same labelled pieces in every library.](images/lec2-anatomy-of-a-chart.svg){fig-alt="A labelled diagram of a generic chart showing a chart title at the top, a drawing area margin around the outside, the chart area inside it containing axes (x-axis with ticks and labels at the bottom, y-axis with ticks and labels at the left), axis labels, two data series rendered as bars and points, and a legend in the upper right."}
 
 ::: notes
@@ -87,73 +97,43 @@ Once you know the parts, switching libraries is mostly translation, not re-learn
 ![Same data, same shape — three different toolchains produce the same picture.](images/lec2-three-languages-histogram.svg){fig-alt="Three panels side by side, each showing the same read-length histogram with about six bars peaking near 100. The panels are labelled matplotlib (Python), ggplot2 (R), and plotters (Rust). Below each panel is a six-line code snippet in the corresponding language."}
 
 ```python
-# matplotlib
-import matplotlib.pyplot as plt
+# matplotlib (Python)
 plt.hist(lengths, bins=30)
 plt.xlabel("read length"); plt.ylabel("count")
 plt.savefig("readlen.png")
 ```
 
 ```r
-# ggplot2
-library(ggplot2)
+# ggplot2 (R)
 ggplot(df, aes(x = length)) +
   geom_histogram(bins = 30) +
-  labs(x = "read length", y = "count") +
   ggsave("readlen.png")
 ```
 
-::: notes
-Same data on three toolchains, same picture out. The matplotlib version is three real lines. The ggplot2 version is four. The plotters version, on the next slide, is twelve — but most of those are setup, not logic.
-
-The point of showing them together is that the *concepts* line up. Bin width, axis labels, output path. Different syntax, same nouns. If you can read one of these, you can read the others.
-
-The `plotters` version is bigger because Rust does not have a one-call `plt.hist`. You construct the pieces yourself. The flip side: the resulting binary needs nothing but a filesystem to run.
-:::
-
-## plotters — a histogram, line by line
-
 ```rust
-use plotters::prelude::*;                                  // pull in the common names
-use std::path::Path;
-
-fn plot_histogram(counts: &[u32], path: &Path)
-    -> Result<(), Box<dyn std::error::Error>>
-{
-    let root = SVGBackend::new(path, (800, 600))           // pick backend + size
-        .into_drawing_area();                              // wrap as a DrawingArea
-    root.fill(&WHITE)?;                                    // paint background white
-    let max = *counts.iter().max().unwrap_or(&0);          // tallest bar -> y range
-    let mut chart = ChartBuilder::on(&root)                // start a chart on the canvas
-        .caption("Read length", ("sans-serif", 24))        // title at the top
-        .build_cartesian_2d(                               // x range, y range
-            0u32..counts.len() as u32, 0u32..(max + 1))?;
-    chart.configure_mesh().draw()?;                        // draw axes + gridlines
-    chart.draw_series(counts.iter().enumerate().map(       // one Rectangle per bar
-        |(b, &c)| Rectangle::new(
-            [(b as u32, 0), (b as u32 + 1, c)],            // (x0,y0)-(x1,y1)
-            BLUE.filled())))?;                             // fill style
-    root.present()?;                                       // flush to disk
-    Ok(())
-}
+// plotters (Rust) — abridged; full version on a later slide
+let root = SVGBackend::new("readlen.svg", (800, 600)).into_drawing_area();
+let mut chart = ChartBuilder::on(&root).build_cartesian_2d(0u32..30, 0u32..max)?;
+chart.draw_series(bars_for(&counts))?;
+root.present()?;
 ```
 
 ::: notes
-This is the whole thing, with a comment on every interesting line. You will write essentially this function in today's exercise 4.
+Same data on three toolchains, same picture out. The matplotlib version is three real lines. The ggplot2 version is three. The abridged plotters version above is four; the unabridged version a few slides on shows every step.
 
-Read top to bottom: pick a backend (SVG or PNG), wrap it as a drawing area, paint it white, decide your axis ranges, configure the axes, draw one rectangle per bar, present.
+The point of showing them together is that the *concepts* line up. Bin width, axis labels, output path. Different syntax, same nouns. If you can read one of these, you can read the others.
 
-`SVGBackend::new(path, (800, 600))` is two arguments: where to write, and the size in pixels. `.into_drawing_area()` is the conversion that gives you something you can draw on. `ChartBuilder::on(&root)` starts the builder pattern; everything until `build_cartesian_2d` is configuration. `build_cartesian_2d` is the call that actually fixes the coordinate system. After that you have a `chart` you can `draw_series` into.
-
-Every `?` is a real failure point — disk full, invalid path, malformed dimensions. The function returns `Result<(), Box<dyn Error>>` so all of them propagate cleanly.
+The `plotters` version is a bit bigger because Rust does not have a one-call `plt.hist`. You construct the pieces yourself. The flip side: the resulting binary needs nothing but a filesystem to run.
 :::
 
 ## The plotters mental model
 
+A **backend** is the rendering target — the thing that turns drawing calls into bytes (here: SVG XML or a PNG bitmap). A **drawing area** is the whole canvas (the pixels that will become the file). A **series** is one set of marks (bars, points, a line).
+
 ![Three nested concepts: a DrawingArea, a ChartContext inside it, and Series drawn into the chart.](images/lec2-plotters-mental-model.svg){fig-alt="Three nested rounded rectangles. The outer box is labelled DrawingArea (the canvas), with a small caption 'SVGBackend or BitMapBackend'. Inside it is a smaller box labelled ChartContext (axes plus coordinate system), with caption 'built by ChartBuilder::on(&root)'. Inside that is the innermost box labelled Series (the marks), with caption 'Rectangle, Circle, PathElement, ...'. To the right is a code panel showing the three lines that build each layer: SVGBackend::new(...).into_drawing_area(), ChartBuilder::on(&root).build_cartesian_2d(...), chart.draw_series(...)."}
 
 ::: notes
-This is the single most useful picture for `plotters`. Three concepts, nested.
+This is the single most useful picture for `plotters`. Three concepts, nested. We show it *before* the code so the code on the next slides has a frame to sit in.
 
 The outermost is the `DrawingArea` — the canvas, the pixels, the bytes that will become a file. It comes from a backend, either `SVGBackend` or `BitMapBackend`. The drawing area knows nothing about charts; it just knows how to colour pixels.
 
@@ -162,6 +142,56 @@ In the middle is the `ChartContext` — axes plus a coordinate system. Once you 
 Innermost are the `Series` — the actual marks. Rectangles for bars, circles for scatter points, line strings for lines. They are coordinates in *data* space; the chart context handles the conversion to pixels.
 
 If a piece of code is touching pixels, it goes through the drawing area. If it is positioning data, it goes through the chart context. If it is a mark, it is in a series.
+:::
+
+## plotters — the four-line skeleton
+
+```rust
+use plotters::prelude::*;
+
+let root = SVGBackend::new("readlen.svg", (800, 600))      // 1. backend + size
+    .into_drawing_area();                                  //    wrap as a DrawingArea
+root.fill(&WHITE)?;                                        //    paint background white
+
+let mut chart = ChartBuilder::on(&root)                    // 2. start a chart
+    .caption("Read length", ("sans-serif", 24))            //    title at the top
+    .build_cartesian_2d(0u32..30, 0u32..max)?;             // 3. fix the coordinate system
+chart.configure_mesh().draw()?;                            //    draw axes + gridlines
+
+// (series go here — next slide)
+
+root.present()?;                                           // 4. flush to disk
+```
+
+Four steps: **backend &rarr; drawing area &rarr; chart &rarr; present**. The series come next.
+
+::: notes
+The skeleton of every `plotters` program. Pick a backend (SVG or PNG), wrap it as a drawing area, paint it white, build a chart with axes, present.
+
+`SVGBackend::new(path, (800, 600))` is two arguments: where to write, and the size in pixels. `.into_drawing_area()` is the conversion that gives you something you can draw on. `ChartBuilder::on(&root)` starts the builder pattern; everything until `build_cartesian_2d` is configuration. `build_cartesian_2d` is the call that actually fixes the coordinate system. After that you have a `chart` you can `draw_series` into — that is the next slide.
+
+The function this lives in returns `Result<(), Box<dyn std::error::Error>>` — we will see error types in detail later; for now, just `?` your way through.
+:::
+
+## plotters — `draw_series` with one rectangle per bar
+
+```rust
+chart.draw_series(counts.iter().enumerate().map(           // for each (bin, count)
+    |(b, &c)| Rectangle::new(                              // build a Rectangle
+        [(b as u32, 0), (b as u32 + 1, c)],                // corners: (x0,y0)-(x1,y1)
+        BLUE.filled(),                                     // fill style
+    ),
+))?;
+```
+
+The closure `|(b, &c)| Rectangle::new(...)` turns each `(bin_index, count)` pair into one bar. `draw_series` consumes the resulting iterator and renders every bar.
+
+::: notes
+This is the only `plotters`-specific bit of the histogram. Everything around it is just setup.
+
+`counts.iter().enumerate()` gives you `(usize, &u32)` pairs. The closure destructures that into `b` (bin index) and `c` (count via `&c` to deref the reference). Then `Rectangle::new` takes two opposite corners in *data* coordinates and a style. The chart context handles the pixel conversion.
+
+Every `?` is a real failure point — disk full, invalid path, malformed dimensions. The function this lives in propagates them via the `Result` return type.
 :::
 
 ## A scatter plot — adding marks
@@ -233,12 +263,12 @@ let s2: Vec<(f64, f64)> = xs.iter().map(|&x| (x, x.cos())).collect();
 
 chart.draw_series(LineSeries::new(s1, &RED))?
     .label("sin(x)")                                       // legend entry
-    .legend(|(x, y)| PathElement::new(
-        vec![(x, y), (x + 20, y)], RED));
+    .legend(|(x, y)| PathElement::new(                     // (x,y) = pixel of legend swatch
+        vec![(x, y), (x + 20, y)], RED));                  //   draw a 20-pixel red line
 
 chart.draw_series(LineSeries::new(s2, &BLUE))?
     .label("cos(x)")
-    .legend(|(x, y)| PathElement::new(
+    .legend(|(x, y)| PathElement::new(                     // same idea, blue swatch
         vec![(x, y), (x + 20, y)], BLUE));
 
 chart.configure_series_labels()
@@ -257,10 +287,12 @@ This is a fair example of the verbosity trade-off. Two extra method calls per se
 
 ## Saving to SVG vs PNG
 
+**Vector** = stored as shapes (lines, circles) that scale cleanly to any size. **Raster** (also called bitmap) = stored as a fixed grid of pixels; zooming in shows the squares.
+
 | Backend | Output | When to use |
 |---|---|---|
 | [`SVGBackend`](https://docs.rs/plotters/latest/plotters/backend/struct.SVGBackend.html) | vector XML | papers, posters, slides — scales without blurring |
-| [`BitMapBackend`](https://docs.rs/plotters/latest/plotters/backend/struct.BitMapBackend.html) | PNG bitmap | screenshots, dashboards, large data with millions of marks |
+| [`BitMapBackend`](https://docs.rs/plotters/latest/plotters/backend/struct.BitMapBackend.html) | PNG bitmap (raster) | screenshots, dashboards, large data with millions of marks |
 
 ```rust
 let svg = SVGBackend::new("out.svg", (800, 600)).into_drawing_area();
@@ -282,6 +314,8 @@ For a paper figure, always SVG.
 
 ## Styling — colour, stroke, alpha
 
+**Alpha** = transparency (0.0 = fully transparent, 1.0 = fully opaque). In `plotters` it is set with `.mix(alpha)`.
+
 ```rust
 // Translucent fill — useful for overlapping bars or points
 Rectangle::new([(0, 0), (1, 10)], RED.mix(0.5).filled());
@@ -289,9 +323,9 @@ Rectangle::new([(0, 0), (1, 10)], RED.mix(0.5).filled());
 // Thicker stroke — useful for lines that need to stand out
 LineSeries::new(series, BLUE.stroke_width(2));
 
-// Custom RGB
-const TEAL: RGBColor = RGBColor(0x1f, 0x77, 0xb4);
-Circle::new((x, y), 4, TEAL.filled());
+// Custom RGB — decimal r, g, b in 0..=255
+let teal = RGBColor(31, 119, 180);
+Circle::new((x, y), 4, teal.filled());
 ```
 
 ::: notes
@@ -340,10 +374,10 @@ Be honest about what `plotters` does not give you:
 
 ::: {.incremental}
 - **No interactivity** — no zoom, no pan, no hover. Static SVG / PNG only.
-- **No statistical transforms** — no `geom_smooth`, no `stat_summary`, no kernel density.
-- **No grammar of graphics** — no `aes(fill = species)`, no auto-legend from a category column.
-- **No tidy data input** — you wrangle the data yourself before drawing.
-- **Limited types** — no boxplot, no violin, no heatmap as a first-class series.
+- **No statistical transforms** — no `geom_smooth` / `sns.regplot`, no `stat_summary`, no kernel density / `sns.kdeplot`.
+- **No grammar of graphics** — no `aes(fill = species)` / `hue=` in seaborn, no auto-legend from a category column.
+- **No tidy data input** — you wrangle the data yourself before drawing; no DataFrame in / plot out.
+- **Limited types** — no boxplot / `plt.boxplot`, no violin / `sns.violinplot`, no heatmap / `sns.heatmap` as a first-class series.
 :::
 
 When you need those: keep the heavy compute in Rust, write a CSV, plot it in ggplot2 or seaborn.
@@ -364,7 +398,10 @@ let points: Vec<(f64, f64)> = records.iter()
     .map(|r| (r.length as f64, r.mean_quality))
     .collect();
 
-let max_len = points.iter().map(|p| p.0).fold(0.0, f64::max);
+// max_len: the largest x (length) across all points
+let max_len = points.iter()
+    .map(|p| p.0)                                 // take just the x coordinate
+    .fold(0.0_f64, f64::max);                     // running max, starting at 0.0
 let root = SVGBackend::new("qc.svg", (800, 600)).into_drawing_area();
 root.fill(&WHITE)?;
 let mut chart = ChartBuilder::on(&root)
