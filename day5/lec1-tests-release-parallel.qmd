@@ -4,7 +4,7 @@ subtitle: "Day 5"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -62,11 +62,9 @@ Six months from now, when you change a helper to make a different caller happy, 
 
 ## The anatomy of a Rust test
 
-A **unit test** [a small test that exercises one function in isolation] in Rust is just a function with a `#[test]` attribute and an **assertion** [a runtime check that aborts the test if the condition is false].
+A **unit test** [a small test that exercises one function in isolation] is a function with a `#[test]` attribute and an **assertion** [a runtime check that aborts the test on false].
 
 ```rust
-/// Fraction of bases that are G or C, in 0.0 ..= 1.0.
-/// Empty input returns 0.0 by convention.
 fn gc_content(seq: &[u8]) -> f64 { /* ... */ }
 
 #[cfg(test)]
@@ -75,18 +73,16 @@ mod tests {
 
     #[test]
     fn gc_of_acgt() {
-        assert_eq!(gc_content(b"ACGT"), 0.5);   // 2 of 4 bases are G or C → 0.5
+        assert_eq!(gc_content(b"ACGT"), 0.5);
     }
 }
 ```
 
-- `#[test]` — mark this function for the test harness to discover
-- `assert_eq!` — fail the test (with a useful message) if the two sides differ
-
-The `#[cfg(test)]` / `mod tests` / `use super::*;` scaffolding is the same for every file; the starter projects already wire it up.
+- `#[test]` — discoverable by the test harness
+- `assert_eq!` — fails (with both values) if the sides differ
 
 ::: notes
-This is the canonical layout for unit tests in Rust: a module at the bottom of the same source file as the code under test, gated by `cfg(test)` so the test code does not ship in the production binary.
+The canonical layout: a module at the bottom of the same source file as the code under test, gated by `cfg(test)` so test code does not ship in the production binary. The `#[cfg(test)]` / `mod tests` / `use super::*;` scaffolding is the same for every file; the starter projects already wire it up.
 
 `use super::*` is the idiom to pull in everything visible in the surrounding file so the test bodies do not have to spell out long paths. Each test is just a function annotated with `#[test]`.
 
@@ -313,20 +309,18 @@ Try it yourself: paste any function into [godbolt.org](https://godbolt.org/), se
 
 | Switch | Debug | Release |
 |---|---|---|
-| Optimisation passes[^optlevel] | off | full |
+| Optimisation passes | off | full |
 | Array bounds checks | always | always |
 | Integer overflow checks | panic | wrap silently |
 | Debug info embedded | yes | no |
 | Function inlining | minimal | aggressive |
-| Uses CPU's wide-math instructions (SIMD: single instruction, multiple data) | rarely | yes |
+| SIMD (wide-math instructions) | rarely | yes |
 | Typical k-mer workload | 40 s | 0.8 s |
 
 Bounds checks stay on in *both* — Rust does not give up memory safety for speed.
 
-[^optlevel]: The knob is `opt-level` in `Cargo.toml`; debug sets 0, release sets 3.
-
 ::: notes
-The big-ticket items are LLVM's full optimisation passes turning on, debug info getting stripped (smaller binary), and inlining plus auto-**vectorisation** [rewriting a scalar loop to use SIMD instructions so one CPU instruction processes 4, 8, or 16 elements at once] together accounting for most of the 50x speed-up on simple loops.
+The knob is `opt-level` in `Cargo.toml`; debug sets 0, release sets 3. The big-ticket items are LLVM's full optimisation passes turning on, debug info getting stripped (smaller binary), and inlining plus auto-**vectorisation** [rewriting a scalar loop to use SIMD instructions so one CPU instruction processes 4, 8, or 16 elements at once] together accounting for most of the 50x speed-up on simple loops.
 
 Bounds checks deserve special mention. They are kept in both profiles. The Rust team's stance is that bounds checks are too cheap to skip and the safety benefit is too large. So `seq[i]` in a release build still panics on out-of-range index — it does not return random memory the way C does. The optimiser does, however, often prove that an index is in range and remove the check at compile time.
 :::
@@ -467,20 +461,19 @@ This is the same algorithm used in Cilk and the JVM's ForkJoin pool. Rayon is th
 
 ## Without Send/Sync — the race condition you'd get
 
-A **race condition** [two threads accessing the same memory at the same time, where at least one is writing, with no coordination — the result depends on which thread "wins" each time] is the bug class Rust's `Send` and `Sync` traits prevent.
-
-Two threads, both updating a shared counter:
+A **race condition** [two threads touching the same memory, at least one writing, with no coordination] is the bug class Rust's `Send` and `Sync` prevent.
 
 ```rust
 // PSEUDOCODE — Rust refuses to compile this without locks.
 let mut total = 0;
 spawn(|| { for _ in 0..1_000_000 { total += 1; } });
 spawn(|| { for _ in 0..1_000_000 { total += 1; } });
-join_both();
-println!("{total}");   // expected 2_000_000 — actually anywhere from ~1.0M to 2.0M
+println!("{total}");   // expected 2_000_000 — actually ~1.0M to 2.0M
 ```
 
-`total += 1` is **three** CPU operations: read total, add 1, write total. If two threads interleave those operations, one of the writes silently loses.
+`total += 1` is **three** CPU ops: read, add, write. If two threads interleave them, one write silently loses.
+
+## Race conditions — pictured
 
 ![Two threads interleaving the read-modify-write of a shared counter; different interleavings give different final values.](images/lec1-race-condition.svg){fig-alt="Three timeline panels showing three interleavings of two threads each running counter += 1. Panel 1: serial — both increments take effect, final = 2 (green). Panel 2: thread 2 reads before thread 1 writes — only one increment takes effect, final = 1 (red). Panel 3: same shape, final = 1 again (red)."}
 
@@ -530,14 +523,11 @@ Note the small caveat: parallel `.sum::<f64>()` is non-deterministic at the last
 
 ## When parallelism helps — and when it doesn't
 
-Handing one item to a worker thread isn't free. There's **per-task overhead** [the bookkeeping rayon does to enqueue a task, hand it to a worker, and merge the result back — typically a few microseconds] for every item. The per-item work has to be larger than that overhead, or you slow down.
+Handing an item to a worker isn't free. **Per-task overhead** [the bookkeeping rayon does per item, typically a few microseconds] has to be smaller than the per-item work, or you slow down.
 
 ![Three bars on the same time scale: per-task overhead is roughly the same size as one GC computation on a short read, but tiny compared to one GC on a long read.](images/lec1-context-switch-vs-work.svg){fig-alt="Horizontal bar chart with three rows. Row 1 (red): 'per-task overhead (~microseconds)' at ~1-10 µs. Row 2 (orange): 'gc_content on a 1000-bp read' at ~1 µs. Row 3 (green): 'gc_content on a 10000-bp read' at ~10 µs. Annotation: if each item is faster than the overhead, parallelism makes things slower."}
 
-**Rule of thumb:**
-- Per item < 1 µs of work → parallelism hurts. Batch first.
-- Per item ~10 µs → marginal gain.
-- Per item > 100 µs (most bioinformatics: per-read alignment, per-record GC, per-sequence k-mer count) → parallelism is a clear win.
+**Rule of thumb:** <1 µs/item hurts; ~10 µs marginal; >100 µs (per-read alignment, per-record GC) is a clear win.
 
 ::: notes
 The actual numbers depend on your CPU and the rayon thread-pool warm-up state, but the order of magnitude holds.
@@ -571,14 +561,16 @@ Docs: [`par_iter_mut`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParalle
 
 ## What you actually get — linear vs sublinear
 
-Two scaling shapes:
+![Ideal linear (grey) vs observed sublinear (green): the gap grows with core count.](images/lec1-linear-vs-sublinear-scaling.svg){fig-alt="Bar chart with 4 groups (1, 2, 4, 8 cores). Each group has two bars side by side: 'ideal linear' (grey, heights 1, 2, 4, 8) and 'observed sublinear' (green, heights 1, 1.9, 3.7, 7.2). Dashed line above each green bar shows where linear would land."}
 
-![Two scaling curves on the same axis. Linear (dashed grey): the ideal; rarely achieved in practice. Sublinear (solid green): what you actually measure on a real workload — the gap grows with core count because of memory bandwidth, cache contention, and Amdahl's law.](images/lec1-linear-vs-sublinear-scaling.svg){fig-alt="Bar chart with 4 groups (1, 2, 4, 8 cores). Each group has two bars side by side: 'ideal linear' (grey, heights 1, 2, 4, 8) and 'observed sublinear' (green, heights 1, 1.9, 3.7, 7.2). Dashed line above each green bar shows where linear would land."}
+- **Ideal linear** — textbook: N cores → N× speedup.
+- **Sublinear** [real speed-up, but less than N×] — Amdahl's law + memory-bandwidth contention.
 
-- **Ideal linear** — what the textbook promises: N cores → N× speedup.
-- **Observed sublinear scaling** [you get a real speed-up, but less than N× on N cores] — what you actually measure. Some part of every program is unavoidably serial, so doubling cores never quite doubles speed. Threads also compete for the same path to memory, so even fully parallel work doesn't always scale linearly.
+For per-record bioinformatics, 7-8× on 8 cores is healthy. Stop tuning within 20% of ideal.
 
-For real bioinformatics workloads (per-record GC, per-read alignment), 7-8× on 8 cores is healthy. Stop tuning when you're within 20% of ideal.
+::: notes
+Some part of every program is unavoidably serial, so doubling cores never quite doubles speed. Threads also compete for the same path to memory, so even fully parallel work doesn't always scale linearly.
+:::
 
 ## Exercise 3 — parallelise GC content
 

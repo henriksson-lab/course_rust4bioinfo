@@ -4,7 +4,7 @@ subtitle: "Day 4, lecture 3"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -57,16 +57,13 @@ Two principles every lossless compressor follows:
 - **The decoder reproduces the original exactly.** Byte-for-byte. No approximation.
 :::
 
-::: {.fragment}
-Contrast with **lossy** compression — JPEG, MP3, MP4:
-
-- The decoded image is *close* to the original, not identical
-- You throw away information the eye or ear will not notice
-- Wonderful for photos, **forbidden for DNA**
+::: notes
+For pictures and music it is fine to lose a little detail. For DNA it is not. Every compressor in our toolbox — gzip, bgzip, zstd, the zip in your laptop — is lossless. The decoded bytes equal the input bytes.
 :::
 
-::: {.fragment}
-Why "forbidden for DNA":
+## Lossy compression — and why not for DNA
+
+**Lossy** compression — JPEG, MP3, MP4 — gives back something *close* to the original. Throws away detail the eye or ear will not notice. Wonderful for photos, **forbidden for DNA**:
 
 ```text
 original: ACCT
@@ -74,12 +71,9 @@ decoded : ACGT   <- one base flipped C -> G
 ```
 
 One byte changed in a quality-controlled FASTQ = one false variant call downstream. Variant callers cannot tell sequencing error from compressor error.
-:::
 
 ::: notes
-Lossless versus lossy is the most important distinction in this lecture. For pictures and music it is fine to lose a little detail — your eye cannot see the difference between a 24-bit and a 16-bit colour value, and your ear cannot hear the difference between two quantisations of a violin.
-
-For DNA it is not fine. If you compress a FASTQ and the decoder gives you back ACGT where the original said ACCT, you have just introduced a variant call. Every compressor in our toolbox — gzip, bgzip, zstd, the zip in your laptop — is lossless. The decoded bytes equal the input bytes.
+If you compress a FASTQ and the decoder gives you back ACGT where the original said ACCT, you have just introduced a variant call. This is why bioinformatics compressors are always lossless.
 :::
 
 ## Run-length encoding — the simplest example
@@ -104,34 +98,38 @@ ACGTACGTACGT  ->  1A 1C 1G 1T 1A 1C 1G 1T 1A 1C 1G 1T
 
 That is *bigger* than the input. RLE made it worse.
 
-::: {.fragment}
-Real genomes have **long low-complexity regions**:
+Real genomes have **long low-complexity regions** where RLE does win:
 
 - Poly-A tails: hundreds of A's in a row
 - Centromeric and telomeric repeats: `TTAGGG TTAGGG TTAGGG ...`
 - Simple satellite DNA
 
-For those regions, RLE wins. For coding sequence, it loses.
-:::
-
-::: {.fragment}
 General-purpose compressors (gzip, zstd) handle both — they are what you use in practice.
-:::
 
 ::: notes
-This slide is the honest answer to "does compression help on DNA". The answer is "it depends what the DNA looks like". Random-looking coding DNA has very few runs, so RLE does almost nothing. Long poly-A regions, repeats and centromeric satellites are full of runs, so they compress dramatically.
+The honest answer to "does compression help on DNA" is "it depends what the DNA looks like". Random-looking coding DNA has very few runs, so RLE does almost nothing. Long poly-A regions and centromeric satellites are full of runs and compress dramatically.
 
-Real compressors do not rely on runs alone. They find any repeated substring, not just same-byte runs, and they assign short codes to common bytes. That is what we look at next.
+Real compressors do not rely on runs alone. They find any repeated substring, not just same-byte runs, and they assign short codes to common bytes.
 :::
 
 ## DEFLATE — what zip / gzip actually use
 
-The algorithm inside `.zip` and `.gz` is called **DEFLATE** (a lossless compression algorithm — the standard one used by gzip and ZIP). It combines two plain-English ideas, each with a fancy name:
+The algorithm inside `.zip` and `.gz` is **DEFLATE**. Two plain-English ideas, each with a fancy name:
 
-- **find repeats** — also known as **LZ77** — when a substring already appeared in the recent window, write a **back-reference** (an offset and length pointing into the recent past) instead of the bytes themselves
-- **give common letters shorter codes** — also known as **Huffman coding** — frequent bytes (`A`, `C`, `G`, `T` in DNA) get short bit-codes, rare ones get longer codes
+- **find repeats** (**LZ77**) — when a substring already appeared in the recent window, write a back-reference (offset + length) instead of the bytes
+- **give common letters shorter codes** (**Huffman coding**) — frequent bytes get short bit-codes, rare ones longer
 
-Worked example — find-repeats on a sliding window:
+When you write `Cargo.toml` with `flate2 = "1"`, this is the algorithm doing the work.
+
+::: notes
+DEFLATE was published in 1996 by Phil Katz, the author of PKZIP, and is now an internet RFC. Every browser, every operating system, and every bioinformatics tool you use knows how to decode it.
+
+LZ77 is the part of DEFLATE that handles repetition. It slides a window over the input, and any substring that already appeared in the window gets encoded as a back-reference. Huffman coding is the part that handles byte frequency: build a tree from the byte counts, assign short codes to frequent bytes.
+
+You do not write either by hand. You add `flate2` or `zip` to `Cargo.toml` and call the API.
+:::
+
+## LZ77 — a worked example
 
 ```text
 input  : ACGTACGT ACGT ACGT
@@ -140,14 +138,10 @@ input  : ACGTACGT ACGT ACGT
 encoded: ACGTACGT <go back 8, copy 4> <go back 8, copy 4>
 ```
 
-You do not need to implement either. You just need to know: when you write `Cargo.toml` with `flate2 = "1"`, this is the algorithm doing the work.
+After the first ACGTACGT, every subsequent occurrence is replaced by a short "go back N, copy M" instruction.
 
 ::: notes
-DEFLATE was published in 1996 by Phil Katz, the author of PKZIP, and is now an internet RFC. Every browser, every operating system, and every bioinformatics tool you use knows how to decode it.
-
-LZ77 is the part of DEFLATE that handles repetition. It slides a window over the input, and any substring that already appeared in the window gets encoded as a back-reference: an offset and a length. Huffman coding is the part that handles byte frequency: build a tree from the byte counts, assign short codes to frequent bytes.
-
-You do not write either of these by hand. You add `flate2` or `zip` to `Cargo.toml` and call the API. The point of this slide is just to give you the names so when someone says "what does gzip do?" you can answer "LZ77 plus Huffman, also known as DEFLATE".
+Slides a window over the input. Any substring that has appeared in the window in recent bytes is encoded by a back-reference: an offset (how far back) and a length (how many bytes to copy). The decoder maintains the same window and re-expands the back-references.
 :::
 
 ## DNA only needs 2 bits per base
@@ -204,8 +198,13 @@ Three real costs at scale:
 - **IO bandwidth.** A pipeline that streams gzip on the fly often runs as fast as one that reads uncompressed files — the bottleneck is disk read, not CPU.
 :::
 
-::: {.fragment}
-Disk-read time on a single 12 GB lane (200 MB/s disk, 300 MB/s gzip decode):
+::: notes
+The bandwidth point is the surprising one. New students often think compression slows things down because the CPU has to do extra work. In reality, modern disks read at maybe 200 MB/s and modern decompressors can decompress gzip at 200-400 MB/s.
+:::
+
+## Disk-read time, 12 GB lane
+
+200 MB/s disk, 300 MB/s gzip decode:
 
 ```text
 raw 12 GB  : ##############################  ~60 s
@@ -213,16 +212,11 @@ gz   3 GB  : ########                        ~15 s  (read + decompress in parall
 ```
 
 The compressed file is read and decoded in less time than the uncompressed file is read.
-:::
 
-::: {.fragment}
-The standard practice in bioinformatics is: **never store uncompressed FASTQ on disk.**
-:::
+Standard practice in bioinformatics: **never store uncompressed FASTQ on disk.**
 
 ::: notes
-The bandwidth point is the surprising one. New students often think compression slows things down because the CPU has to do extra work. In reality, modern disks read at maybe 200 MB/s and modern decompressors can decompress gzip at 200-400 MB/s. The decompression keeps up. And because the compressed file is 4x smaller, the disk has to do 4x less work. The pipeline often runs *faster* on `.fastq.gz` than on uncompressed `.fastq`.
-
-This is why every aligner, every QC tool, every read trimmer in 2026 reads `.fastq.gz` directly. You should not be writing pipelines that decompress to a temp file first.
+Because the compressed file is 4x smaller, the disk has to do 4x less work. The pipeline often runs *faster* on `.fastq.gz` than on uncompressed `.fastq`. Every aligner, every QC tool, every read trimmer in 2026 reads `.fastq.gz` directly. You should not be writing pipelines that decompress to a temp file first.
 :::
 
 ## The Rust `zip` crate — write

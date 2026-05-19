@@ -3,7 +3,7 @@ title: "How a computer works"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -29,12 +29,18 @@ This is the very first lecture of the course. We have not started Rust yet. The 
 
 One chip does the work; everything else feeds it or stores its results.
 
-![](images/lec1-computer-overview.svg){#fig-overview width="85%" fig-alt="A motherboard rectangle containing labelled components: a CPU box with caches at upper centre, two narrow DDR4 RAM modules to its right, an NVMe SSD and a network card on the far right, a long GPU board across the lower half, and a power supply on the left. Thick and thin lines connect components, labelled memory bus 100 ns, PCIe 10 microseconds, and PCIe NIC varies. Schematic of a typical desktop or laptop: motherboard with CPU socket, RAM DIMM slots, NVMe storage, GPU, network card, and PSU, connected by buses of varying speed."}
-
-![A real motherboard — the same components as the schematic, in the wild. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-photo.jpg){width="70%" fig-alt="Photograph of an ASRock K7VT4A Pro motherboard top-down, showing the CPU socket, RAM slots, chipset heatsink, PCI and AGP expansion slots, capacitors, and rear I/O ports; provided as a real-world complement to the abstract schematic above."}
+![](images/lec1-computer-overview.svg){#fig-overview width="70%" fig-alt="A motherboard rectangle containing labelled components: a CPU box with caches at upper centre, two narrow DDR4 RAM modules to its right, an NVMe SSD and a network card on the far right, a long GPU board across the lower half, and a power supply on the left. Thick and thin lines connect components, labelled memory bus 100 ns, PCIe 10 microseconds, and PCIe NIC varies. Schematic of a typical desktop or laptop: motherboard with CPU socket, RAM DIMM slots, NVMe storage, GPU, network card, and PSU, connected by buses of varying speed."}
 
 ::: notes
 Forget desktop computers for a moment. Phones, laptops, HPC nodes — they are all the same recipe. One chip that does the work. Some fast memory it can read from quickly. Some slower memory that survives a power-off. A way to talk to the outside world. Everything else is detail. We are going to walk through each box on this diagram in turn.
+:::
+
+## The same machine in the wild
+
+![A real motherboard — the same components as the schematic. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-photo.jpg){width="65%" fig-alt="Photograph of an ASRock K7VT4A Pro motherboard top-down, showing the CPU socket, RAM slots, chipset heatsink, PCI and AGP expansion slots, capacitors, and rear I/O ports; provided as a real-world complement to the abstract schematic above."}
+
+::: notes
+The same components as the schematic, in the wild. CPU socket, RAM slots, chipset heatsink, PCI/AGP expansion slots, capacitors, rear I/O ports. Every machine you own — phone, laptop, server — is a variant of this layout.
 :::
 
 ## The CPU — arithmetic + decisions
@@ -125,16 +131,22 @@ Caches are completely invisible to your program. You never write code that says 
 When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line.
 
 ::: {.fragment}
-![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
+![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){width="60%" fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
 :::
 
 ::: {.fragment}
-![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
+![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){width="60%" fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
 :::
 
-::: {.fragment}
-![Step 3: nearby byte reads are cache hits, fast and free.](images/lec1-cache-line-step3.svg){fig-alt="Subsequent reads from adjacent bytes within the same 64-byte line are served from the cache, marked as fast cache hits."}
+::: notes
+The CPU fetches whole cache lines, not single bytes. Each fetch costs about a hundred nanoseconds.
 :::
+
+## Cache lines — and why sequential access wins
+
+![Step 3: nearby byte reads are cache hits, fast and free.](images/lec1-cache-line-step3.svg){width="65%" fig-alt="Subsequent reads from adjacent bytes within the same 64-byte line are served from the cache, marked as fast cache hits."}
+
+Sequential reads inside a line are essentially free.
 
 ::: notes
 This is why iterating over an array in order is so much faster than jumping around: each cache line fetch costs about a hundred nanoseconds, but it gives you 64 bytes' worth of data essentially for free if you use them in sequence. A Python list of integers does the opposite — each integer is a separate heap allocation, so each one is a fresh cache line miss. A Rust `Vec<i32>` is one contiguous block, four bytes per integer, sixteen integers per cache line. Same algorithm, very different speed.
@@ -149,7 +161,7 @@ This is why iterating over an array in order is so much faster than jumping arou
 | SATA SSD | ~200 µs | ~0.5 GB/s | yes | up to 8 TB |
 | HDD (spinning) | ~10 ms | ~0.15 GB/s | yes | up to 20 TB |
 
-![Most real datasets overflow RAM; streaming is the rule.](images/lec1-bio-file-sizes.svg){fig-alt="Bar chart of common bioinformatics file sizes on a log scale, with horizontal markers for L3 cache, RAM, SSD."}
+![Most real datasets overflow RAM; streaming is the rule.](images/lec1-bio-file-sizes.svg){width="55%" fig-alt="Bar chart of common bioinformatics file sizes on a log scale, with horizontal markers for L3 cache, RAM, SSD."}
 
 ::: notes
 SSDs replaced HDDs in laptops because they are about a hundred times faster for the small, random reads that modern software does — opening files, launching apps, paging memory. HDDs are still cheaper per terabyte for cold storage. For bioinformatics: your raw sequencing data probably lives on HDD or networked storage; your working dataset gets copied to local SSD or RAM. When a tool feels slow, the first question is almost always "where is the data sitting right now?"
@@ -169,17 +181,12 @@ GPUs entered general computing through deep learning, but they have been used in
 
 ## A running program in memory
 
-When the OS launches your program, it sets up four distinct regions of memory for it.
+The OS sets up four regions of memory for every process: **code**, **static data**, **heap** (grows up), **stack** (grows down).
 
-- **Code** — the program's instructions, loaded from your binary
-- **Data** — fixed values known before the program starts (constants, string literals)
-- **Heap** — a flexible pool the program asks for as it runs
-- **Stack** — a small fast region used for function calls and local variables
-
-![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom 'text (machine code)', then 'static data', then a 'heap' band with an upward arrow, then a big empty middle, then mapped libraries, then 'stack' at the top with a downward arrow."}
+![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="55%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom 'text (machine code)', then 'static data', then a 'heap' band with an upward arrow, then a big empty middle, then mapped libraries, then 'stack' at the top with a downward arrow."}
 
 ::: notes
-Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code and constants at the bottom, the heap growing up, the stack growing down. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
+Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code (the program's instructions, loaded from your binary) and static data (fixed values known before the program starts — constants, string literals) at the bottom, the heap (a flexible pool the program asks for as it runs) growing up, and the stack (a small fast region used for function calls and local variables) growing down. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
 :::
 
 ## When a program touches memory it doesn't own — segfault
@@ -195,7 +202,7 @@ A segfault is the operating system slamming the door. The hardware (the memory m
 
 ## Stack — fast, structured, automatic
 
-The **stack** is a fast, last-in-first-out region used for function calls. Every time you call a function, a fresh **stack frame** (the slice of stack belonging to one call: its arguments and local variables) is pushed on top; when it returns, the frame is popped.
+The **stack** is a fast, last-in-first-out region used for function calls. Each call pushes a fresh **stack frame** (its arguments and local variables) on top; returning pops it.
 
 ```python
 def gc_count(seq):
@@ -209,22 +216,28 @@ def main():
 main()
 ```
 
+::: notes
+The stack is small — typically one to eight megabytes total — but extremely fast and managed for you. Local variables live on the stack. Function arguments live on the stack. When a function returns, all its locals are gone instantly. You never have to ask. The price: stack values must have a size the compiler knows up-front. A 5-element array, yes. A string of unknown length read from a file, no — that one has to live on the heap. Allocating on the stack is essentially free — the CPU just moves a pointer.
+:::
+
+## Stack frames — push on call, pop on return
+
 ::: {.fragment}
-![Step 1: main() running — one frame on the stack.](images/lec1-stack-frames-step1.svg){fig-alt="A stack diagram with a single frame for main() containing the local variable seq."}
+![Step 1: main() running — one frame on the stack.](images/lec1-stack-frames-step1.svg){width="55%" fig-alt="A stack diagram with a single frame for main() containing the local variable seq."}
 :::
 
 ::: {.fragment}
-![Step 2: main() calls gc_count(seq) — a new stack frame (the slice of stack belonging to one call) is pushed on top.](images/lec1-stack-frames-step2.svg){fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
+![Step 2: main() calls gc_count(seq) — a new frame pushed on top.](images/lec1-stack-frames-step2.svg){width="55%" fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
 :::
 
 ::: {.fragment}
-![Step 3: gc_count() returns — its frame is popped; main() continues with the result.](images/lec1-stack-frames-step3.svg){fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
+![Step 3: gc_count() returns — its frame is popped; main continues.](images/lec1-stack-frames-step3.svg){width="55%" fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
 :::
 
 ::: notes
-The stack is small — typically one to eight megabytes total — but extremely fast and managed for you. Local variables live on the stack. Function arguments live on the stack. When a function returns, all its locals are gone instantly. You never have to ask. The price: stack values must have a size the compiler knows up-front. A 5-element array, yes. A string of unknown length read from a file, no — that one has to live on the heap. Allocating on the stack is essentially free — the CPU just moves a pointer.
+The stack grows and shrinks one frame per function call. A stack frame is the slice of stack belonging to one call — its arguments and local variables. The frame is pushed on call, popped on return; no allocator involved, just a pointer adjustment.
 
-*Streaming a 10 GB BAM file with samtools uses only ~100 MB RAM — the records flow through the stack, processed and dropped. Slurping it into a Python list of dicts would need 10–30 GB of heap.*
+Streaming a 10 GB BAM file with samtools uses only ~100 MB RAM — the records flow through the stack, processed and dropped. Slurping it into a Python list of dicts would need 10–30 GB of heap.
 :::
 
 ## Heap — flexible, slower, you manage the lifetime
@@ -239,33 +252,31 @@ A large region for data whose size or lifetime isn't known at compile time.
 The heap is asked for, not assumed. C asks you to call malloc and free by hand. Python and Java use a garbage collector that figures out when something is unreachable and frees it for you. Rust uses ownership — the compiler proves at build time when each value can be freed, with no runtime garbage collector. We will see all of this on day 2. For now, just know that "on the heap" means "your program asked for it" and "on the stack" means "the compiler decided". Heap allocations are slower because the allocator has to find a free chunk of the right size.
 :::
 
-## Boxed vs unboxed (boxed = wrapped in a heap object) — what the value actually costs
+## Boxed vs unboxed — what the value actually costs
 
-In C or Rust, a small value like `42` lives directly in its 4-byte slot. In Python, the variable is a pointer; the value is wrapped in a small heap-allocated object that also stores a **type tag** (a label saying "this is an int, not a string") and a **refcount** (count of how many places refer to this object).
+In C or Rust, `42` lives directly in its 4-byte slot. In Python, the variable is a pointer; the value is wrapped in a heap object with a **type tag** and a **refcount**.
 
-![Same `42`, very different memory: C/Rust store the 4 bytes directly; Python wraps it in a heap-allocated object with type tag and refcount.](images/lec1-boxed-vs-unboxed.svg){fig-alt="Two columns. Left: C/Rust shows a single 4-byte box holding 42 directly. Right: Python shows a small pointer on the stack pointing into the heap to a larger object containing a type tag, a reference count, and the value 42."}
+![Same `42`, very different memory.](images/lec1-boxed-vs-unboxed.svg){width="65%" fig-alt="Two columns. Left: C/Rust shows a single 4-byte box holding 42 directly. Right: Python shows a small pointer on the stack pointing into the heap to a larger object containing a type tag, a reference count, and the value 42."}
 
-- One Python integer is tens of bytes; one C/Rust integer is 4 bytes
-- Each Python value needs a pointer hop — bad news for the cache
-- A million-int list: ~60 MB in Python vs ~4 MB in C/Rust
+- A million-int list: **~60 MB in Python vs ~4 MB in C/Rust**
 
 ::: notes
-This is the price of Python's convenience. Because Python lets you write x = 42 today and x = "hello" tomorrow and the runtime has to handle either, every value carries a type tag and a refcount. The smallest integer in Python is about 28 bytes — seven times the size of a C int. Multiply by the number of vectors in a genomics pipeline; this is where Python loses an order of magnitude.
+"Boxed" means wrapped in a heap object. The type tag is a label saying "this is an int, not a string"; the refcount is the count of how many places refer to this object.
 
-*This is why `samtools` (written in C) processes 10 million BAM reads in seconds while the same loop in pure Python takes hours. The Python rewrite isn't slow because Python is poorly implemented — it's slow because every base is wrapped in a heap object.*
+This is the price of Python's convenience. Because Python lets you write x = 42 today and x = "hello" tomorrow and the runtime has to handle either, every value carries a type tag and a refcount. The smallest integer in Python is about 28 bytes — seven times the size of a C int. Each Python value needs a pointer hop — bad news for the cache. Multiply by the number of vectors in a genomics pipeline; this is where Python loses an order of magnitude.
+
+This is why samtools (written in C) processes 10 million BAM reads in seconds while the same loop in pure Python takes hours. The Python rewrite isn't slow because Python is poorly implemented — it's slow because every base is wrapped in a heap object.
 :::
 
 ## The operating system — referee and gatekeeper
 
 Your program is not alone on the machine. The OS decides which process gets the CPU when, hands out memory, and is the only thing allowed to touch hardware directly.
 
-- **Kernel** (the privileged core of the OS that can touch hardware) — runs the scheduler, file system, network stack
-- **User space** (where ordinary programs run, with no direct hardware access) — your browser, your Python script, your Rust tool
-- **Syscall** (a controlled jump from user space into the kernel) — the only legal way for your program to ask the kernel to do something
+- **Kernel** — the privileged core that runs the scheduler, file system, network stack
+- **User space** — where ordinary programs run, with no direct hardware access
+- **Syscall** — the only legal way for your program to ask the kernel to do something
 
-![Only the kernel touches hardware; user code goes through syscalls.](images/lec1-kernel-userspace.svg){#fig-os fig-alt="Three stacked bands: top labelled User space containing three process boxes firefox, vim, your_program; middle band Kernel space labelled Linux/macOS/Windows kernel containing process scheduler, file system, memory manager, network stack; bottom band Hardware containing CPU, RAM, disk, network. Downward arrows from each user-space process into the kernel labelled with example syscalls open data fa, mmap 8 MiB, send packet, then thick arrows from kernel to each hardware box."}
-
-![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
+![Only the kernel touches hardware; user code goes through syscalls.](images/lec1-kernel-userspace.svg){#fig-os width="60%" fig-alt="Three stacked bands: top labelled User space containing three process boxes firefox, vim, your_program; middle band Kernel space labelled Linux/macOS/Windows kernel containing process scheduler, file system, memory manager, network stack; bottom band Hardware containing CPU, RAM, disk, network. Downward arrows from each user-space process into the kernel labelled with example syscalls open data fa, mmap 8 MiB, send packet, then thick arrows from kernel to each hardware box."}
 
 ::: notes
 This is the model that every modern OS — Linux, macOS, Windows — implements. The kernel runs in privileged mode and can touch hardware. Your program runs in unprivileged user mode and cannot. Every interaction with the outside world — opening a file, allocating a large buffer, sending a network packet — goes through a syscall, a controlled doorway into the kernel. This is what stops your buggy Python script from crashing the whole machine.
@@ -273,18 +284,14 @@ This is the model that every modern OS — Linux, macOS, Windows — implements.
 
 ## OS vs software — syscalls are the doorway
 
-When your Python code does:
+When your Python code does `f = open("data.fa")`, the runtime issues an `open` syscall — a controlled jump into the kernel, which checks permissions, locates the file, and returns a file descriptor.
 
-```python
-f = open("data.fa")
-```
-
-what actually happens is: the Python runtime makes a syscall — `open("data.fa", O_RDONLY)` — which is a controlled jump from user space into the kernel. The kernel checks permissions, locates the file, returns a file descriptor (a small integer the kernel hands back so your program can refer to the file later). Then control comes back to your code.
-
-![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
+![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){width="65%" fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
 
 ::: notes
 Every interesting thing a program does crosses this boundary. Opening a file. Allocating heap memory (eventually). Reading from the network. Even printing to the screen. The syscall is the only legal way down. Crossing the boundary costs about a microsecond — much more than a function call within your program, much less than a disk read. This is why "do one big syscall not a million small ones" is universally good advice. Buffer your reads.
+
+A file descriptor is a small integer the kernel hands back so your program can refer to the file later.
 :::
 
 ## Putting it together — what happens when you run a program

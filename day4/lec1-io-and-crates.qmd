@@ -4,7 +4,7 @@ subtitle: "Day 4"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -102,13 +102,17 @@ let reader = BufReader::new(file);                // wrap in a 64 KB buffer
 for line in reader.lines() { /* one line at a time */ }
 ```
 
+::: notes
+The file on disk is enormous. The buffer in RAM is small — 64 KB by default. The iterator yields one line at a time, and as soon as you stop using it, the line is dropped.
+
+Doubling the file size does not change the memory used by the program. Only the disk reads multiply.
+:::
+
+## `BufReader` visualised
+
 ![Stream through a 64 KB window; file size no longer matters.](images/lec1-bufreader.svg){fig-alt="Diagram in three columns showing BufReader workflow. Left column titled 'On disk' shows a reads.fastq file labeled 10 GB containing FASTQ records (@read1, sequence, +, quality lines repeating). A dark arrow labeled '64 KB at a time' and 'one syscall per refill' leads to a middle column titled 'In RAM' showing a light-blue box labeled BufReader<File> with a 64 KB internal buffer holding the first few records as text. A green arrow labeled '.lines()' and 'one line at a time' leads to the right column titled 'Your code' showing a for-loop with successive String lines yielded into small boxes: '@read1', 'ACGTACGTAC', '+', '!!!!!!!!!!', noted as 'only one line lives at a time' with a bold 'O(1) memory' caption. A red-bordered footer panel titled 'The wrong way' shows the code 'let s = std::fs::read_to_string(\"reads.fastq\")?;' with a warning that a 10 GB FASTQ will not fit in RAM and the program will be killed by the OS."}
 
 ::: notes
-This is the core picture for day 4. The file on disk is enormous. The buffer in RAM is small — 64 KB by default. The iterator your code touches yields one line at a time, and as soon as you stop using it, the line is dropped.
-
-The pattern scales: doubling the file size does not change the memory used by the program. Tripling, quadrupling — same memory. Only the disk reads multiply.
-
 The red panel at the bottom is the alternative we just ruled out: `read_to_string` on a giant FASTQ. The kernel will allocate until it cannot, then kill your process. Use `BufReader` instead.
 :::
 
@@ -148,14 +152,22 @@ let writer = BufWriter::new(output);            // same for writes
 
 Always wrap a `File` in `BufReader` or `BufWriter`. The unbuffered version makes one syscall per byte.
 
-![A `File` provides byte-level access; `BufReader` wraps it and reads chunks.](images/lec1-file-bufreader-box.svg){fig-alt="An outer rounded box labelled BufReader contains a smaller rounded box labelled File, which contains an arrow into the kernel's file table. Annotation: 'BufReader holds a File and a buffer; the File holds an OS file descriptor.'"}
-
 ::: notes
 [`File::open`](https://doc.rust-lang.org/std/fs/struct.File.html#method.open) opens an existing file for reading. [`File::create`](https://doc.rust-lang.org/std/fs/struct.File.html#method.create) creates a new file for writing, truncating it if it already exists. Both return `Result<File, io::Error>`, so a `?` propagates the failure.
 
 The unwrapped `File` is technically usable directly — it implements `Read` and `Write` — but you should not. Each call to `read` or `write` makes a system call, which is slow. Buffering amortises that: one syscall reads 64 KB into RAM, then your code consumes it byte by byte at memory speed.
 
 The pattern is so common that you should think of `BufReader::new(File::open(p)?)` as the canonical way to open a file for reading.
+
+The picture on the next slide shows the nested boxes.
+:::
+
+## File wrapped in BufReader
+
+![A `File` provides byte-level access; `BufReader` wraps it and reads chunks.](images/lec1-file-bufreader-box.svg){fig-alt="An outer rounded box labelled BufReader contains a smaller rounded box labelled File, which contains an arrow into the kernel's file table. Annotation: 'BufReader holds a File and a buffer; the File holds an OS file descriptor.'"}
+
+::: notes
+`BufReader` holds a `File` and a buffer; the `File` holds an OS file descriptor.
 :::
 
 ## Lines, words, bytes — what `BufRead` gives you
@@ -173,9 +185,7 @@ for line in reader.lines() {
 }
 ```
 
-[`.lines()`](https://doc.rust-lang.org/std/io/trait.BufRead.html#method.lines) is an **iterator** (an object that produces one value at a time on demand, like a Python generator) that yields one `Result<String>` per line. It is **lazy** — nothing is read until you ask for the next item. Use it for line-oriented formats: BED, TSV, plain FASTA headers.
-
-![From file bytes to your loop variable: BufRead fills a buffer, splits at newlines, hands you one line at a time.](images/lec1-bufread-flowchart.svg){fig-alt="Horizontal flow: raw file bytes → BufReader internal buffer (64 KB) → find next \\n → yield String (owned by you) → loop body consumes it → next iteration drops it. Annotation: at any moment ~64 KB is in memory; everything else is on disk."}
+[`.lines()`](https://doc.rust-lang.org/std/io/trait.BufRead.html#method.lines) yields one `Result<String>` per line, lazily. Use it for BED, TSV, plain FASTA headers.
 
 ::: notes
 `BufRead` adds line-level convenience on top of byte-level `Read`. The method you will use most is `.lines()`, which yields one `Result<String>` for each line. The newline is stripped for you. The iterator is lazy — the file is only read as you advance.
@@ -183,6 +193,16 @@ for line in reader.lines() {
 For your hand-written BED parser in today's first exercise, this is exactly the loop you want. One line at a time, split on tab, parse the columns. The whole file streams through.
 
 A subtle point: each yielded item is a `Result`, not a `String`. Even a single byte of mid-stream I/O failure surfaces as an `Err`. The `let line = line?;` shadowing pattern unwraps the happy path and short-circuits the error.
+
+An **iterator** is an object that produces one value at a time on demand, like a Python generator.
+:::
+
+## `BufRead` visualised
+
+![From file bytes to your loop variable: BufRead fills a buffer, splits at newlines, hands you one line at a time.](images/lec1-bufread-flowchart.svg){fig-alt="Horizontal flow: raw file bytes → BufReader internal buffer (64 KB) → find next \\n → yield String (owned by you) → loop body consumes it → next iteration drops it. Annotation: at any moment ~64 KB is in memory; everything else is on disk."}
+
+::: notes
+The picture makes the point: at any moment ~64 KB is in memory; everything else is on disk. The yielded `String` is owned by you; the next iteration drops it before fetching the next line.
 :::
 
 ## `Result` propagation — `?` is your verb
@@ -292,14 +312,18 @@ For each line in `[dependencies]`, Cargo:
 - **caches** it in `~/.cargo` (shared across all your projects)
 - **links** it statically into your **binary** (the single compiled program file)
 
+::: notes
+Three lines of TOML say "this project uses these crates". On `cargo build`, Cargo reads the manifest, contacts `crates.io` for compatible versions, downloads them once into `~/.cargo/registry`, builds them, and links them into your binary.
+
+The cache is shared across all your projects on this machine. First time slow; subsequent builds free. The resulting binary contains the machine code for every dependency, statically linked — no "missing shared library" errors at deploy.
+:::
+
+## Cargo.toml to running binary
+
 ![One line of TOML, and Cargo does the rest — fetch, resolve, cache, link.](images/lec1-cargo-deps.svg){fig-alt="Diagram titled 'Cargo.toml to running binary' showing a flow from top-left to bottom-right. Top-left: a yellow Cargo.toml box with [package] and [dependencies] sections listing 'noodles-fasta = \"0.50\"', 'plotters = \"0.3\"', 'zip = \"0.6\"'. Grey dashed arrows from each dep line lead down to a blue cloud shape labeled 'crates.io public registry' captioned '\"0.50\" resolves to e.g. 0.50.3'. A grey arrow leads down to a grey box labeled '~/.cargo/registry/' captioned 'downloaded once, reused forever'. A green arrow labeled 'linked in' leads right to an orange 'rustc + linker' box (your code + crates = one binary). A green arrow labeled 'produces' leads down to a green 'target/debug/qc-report' box captioned 'contains every byte of every dep'. Footer: 'You add one line to Cargo.toml. Cargo handles fetching, version resolution, caching, and linking.'"}
 
 ::: notes
-This is the whole story behind `[dependencies]`. Three lines of TOML say "this project uses these crates". When you next run `cargo build`, Cargo reads the manifest, contacts `crates.io` to find a compatible version for each, downloads them once into `~/.cargo/registry`, builds them, and links them into your binary.
-
-The local registry is shared across all your projects on this machine. The first time you depend on `noodles-fasta`, the build is slow because Cargo downloads and compiles it. The hundredth time, the cache hit is free.
-
-The resulting binary contains the machine code for every dependency, statically linked. No "missing shared library" errors at deploy time. Hand the binary to a colleague and it just runs.
+You add one line to Cargo.toml. Cargo handles fetching, version resolution, caching, and linking.
 :::
 
 ## A real Cargo.toml for day 4
@@ -334,11 +358,8 @@ After you save the file, `cargo build` does the rest. No separate `pip install`,
 | `"0.50"` | `0.50.0`, `0.50.3`, `0.50.99` | `0.51.0`, `0.49.0` |
 | `"1"`    | `1.0.0`, `1.5.3`, `1.99.0`    | `2.0.0`, `0.99.0` |
 | `"=0.50.1"` | exactly `0.50.1` | anything else |
-| `"0.50.1"` (in 0.x) | `0.50.1`, `0.50.2`, `0.50.x` | `0.51.0` |
 
 The exact resolved version goes into `Cargo.lock` — commit that file for applications.
-
-![Semver: major.minor.patch — break, add, fix.](images/lec1-semver-example.svg){fig-alt="Three example version transitions: 1.4.2 → 1.4.3 (patch — bug fix, drop-in safe), 1.4.2 → 1.5.0 (minor — new feature, backward compatible), 1.4.2 → 2.0.0 (major — breaking change, code may not compile). Cargo defaults to '^1.4.2' meaning 'compatible with 1.4.2, ≤ 2.0.0'."}
 
 ::: notes
 Crate versions follow [semantic versioning](https://semver.org): major.minor.patch. The rule is that breaking changes bump the major version, new backward-compatible features bump the minor, and bug fixes bump the patch.
@@ -348,6 +369,14 @@ When you write `"0.50"` in `Cargo.toml`, Cargo interprets that as "0.50.x — ac
 There is a wrinkle: 0.x versions are considered unstable, so the minor version is treated like a major version. `"0.50"` accepts 0.50.anything but not 0.51. Once a crate hits 1.0, `"1"` accepts everything in the 1.x series.
 
 `Cargo.lock` records the exact version Cargo actually resolved. Commit it for applications so your CI builds the same bytes as your laptop. Leave it out for libraries so downstream users can resolve fresh.
+:::
+
+## Semver visualised
+
+![Semver: major.minor.patch — break, add, fix.](images/lec1-semver-example.svg){fig-alt="Three example version transitions: 1.4.2 → 1.4.3 (patch — bug fix, drop-in safe), 1.4.2 → 1.5.0 (minor — new feature, backward compatible), 1.4.2 → 2.0.0 (major — breaking change, code may not compile). Cargo defaults to '^1.4.2' meaning 'compatible with 1.4.2, ≤ 2.0.0'."}
+
+::: notes
+Patch = bug fix, drop-in safe. Minor = new feature, backward compatible. Major = breaking change. Cargo's `"1.4.2"` defaults to `^1.4.2` — anything in the 1.x series, ≤ 2.0.0.
 :::
 
 ## `crates.io` and `docs.rs`
@@ -379,42 +408,48 @@ Locally, `cargo doc --open` does the same thing for the dependencies of your pro
 4. **Paste the example into your project.** Get the canonical example working before customising.
 5. **Add it to `Cargo.toml`** and run `cargo build`.
 
+::: notes
+The whole discovery-to-use loop. First signal when searching is "what's popular": a package nobody downloads has no track record. Second, on the package page: is it alive, is the license compatible. Third, the top of the docs — if there is no example, that is a red flag.
+
+Once the example runs, paste it in, edit until it does what you need. Most crates you will ever use, you find this way.
+:::
+
+## A docs.rs landing page
+
 ![](images/lec1-docsrs-landing.svg){fig-alt="A mock docs.rs landing page for noodles-fasta, showing the module-level documentation with a short example and a list of submodules and types."}
 
 ::: notes
-The whole discovery-to-use loop on one slide. The screenshot is the docs.rs landing page — that page is where you will spend most of your time once you have picked a crate.
-
-The first signal when searching is "what's popular": a package nobody downloads has no track record. The second signal, on the package page, is whether it is alive and whether the license is compatible. The third is the top of the docs — if there is no example, that is a red flag.
-
-Once the example runs, paste it in, edit until it does what you need, then commit. Most crates you will ever use, you find this way.
-
-(Click-through appendix slides — one screenshot per step — are available if you want to dwell on any one of these.)
+This is where you will spend most of your time once you have picked a crate.
 :::
 
-## `noodles` — streaming records, constant memory
+## `noodles` — streaming records, step 1
 
 The reader holds a window into the file; you process one record at a time.
 
-::: {.fragment}
 ![Step 1: open the file, the reader allocates a small buffer.](images/lec1-noodles-streaming-step1.svg){fig-alt="Step 1 of noodles streaming: a FASTQ file on disk; a Reader is constructed over a BufReader of the file, with an empty internal buffer ready to be filled."}
+
+::: notes
+You give a `Reader` something that implements `BufRead`. The reader allocates an internal buffer but does not read anything yet.
 :::
 
-::: {.fragment}
+## `noodles` — streaming records, step 2
+
 ![Step 2: reader fills the buffer with the first record, hands it to you.](images/lec1-noodles-streaming-step2.svg){fig-alt="Step 2 of noodles streaming: the Reader has read the first record from disk into its buffer and yielded a Record value to your loop body."}
+
+::: notes
+The reader parses one record at a time and yields it to your loop body.
 :::
 
-::: {.fragment}
+## `noodles` — streaming records, step 3
+
 ![Step 3: you drop the record, the reader fetches the next.](images/lec1-noodles-streaming-step3.svg){fig-alt="Step 3 of noodles streaming: the previous Record has been dropped (memory freed); the Reader fetches the next record from disk into the same buffer and yields it."}
-:::
 
 Memory stays roughly constant — independent of file size.
 
 ::: notes
-This is the unifying picture of how every `noodles` crate works. You give a `Reader` something that implements `BufRead`. It internally parses one record at a time and yields it to your loop. When the loop body finishes one iteration, the record is dropped — its memory goes back to the allocator before the next record is read.
+When the loop body finishes one iteration, the record is dropped — its memory goes back to the allocator before the next record is read.
 
-The consequence: program memory is constant in the file size. A 3 GB FASTQ takes the same RAM as a 3 KB one. Only disk reads multiply.
-
-`noodles_fasta`, `noodles_fastq`, `noodles_bam`, `noodles_vcf`, and the dozen others in the family all share this design. Learn the shape once, apply it to any format.
+Program memory is constant in the file size. A 3 GB FASTQ takes the same RAM as a 3 KB one. Only disk reads multiply. `noodles_fasta`, `noodles_fastq`, `noodles_bam`, `noodles_vcf` and the dozen others all share this design.
 :::
 
 ## `noodles-fasta` in eight lines
@@ -437,14 +472,20 @@ fn count_records(reader: BufReader<File>) -> std::io::Result<usize> {
 
 [`fasta::io::Reader::new`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html) wraps the buffered file. [`.records()`](https://docs.rs/noodles-fasta/latest/noodles_fasta/io/struct.Reader.html#method.records) yields `Result<Record>`.
 
-![Layered abstractions: BufReader wraps a File; noodles Reader wraps a BufReader; the records iterator wraps the Reader.](images/lec1-noodles-fasta-boxes.svg){fig-alt="Three nested rectangles, outermost to innermost: 'noodles_fasta::Reader' contains 'BufReader<File>' contains 'File' contains an OS file descriptor. Each layer's purpose annotated: File = bytes from disk; BufReader = chunked reads; noodles Reader = FASTA semantics."}
-
 ::: notes
 This is roughly the body of exercise 2 for today. Eight lines. Almost all the interesting work — parsing the header, joining wrapped sequence lines, handling CRLF, validating the format — happens inside `noodles_fasta`. Your job is to consume records and accumulate.
 
 The function takes a concrete `BufReader<File>` here so the type signature is easy to read. On the next slide we make it generic so the same function will also accept test bytes — but the body of the function does not change.
 
 Note the two `Result`s. The function itself returns `std::io::Result<usize>`, and each yielded record is `Result<Record>`. The `?` on the inner result short-circuits the outer one. No nested matches.
+:::
+
+## How the reader layers stack
+
+![Layered abstractions: BufReader wraps a File; noodles Reader wraps a BufReader; the records iterator wraps the Reader.](images/lec1-noodles-fasta-boxes.svg){fig-alt="Three nested rectangles, outermost to innermost: 'noodles_fasta::Reader' contains 'BufReader<File>' contains 'File' contains an OS file descriptor. Each layer's purpose annotated: File = bytes from disk; BufReader = chunked reads; noodles Reader = FASTA semantics."}
+
+::: notes
+File = raw bytes from disk. BufReader = chunked reads with a 64 KB buffer. noodles Reader = FASTA semantics: headers, wrapped sequences, validation. Each layer does one job.
 :::
 
 ## Same function, generic over the reader
@@ -489,7 +530,7 @@ for result in reader.records() {
     let length = seq.len();
 
     let mut gc_count = 0u64;
-    for &base in seq {                          // &base = "give me the byte, not the reference"
+    for &base in seq {                          // &base = give me the byte
         if base == b'G' || base == b'C'
             || base == b'g' || base == b'c' {
             gc_count += 1;
@@ -501,14 +542,22 @@ for result in reader.records() {
 
 Accessors return borrowed slices — no copying.
 
-![A noodles Record in memory: a struct holding owned String fields for name and sequence.](images/lec1-record-in-memory.svg){fig-alt="A `Record` struct on the stack with three fields (name: String, sequence: Sequence, description: Option<String>), each pointing to heap allocations holding the actual bytes. Annotation: the record owns its data — dropping it frees the heap allocations."}
-
 ::: notes
 What you get back from `noodles` is a `Record` struct. The methods on it — `.name()`, `.sequence()` — return borrowed slices that point into the record's own buffer. No allocations, no copies. The record lives for the iteration; after that, the slices are gone too.
 
 This is your day-2 ownership knowledge in action. The function does not own the bytes — `record` does. While `record` is alive in this loop iteration, `name` and `seq` are valid. Try to keep `seq` around past the end of the iteration and the compiler refuses. Good — those bytes are about to be overwritten by the next record.
 
 A plain `for` loop with a counter is shown here for clarity. The same thing can be written as `seq.iter().filter(|&&b| matches!(b, b'G' | b'C' | b'g' | b'c')).count()` — the `&&b` is "the filter gives a reference to a reference; deref twice to get the byte" — but if you are seeing those tokens for the first time, the explicit loop is easier to read.
+
+The accompanying picture (next slide) shows the `Record` struct: heap-owned name and sequence, dropped when the loop iteration ends.
+:::
+
+## `Record` in memory
+
+![A noodles Record in memory: a struct holding owned String fields for name and sequence.](images/lec1-record-in-memory.svg){fig-alt="A `Record` struct on the stack with three fields (name: String, sequence: Sequence, description: Option<String>), each pointing to heap allocations holding the actual bytes. Annotation: the record owns its data — dropping it frees the heap allocations."}
+
+::: notes
+The record owns its data; dropping it frees the heap allocations. Borrowed slices from `.name()` and `.sequence()` are valid only while the record is alive.
 :::
 
 ## `noodles-fastq` — read, filter, write
@@ -534,14 +583,20 @@ fn filter<R: BufRead, W: Write>(reader: R, writer: W, min_len: usize)
 }
 ```
 
-![Streaming filter pipeline: reader produces records, filter keeps the good ones, writer emits them.](images/lec1-fastq-filter-flowchart.svg){fig-alt="Horizontal flow: source FASTQ file → noodles_fastq::Reader → filter (`record.sequence().len() >= min_len`) → noodles_fastq::Writer → destination FASTQ file. Records that fail the filter are dropped (red arrow). Annotation: constant memory; one record in flight at a time."}
-
 ::: notes
 Today's exercise 3 in one slide. Same shape as the FASTA reader. Add a `Writer` for the output, generic over `W: Write`. Iterate. Apply a predicate. Write the surviving records.
 
 Notice how everything is generic. Real production code will call this with `BufReader<File>` reading the input and `BufWriter<File>` writing the output. Your tests will call it with `Cursor<&[u8]>` for input and `Vec<u8>` for output — fast, no temp files, parallelisable. Same function, different concrete types.
 
 The two-counter return value is a common pattern: report what you did so the caller can log it or feed it to monitoring. Bioinformatics pipelines live or die on these counters.
+:::
+
+## The filter pipeline
+
+![Streaming filter pipeline: reader produces records, filter keeps the good ones, writer emits them.](images/lec1-fastq-filter-flowchart.svg){fig-alt="Horizontal flow: source FASTQ file → noodles_fastq::Reader → filter (`record.sequence().len() >= min_len`) → noodles_fastq::Writer → destination FASTQ file. Records that fail the filter are dropped (red arrow). Annotation: constant memory; one record in flight at a time."}
+
+::: notes
+Constant memory; one record in flight at a time. The same shape applies to any record-level transform you write today.
 :::
 
 ## Modules — splitting one crate across files
@@ -552,16 +607,18 @@ A real project does not live in one `main.rs`. Three keywords carry the system:
 - **`pub`** controls visibility — without `pub`, items are private to the module
 - **`use`** brings names into scope so you can write `parse_record(...)` instead of `crate::parser::parse_record(...)`
 
+::: notes
+`mod foo;` in `main.rs` tells the compiler "there is a child module called `foo`; look for its code in `foo.rs` or `foo/mod.rs`". The compiler reads that file as if it were a `mod foo { ... }` block in the parent.
+
+`pub` controls what is visible outside a module. The default is private — like immutability, the careful choice has to be opted into.
+:::
+
+## Modules visualised
+
 ![mod declares, pub exposes, use brings names into scope.](images/lec1-modules.svg){fig-alt="Diagram titled 'Modules: split one crate across files'. Left side titled 'On disk' shows a directory tree: ex-fasta-stats/, Cargo.toml, src/, main.rs, parser.rs, stats.rs, captioned 'one source file per module'. Right side top: a blue box labeled 'src/main.rs' showing code 'mod parser;', 'mod stats;', 'use crate::parser::parse_record;', 'use crate::stats::ContigStat;', 'fn main() { /* ... */ }'. Right side bottom: a green box labeled 'src/parser.rs' showing code 'pub struct Record { pub name: String, pub sequence: Vec<u8>, }', 'pub fn parse_record(line: &str) -> Record { /* ... */ }', captioned 'pub = visible to other modules'. A grey dashed arrow labeled 'mod parser; -> look for parser.rs' connects the mod declaration to the parser.rs file. A green arrow labeled 'name lookup' connects the use statement to the pub function. Footer: 'mod declares a child module; pub controls what leaks out; use brings a name into scope.'"}
 
 ::: notes
-The exercises so far have lived in a single `src/main.rs`. Real projects grow past that. Rust's tool for splitting code is the module system.
-
-`mod foo;` in `main.rs` tells the compiler "there is a child module called `foo`; look for its code in `foo.rs` or `foo/mod.rs`". The compiler reads that file as if it were a `mod foo { ... }` block in the parent.
-
-`pub` controls what is visible outside a module. A struct without `pub` is module-private. A field without `pub` is private even if the struct is public. The default is private — like immutability, the careful choice has to be opted into.
-
-`use` brings a name into scope so you can write `parse_record(...)` instead of `crate::parser::parse_record(...)` every time.
+mod declares a child module; pub controls what leaks out; use brings a name into scope.
 :::
 
 ## A tiny module example

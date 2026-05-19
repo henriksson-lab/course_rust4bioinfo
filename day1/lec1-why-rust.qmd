@@ -4,7 +4,7 @@ subtitle: "Day 1, Lecture 1"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720

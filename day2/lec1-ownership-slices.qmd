@@ -4,7 +4,7 @@ subtitle: "Day 2"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -169,9 +169,9 @@ println!("{:?}", v);             // v still owns the data
 
 `&v` makes a reference; the function reads through it. `v` is never moved.
 
-Think of borrowing a library book: you can read it, you can even put a bookmark in it, but the book still belongs to the library. You must return it eventually &mdash; and while you're holding it, the library can't lend the same copy to someone else (if you have a `&mut`, an exclusive loan) or hand someone else an editable version while several people are reading (if multiple `&` borrowers all need read-only access at once).
-
 ::: notes
+Think of borrowing a library book: you can read it, put a bookmark in it, but the book still belongs to the library. You must return it eventually, and while you're holding it the library can't lend the same copy mutably to someone else.
+
 A reference is a borrow. The owner keeps owning; the function gets temporary access through a pointer.
 
 In the example, `gc_content` doesn't need to own the sequence — it just needs to read each byte and count. So we pass `&v`, a reference, instead of `v` itself. After the call, `v` is unchanged and still valid.
@@ -256,17 +256,15 @@ fn count_g(seq: &[u8]) -> usize { /* counts G's */ }
 // Mutates in place — takes &mut T:
 fn trim_in_place(buf: &mut Vec<u8>) { /* shortens buf */ }
 
-// Consumes — takes owned T (caller can't use it afterwards):
+// Consumes — takes owned T:
 fn into_codons(seq: Vec<u8>) -> Vec<[u8; 3]> { /* repackages the bytes */ }
 ```
 
-Read the signatures **as contracts**:
-
-- `&[u8]` &mdash; "I will read your bytes; you keep them."
-- `&mut Vec<u8>` &mdash; "I will write into your buffer; you keep the allocation."
+- `&[u8]` &mdash; "I read your bytes; you keep them."
+- `&mut Vec<u8>` &mdash; "I write into your buffer; you keep the allocation."
 - `Vec<u8>` &mdash; "Hand it over; I own it now."
 
-**Rule of thumb:** default to `&T`. Use `&mut T` only when you mutate. Take ownership only when you really need to consume the value.
+**Default to `&T`**; use `&mut T` only to mutate; take ownership only to consume.
 
 ::: notes
 The right way to read a Rust signature is as a contract about ownership.
@@ -418,9 +416,9 @@ let seq = b"ACGT";
 let bad = &seq[2..10];   // panics: "byte index 10 out of bounds"
 ```
 
+::: notes
 The compiler only sees that you took a slice; it can't predict the length of `seq` at the use-site, so it can't statically check that `10 <= seq.len()`.
 
-::: notes
 The full menu of slice notations. They all produce a `&[T]` of the appropriate length, all in O(1), all without copying.
 
 The empty form `&seq[..]` is the whole thing — a slice covering the entire Vec. This is how you turn a `Vec<u8>` into a `&[u8]` when calling a function that expects one. (In many cases, Rust does this conversion implicitly via a feature called Deref coercion — the compiler quietly turning `&Vec<u8>` into `&[u8]` because `Vec` has opted in to the conversion — but the explicit form is always available.)
@@ -442,8 +440,6 @@ fn kmers(seq: &[u8], k: usize) -> Vec<&[u8]> {
 
 For a 100 Mb genome with k=21: ~100M *slices* (16 bytes each), **zero bytes of DNA duplicated.**
 
-![100 million fat pointers, all pointing into the same DNA buffer &mdash; no copies.](images/lec1-kmer-slices-data-structure.svg){fig-alt="A long horizontal DNA byte buffer at the top with 100 million labelled arrows below, each one being a (ptr, len) pair pointing at a 21-byte window of the buffer. Annotation: '100M x 16 bytes of metadata, 100 Mb of DNA bytes shared — total memory ~1.7 GB, not 2.1 GB + 100 Mb.'"}
-
 ::: notes
 This is exercise 3 this afternoon, foreshadowed. The function takes a sequence and a window size, and returns every k-length window.
 
@@ -464,8 +460,6 @@ If you scaled this up to a real genome with k=21, you'd produce roughly one slic
 
 ## Writing into a caller-owned buffer
 
-A "hot loop" is the innermost loop that runs millions or billions of times &mdash; the part of the program that dominates its total runtime. Making that one loop 2x faster might cut total program time by 50%; making a cold function 2x faster might not show up at all. Bioinformatics has a lot of hot loops: every k-mer pass, every base comparison, every quality check.
-
 A function that allocates a fresh `Vec` on every call is wasteful in a hot loop:
 
 ```rust
@@ -481,6 +475,8 @@ fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
 The same heap allocation is reused across millions of calls.
 
 ::: notes
+A "hot loop" is the innermost loop that runs millions or billions of times — the part that dominates total runtime. Bioinformatics has many: every k-mer pass, every base comparison, every quality check.
+
 This is exercise 2 this afternoon. The shape — `&[u8]` in, `&mut Vec<u8>` out — is what every fast bioinformatics tool uses in its inner loop.
 
 The trick is `clear()`. It sets the Vec's length to zero, but it does *not* hand the underlying memory back to the system. The capacity stays the same. Next time the function fills the buffer, no fresh memory request is needed &mdash; the storage is right there from last time.
@@ -542,7 +538,7 @@ The 10-cell strip is one read's worth of quality bytes. The two arcs at the top 
 
 *Elision* = "leaving something out that the compiler can figure out for you."
 
-**The rule:** one reference in, one reference out &rArr; the output borrows from the input. The compiler fills in the lifetime (the span of time a borrow is valid) for you.
+**The rule:** one reference in, one reference out &rArr; the output borrows from the input.
 
 ```rust
 fn quality_trim(qual: &[u8], min: u8) -> &[u8] { /* ... */ }
@@ -552,9 +548,9 @@ fn quality_trim(qual: &[u8], min: u8) -> &[u8] { /* ... */ }
 
 ![Compiler infers what you would have written by hand.](images/lec1-lifetime-elision.svg){fig-alt="Top: the signature fn quality_trim(qual: &[u8], min: u8) -> &[u8] as the programmer writes it. Below: the same signature with the implicit lifetime 'a drawn in on both input and output reference, plus a dashed arrow linking input to output and the rule 'output lives no longer than the input'."}
 
+::: notes
 For the rare case where the compiler can't decide which input the output borrows from, you write it explicitly: `fn f<'a>(s: &'a str) -> &'a str`. Today's exercises don't need that.
 
-::: notes
 You'll notice we haven't written a single `<'a>` annotation today. That's lifetime elision: in common cases the compiler infers the lifetimes for you.
 
 The rule that matters this week: if a function takes one reference parameter and returns a reference, the output's lifetime is the input's. So in `fn quality_trim(qual: &[u8], min: u8) -> &[u8]`, the returned slice borrows from qual, and the compiler enforces that the returned slice cannot outlive qual.
@@ -593,7 +589,7 @@ References are interesting: the pointer itself is Copy, because a pointer is jus
 For the rest of the week, just remember: numerics copy, owners move. If you really do want to duplicate a Vec, call `.clone()` explicitly. That makes the cost visible.
 :::
 
-## Common borrow-checker errors
+## Common borrow-checker errors (1/2)
 
 **E0382 — borrow of moved value.** You used `v` after handing it away.
 
@@ -604,7 +600,7 @@ println!("{:?}", v);   // error: v was moved into w
 ```
 *Fix:* pass `&v` (borrow) instead of `v`, or do the print first.
 
-**E0502 — cannot borrow as mutable / immutable.** A `&` and a `&mut` overlap. (Subsumes E0596 — forgetting `mut` is the trivial special case.)
+**E0502 — cannot borrow as mutable / immutable.** A `&` and a `&mut` overlap.
 
 ```rust
 let mut v = vec![b'A'];
@@ -614,6 +610,16 @@ println!("{}", r);
 ```
 *Fix:* narrow the scope of `r`, or copy the byte (`let r = v[0];`).
 
+::: notes
+Three errors cover almost everything you will see this afternoon. They are not bugs — they are the compiler protecting you.
+
+E0382 is the move-then-use error. Often you didn't actually mean to take ownership; passing `&v` instead solves it.
+
+E0502 is the borrow overlap. The fix is to make sure the shared borrow ends before the mutable borrow begins, often by introducing a `{ }` block or reordering operations. E0502 also subsumes E0596 (forgetting `mut` is the trivial special case — fix is `let mut v = ...`).
+:::
+
+## Common borrow-checker errors (2/2)
+
 **E0507 — cannot move out of borrowed content.** You tried to take ownership from behind a `&T`.
 
 ```rust
@@ -621,13 +627,9 @@ fn first(v: &Vec<u8>) -> Vec<u8> { *v }   // error: can't move out of &
 ```
 *Fix:* `v.clone()`, or change the API to take `Vec<u8>` by value.
 
+The error messages are good — they almost always include a suggested fix at the bottom. Read them.
+
 ::: notes
-Three errors cover almost everything you will see this afternoon. They are not bugs — they are the compiler protecting you.
-
-E0382 is the move-then-use error. Often you didn't actually mean to take ownership; passing `&v` instead solves it.
-
-E0502 is the borrow overlap. The fix is to make sure the shared borrow ends before the mutable borrow begins, often by introducing a `{ }` block or reordering operations. The trivial special case is E0596 — you forgot the `mut` keyword on a `let` binding — same idea, fix is `let mut v = ...`.
-
 E0507 happens when you try to pull a non-Copy value out from behind a reference. You can't move out of someone else's value — you only borrowed it.
 
 The error messages are good. They almost always include the fix in a suggestion at the bottom. Read them.

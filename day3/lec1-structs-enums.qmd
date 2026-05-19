@@ -4,7 +4,7 @@ subtitle: "Day 3"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -171,17 +171,18 @@ struct GenomicInterval {
 }
 ```
 
-The compiler writes the obvious **trait** [a named bundle of methods a type can opt in to — like a Java interface, but more powerful] implementations for you — equality, debug printing, cloning — so you don't have to type them by hand every time.
+The compiler writes the obvious **trait** implementations for you — equality, debug printing, cloning — so you don't type them by hand.
 
 The four you will reach for this week:
 
 - **`Debug`** — `{:?}` printing, for diagnostics
 - **`Clone`** — explicit `.clone()` deep copy
-- **`Copy`** — assignment copies (only for stack-only types)
-  - only works if every field is also `Copy` — so not for anything holding a `String` or `Vec`
+- **`Copy`** — assignment copies (only if every field is also `Copy`)
 - **`PartialEq`** / `Eq` — `==` and `!=`
 
 ::: notes
+A trait is a named bundle of methods a type can opt in to — like a Java interface, but more powerful.
+
 A `derive` tells the compiler to write a trait implementation for you, field by field. You almost always want Debug and Clone — Debug to be able to print the value when something is wrong, Clone to make an explicit copy when ownership rules push back.
 
 Copy is more specialised. A type can only be Copy if everything inside it is also Copy. `String` is not Copy because copying it would require allocating new heap storage — so any struct containing a String can be Clone but not Copy. Plain integer types and small enums like `Strand` are fine to make Copy.
@@ -288,14 +289,20 @@ fn ref_alt_delta(v: &Variant) -> i64 {
 
 `match` binds the variant's fields by name inside the arm. The `..` pattern means "ignore the rest".
 
-![match on enum: try arms top-to-bottom; first match wins.](images/lec1-match-enum-flow.svg){fig-alt="A value of an enum type enters at the top; below, three arms — one per variant — each labelled with the pattern (e.g. Strand::Plus, Strand::Minus, _); arrows show the value flowing into the first matching arm and its result coming out."}
-
 ::: notes
 You can't just read `v.bases` — there is no such field on a SNP variant. To get at the contents you have to first establish which variant you have, and `match` is the canonical tool.
 
 Each arm pattern names the variant and destructures its fields. Inside the Insertion arm, `bases` is bound to the actual Vec; inside the Deletion arm, `len` is bound to the actual u64. The compiler enforces that you only touch fields that actually exist on the matched variant.
 
 The `..` in a struct pattern means "any remaining fields I don't care about". Use it freely — it documents intent and keeps the pattern short.
+:::
+
+## `match` — control flow
+
+![match on enum: try arms top-to-bottom; first match wins.](images/lec1-match-enum-flow.svg){fig-alt="A value of an enum type enters at the top; below, three arms — one per variant — each labelled with the pattern (e.g. Strand::Plus, Strand::Minus, _); arrows show the value flowing into the first matching arm and its result coming out."}
+
+::: notes
+The flow: a value enters from the top; arms are tried top-to-bottom; the first matching arm's body runs; the result is the result of the match expression.
 :::
 
 ## Exhaustiveness — the safety net
@@ -333,8 +340,6 @@ if zygosity == "het":
 elif zygosity == "hom_alt":
     report_hom_alt(call)
 # hom_ref silently dropped
-# or: "het " (trailing space) silently
-# ignored
 ```
 
 No warning. No error. The patient gets the wrong report.
@@ -347,9 +352,7 @@ No warning. No error. The patient gets the wrong report.
 match zygosity {
     Zygosity::Het    => report_het(call),
     Zygosity::HomAlt => report_hom_alt(call),
-    // HomRef missing -> compile error:
-    // non-exhaustive patterns:
-    //   `HomRef` not covered
+    // HomRef missing -> compile error
 }
 ```
 
@@ -357,12 +360,18 @@ The build fails. You cannot ship the bug.
 :::
 :::
 
-![Python lets you forget a case; Rust refuses to compile.](images/lec1-clinical-exhaustiveness.svg){fig-alt="Side-by-side: left, Python if/elif chain missing one case, with a red arrow showing a silently dropped sample; right, Rust match with a compile-error diagnostic pointing at the missing variant."}
-
 ::: notes
 In a clinical context — a cancer panel, a rare-disease report — a silently dropped case is a silently missed call. A homozygous-reference position that should have been flagged as a normal control instead never appears in the report. A trailing-space typo on a string tag silently routes every het into the "unknown" bucket.
 
 Rust's exhaustiveness check is not a stylistic nicety. It is the difference between "the test suite happened to cover it" and "the build won't even start if it isn't covered". When the types model the biology — zygosity, variant kind, strand — the compiler enforces the case analysis for free.
+:::
+
+## Exhaustiveness — picture
+
+![Python lets you forget a case; Rust refuses to compile.](images/lec1-clinical-exhaustiveness.svg){fig-alt="Side-by-side: left, Python if/elif chain missing one case, with a red arrow showing a silently dropped sample; right, Rust match with a compile-error diagnostic pointing at the missing variant."}
+
+::: notes
+The same idea visualised: on the left, the Python pipeline silently drops the missing case at runtime — a sample never appears in the report. On the right, the Rust build fails before it ever runs.
 :::
 
 ## `Option<T>` — values that may be absent
@@ -420,8 +429,6 @@ if let Some(i) = first_g(seq) {                  // only care about Some
 let i = first_g(seq).unwrap_or(0);               // missing G means 0
 let i = first_g(seq).expect("read must contain a G");  // panic if None
 ```
-
-![Three ways to pattern-match an Option<T>.](images/lec1-option-flow.svg){fig-alt="A value of type Option<T> enters; the Some(x) arm uses x; the None arm runs a fallback. Three pattern styles shown side by side: match, if let Some(x), and unwrap_or(default)."}
 
 → [`Option` docs](https://doc.rust-lang.org/std/option/enum.Option.html)
 
@@ -537,14 +544,20 @@ fn translate(codon: &[u8]) -> Option<u8> {
 
 64 codons. `match` checks you cover every byte string in your domain.
 
-![](images/codon-table.svg){fig-alt="A 4x4 grid showing the standard genetic code. Rows are first base T, C, A, G; columns are second base T, C, A, G; each cell holds four sub-rows for the third base. Each row gives the codon and its one-letter amino acid. Codons are coloured by amino-acid category: hydrophobic in cream, polar uncharged in light blue, basic in light green, acidic in pink, stop codons in dark grey. The standard genetic code — 64 codons grouped by their first and second base."}
-
 ::: notes
 Codon translation is a function from a 3-byte sequence to an amino acid. The natural Rust shape is a match on byte-string patterns: each arm is one codon, the body is the amino acid.
 
 The pipe operator combines synonymous codons into one arm — alanine is GCT, GCC, GCA, GCG; the four arms collapse to one. The trailing `_ => None` covers anything that isn't a valid codon — an ambiguous base, a partial codon at the end of a sequence.
 
 The genetic code is a small finite table, so a match expression is faster, smaller, and easier to read than a HashMap lookup. This is exercise 3.
+:::
+
+## The standard genetic code
+
+![](images/codon-table.svg){fig-alt="A 4x4 grid showing the standard genetic code. Rows are first base T, C, A, G; columns are second base T, C, A, G; each cell holds four sub-rows for the third base. Each row gives the codon and its one-letter amino acid. Codons are coloured by amino-acid category: hydrophobic in cream, polar uncharged in light blue, basic in light green, acidic in pink, stop codons in dark grey. The standard genetic code — 64 codons grouped by their first and second base."}
+
+::: notes
+The standard genetic code as a 4x4 grid. Rows are first base; columns are second base; each cell holds four sub-rows for the third base. Notice how synonymous codons cluster — most third-base changes don't change the amino acid (wobble). This is why the match arm for alanine collapses four codons into one.
 :::
 
 ## Iterators — describe, don't loop
@@ -647,9 +660,7 @@ The Rust entry API does the lookup, the maybe-insert, and the get-mut all in one
 :::
 :::
 
-Idiomatic one-liner once you're used to it: `*counts.entry(window.to_vec()).or_insert(0) += 1;`
-
-![One lookup-or-insert per window builds the histogram.](images/kmer-counts.svg){fig-alt="Diagram showing 3-mer counts in ATGATGCAT — 7 windows total; ATG appears twice. The DNA sequence ATGATGCAT is shown at the top with a bracket below noting 7 windows of length 3 slide left to right; the first window ATG is outlined in orange. Below is a bar chart of counts for the six distinct 3-mers in alphabetical order: ATG has count 2, while CAT, GAT, GCA, TGA, and TGC each have count 1."}
+Idiomatic one-liner: `*counts.entry(window.to_vec()).or_insert(0) += 1;`
 
 ::: notes
 This is the canonical histogram pattern in Rust. Without the entry API you'd write three lines per insert: look up, branch on Some/None, insert default or increment.
@@ -659,6 +670,14 @@ This is the canonical histogram pattern in Rust. Without the entry API you'd wri
 The deref-and-add-assign at the front (`*entry... += 1`) modifies the value in place. Net effect: one expression, one hash lookup, exactly one allocation if the key is new. This is exercise 4: count every k-mer in a sequence.
 
 The Python side shows the two equivalent idioms. `dict.get(k, 0) + 1` does the same job in a stricter way; `defaultdict(int)` is closer to the Rust pattern but requires an extra import and a different dict type.
+:::
+
+## k-mer counts — picture
+
+![One lookup-or-insert per window builds the histogram.](images/kmer-counts.svg){fig-alt="Diagram showing 3-mer counts in ATGATGCAT — 7 windows total; ATG appears twice. The DNA sequence ATGATGCAT is shown at the top with a bracket below noting 7 windows of length 3 slide left to right; the first window ATG is outlined in orange. Below is a bar chart of counts for the six distinct 3-mers in alphabetical order: ATG has count 2, while CAT, GAT, GCA, TGA, and TGC each have count 1."}
+
+::: notes
+7 windows in ATGATGCAT; ATG appears twice. Each window does one entry-API lookup; new keys are inserted with value 0 then incremented; existing keys are incremented in place. Total: 7 hash lookups, 6 allocations for new keys.
 :::
 
 ## Closures — anonymous functions that capture
@@ -672,7 +691,15 @@ let high_quality = quals.iter()
 
 `|args| body`. Closures capture the variables they mention from the enclosing scope.
 
-The `*q` dereferences once: `quals.iter()` yields `&u8` (a reference to a byte), and `filter` passes a reference to *that* — so inside the closure `q` is a `&&u8` and `*q` reads the byte. You'll sometimes see the shorter `|&&q| q >= threshold` form that destructures both layers in the pattern; same meaning.
+::: notes
+A closure is a function value you can pass around — like a Python `lambda`, but more capable. Pipes around the parameter list, then the body.
+
+What makes them "closures" rather than just "function literals" is capture: a closure can refer to variables in the surrounding scope, and the compiler arranges to keep those variables alive as long as the closure is. In the example, `threshold` is captured by the filter's closure.
+
+The `*q` dereferences once: `quals.iter()` yields `&u8`, and `filter` passes a reference to *that* — so `q` is `&&u8` and `*q` reads the byte. The shorter `|&&q| q >= threshold` form destructures both layers in the pattern.
+:::
+
+## Closures vs. named functions
 
 ```rust
 // closure (anonymous, one-shot):
@@ -685,12 +712,6 @@ fn bump(q: u8) -> u8 { q + 1 }
 The closure form is shorter when the function is one-line and only used here. The named-function form is what you reach for when the function needs a stable name and is called from elsewhere.
 
 ::: notes
-A closure is a function value you can pass around — like a Python `lambda`, but more capable. Pipes around the parameter list, then the body.
-
-What makes them "closures" rather than just "function literals" is capture: a closure can refer to variables in the surrounding scope, and the compiler arranges to keep those variables alive as long as the closure is. In the example, `threshold` is captured by the filter's closure.
-
-The reference-layering is one of the small surprises Rust hands you in iterator chains. `iter()` yields `&T` so it doesn't copy or move elements; `filter` then borrows each element to look at it, which gives you a `&&T` inside the closure body. You either write `|q| *q >= threshold` (deref in the body) or `|&&q| q >= threshold` (destructure both layers in the pattern) — same compiled code.
-
 The named-function `bump` shows what the closure replaces when there are no captures: same body, more syntax, but a real top-level function you can call from anywhere. Pick the closure when the function is throwaway; pick the named function when it needs a stable name.
 :::
 

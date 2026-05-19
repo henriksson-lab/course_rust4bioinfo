@@ -4,7 +4,7 @@ subtitle: "Day 7"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -36,21 +36,19 @@ Today is the half-day shift away from sequence data into structured data — str
 You're managing a microbial strain collection. The lab uses a shared TSV file.
 
 ::: {.fragment}
-![Two team members type the same strain's name slightly differently — "K-12 MG1655" vs "K12 MG1655". Now your query for one returns half the data.](images/lec1-pain-step1.svg){fig-alt="Two team members typing the same strain's name slightly differently, leaving the TSV with inconsistent entries."}
+![Two team members type the same strain's name slightly differently.](images/lec1-pain-step1.svg){width="55%" fig-alt="Two team members typing the same strain's name slightly differently, leaving the TSV with inconsistent entries."}
 :::
 
 ::: {.fragment}
-![A row gets pasted twice. The same strain now has two `strain_id`s, two contradictory `isolation_source` values, and there's no way to tell which one is right.](images/lec1-pain-step2.svg){fig-alt="A duplicated row showing the same strain with two strain_id values and contradictory isolation_source entries."}
+![A row gets pasted twice; contradictory values, no way to tell which is right.](images/lec1-pain-step2.svg){width="55%" fig-alt="A duplicated row showing the same strain with two strain_id values and contradictory isolation_source entries."}
 :::
 
 ::: {.fragment}
-![Two people open the TSV in Excel at the same time. One saves, the other saves, the second save silently overwrites the first.](images/lec1-pain-step3.svg){fig-alt="Two users opening the same TSV in Excel, with the second save overwriting the first."}
+![Two Excel users save the same TSV; second save silently wins.](images/lec1-pain-step3.svg){width="55%" fig-alt="Two users opening the same TSV in Excel, with the second save overwriting the first."}
 :::
-
-A relational database stops every one of these at the moment they happen — not after the paper is published.
 
 ::: notes
-This is the universal story: a shared TSV grows past the point where ad-hoc edits can be trusted. A relational database is the standard, fifty-year-old answer to every one of these failure modes. Today is the introduction.
+A relational database stops every one of these at the moment they happen — not after the paper is published. This is the universal story: a shared TSV grows past the point where ad-hoc edits can be trusted. A relational database is the standard, fifty-year-old answer to every one of these failure modes.
 :::
 
 ## A relational database in one picture
@@ -84,7 +82,7 @@ SQLite has just a handful of declared types — INTEGER, REAL, TEXT, BLOB. The b
 
 ## Primary keys — one row, one identity
 
-The **primary key** is the column (or set of columns) that uniquely identifies a row. Two rows may agree on every other column, but never on the primary key.
+The **primary key** uniquely identifies a row. Two rows may agree on every other column, but never on the primary key.
 
 ```sql
 CREATE TABLE strain (
@@ -96,28 +94,28 @@ CREATE TABLE strain (
 );
 ```
 
-`INTEGER PRIMARY KEY` is SQLite's "auto-assign on INSERT" spelling. `NOT NULL` makes the column mandatory.
+`INTEGER PRIMARY KEY` auto-assigns the next free integer on INSERT. `NOT NULL` makes the column mandatory.
 
 Reference: [`CREATE TABLE`](https://www.sqlite.org/lang_createtable.html), [`PRIMARY KEY`](https://www.sqlite.org/lang_createtable.html#primkeyconst), [`NOT NULL`](https://www.sqlite.org/lang_createtable.html#notnullconst).
 
-![Each row's `strain_id` is unique — that's what makes it a primary key.](images/lec1-primary-key-example.svg){fig-alt="A strain table where every row has a distinct strain_id value, highlighted as the primary key."}
-
 ::: notes
-The primary key is the database's name for the row. Once a row has a primary key value, other tables can refer to it — that is what makes the data relational. The convention `INTEGER PRIMARY KEY` is unusually convenient in SQLite: you do not have to invent IDs, the engine hands you the next free integer when you INSERT without one.
+The primary key is the database's name for the row. Once a row has a primary key value, other tables can refer to it — that is what makes the data relational. The convention `INTEGER PRIMARY KEY` is unusually convenient in SQLite: you do not have to invent IDs, the engine hands you the next free integer when you INSERT without one. Visual: every row's `strain_id` is unique — that's what makes it a primary key.
 :::
 
 ## Why tables need to reference each other
 
-If every assay record had to repeat the full strain name, species, and isolation source, two things go wrong:
+If every assay record repeated the full strain metadata:
 
-1. Storage explodes (the same strain has hundreds of assays).
-2. Updates are unsafe — change a strain's species in one row, forget to change it in the other 99, and the data set quietly disagrees with itself.
+1. Storage explodes (same strain, hundreds of assays).
+2. Updates are unsafe — change one row, forget the other 99, the data quietly disagrees with itself.
 
-The relational solution: store each strain once. Every assay carries just the strain's `strain_id` and "joins" against the strain table when needed. This is called **normalisation** (storing each fact in exactly one place).
+**Normalisation**: store each strain once; every assay carries only its `strain_id` and joins against the strain table when needed.
 
-![Without references, the same strain appears redundantly in every assay row, and an update misses some copies — the two copies quietly disagree.](images/lec1-why-tables-reference.svg){fig-alt="A wide assay table where strain metadata is repeated on every row, with one row's species edited and the others left stale."}
+![Without references, the same strain is repeated on every assay row; an update misses some copies.](images/lec1-why-tables-reference.svg){width="70%" fig-alt="A wide assay table where strain metadata is repeated on every row, with one row's species edited and the others left stale."}
 
+::: notes
 Next slide: how the database enforces this with a foreign-key constraint.
+:::
 
 ## Foreign keys — linking two tables
 
@@ -138,13 +136,12 @@ INSERT INTO strain (strain_name, species, isolation_source, year_isolated)
 VALUES ('K-12 MG1655', 'Escherichia coli', 'human gut', 1922);
 ```
 
-- Strings in **single** quotes. Double quotes mean *identifier* (column or table name).
-- Integers bare.
+- Strings in **single** quotes; double quotes mean *identifier*.
 - We omitted `strain_id` — `INTEGER PRIMARY KEY` assigns the next free integer.
 
-Reference: [`INSERT`](https://www.sqlite.org/lang_insert.html).
+![Before INSERT 3 rows; after, the new row is appended with auto-assigned `strain_id`.](images/lec1-insert-row.svg){width="60%" fig-alt="Before/after view of the strain table: three rows, then four after the INSERT, with the new row's strain_id auto-assigned."}
 
-![Before INSERT, the table has 3 rows. After, the new row is appended; the `strain_id` is auto-assigned.](images/lec1-insert-row.svg){fig-alt="Before/after view of the strain table: three rows, then four after the INSERT, with the new row's strain_id auto-assigned."}
+Reference: [`INSERT`](https://www.sqlite.org/lang_insert.html).
 
 ::: notes
 Single quotes wrap string values; double quotes wrap identifiers like column names. Forgetting this is the single most common newbie SQL footgun: write `WHERE species = "Escherichia coli"` and the engine looks for a column called Escherichia coli. Always single quotes for text. Omitting the primary key column on INSERT is a convenient idiom — let the engine pick the ID for you.
@@ -160,16 +157,11 @@ ORDER BY year_isolated DESC
 LIMIT 5;
 ```
 
-- `FROM` picks the table
-- `WHERE` filters rows
-- `ORDER BY` sorts the survivors
-- `LIMIT` keeps the top N
+- `FROM` picks the table; `WHERE` filters; `ORDER BY` sorts; `LIMIT` cuts.
+
+![Result: only the requested columns, only the matching rows.](images/lec1-select-output.svg){width="55%" fig-alt="Output table of the SELECT query, showing only strain_name and species columns for rows where year_isolated exceeds 1980."}
 
 [`SELECT`](https://www.sqlite.org/lang_select.html), [`WHERE`](https://www.sqlite.org/lang_select.html#whereclause), [`ORDER BY`](https://www.sqlite.org/lang_select.html#orderby), [`LIMIT`](https://www.sqlite.org/lang_select.html#limitoffset).
-
-The result is a table of just the columns you asked for:
-
-![Output of `SELECT strain_name, species FROM strain WHERE year_isolated > 1980;` — three columns become two, four matching rows.](images/lec1-select-output.svg){fig-alt="Output table of the SELECT query, showing only strain_name and species columns for rows where year_isolated exceeds 1980."}
 
 ::: notes
 A SELECT statement is the bread and butter of SQL — you will write tens of these a day in real work. The four clauses on this slide cover most one-table queries: pick a table, filter rows, sort, cut to a limit. The next slide visualises the pipeline.
@@ -177,7 +169,7 @@ A SELECT statement is the bread and butter of SQL — you will write tens of the
 
 ## Aggregation — GROUP BY + COUNT / AVG
 
-**Aggregation** (collapsing many rows down to one summary row per group) is the SQL idiom for "how many", "what's the average", "what's the max".
+**Aggregation** collapses many rows into one summary row per group.
 
 ```sql
 -- How many strains per species?
@@ -188,7 +180,7 @@ ORDER BY n DESC;
 ```
 
 ```sql
--- Mean OD per medium, only counting media measured >= 3 times
+-- Mean OD per medium, only media measured >= 3 times
 SELECT medium, AVG(od600_24h) AS mean_od, COUNT(*) AS n
 FROM assay
 GROUP BY medium
@@ -197,40 +189,52 @@ HAVING COUNT(*) >= 3;
 
 [`GROUP BY`](https://www.sqlite.org/lang_select.html#groupby), [`COUNT`](https://www.sqlite.org/lang_aggfunc.html#count), [`AVG`](https://www.sqlite.org/lang_aggfunc.html#avg).
 
-![Input: the `assay` table (one row per measurement). Output: one row per medium, with `AVG(od600_24h)` computed across all rows in that group.](images/lec1-aggregation-example.svg){fig-alt="An input assay table with many rows mapped to an output table with one row per medium, showing the AVG(od600_24h) computed per group."}
-
 ::: notes
 GROUP BY is the SQL spelling of "for each unique value of column X, give me one summary row". COUNT, AVG, SUM, MIN, MAX are the standard aggregate functions. The second query shows HAVING — filtering whole groups after aggregation. AS gives the output column a friendlier name; you can use that name in ORDER BY but not (in most engines) back in WHERE, because of the pipeline order on the next slide.
 :::
 
-## SELECT as a pipeline
+## Aggregation — visualised
 
-The clauses you write in a `SELECT` don't run in writing order — they run as a pipeline:
-
-::: {.fragment}
-![Stage 1 — `FROM table`: pick the input table(s).](images/lec1-select-pipeline-step1.svg){fig-alt="Pipeline stage 1: the FROM clause selects the input table(s)."}
-:::
-
-::: {.fragment}
-![Stage 2 — `WHERE`: filter rows.](images/lec1-select-pipeline-step2.svg){fig-alt="Pipeline stage 2: the WHERE clause filters individual rows."}
-:::
-
-::: {.fragment}
-![Stage 3 — `GROUP BY`: bucket rows by a key.](images/lec1-select-pipeline-step3.svg){fig-alt="Pipeline stage 3: the GROUP BY clause buckets rows by a key."}
-:::
-
-::: {.fragment}
-![Stage 4 — `SELECT` and aggregations: compute columns per group.](images/lec1-select-pipeline-step4.svg){fig-alt="Pipeline stage 4: the SELECT clause and aggregations compute columns per group."}
-:::
-
-::: {.fragment}
-![Stage 5 — `ORDER BY` and `LIMIT`: sort and trim.](images/lec1-select-pipeline-step5.svg){fig-alt="Pipeline stage 5: the ORDER BY and LIMIT clauses sort and trim the result."}
-:::
-
-This is why `WHERE` can reference table columns but `HAVING` references aggregations — they run at different stages.
+![Input: many `assay` rows. Output: one row per medium with `AVG(od600_24h)` per group.](images/lec1-aggregation-example.svg){width="75%" fig-alt="An input assay table with many rows mapped to an output table with one row per medium, showing the AVG(od600_24h) computed per group."}
 
 ::: notes
-You write the clauses in declarative order — SELECT first, FROM second — but the engine runs them in execution order: pick tables, drop rows, bucket, aggregate, project columns, sort, cut. Understanding this order is what makes the difference between WHERE and HAVING click: WHERE filters individual rows before grouping, HAVING filters whole groups after aggregation. You cannot use `COUNT(*) > 1` in WHERE — at WHERE-time the count does not exist yet.
+The picture: assay rows on the left get bucketed by medium, and each bucket collapses to one output row with the average.
+:::
+
+## SELECT as a pipeline
+
+The clauses don't run in writing order — they run as a pipeline.
+
+::: {.fragment}
+![Stage 1 — `FROM`: pick the input table(s).](images/lec1-select-pipeline-step1.svg){width="55%" fig-alt="Pipeline stage 1: the FROM clause selects the input table(s)."}
+:::
+
+::: {.fragment}
+![Stage 2 — `WHERE`: filter rows.](images/lec1-select-pipeline-step2.svg){width="55%" fig-alt="Pipeline stage 2: the WHERE clause filters individual rows."}
+:::
+
+::: {.fragment}
+![Stage 3 — `GROUP BY`: bucket rows by a key.](images/lec1-select-pipeline-step3.svg){width="55%" fig-alt="Pipeline stage 3: the GROUP BY clause buckets rows by a key."}
+:::
+
+::: notes
+You write the clauses in declarative order — SELECT first, FROM second — but the engine runs them in execution order: pick tables, drop rows, bucket, aggregate, project columns, sort, cut.
+:::
+
+## SELECT pipeline (continued)
+
+::: {.fragment}
+![Stage 4 — `SELECT` + aggregations: compute columns per group.](images/lec1-select-pipeline-step4.svg){width="55%" fig-alt="Pipeline stage 4: the SELECT clause and aggregations compute columns per group."}
+:::
+
+::: {.fragment}
+![Stage 5 — `ORDER BY` + `LIMIT`: sort and trim.](images/lec1-select-pipeline-step5.svg){width="55%" fig-alt="Pipeline stage 5: the ORDER BY and LIMIT clauses sort and trim the result."}
+:::
+
+`WHERE` filters individual rows before grouping; `HAVING` filters whole groups after aggregation.
+
+::: notes
+Understanding pipeline order is what makes the difference between WHERE and HAVING click. You cannot use `COUNT(*) > 1` in WHERE — at WHERE-time the count does not exist yet.
 :::
 
 ## JOIN — combine two tables
@@ -256,43 +260,46 @@ JOIN is how relational data earns its name. Match `assay.strain_id` to `strain.s
 ## INNER JOIN — visualised
 
 ::: {.fragment}
-![Start: strain table on the left, assay table on the right; no joined rows yet.](images/lec1-inner-join-step1.svg){fig-alt="The strain and assay tables side by side with no joined output yet."}
+![Start: strain and assay tables, no joined rows yet.](images/lec1-inner-join-step1.svg){width="55%" fig-alt="The strain and assay tables side by side with no joined output yet."}
 :::
 
 ::: {.fragment}
-![Match #1: assay row with `strain_id = 1` joins to strain row 1; produces one combined row.](images/lec1-inner-join-step2.svg){fig-alt="An assay row with strain_id 1 joined to strain row 1, producing one combined output row."}
-:::
-
-::: {.fragment}
-![Match #2: a second assay for `strain_id = 1` joins to the same strain row; the strain row is reused (one strain, many assays).](images/lec1-inner-join-step3.svg){fig-alt="A second assay for strain_id 1 joined to the same strain row, illustrating one strain with many assays."}
-:::
-
-::: {.fragment}
-![All matching pairs: every assay whose `strain_id` exists in the strain table appears in the output exactly once per (strain, assay) pair.](images/lec1-inner-join-step4.svg){fig-alt="The complete inner-join output: every assay matched to its strain, one output row per matching pair."}
+![Match #1: assay `strain_id = 1` joins to strain row 1.](images/lec1-inner-join-step2.svg){width="55%" fig-alt="An assay row with strain_id 1 joined to strain row 1, producing one combined output row."}
 :::
 
 ::: notes
-The animation builds the join one matched pair at a time. The same strain row is reused for every assay that points at it — that is what produces the one-to-many shape. A strain with zero matching assays would be dropped from the output entirely — that's the defining behaviour of INNER JOIN. Hold that thought; it is exactly what LEFT JOIN exists to fix.
+The animation builds the join one matched pair at a time. Continued on the next slide.
+:::
+
+## INNER JOIN — visualised (continued)
+
+::: {.fragment}
+![Match #2: a second assay reuses the same strain row (one-to-many).](images/lec1-inner-join-step3.svg){width="55%" fig-alt="A second assay for strain_id 1 joined to the same strain row, illustrating one strain with many assays."}
+:::
+
+::: {.fragment}
+![All matching pairs: one output row per (strain, assay) match.](images/lec1-inner-join-step4.svg){width="55%" fig-alt="The complete inner-join output: every assay matched to its strain, one output row per matching pair."}
+:::
+
+::: notes
+A strain with zero matching assays would be dropped from the output entirely — that's the defining behaviour of INNER JOIN. Hold that thought; it is exactly what LEFT JOIN exists to fix.
 :::
 
 ## NATURAL JOIN — the shortcut
 
-**`NATURAL JOIN`** (auto-join on every column the two tables happen to share by name) is the shortcut. If both tables have a column with the **same name**, SQL can infer the join:
+**`NATURAL JOIN`** auto-joins on every column the two tables share by name.
 
 ```sql
 SELECT strain_name, species, medium, od600_24h
 FROM strain NATURAL JOIN assay;
 ```
 
-Equivalent to the explicit `JOIN ... ON a.strain_id = s.strain_id` because that is the one column the two schemas share.
+Equivalent to `JOIN ... ON a.strain_id = s.strain_id` because that is the one shared column.
 
-![NATURAL JOIN auto-joins on every column with the same name. Here `strain_id` is the only shared column — so it's the join key.](images/lec1-natural-join-columns.svg){fig-alt="Two table headers side by side with strain_id highlighted as the only shared column name, the implicit NATURAL JOIN key."}
+![`strain_id` is the only shared column — so it's the join key.](images/lec1-natural-join-columns.svg){width="60%" fig-alt="Two table headers side by side with strain_id highlighted as the only shared column name, the implicit NATURAL JOIN key."}
 
 ::: {.fragment}
-**Convenient** when you name your foreign keys carefully.
-**Dangerous** when someone later adds a column whose name happens to match.
-
-Use it once; reach for explicit `JOIN ... ON` in real code.
+Convenient on tidy schemas; dangerous when someone later adds a matching-name column. Prefer explicit `JOIN ... ON` in real code.
 :::
 
 ::: notes
@@ -301,26 +308,20 @@ NATURAL JOIN is a syntactic convenience that pays off in tidy schemas — when e
 
 ## NULL is weird — handle with care
 
-**NULL** (the database's "no value here" marker — *not* zero, *not* empty string) follows **three-valued logic** (true / false / unknown). Comparing anything to NULL gives NULL, not true or false.
+**NULL** is "no value here" — *not* zero, *not* empty string. Comparing anything to NULL gives NULL, not true or false.
 
 ```sql
--- Tiny table with one missing value:
--- assay_id | strain_id | od600_24h
---    101   |     1     |   0.42
---    102   |     1     |   NULL
---    103   |     2     |   0.61
+-- Tiny table: assay_id 101 od=0.42, 102 od=NULL, 103 od=0.61
 
-SELECT * FROM assay WHERE od600_24h = NULL;   -- 0 rows!  (NULL = NULL is NULL, not true)
-SELECT * FROM assay WHERE od600_24h IS NULL;  -- 1 row    (the right way to ask)
+SELECT * FROM assay WHERE od600_24h = NULL;   -- 0 rows! (NULL = NULL is NULL)
+SELECT * FROM assay WHERE od600_24h IS NULL;  -- 1 row   (the right way)
 
-SELECT COUNT(*)          FROM assay;          -- 3   (counts every row)
-SELECT COUNT(od600_24h)  FROM assay;          -- 2   (skips the NULL row)
+SELECT COUNT(*)          FROM assay;          -- 3 (every row)
+SELECT COUNT(od600_24h)  FROM assay;          -- 2 (skips NULL)
 ```
 
-Rules of thumb:
-
 - Use `IS NULL` / `IS NOT NULL`, never `= NULL`.
-- `COUNT(*)` counts rows; `COUNT(column)` counts non-NULL values in that column.
+- `COUNT(*)` counts rows; `COUNT(column)` counts non-NULL values.
 
 ::: notes
 NULL is the source of more SQL surprises than any other feature. The rule that breaks people's intuition: a comparison involving NULL returns NULL, not false. So `WHERE col = NULL` returns zero rows even when there are NULLs in `col` — because the WHERE clause keeps rows where the predicate is *true*, and NULL is not true. Use `IS NULL` and `IS NOT NULL`. The COUNT distinction matters for the next slide: `COUNT(a.assay_id)` is what makes a strain with no assays come out as 0 instead of 1.
@@ -336,11 +337,9 @@ GROUP BY s.strain_name
 ORDER BY n;
 ```
 
-**`LEFT JOIN`** (keep every row from the left table, even when nothing on the right matches) fills `NULL` on the right when there is no match.
+**`LEFT JOIN`** keeps every left-table row, filling `NULL` on the right when no match exists. A strain with zero assays shows up with `n = 0`; `INNER JOIN` would drop it silently.
 
-A strain with zero assays shows up with `n = 0`. With `INNER JOIN` it would silently vanish.
-
-![LEFT JOIN keeps every row from the left table, even when there's no match on the right — the unmatched fields become NULL.](images/lec1-left-join-example.svg){fig-alt="LEFT JOIN output retaining all left-table rows; rows with no match on the right show NULL values in the right-side columns."}
+![LEFT JOIN keeps unmatched left rows; right-side fields become NULL.](images/lec1-left-join-example.svg){width="60%" fig-alt="LEFT JOIN output retaining all left-table rows; rows with no match on the right show NULL values in the right-side columns."}
 
 ::: notes
 This is one of the most common bugs in production SQL: someone reaches for INNER JOIN by reflex, and rows from the left table that have no matching right-side row disappear from the output. The fix is to use LEFT JOIN whenever you want to preserve every left-side row regardless of whether there is a match. Note also `COUNT(a.assay_id)` rather than `COUNT(*)` — count of a column ignores NULLs, which is what makes the no-assay strain come out as 0 instead of 1.
@@ -448,18 +447,18 @@ The [`bundled`](https://docs.rs/rusqlite/latest/rusqlite/#features) feature comp
 Four lines of Rust, four conceptual stages:
 
 ::: {.fragment}
-![Step 1 — `Connection::open(path)`: connect to the database file (creates one if missing).](images/lec1-rusqlite-step1.svg){fig-alt="Step 1: Connection::open opens (or creates) the .db file and returns a Connection handle."}
+![Step 1 — `Connection::open(path)`: open (or create) the `.db` file.](images/lec1-rusqlite-step1.svg){width="55%" fig-alt="Step 1: Connection::open opens (or creates) the .db file and returns a Connection handle."}
 :::
 
 ::: {.fragment}
-![Step 2 — `conn.prepare("SELECT ...")`: parse and compile the SQL into a reusable **prepared statement** (a compiled query the engine can run many times with different parameter values).](images/lec1-rusqlite-step2.svg){fig-alt="Step 2: conn.prepare compiles the SQL string into a reusable Statement object."}
+![Step 2 — `conn.prepare(...)`: compile SQL into a reusable **prepared statement**.](images/lec1-rusqlite-step2.svg){width="55%" fig-alt="Step 2: conn.prepare compiles the SQL string into a reusable Statement object."}
 :::
 
 ::: {.fragment}
-![Step 3 — `stmt.query_map(params, |row| ...)`: bind the parameters, run the query, map each row to a Rust struct.](images/lec1-rusqlite-step3.svg){fig-alt="Step 3: stmt.query_map binds parameters, runs the query, and maps each row to a Rust struct via the closure."}
+![Step 3 — `stmt.query_map(params, |row| ...)`: bind, run, map each row.](images/lec1-rusqlite-step3.svg){width="55%" fig-alt="Step 3: stmt.query_map binds parameters, runs the query, and maps each row to a Rust struct via the closure."}
 :::
 
-Step 4 is just iterating the `MappedRows` with a `for` loop.
+Step 4: iterate `MappedRows` with a `for` loop.
 
 ::: notes
 Four steps; the same shape for every SELECT in rusqlite. Open returns a Connection. Prepare compiles the SQL into a Statement that you can reuse. query_map binds the parameters into the placeholders and gives you back an iterator. The for loop materialises each row by invoking your closure. The closure is where column types meet Rust types — row.get(i) returns a Result whose inner type is inferred from the field you assign into.
@@ -487,7 +486,7 @@ conn.execute(
 Two method calls and a macro. Open returns a Connection. Execute runs a statement that does not produce a result set — INSERT, UPDATE, DELETE, CREATE TABLE, anything but SELECT. The placeholders `?1` and friends are filled by the `params!` macro, which knows how to encode each Rust value into the right SQL type. Never glue strings together with format! — we will get to why on the SQL-injection slide.
 :::
 
-## Read rows back
+## Read rows back — the row struct
 
 A plain Rust struct holds one row's worth of fields:
 
@@ -500,30 +499,38 @@ struct Strain {
 }
 ```
 
+Each column maps to one field. NOT NULL columns map to `T`; nullable columns map to `Option<T>` (next slide).
+
+::: notes
+The struct is the Rust shape of one row. The closure on the next slide turns each query row into one of these structs by calling `row.get(i)` for each column in declaration order.
+:::
+
+## Read rows back — prepare and iterate
+
 ```rust
-let mut stmt = conn.prepare(                              // compile the query once
+let mut stmt = conn.prepare(                            // compile once
     "SELECT strain_id, strain_name, species
      FROM strain
      WHERE species = ?1",
 )?;
 
-let rows = stmt.query_map(["Escherichia coli"], |row| {   // bind ?1, run, map each row
-    Ok(Strain {                                           // build a Strain struct per row
-        strain_id:   row.get(0)?,                         // column 0 -> strain_id field
-        strain_name: row.get(1)?,                         // column 1 -> strain_name field
-        species:     row.get(2)?,                         // column 2 -> species field
+let rows = stmt.query_map(["Escherichia coli"], |row| { // bind, run, map
+    Ok(Strain {
+        strain_id:   row.get(0)?,
+        strain_name: row.get(1)?,
+        species:     row.get(2)?,
     })
 })?;
 
-for strain in rows {                                      // iterate the results
-    println!("{:?}", strain?);                            // unwrap the row's Result, then print
+for strain in rows {
+    println!("{:?}", strain?);
 }
 ```
 
 [`prepare`](https://docs.rs/rusqlite/latest/rusqlite/struct.Connection.html#method.prepare) → [`query_map`](https://docs.rs/rusqlite/latest/rusqlite/struct.Statement.html#method.query_map) → loop. Same shape every time.
 
 ::: notes
-This is the read path: prepare the SQL, call query_map with the parameters and a closure that maps each row to your Rust struct, iterate. The closure calls row.get(i) for each column, in declaration order. row.get returns Result, so the `?` short-circuits on a type-mismatch error. The for loop yields Result<Strain> values, so you `?` again to unwrap each one. Look how little there is here — eight lines of boilerplate plus your SQL.
+This is the read path: prepare the SQL, call query_map with the parameters and a closure that maps each row to your Rust struct, iterate. The closure calls row.get(i) for each column, in declaration order. row.get returns Result, so the `?` short-circuits on a type-mismatch error. The for loop yields Result<Strain> values, so you `?` again to unwrap each one.
 :::
 
 ## Nullable columns map to Option
@@ -548,7 +555,7 @@ The rule is mechanical: a column declared `NOT NULL` in the schema maps to a pla
 
 ## Parameter binding — never format! into SQL
 
-**Parameter binding** (sending the SQL template and the values to the database separately, instead of pasting the values into the SQL string) is the only safe way to inject user data into a query.
+**Parameter binding** sends the SQL template and the values separately, instead of pasting values into the SQL string.
 
 ```rust
 // NEVER do this:
@@ -559,7 +566,13 @@ conn.execute(
 )?;
 ```
 
-If `user_input` is `"x'; DROP TABLE strain; --"`, you just deleted the table. This is a **SQL injection** (an attacker smuggles SQL syntax inside what your code treats as a plain value).
+If `user_input` is `"x'; DROP TABLE strain; --"`, you just deleted the table — a **SQL injection**.
+
+::: notes
+SQL injection is fifty years old and still the #1 web vulnerability. The mechanism: if you build SQL by string concatenation, an attacker can sneak SQL syntax inside what looks like a value.
+:::
+
+## Parameter binding — the safe form
 
 ```rust
 // ALWAYS do this:
@@ -569,29 +582,28 @@ conn.execute(
 )?;
 ```
 
-The `?1` placeholder + [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro escape the value safely. **Non-negotiable.**
+The `?1` placeholder + [`params!`](https://docs.rs/rusqlite/latest/rusqlite/macro.params.html) macro escape the value safely.
+
+Any value not literally typed by you goes through `?1` / `params!`, never `format!`. **Non-negotiable.**
 
 ::: notes
-SQL injection is fifty years old and still the #1 web vulnerability. The mechanism: if you build SQL by string concatenation, an attacker can sneak SQL syntax inside what looks like a value. The fix is universal — use the parameter placeholder mechanism the library gives you, which sends the SQL and the values separately to the database. rusqlite's `params!` macro handles every primitive and Option type. The rule is absolute: any value not literally typed by you goes through `?1`/`params!`, not format!.
+The fix is universal — use the parameter placeholder mechanism the library gives you, which sends the SQL and the values separately to the database. rusqlite's `params!` macro handles every primitive and Option type.
 :::
 
 ## SQL injection in the wild
 
 The "Bobby Tables" comic is a joke, but the bug is real and expensive:
 
-![](https://imgs.xkcd.com/comics/exploits_of_a_mom.png){width="60%" fig-alt="The XKCD 'Exploits of a Mom' comic strip, showing a school calling a parent about their child named 'Robert'); DROP TABLE Students;--' which deleted all student records due to a SQL injection vulnerability."}
+![](https://imgs.xkcd.com/comics/exploits_of_a_mom.png){width="45%" fig-alt="The XKCD 'Exploits of a Mom' comic strip, showing a school calling a parent about their child named 'Robert'); DROP TABLE Students;--' which deleted all student records due to a SQL injection vulnerability."}
 
-In 2015 the UK ISP **TalkTalk** lost the personal details of ~157,000 customers to a SQL injection attack — total cost ~£77 million, including a record ICO fine. A teenager exploited an unpatched legacy page.
+In 2015 the UK ISP **TalkTalk** lost ~157,000 customers' details to SQL injection — total cost ~£77 million.
 
-→ [Wikipedia: TalkTalk data breach](https://en.wikipedia.org/wiki/TalkTalk_data_breach)
-→ [Wikipedia: SQL injection (long list of public incidents)](https://en.wikipedia.org/wiki/SQL_injection)
+→ [TalkTalk breach](https://en.wikipedia.org/wiki/TalkTalk_data_breach), [SQL injection incidents](https://en.wikipedia.org/wiki/SQL_injection)
 
-Even a small lab-internal web app over your strain database is reachable from the campus network — the same rule applies.
-
-Use parameter binding. Always. There is no scenario in which the saved characters of string concatenation are worth £77 million.
+Use parameter binding. Always.
 
 ::: notes
-Bioinformatics rarely runs public web services, but lab databases sometimes back internal web tools — and the lesson generalises: never paste untrusted strings into SQL. rusqlite's `params!` macro makes the safe path the easy one.
+A teenager exploited an unpatched legacy page. Even a small lab-internal web app over your strain database is reachable from the campus network — the same rule applies. Bioinformatics rarely runs public web services, but lab databases sometimes back internal web tools — and the lesson generalises: never paste untrusted strings into SQL. rusqlite's `params!` macro makes the safe path the easy one. There is no scenario in which the saved characters of string concatenation are worth £77 million.
 :::
 
 ## Transactions — atomicity AND performance

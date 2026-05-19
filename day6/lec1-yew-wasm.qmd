@@ -4,7 +4,7 @@ subtitle: "Day 6"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -258,19 +258,14 @@ The picture is: at the `.await`, your function yields control. The browser keeps
 
 ## A REST server in 20 lines of axum
 
-**REST** [Representational State Transfer — the convention of using HTTP verbs (GET, POST, ...) plus URL paths to access named resources]. Before adding a frontend, here's the smallest possible backend — it accepts a DNA sequence and returns its GC content. `axum` [a Rust web framework for building HTTP servers] is the backend library we use today:
+**REST** [HTTP verbs + URL paths to access named resources]. `axum` [a Rust web framework for HTTP servers] is the backend library we use today. The smallest possible backend — accepts a DNA sequence, returns its GC content:
 
 ```rust
-// Rust
 use axum::{routing::get, Router, extract::Query};
 use serde::{Serialize, Deserialize};
-use std::net::SocketAddr;
 
-#[derive(Deserialize)]
-struct GcQuery { seq: String }
-
-#[derive(Serialize)]
-struct GcAnswer { length: usize, gc: f64 }
+#[derive(Deserialize)] struct GcQuery { seq: String }
+#[derive(Serialize)]   struct GcAnswer { length: usize, gc: f64 }
 
 async fn gc(Query(q): Query<GcQuery>) -> axum::Json<GcAnswer> {
     let n = q.seq.len();
@@ -281,16 +276,18 @@ async fn gc(Query(q): Query<GcQuery>) -> axum::Json<GcAnswer> {
 #[tokio::main]
 async fn main() {
     let app = Router::new().route("/gc", get(gc));
-    let addr: SocketAddr = "127.0.0.1:3000".parse().unwrap();
-    axum::Server::bind(&addr).serve(app.into_make_service()).await.unwrap();
+    let l = tokio::net::TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    axum::serve(l, app).await.unwrap();
 }
 ```
-
-![The flow: client requests `GET /gc?seq=ACGT` → axum routes → `gc()` handler → JSON response.](images/lec1-rest-server-example.svg){fig-alt="A flow diagram showing a client sending GET /gc?seq=ACGT to axum, the router dispatching to the gc handler, and a JSON response being returned."}
 
 ::: notes
 This is the bare minimum to convince yourself that "Rust on the backend" works. No frontend yet — we'll add Yew in a moment.
 :::
+
+## REST server — the call flow
+
+![The flow: client requests `GET /gc?seq=ACGT` → axum routes → `gc()` handler → JSON response.](images/lec1-rest-server-example.svg){fig-alt="A flow diagram showing a client sending GET /gc?seq=ACGT to axum, the router dispatching to the gc handler, and a JSON response being returned."}
 
 ## Calling it with curl
 
@@ -512,14 +509,13 @@ html! {
 }
 ```
 
-The `html!` macro lets you write **HTML-shaped syntax** — the same `<div>`, `<h1>`, `<p>` tags you saw earlier — directly in your Rust source. The `{ ... }` slots let you embed any Rust expression for dynamic content.
+HTML-shaped syntax in Rust source. `{ ... }` slots embed any Rust expression.
 
-Differences from plain HTML you write by hand:
+Differences from plain HTML:
 
 - Every tag must be closed (`<br/>`, not `<br>`)
-- Text content goes inside `{ }`: `<p>{ "hi" }</p>` (bare text won't compile)
-- Any Rust expression inside `{ }`: `<p>{ 1 + 1 }</p>` renders "2"
-- Multiple top-level elements: wrap in `<></>` or a `<div>`
+- Text goes inside `{ }`: `<p>{ "hi" }</p>`
+- Multiple top-level elements: wrap in `<></>`
 
 ::: notes
 The macro looks like HTML but is actually Rust. Text content has to live inside braces because the macro is parsed by the Rust tokenizer — `Hi` would look like an identifier. Inside braces you can put any expression that produces something Yew knows how to render. The closed-tags rule comes from the XML-style parser; HTML's tolerance for unclosed `<br>` does not apply.
@@ -587,10 +583,9 @@ let on_click = {
 
 ## Controlled input — input bound to state
 
-A **controlled input** [a form element whose displayed value is read from state, and whose changes are written back to state] makes the Rust value the single source of truth.
+A **controlled input** [displayed value reads from state; changes write back] makes the Rust value the single source of truth.
 
 ```rust
-// Rust
 let typed = use_state(String::new);
 
 let on_input = {
@@ -602,16 +597,14 @@ let on_input = {
 };
 
 html! {
-    // deref the use_state handle to get the inner String, then clone it
-    // so the attribute value is owned
     <input type="text" value={(*typed).clone()} oninput={on_input} />
 }
 ```
 
-The state **is** the input's value. Every keystroke writes; the value attribute reads.
+State **is** the input's value. Keystroke writes; the value attribute reads.
 
 ::: notes
-This is the textbook controlled-input pattern. The input's content lives in state, not in the DOM. The oninput callback writes the new value back to state, which triggers a rerender, which sets the input's value attribute to the new string. The "let typed = typed.clone()" line before the callback is necessary because the closure needs its own handle to move into. For the exercises you will use `<textarea>` and `HtmlTextAreaElement` in exactly the same shape — same pattern, different element type.
+The input's content lives in state, not in the DOM. The oninput callback writes the new value back to state, which triggers a rerender, which sets the input's value attribute to the new string. The `let typed = typed.clone()` line before the callback is necessary because the closure needs its own handle to move into. For the exercises you will use `<textarea>` and `HtmlTextAreaElement` in exactly the same shape — same pattern, different element type.
 :::
 
 ## `use_effect_with` — run something when deps change
@@ -655,7 +648,6 @@ A `.wasm` module has no threads. You cannot block on a synchronous fetch — the
 ## Loading samples on mount
 
 ```rust
-// Rust
 {
     let samples = samples.clone();
     use_effect_with((), move |_| {
@@ -671,10 +663,10 @@ A `.wasm` module has no threads. You cannot block on a synchronous fetch — the
 }
 ```
 
-`use_effect_with` runs once on mount; `spawn_local` does the fetch; nested `if let Ok` swallows errors for the teaching example.
+`use_effect_with((), …)` runs once on mount; `spawn_local` runs the async fetch.
 
 ::: notes
-This composition shows all the pieces together. The outer scope clones `samples` so the effect closure can own its own handle. `use_effect_with((), ...)` makes the body run once. `spawn_local` runs the async fetch. On success, `samples.set(data)` triggers a rerender that draws the buttons. In a real app you would surface errors in the UI; for the exercise nested `if let Ok` is enough.
+The outer scope clones `samples` so the effect closure can own its own handle. `use_effect_with((), ...)` makes the body run once. `spawn_local` runs the async fetch. On success, `samples.set(data)` triggers a rerender that draws the buttons. In a real app you would surface errors in the UI; for the exercise nested `if let Ok` is enough.
 :::
 
 ## `gloo_net::Request` — fetch from WASM
@@ -701,7 +693,6 @@ gloo_net is the WASM-side HTTP client. The shape mirrors JavaScript's fetch: sen
 ## axum — Rust HTTP server
 
 ```rust
-// Rust
 use axum::{routing::get, Json, Router};
 use shared::SampleSummary;
 
@@ -717,7 +708,7 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
-[`axum`](https://docs.rs/axum/) is the standard Rust web framework for JSON APIs. A **route** [a mapping from URL path + HTTP method to a handler] is added with `Router::new().route(...)`. A **handler** [the async function axum calls when a route matches] is just an `async fn` that returns something serialisable.
+A **route** maps URL+method to a **handler** — an `async fn` returning something serialisable. See [`axum`](https://docs.rs/axum/).
 
 ::: notes
 A `Router` maps URL paths to handler functions. Each handler is async. `Json<T>` is a wrapper that does serde encoding automatically — return `Json(data)` and the client receives a JSON body with the right content-type. The `#[tokio::main]` attribute starts the Tokio async runtime, which is what schedules these futures across the server's thread pool.
@@ -747,16 +738,14 @@ Extractors are how axum gets arguments into handlers. `Path<String>` extracts a 
 
 ## CORS — and why we usually avoid it
 
-An **origin** [the (scheme, host, port) triple — `http://localhost:8080` and `http://localhost:3000` differ in port, so they are different origins] is what the browser uses to decide who can talk to whom. **CORS** [Cross-Origin Resource Sharing — HTTP headers the server sends to opt in to cross-origin requests] is the permission system on top of that.
+An **origin** [scheme + host + port] is the browser's unit of trust. `:8080` and `:3000` are different origins.
 
-Recall ports — your frontend on `:8080` calling your backend on `:3000` is technically two different origins. The browser's **Same-Origin Policy** [the default rule that scripts on page A cannot read responses from a different origin B] blocks the call unless the server explicitly opts in.
-
-A browser blocks `fetch` calls from one origin (`localhost:8080`, trunk) to another (`localhost:3000`, axum) unless the server explicitly opts in.
+The **Same-Origin Policy** blocks `fetch` from one origin to another unless the server opts in with **CORS** [Cross-Origin Resource Sharing headers].
 
 Two ways to handle it:
 
-- **Enable CORS** on axum with `tower_http::cors::CorsLayer::permissive()` (real apps do this)
-- **Proxy through trunk** — let trunk forward `/api/...` to axum so the browser sees one origin (what we do today)
+- **Enable CORS** on axum with `tower_http::cors::CorsLayer::permissive()` (real apps)
+- **Proxy through trunk** — trunk forwards `/api/...` to axum, browser sees one origin (today)
 
 ::: notes
 The Same-Origin Policy is the browser's main defence against malicious cross-site requests. A page served from `:8080` cannot fetch from `:3000` unless `:3000` sends back specific headers saying "this is allowed". You either configure the backend to send those headers — that is what `tower_http::cors::CorsLayer` does — or arrange for the browser to never see two origins in the first place. We go with option two for development.
@@ -798,13 +787,11 @@ This is the data flow of exercise 4 read in slow motion. Every step is a piece y
 
 ## What we deliberately skip
 
-**In scope today:**
-function components, `use_state`, `use_effect_with`, `Callback::from`, one `async fn` pattern, `spawn_local`, `gloo_net::Request`, serde, axum routes + handlers, trunk + dev proxy, inline SVG in `html!`.
+**In scope:** function components, `use_state`, `use_effect_with`, `Callback::from`, one `async fn` pattern, `spawn_local`, `gloo_net::Request`, serde, axum routes + handlers, trunk + dev proxy, inline SVG in `html!`.
 
-**Out of scope today:**
-`Future` internals, pinning, executors; axum extractors with state and middleware; the full Yew agents/lifecycle/portals API; wasm-bindgen deep magic.
+**Out of scope:** `Future` internals, pinning, executors; axum state and middleware; full Yew agents/lifecycle/portals; wasm-bindgen deep magic.
 
-The app you build today is structurally identical to a real Rust web app. The "out" items are real and useful — they will not stop you shipping.
+The app is structurally identical to a real Rust web app. The "out" items will not stop you shipping.
 
 ::: notes
 We are picking a narrow, useful slice of each topic and stopping. The slice is enough to build a working, deployable app. The deeper material — executors, Tokio internals, advanced Yew patterns — is real and worth learning eventually, but trying to teach it today would mean nothing got built.

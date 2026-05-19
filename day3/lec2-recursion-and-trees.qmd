@@ -4,7 +4,7 @@ subtitle: "Day 3"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -38,16 +38,11 @@ The biological motivation is phylogenies. A phylogenetic tree relates species, g
 
 ## Phylogenetic trees — what we want to model
 
-A phylogeny is a branching diagram representing evolutionary relationships between species, genes, or strains. **Internal nodes** are inferred common ancestors; **tips** (leaves) are present-day samples.
+A phylogeny is a branching diagram of evolutionary relationships. **Internal nodes** are inferred common ancestors; **tips** (leaves) are present-day samples.
 
-At each node we want to record:
+At each node we record a **name** (at tips) and a **branch length** — the evolutionary distance to the parent.
 
-- A **name** (at tips: species, gene, strain — internal nodes are usually nameless)
-- A **branch length** (everywhere except the root) — the evolutionary distance to the parent
-
-![Same tree as a picture, a Newick string, and a Rust enum literal.](images/phylo-three-views.svg){fig-alt="A small 3-tip tree shown three ways: a graphical tree, the Newick string ((A:0.1,B:0.2):0.3,C:0.5);, and the equivalent Rust Node::Internal { ... } literal — coloured highlights link matching parts across the three representations."}
-
-To write code that walks this — count tips, find the longest branch, prune a subtree — we need a recursive type and recursive functions.
+![Same tree as a picture, a Newick string, and a Rust enum literal.](images/phylo-three-views.svg){width="75%" fig-alt="A small 3-tip tree shown three ways: a graphical tree, the Newick string ((A:0.1,B:0.2):0.3,C:0.5);, and the equivalent Rust Node::Internal { ... } literal."}
 
 ::: notes
 Three views of the same tree. The picture is what a biologist draws on a whiteboard; the Newick string is the standard text format the field uses for file storage and exchange; the Rust enum literal is what we'll be computing on for the next forty minutes.
@@ -68,9 +63,9 @@ enum Node {
 // error[E0072]: recursive type `Node` has infinite size
 ```
 
-`size(Node) = 1 + 2 × size(Node)` — there is no fixed answer.
+`size(Node) = 1 + 2 × size(Node)` — no fixed answer.
 
-The `1` here is the small label (the **tag** [a byte that records which variant this value is — Leaf or Internal]) Rust stores so it can tell which variant a `Node` value is. The `2 × size(Node)` is the two child Nodes inlined into the parent — that's the part that has no finite answer.
+The `1` is the variant **tag**; the `2 × size(Node)` is two child Nodes inlined into the parent — that's the part with no finite answer.
 
 The fix: store a pointer to each child instead of the child itself.
 
@@ -120,10 +115,10 @@ Notice that the root has a `branch_length` field. In a strict reading of phyloge
 
 To count the tips of a tree:
 
-> if the tree is a single tip (Leaf), the answer is **1**.
-> Otherwise (Internal), the answer is the **sum** of the tip counts of each child, computed the same way.
+> if the tree is a Leaf, the answer is **1**.
+> If Internal, the answer is the **sum** of the tip counts of each child.
 
-The explicit shape first — an accumulator and a loop, exactly as you'd write in Python:
+The explicit shape — an accumulator and a loop:
 
 ```rust
 fn count_tips(node: &Node) -> usize {
@@ -140,6 +135,16 @@ fn count_tips(node: &Node) -> usize {
 }
 ```
 
+::: notes
+The function shape mirrors the type shape. A leaf contributes one tip. An internal node's tip count is the sum of its children's tip counts. The match exhausts both variants; the recursion bottoms out at leaves.
+
+This version is the one most readers can read off without thinking: declare a mutable accumulator, loop, add, return.
+
+This is the central pattern of recursive code on recursive types: one `match` arm per variant, and the recursive arms call the function on each contained sub-tree.
+:::
+
+## The idiomatic Rust version
+
 The idiomatic Rust version collapses the loop into an iterator chain:
 
 ```rust
@@ -155,13 +160,9 @@ fn count_tips(node: &Node) -> usize {
 Same code, same speed — the second is what you'll see in Rust idiom.
 
 ::: notes
-The function shape mirrors the type shape. A leaf contributes one tip. An internal node's tip count is the sum of its children's tip counts. The match exhausts both variants; the recursion bottoms out at leaves.
-
-The first version is the one most readers can read off without thinking: declare a mutable accumulator, loop, add, return. The second uses iterators: `map(count_tips)` produces an iterator of usize values, and `sum()` reduces them. `count_tips` is passed by name as a function value to `map` — Rust functions are first-class.
+This uses iterators: `map(count_tips)` produces an iterator of usize values, and `sum()` reduces them. `count_tips` is passed by name as a function value to `map` — Rust functions are first-class.
 
 Either version is fine to write; they produce the same machine code. The iterator form is what you'll see in idiomatic Rust because it composes well with `.filter()`, `.take_while()`, and so on.
-
-This is the central pattern of recursive code on recursive types: one `match` arm per variant, and the recursive arms call the function on each contained sub-tree.
 :::
 
 ## Another walk: deepest leaf
@@ -193,7 +194,7 @@ If you wanted total branch length instead of depth, you'd add `*branch_length + 
 
 ## Recursion has a depth cost
 
-Every recursive call pushes a **stack frame** [a chunk of memory holding the call's local variables and return address] onto the **call stack** [the program's per-thread stack of in-progress function calls].
+Every recursive call pushes a **stack frame** onto the **call stack**.
 
 ```text
 max_depth(root)
@@ -205,17 +206,25 @@ max_depth(root)
 
 The stack has a fixed size (a few megabytes by default). Very deep recursion can run out of room — a **stack overflow**.
 
-When this matters:
+::: notes
+A stack frame is a chunk of memory holding the call's local variables and return address. The call stack is the program's per-thread stack of in-progress function calls.
+
+The call stack is the data structure your program uses to keep track of which function is currently running and where to return to when it finishes. Each call adds a frame; each return pops one.
+
+The default stack size on Linux is 8 MB, on Windows 1 MB, on threads spawned by the standard library 2 MB. A typical recursive frame is a few dozen to a few hundred bytes — so you can usually go a few tens of thousands of levels deep before hitting the wall.
+:::
+
+## When recursion is safe
+
+When recursion depth matters:
 
 - **Phylogenies**: a few hundred internal nodes at most — well within the budget. Recursion is fine.
 - **Long sequences**: a million bases would mean a million frames — would crash. Use an explicit loop or an iterative work-list instead.
 
-Rust does not guarantee **tail-call optimisation** [a compiler trick that reuses a single stack frame for recursive calls in tail position — so it can't overflow]; some other languages do, but you can't rely on it here.
+Rust does not guarantee **tail-call optimisation**; some other languages do, but you can't rely on it here.
 
 ::: notes
-The call stack is the data structure your program uses to keep track of which function is currently running and where to return to when it finishes. Each call adds a frame; each return pops one.
-
-The default stack size on Linux is 8 MB, on Windows 1 MB, on threads spawned by the standard library 2 MB. A typical recursive frame is a few dozen to a few hundred bytes — so you can usually go a few tens of thousands of levels deep before hitting the wall.
+Tail-call optimisation is a compiler trick that reuses a single stack frame for recursive calls in tail position — so it can't overflow.
 
 The practical rule: trust recursion when the depth is bounded by something biologically small (tree heights, codon tables, parser states). Switch to iteration when the depth is bounded by something large (sequence length, genome size, number of reads).
 

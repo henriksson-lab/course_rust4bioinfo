@@ -4,7 +4,7 @@ subtitle: "Day 3"
 author: "Rust for bioinformaticians"
 format:
   revealjs:
-    theme: simple
+    theme: [simple, ../theme.scss]
     slide-number: c/t
     width: 1280
     height: 720
@@ -54,7 +54,7 @@ There are many other possible alignments; the question we want to answer is whic
 
 ## The naive recursion — what we'd write first
 
-The obvious recursion follows the English: at every step, either align the last two characters, drop one from `a`, or drop one from `b`. Take the best of the three.
+Follow the English: at each step, align the last two characters, drop one from `a`, or drop one from `b`. Take the best of the three.
 
 ```rust
 fn align_naive(a: &[u8], b: &[u8]) -> i32 {
@@ -69,9 +69,7 @@ fn align_naive(a: &[u8], b: &[u8]) -> i32 {
 }
 ```
 
-Each call makes three more calls. To compute `align("CA", "CA")` we end up computing `align("C", "C")` three different ways — and each of those branches three more times. The same little subproblem ["a subproblem is the same kind of question on smaller inputs"] is recomputed over and over.
-
-That's where the explosion comes from. The next slide quantifies it.
+Each call makes three more calls. The same little subproblem is recomputed over and over — that's the explosion.
 
 ::: notes
 This is the algorithm you'd write off the top of your head before knowing dynamic programming exists — and it's exactly what an exam paper would ask you to write. The structure is correct, the code is short, and the result it would compute (if it ever finished) is the true optimal alignment score.
@@ -144,17 +142,15 @@ We'll revisit this list at the end of the lecture once the alignment example is 
 
 ## The rule for filling one cell
 
-![Fill once in dependency order; each subproblem solved exactly once.](images/dp-cell-recurrence.svg){fig-alt="A 2x2 grid showing four cells [i-1][j-1], [i-1][j], [i][j-1] in grey as predecessors, with the cell [i][j] highlighted in orange as the target. Three arrows from the predecessors converge on the target. A side panel lists three options being maximised: diagonal score[i-1][j-1] + s(a[i], b[j]) (match or mismatch), up score[i-1][j] + gap (gap in b), left score[i][j-1] + gap (gap in a). Footer notes that storing which neighbour won gives the traceback, the table fills top-left to bottom-right with each cell computed exactly once, and naïve recursion would re-derive the same subproblem exponentially many times."}
+![Fill once in dependency order; each subproblem solved exactly once.](images/dp-cell-recurrence.svg){width="70%" fig-alt="A 2x2 grid showing four cells [i-1][j-1], [i-1][j], [i][j-1] in grey as predecessors, with the cell [i][j] highlighted in orange as the target. Three arrows from the predecessors converge on the target."}
 
 Three options for filling cell `[i][j]`:
 
-- **diagonal**: `score[i-1][j-1] + s(a[i], b[j])` — align `a[i]` with `b[j]` (match or mismatch)
+- **diagonal**: `score[i-1][j-1] + s(a[i], b[j])` — match/mismatch
 - **up**: `score[i-1][j] + gap` — `a[i]` aligns to a gap in `b`
 - **left**: `score[i][j-1] + gap` — `b[j]` aligns to a gap in `a`
 
-`score[i][j]` = the maximum of the three.
-
-*This rule (CS jargon: the **recurrence** [the formula that defines each cell in terms of smaller ones]) is the heart of the algorithm. We'll call it the "filling step" or "the rule" from here on.*
+`score[i][j]` = the maximum of the three. CS jargon for this rule: the **recurrence**.
 
 ::: notes
 Each cell is filled from its three already-computed neighbours; the rule is the same in every cell.
@@ -166,15 +162,15 @@ There's a base case: the first row and first column are filled by "gap, gap, gap
 
 ## The filled matrix
 
-![The filled matrix for `ACGT` vs `ACT`. Each cell maxes three neighbours.](images/dp-matrix.svg){fig-alt="A worked Needleman–Wunsch matrix for a = ACGT and b = ACT with scoring match +1, mismatch -1, gap -1. The grid has columns labelled ε, A, C, T (b's letters) and rows labelled ε, A, C, G, T (a's letters). The first row reads 0, -1, -2, -3 and the first column reads 0, -1, -2, -3, -4. The cell (G, C) is highlighted in orange with the score 1. Three arrows converge on it: a grey diagonal arrow from the cell scoring 0, a grey left arrow from the cell scoring -1, and a thick green up arrow from the cell scoring 2 (chosen). A right-hand panel works through the recurrence: score[3][2] = max of ↘ 0 + (-1) = -1, ↓ 2 + (-1) = 1 (chosen), → -1 + (-1) = -2; so score[3][2] = 1 and the traceback arrow points up. A footer notes that walking arrows back from (n, m) recovers the alignment."}
+![The filled matrix for `ACGT` vs `ACT`. Each cell maxes three neighbours.](images/dp-matrix.svg){width="65%" fig-alt="A worked Needleman-Wunsch matrix for a = ACGT and b = ACT with scoring match +1, mismatch -1, gap -1."}
 
-For the highlighted cell `score[3][2]` (row G, column C), the three options are:
+For the highlighted cell `score[3][2]` (row G, column C):
 
 - diagonal: `0 + (-1) = -1`  (G vs C, mismatch)
-- up:       `2 + (-1) = 1`   (gap in `b`)  &larr; **chosen**
-- left:    `-1 + (-1) = -2`  (gap in `a`)
+- up: `2 + (-1) = 1` (gap in `b`)  &larr; **chosen**
+- left: `-1 + (-1) = -2` (gap in `a`)
 
-So `score[3][2] = 1`. The bottom-right cell holds the score of the best alignment of the whole sequences.
+So `score[3][2] = 1`. The bottom-right cell holds the score of the best alignment.
 
 ::: notes
 This is the global alignment matrix for two short sequences with simple scoring: match +1, mismatch -1, gap -1. Each cell is the best alignment score for the prefix pair `(a[..i], b[..j])` — the max over the three options from the previous slide.
@@ -186,11 +182,19 @@ The highlighted cell shows the filling rule in action. The same rule — replace
 
 The score alone tells you how good the alignment is, not what it actually is.
 
-**Trick:** at each cell, also remember **which neighbour won** the max. Walking those back-pointers from the bottom-right cell to the top-left reproduces the alignment — this walk is called the **traceback** [reading the choices back out of the filled table to recover the actual alignment, not just its score].
+**Trick:** at each cell, also remember **which neighbour won** the max. Walking those back-pointers from the bottom-right cell to the top-left reproduces the alignment — this walk is called the **traceback**.
 
-![Same matrix, now read backwards: trace the arrows from the bottom-right cell to the top-left.](images/dp-matrix.svg){fig-alt="The same Needleman-Wunsch matrix as on the previous slide, reused here so the audience can mentally trace the back-pointers from (n, m) back to (0, 0)."}
+![Same matrix, now read backwards: trace arrows from bottom-right to top-left.](images/dp-matrix.svg){width="60%"}
 
-The path through the matrix for the worked `CACGT` vs `CAGT` example, with each step labelled by which neighbour won:
+::: notes
+The traceback reads the choices back out of the filled table to recover the actual alignment, not just its score.
+
+Each cell already knows which of its three predecessors was the max — so storing one extra byte per cell (a "back-pointer") lets you reconstruct an actual alignment, not just its score.
+:::
+
+## Traceback — the path
+
+The path through the matrix for `CACGT` vs `CAGT`, each step labelled by which neighbour won:
 
 ```text
                     ε  C  A  G  T
@@ -202,7 +206,7 @@ The path through the matrix for the worked `CACGT` vs `CAGT` example, with each 
                 T   ↑  .  .  .  ↘
 ```
 
-Reading the chosen arrows along the path bottom-right → top-left gives:
+Reading chosen arrows along the path bottom-right → top-left:
 
 ```text
 walk:   ↘ ↘ ↓ ↘ ↘
@@ -212,8 +216,6 @@ align:  C A C G T
 ```
 
 ::: notes
-Each cell already knows which of its three predecessors was the max — so storing one extra byte per cell (a "back-pointer") lets you reconstruct an actual alignment, not just its score.
-
 The traceback walk is its own short recursion: from cell `(n, m)`, follow the stored back-pointer to one of three predecessors, emit one column of the alignment, and repeat. When you reach `(0, 0)`, reverse the emitted columns. Total time: O(n + m).
 
 For the exercise we ask for the score; the traceback is offered as a stretch goal. The full Needleman-Wunsch implementation — filling the matrix, recording back-pointers, walking the traceback — fits in about 60 lines of Rust.
