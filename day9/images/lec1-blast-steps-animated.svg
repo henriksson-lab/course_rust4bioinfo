@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title (always visible) -->
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="600" fill="#222">
+    BLAST in three conceptual steps
+  </text>
+
+  <!-- ===================== STAGE 1: Query split into k-mers ===================== -->
+  <g>
+    <text x="30" y="60" font-size="14" font-weight="600" fill="#1976d2">
+      1. Split query into k-mers
+    </text>
+
+    <!-- Query bar -->
+    <rect x="30" y="72" width="840" height="28" rx="4" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+    <text x="450" y="91" text-anchor="middle" font-size="13" fill="#1976d2" font-family="ui-monospace, monospace">
+      query sequence - e.g. 200 bp
+    </text>
+
+    <!-- k-mer boxes (overlapping) -->
+    <g font-family="ui-monospace, monospace" font-size="11" fill="#1976d2">
+      <rect x="50"  y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="100" y="128" text-anchor="middle">k-mer 1</text>
+
+      <rect x="135" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="185" y="128" text-anchor="middle">k-mer 2</text>
+
+      <rect x="220" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="270" y="128" text-anchor="middle">k-mer 3</text>
+
+      <rect x="305" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="355" y="128" text-anchor="middle">k-mer 4</text>
+
+      <rect x="390" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="440" y="128" text-anchor="middle">k-mer 5</text>
+
+      <rect x="475" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="525" y="128" text-anchor="middle">k-mer 6</text>
+
+      <rect x="560" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="610" y="128" text-anchor="middle">k-mer 7</text>
+
+      <rect x="645" y="112" width="100" height="22" rx="3" fill="#fff" stroke="#1976d2"/>
+      <text x="695" y="128" text-anchor="middle">k-mer 8</text>
+    </g>
+  </g>
+
+  <!-- ===================== STAGE 2: Hash index lookup (appears at t=1s) ===================== -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1s" dur="0.4s" fill="freeze"/>
+
+    <text x="30" y="170" font-size="14" font-weight="600" fill="#d97706">
+      2. Look each k-mer up in the database hash index
+    </text>
+
+    <!-- Hash index box -->
+    <rect x="30" y="180" width="840" height="80" rx="6" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <text x="450" y="202" text-anchor="middle" font-size="13" font-weight="600" fill="#d97706" font-family="ui-monospace, monospace">
+      database hash index (pre-built - O(1) lookup per k-mer)
+    </text>
+
+    <!-- bucket cells -->
+    <g font-family="ui-monospace, monospace" font-size="10" fill="#d97706">
+      <rect x="60"  y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="90"  y="236" text-anchor="middle">bucket</text>
+      <rect x="130" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="160" y="236" text-anchor="middle">bucket</text>
+      <rect x="200" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="230" y="236" text-anchor="middle">bucket</text>
+      <rect x="270" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="300" y="236" text-anchor="middle">bucket</text>
+      <rect x="340" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="370" y="236" text-anchor="middle">bucket</text>
+      <rect x="410" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="440" y="236" text-anchor="middle">bucket</text>
+      <rect x="480" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="510" y="236" text-anchor="middle">bucket</text>
+      <rect x="550" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="580" y="236" text-anchor="middle">bucket</text>
+      <rect x="620" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="650" y="236" text-anchor="middle">bucket</text>
+      <rect x="690" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="720" y="236" text-anchor="middle">bucket</text>
+      <rect x="760" y="218" width="60" height="28" rx="3" fill="#fff" stroke="#d97706"/>
+      <text x="790" y="236" text-anchor="middle">bucket</text>
+    </g>
+
+    <!-- Lookup arrows from each k-mer to the hash index (staggered 0.3s apart, starting 1.2s) -->
+    <!-- k-mer 1 -> miss -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.2s" dur="0.25s" fill="freeze"/>
+      <line x1="100" y1="134" x2="100" y2="218" stroke="#888" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+      <text x="100" y="214" text-anchor="middle" font-size="14" fill="#c62828" font-weight="700">X</text>
+    </g>
+    <!-- k-mer 2 -> hit -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.5s" dur="0.25s" fill="freeze"/>
+      <line x1="185" y1="134" x2="185" y2="218" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+      <text x="185" y="214" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="700">&#10003;</text>
+    </g>
+    <!-- k-mer 3 -> miss -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.8s" dur="0.25s" fill="freeze"/>
+      <line x1="270" y1="134" x2="270" y2="218" stroke="#888" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+      <text x="270" y="214" text-anchor="middle" font-size="14" fill="#c62828" font-weight="700">X</text>
+    </g>
+    <!-- k-mer 4 -> miss -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.1s" dur="0.25s" fill="freeze"/>
+      <line x1="355" y1="134" x2="355" y2="218" stroke="#888" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+      <text x="355" y="214" text-anchor="middle" font-size="14" fill="#c62828" font-weight="700">X</text>
+    </g>
+    <!-- k-mer 5 -> hit -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.4s" dur="0.25s" fill="freeze"/>
+      <line x1="440" y1="134" x2="440" y2="218" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+      <text x="440" y="214" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="700">&#10003;</text>
+    </g>
+    <!-- k-mer 6 -> miss -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.7s" dur="0.25s" fill="freeze"/>
+      <line x1="525" y1="134" x2="525" y2="218" stroke="#888" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+      <text x="525" y="214" text-anchor="middle" font-size="14" fill="#c62828" font-weight="700">X</text>
+    </g>
+    <!-- k-mer 7 -> hit -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3.0s" dur="0.25s" fill="freeze"/>
+      <line x1="610" y1="134" x2="610" y2="218" stroke="#2e7d32" stroke-width="1.8" marker-end="url(#arrow-green)"/>
+      <text x="610" y="214" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="700">&#10003;</text>
+    </g>
+    <!-- k-mer 8 -> miss -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3.3s" dur="0.25s" fill="freeze"/>
+      <line x1="695" y1="134" x2="695" y2="218" stroke="#888" stroke-width="1.5" marker-end="url(#arrow-grey)"/>
+      <text x="695" y="214" text-anchor="middle" font-size="14" fill="#c62828" font-weight="700">X</text>
+    </g>
+
+    <!-- Database sequence band (appears with stage 2) -->
+    <rect x="30" y="275" width="840" height="26" rx="4" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+    <text x="450" y="293" text-anchor="middle" font-size="12" fill="#1976d2" font-family="ui-monospace, monospace">
+      database sequence (millions of bp)
+    </text>
+
+    <!-- annotation arrows from hash-index bucket to database positions for the 3 hits -->
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="1.7s" dur="0.25s" fill="freeze"/>
+      <line x1="160" y1="246" x2="190" y2="275" stroke="#2e7d32" stroke-width="1.4" marker-end="url(#arrow-green)"/>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="2.6s" dur="0.25s" fill="freeze"/>
+      <line x1="440" y1="246" x2="450" y2="275" stroke="#2e7d32" stroke-width="1.4" marker-end="url(#arrow-green)"/>
+    </g>
+    <g opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3.2s" dur="0.25s" fill="freeze"/>
+      <line x1="650" y1="246" x2="700" y2="275" stroke="#2e7d32" stroke-width="1.4" marker-end="url(#arrow-green)"/>
+    </g>
+  </g>
+
+  <!-- ===================== STAGE 3: Extend each hit (appears at t=4s) ===================== -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="4s" dur="0.4s" fill="freeze"/>
+
+    <text x="30" y="332" font-size="14" font-weight="600" fill="#2e7d32">
+      3. Extend each hit with a local alignment
+    </text>
+  </g>
+
+  <!-- extension box 1 (4.2s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="4.2s" dur="0.3s" fill="freeze"/>
+    <rect x="100" y="345" width="180" height="80" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="190" y="365" text-anchor="middle" font-size="12" font-weight="600" fill="#2e7d32">hit #1 extension</text>
+    <!-- tiny matrix -->
+    <g stroke="#2e7d32" stroke-width="0.8" fill="#fff">
+      <rect x="120" y="375" width="12" height="12"/>
+      <rect x="132" y="375" width="12" height="12"/>
+      <rect x="144" y="375" width="12" height="12"/>
+      <rect x="156" y="375" width="12" height="12"/>
+      <rect x="168" y="375" width="12" height="12"/>
+      <rect x="120" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="132" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="144" y="387" width="12" height="12"/>
+      <rect x="156" y="387" width="12" height="12"/>
+      <rect x="168" y="387" width="12" height="12"/>
+      <rect x="120" y="399" width="12" height="12"/>
+      <rect x="132" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="144" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="156" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="168" y="399" width="12" height="12"/>
+    </g>
+    <text x="225" y="395" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Smith-</text>
+    <text x="225" y="408" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Waterman</text>
+  </g>
+
+  <!-- extension box 2 (4.6s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="4.6s" dur="0.3s" fill="freeze"/>
+    <rect x="360" y="345" width="180" height="80" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="450" y="365" text-anchor="middle" font-size="12" font-weight="600" fill="#2e7d32">hit #2 extension</text>
+    <g stroke="#2e7d32" stroke-width="0.8" fill="#fff">
+      <rect x="380" y="375" width="12" height="12"/>
+      <rect x="392" y="375" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="404" y="375" width="12" height="12"/>
+      <rect x="416" y="375" width="12" height="12"/>
+      <rect x="428" y="375" width="12" height="12"/>
+      <rect x="380" y="387" width="12" height="12"/>
+      <rect x="392" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="404" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="416" y="387" width="12" height="12"/>
+      <rect x="428" y="387" width="12" height="12"/>
+      <rect x="380" y="399" width="12" height="12"/>
+      <rect x="392" y="399" width="12" height="12"/>
+      <rect x="404" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="416" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="428" y="399" width="12" height="12"/>
+    </g>
+    <text x="485" y="395" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Smith-</text>
+    <text x="485" y="408" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Waterman</text>
+  </g>
+
+  <!-- extension box 3 (5.0s) -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="5.0s" dur="0.3s" fill="freeze"/>
+    <rect x="620" y="345" width="180" height="80" rx="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="710" y="365" text-anchor="middle" font-size="12" font-weight="600" fill="#2e7d32">hit #3 extension</text>
+    <g stroke="#2e7d32" stroke-width="0.8" fill="#fff">
+      <rect x="640" y="375" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="652" y="375" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="664" y="375" width="12" height="12"/>
+      <rect x="676" y="375" width="12" height="12"/>
+      <rect x="688" y="375" width="12" height="12"/>
+      <rect x="640" y="387" width="12" height="12"/>
+      <rect x="652" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="664" y="387" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="676" y="387" width="12" height="12"/>
+      <rect x="688" y="387" width="12" height="12"/>
+      <rect x="640" y="399" width="12" height="12"/>
+      <rect x="652" y="399" width="12" height="12"/>
+      <rect x="664" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="676" y="399" width="12" height="12" fill="#c8e6c9"/>
+      <rect x="688" y="399" width="12" height="12" fill="#c8e6c9"/>
+    </g>
+    <text x="745" y="395" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Smith-</text>
+    <text x="745" y="408" font-size="10" fill="#2e7d32" font-family="ui-monospace, monospace">Waterman</text>
+  </g>
+
+  <!-- ===================== Final caption (appears at t=5.5s) ===================== -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="5.5s" dur="0.4s" fill="freeze"/>
+    <rect x="30" y="455" width="840" height="60" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+    <text x="450" y="478" text-anchor="middle" font-size="13" fill="#1976d2" font-family="ui-monospace, monospace">
+      BLAST: O(query x index-lookup) + O(hits x extension^2)
+    </text>
+    <text x="450" y="500" text-anchor="middle" font-size="13" fill="#222">
+      much faster than O(query x database x alignment)
+    </text>
+  </g>
+</svg>

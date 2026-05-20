@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="600" fill="#222">
+    DFS through a tree — also O(n), even though the path zig-zags
+  </text>
+
+  <!-- ======================================================
+       Tree layout (DFS preorder visit numbers 1..7)
+                  (1) root @ (450, 90)
+                /         \
+            (2) @ (270,180)   (5) @ (630,180)
+            /     \          /     \
+        (3)@180,270 (4)@360,270 (6)@540,270 (7)@720,270
+       ====================================================== -->
+
+  <!-- Edges (drawn first so nodes overlap them) -->
+  <g stroke="#888" stroke-width="1.5" fill="none">
+    <line x1="450" y1="110" x2="270" y2="170"/>
+    <line x1="450" y1="110" x2="630" y2="170"/>
+    <line x1="270" y1="200" x2="180" y2="260"/>
+    <line x1="270" y1="200" x2="360" y2="260"/>
+    <line x1="630" y1="200" x2="540" y2="260"/>
+    <line x1="630" y1="200" x2="720" y2="260"/>
+  </g>
+
+  <!-- Nodes: circles + visit number labels -->
+  <g fill="#e3f2fd" stroke="#1976d2" stroke-width="1.8">
+    <circle cx="450" cy="90"  r="26"/>
+    <circle cx="270" cy="180" r="26"/>
+    <circle cx="630" cy="180" r="26"/>
+    <circle cx="180" cy="270" r="26"/>
+    <circle cx="360" cy="270" r="26"/>
+    <circle cx="540" cy="270" r="26"/>
+    <circle cx="720" cy="270" r="26"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="700" fill="#1976d2" text-anchor="middle">
+    <text x="450" y="97">1</text>
+    <text x="270" y="187">2</text>
+    <text x="180" y="277">3</text>
+    <text x="360" y="277">4</text>
+    <text x="630" y="187">5</text>
+    <text x="540" y="277">6</text>
+    <text x="720" y="277">7</text>
+  </g>
+
+  <!-- DFS path arrows (1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7) using curved paths -->
+  <g fill="none" stroke="#c62828" stroke-width="2" stroke-dasharray="0">
+    <!-- 1 -> 2  (top-right to top-left of #2) -->
+    <path d="M 432,107 Q 380,150 290,162" marker-end="url(#arrow-red)"/>
+    <!-- 2 -> 3 -->
+    <path d="M 254,200 Q 215,240 198,254" marker-end="url(#arrow-red)"/>
+    <!-- 3 -> 4 (curving up around node 2) -->
+    <path d="M 206,270 Q 270,330 334,270" marker-end="url(#arrow-red)"/>
+    <!-- 4 -> 5  (long arc up across the top to right subtree) -->
+    <path d="M 378,255 Q 480,140 606,170" marker-end="url(#arrow-red)"/>
+    <!-- 5 -> 6 -->
+    <path d="M 614,200 Q 575,240 558,254" marker-end="url(#arrow-red)"/>
+    <!-- 6 -> 7 (curving up around node 5) -->
+    <path d="M 566,270 Q 630,330 694,270" marker-end="url(#arrow-red)"/>
+  </g>
+
+  <!-- Order label near top of path -->
+  <text x="450" y="60" text-anchor="middle" font-size="13" fill="#c62828" font-family="ui-monospace, monospace">
+    DFS visit order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+  </text>
+
+  <!-- Annotation -->
+  <rect x="170" y="360" width="560" height="40" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2"/>
+  <text x="450" y="386" text-anchor="middle" font-size="15" fill="#2e7d32" font-weight="600" font-family="ui-monospace, monospace">
+    7 nodes, 7 visits → still O(n), regardless of branching
+  </text>
+
+  <!-- Caption -->
+  <text x="450" y="430" text-anchor="middle" font-size="14" fill="#555">
+    Iteration complexity is set by how many elements you visit, not by the shape of the structure.
+  </text>
+</svg>

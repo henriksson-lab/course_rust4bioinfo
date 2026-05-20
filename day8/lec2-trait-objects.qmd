@@ -1,6 +1,6 @@
 ---
 title: "Traits — Box<dyn> and dynamic dispatch"
-subtitle: "Day 3b, lecture 2"
+subtitle: "Day 8, lecture 2"
 author: "Rust for bioinformaticians"
 format:
   revealjs:

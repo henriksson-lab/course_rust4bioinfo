@@ -1,6 +1,6 @@
 ---
 title: "Traits — the interface"
-subtitle: "Day 3b, lecture 1"
+subtitle: "Day 8, lecture 1"
 author: "Rust for bioinformaticians"
 format:
   revealjs:

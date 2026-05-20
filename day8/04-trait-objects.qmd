@@ -1,5 +1,5 @@
 ---
-title: "Day 3b — Exercise: a Box<dyn> heterogeneous collection"
+title: "Day 8 — Exercise: a Box<dyn> heterogeneous collection"
 format:
   html:
     toc: true

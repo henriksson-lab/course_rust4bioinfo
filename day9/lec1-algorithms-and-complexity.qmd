@@ -80,6 +80,8 @@ For a 10 Mb genome at k=21:
 - Naïve **O(n²)**: ~10¹⁴ operations — **years**
 - HashMap **O(n)**: ~10⁷ operations — **seconds**
 
+![Why the algorithm matters more than the language: naive nested-loop comparison touches every pair of windows (an n × n grid), while the HashMap version touches each window once (a single row).](images/lec1-kmer-counting-compare.svg){fig-alt="Left: a grid of n × n small boxes showing that the naive algorithm visits every (i, j) pair. Right: a single row of n boxes showing that the HashMap algorithm visits each window once. Annotation: same problem; n² operations versus n operations." width="80%"}
+
 ::: notes
 Same problem, two implementations, factor of ten million in wall-clock. The naïve version compares every window against every other window. The HashMap version makes one pass and lets the hash table do the matching. This is the kind of decision Big-O notation helps you see *before* you hit Enter and wait for hours.
 :::
@@ -111,16 +113,10 @@ This is the whole definition. Computer scientists like to dress it up; the kerne
 | `O(n²)` | quadratic | quadruples the time |
 | `O(n!)` | factorial | intractable for `n > 12` |
 
-::: notes
-Six classes, in order of growth. From the top, going down, each class grows faster than the one above. The qualitative picture: `O(1)` and `O(log n)` are essentially free, `O(n)` and `O(n log n)` scale to anything bioinformatics throws at you, `O(n²)` is fine for small inputs and a disaster at scale, and `O(n!)` is reserved for problems we either accept as hard or replace with heuristics.
-:::
-
-## A picture — the five curves compared
-
 ![Five complexity curves on one chart. O(1) and O(log n) hug the bottom; O(n) rises gently; O(n log n) is slightly steeper; O(n²) explodes upward; O(n!) leaves the chart almost immediately.](images/lec1-bigo-comparison.svg){fig-alt="Line chart with input size n on the x-axis (log scale) and number of operations on the y-axis (log scale). Six labelled curves: O(1) flat at the bottom; O(log n) almost flat slightly above; O(n) a straight diagonal line; O(n log n) parallel to but slightly above O(n); O(n^2) much steeper; O(n!) shooting off the top of the chart."}
 
 ::: notes
-This is the canonical picture. The headline takeaway: there is a *qualitative* gap between O(n log n) and O(n²). The first scales to anything; the second blows up. A lot of the cleverness in algorithms is finding ways to turn an O(n²) approach into an O(n log n) or O(n) one.
+Six classes, in order of growth. From the top, going down, each class grows faster than the one above. The qualitative picture: `O(1)` and `O(log n)` are essentially free, `O(n)` and `O(n log n)` scale to anything bioinformatics throws at you, `O(n²)` is fine for small inputs and a disaster at scale, and `O(n!)` is reserved for problems we either accept as hard or replace with heuristics. There is a *qualitative* gap between O(n log n) and O(n²): the first scales to anything; the second blows up. A lot of the cleverness in algorithms is finding ways to turn an O(n²) approach into an O(n log n) or O(n) one.
 :::
 
 ## A biology example for each
@@ -136,23 +132,6 @@ This is the canonical picture. The headline takeaway: there is a *qualitative* g
 
 ::: notes
 One concrete example per class, drawn from the kind of code you write. The O(1) case is the simplest: a Vec gives you constant-time random access. Binary search halves the range each step, so the number of steps grows like log n. GC content needs every base inspected exactly once. Sorting is the canonical O(n log n) — merge sort, quicksort, the standard slice sort. Pairwise everything-against-everything is the easiest way to land in O(n²). Multiple-sequence alignment by exhaustive enumeration is the kind of thing nobody actually does — we use heuristics like progressive alignment instead.
-:::
-
-## What this gets you in absolute numbers
-
-For `n = 1,000,000`:
-
-| Class | Operations | Wall-clock (rough) |
-|---|---|---|
-| `O(1)` | 1 | under 1 µs |
-| `O(log n)` | ~20 | under 1 µs |
-| `O(n)` | 1,000,000 | ~1 ms |
-| `O(n log n)` | ~2 × 10⁷ | ~20 ms |
-| `O(n²)` | 10¹² | ~17 minutes |
-| `O(n!)` | more than atoms in the universe | never |
-
-::: notes
-Translating Big-O into seconds is approximate — it depends on your CPU, the constant factor inside the operation, cache effects, all of it. But the orders of magnitude on this slide are reliable. For a million inputs, an O(n²) algorithm crosses the 10-minute line. For 10 million inputs, it crosses the 1-day line. For 100 million, it crosses the 1-century line. This is why the choice of complexity class is more important than any micro-optimisation.
 :::
 
 ## Data structures the standard library gives you
@@ -171,11 +150,11 @@ Five collections, more than you will need most days. Vec is the workhorse — wh
 
 ## When to pick which
 
-- **"I just want to iterate or look up by index"** — `Vec`
-- **"I want to look up by key, order does not matter"** — `HashMap`
-- **"I want to look up by key and iterate keys in sorted order"** — `BTreeMap`
-- **"I just need to test membership"** — `HashSet`
-- **"I need to push and pop at both ends"** — `VecDeque`
+- **"I just want to iterate or look up by index"** => `Vec`
+- **"I want to look up by key, order does not matter"** => `HashMap`
+- **"I want to look up by key and iterate keys in sorted order"** => `BTreeMap`
+- **"I just need to test membership"** => `HashSet`
+- **"I need to push and pop at both ends"** => `VecDeque`
 
 ::: notes
 This is the decision tree, short version. If you cannot decide between HashMap and BTreeMap, the deciding question is: do you ever need to iterate the keys in sorted order, or look up the next-largest key? If yes, BTreeMap. If no, HashMap is faster per operation. If you do not even need values — only "have I seen this thing?" — use HashSet. Cheaper than putting a dummy value into a HashMap.
@@ -202,25 +181,36 @@ let mut v: Vec<u8> = Vec::new();
 for b in seq { v.push(b); }    // O(n) total for n pushes
 ```
 
+![Vec grows by doubling: the first push allocates 1 slot, the second allocates 2 more (copying the 1), the next reallocation doubles to 4, then 8, 16, …. The total copying work for n pushes adds up to ≈ 2n, so the average per-push cost stays constant.](images/lec1-amortised-doublings.svg){fig-alt="A series of Vec snapshots showing capacities 1, 2, 4, 8, 16, 32 with the cost of each reallocation labelled. Below: a summation 1 + 2 + 4 + 8 + 16 + 32 = 63 ≈ 2 × 32, showing total work is linear in n." width="80%"}
+
 ::: notes
 Amortised analysis is the answer to the question "why do we say push is O(1) when sometimes it has to reallocate the whole vector?" The answer: the reallocations get rarer as the Vec grows, in exactly the right proportion that the *average* cost per push stays constant. The Vec doubles its backing storage when it fills, so after n pushes you have done at most n + n/2 + n/4 + ... < 2n total work — still O(n) total, still O(1) per push on average. This is the same trick that makes `String::push` and `HashMap::insert` work.
 :::
 
 ## When Big-O lies
 
-- For small `n`, **constants** matter more than asymptotic class
-- A *cache-friendly* [accessing nearby memory addresses so the CPU can pre-fetch them] O(n²) over a small `Vec` can beat an O(n log n) over a pointer-chasing tree
-- Big-O ignores: instruction count per operation, cache misses, branch prediction, SIMD, allocator pressure
+A BTreeMap lookup is O(log n); a sorted Vec scan is O(n). For n = 100 you'd expect the tree to win. In practice the Vec often wins — because the tree pays a *cache miss* on every pointer hop.
 
-```rust
-// For n < ~50, this O(n²) often beats any tree-based O(n log n) sort:
-arr.sort_unstable();      // standard library already does this — small-n shortcut
+Concretely, for n = 100 items:
+
+```
+BTreeMap lookup:   7 pointer hops × ~100 ns RAM latency + 7 comparisons
+                   ≈ 700 ns + a few ns
+                   ≈ 700 ns
+
+Sorted Vec scan:   100 comparisons in a tight loop, all bytes already in cache
+                   ≈ 100 ns total
+                   ≈ 100 ns
 ```
 
-Big-O is the starting point, not the last word. **Measure.**
+Result: the "asymptotically slower" linear scan is **7× faster** for small n, because cache locality dominates the pointer-chasing cost.
+
+![A BTreeMap with nodes scattered across the heap (red arrows = pointer hops, each one a potential cache miss) compared to a contiguous Vec (everything in one cache line).](images/lec1-pointer-chasing.svg){fig-alt="Left panel: BTreeMap shown as 7 small node boxes scattered across a 'heap' band; red arrows trace the pointer chain from root through 7 hops to the target. Right panel: a contiguous Vec shown as a single row of 100 cells; a blue arrow scans linearly. Latency annotations: ~100 ns per cache miss vs ~1 ns per cached comparison."}
+
+**Big-O is a starting point, not the last word — measure for your real input sizes and access patterns.**
 
 ::: notes
-The Big-O hierarchy is a guide, not a law. Two things break it. First, constants — an O(n^2) algorithm with a tight inner loop and good cache behaviour can outrun an O(n log n) algorithm that chases pointers. The standard library's sort actually switches to an insertion sort (O(n^2)) for very small subarrays for exactly this reason. Second, n is sometimes just small — if you are sorting twenty-two autosomes, the asymptotic class is irrelevant. The discipline: Big-O picks the algorithm; profilers verify the choice.
+This is the gotcha that bites everyone. Pick BTreeMap for "asymptotic" reasons; benchmark; discover sorted Vec is faster for n < 1000; switch. Always profile.
 :::
 
 ## Iterator combinator complexities
@@ -235,6 +225,12 @@ The Big-O hierarchy is a guide, not a law. Two things break it. First, constants
 | [`.dedup()`](https://doc.rust-lang.org/std/primitive.slice.html#method.dedup) on a slice | O(n), needs sorted input |
 
 A chain like `seq.iter().filter(|b| is_gc(b)).count()` is **O(n) overall** — one pass, constant work per element.
+
+![Iterating a slice visits each element once — O(n).](images/lec1-linear-search-array.svg){fig-alt="A row of array cells with an arrow scanning left-to-right, one cell per step. Annotation: n cells, n steps, O(n)." width="70%"}
+
+![Iterating a tree (depth-first) also visits each node once — still O(n), even though the path zig-zags.](images/lec1-tree-traversal-linear.svg){fig-alt="A binary tree with 7 nodes; the DFS traversal path drawn as a numbered red arrow visiting each node in order 1-7. Annotation: same number of visits as nodes — still O(n)." width="70%"}
+
+**Iteration complexity is decided by how many elements you visit, not by the shape of the data structure.** A sorted Vec, a HashMap, and a tree all iterate in O(n) — the question is whether you also want them sorted, and which data structure makes the per-element cost cheaper (cache locality again).
 
 ::: notes
 Iterators are deceptive — a long chain of combinators looks like a lot of work, but most chains walk the data exactly once. The cost of a chain is the cost of one pass, times the work per element. Adapter methods that do not consume the iterator (`.filter`, `.map`, `.take_while`) are O(1) per element; consuming methods that walk the whole thing (`.count`, `.sum`, `.collect`) are O(n) total. The one to watch for is `.sort()`, which is O(n log n) and which you call on a slice, not on an iterator.
@@ -254,6 +250,8 @@ A naïve all-vs-all alignment of a query against a database:
 - Only run the expensive alignment around the hits
 
 The hash-table lookup turns most of the search from O(database) into O(1) — and made large-scale sequence search practical.
+
+![Conceptual BLAST: split the query into short k-mers, look up each k-mer in the database's pre-built hash index (O(1) per lookup), then extend each match with a Smith-Waterman-style alignment around it (O(match-length²), small).](images/lec1-blast-steps-animated.svg){fig-alt="An SMIL-animated diagram showing: step 1, query sequence shown as boxes, then split into k-mer windows; step 2, each k-mer becomes a hash lookup arrow into the database index (a HashMap-like box); step 3, each hit triggers a small local alignment extension around the hit position. Total animation about 5 seconds." width="80%"}
 
 ::: notes
 BLAST is the canonical example of a complexity rescue. The honest pairwise dynamic programming algorithm — Smith-Waterman — is O(q*d) per query-database pair, and you have to multiply by the number of database sequences. For modern protein databases, that is millions of sequences times thousands of bases each: completely infeasible. BLAST's insight was that real homologous sequences share short exact-match k-mers, so you can index the database by k-mer and use the index to skip almost all of the candidates. The alignment work then only runs in the small neighbourhoods where there was a k-mer hit. This is a hashing trick — and it is why BLAST is the most-cited paper in biology.
@@ -276,6 +274,45 @@ let mut score = vec![vec![0i32; n + 1]; n + 1];
 
 ::: notes
 Time complexity is the famous half of the story; space complexity is the other half, with the same notation. A 21-mer hash for a 10 Mb genome is fine — at most ten million distinct k-mers, each entry a few tens of bytes, so hundreds of megabytes. A 21-mer hash for a 100 Gb pangenome is suddenly a terabyte. And Smith-Waterman's O(n^2) scoring matrix is exactly why pairwise alignment is normally done with banded variants — you do not have the RAM for the full matrix at scale.
+:::
+
+## How a HashMap actually works — and why it helps memory
+
+A `HashMap<K, V>` is an array of slots plus a **hash function** (gloss: a function that turns any key into a number — the slot index).
+
+```
+       insert(k, v):
+         slot = hash(k) % slots.len()
+         slots[slot] = (k, v)
+
+       get(k):
+         slot = hash(k) % slots.len()
+         return slots[slot]
+```
+
+Both `insert` and `get` are O(1) on average — one hash computation, one indexed access.
+
+**Where it saves memory in bioinformatics:** counting distinct k-mers.
+
+A naive approach stores every k-mer occurrence:
+
+```
+Vec<&[u8]>     // 21 bytes per k-mer × 100M windows = 2.1 GB
+```
+
+A HashMap stores one entry per **unique** k-mer:
+
+```
+HashMap<[u8; 21], u32>   // ~unique-k-mer-count × 32 bytes
+                          // ≈ 50M × 32 = 1.6 GB
+                          // ... but you also lose duplicates
+                          // and just keep counts.
+```
+
+For sequence data with lots of repetition, the HashMap collapses the data: the same 21-mer appearing a million times stores ONE entry, not a million. That's why every k-mer counter (`jellyfish`, `bbmap`'s `kmercountexact.sh`, etc.) is built on hashing.
+
+::: notes
+The point is not that hashing is magical — it's that "key → count" is a natural data shape for biology, and the hashmap makes it cheap in both time and (when there's redundancy) memory. Aggregating duplicates is the win.
 :::
 
 ## When you don't have to think about it
@@ -316,3 +353,4 @@ Three things to remember out of this lecture: Big-O is the vocabulary for growth
 ::: notes
 For going deeper: CLRS is the standard textbook on algorithms and is the place to read if you want the rigorous version of everything in this lecture. The Rust standard library docs are remarkably good — every collection has a complexity table at the top of its module page, and the std::collections overview has a short decision tree for picking between them. Wikipedia's Big-O article has the formal definitions if you want to be precise about the difference between O, Ω, and Θ.
 :::
+

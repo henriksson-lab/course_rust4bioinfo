@@ -1,8 +1,8 @@
-# Day 3b — Exercises
+# Day 8 — Exercises
 
 Traits — Rust's interface mechanism.
 
-Start with [**00 — Concepts**](00-concepts.qmd) for a reference overview of traits (companion to the slides). Day 3b sits between day 3 (structs, enums, recursion) and day 4 (I/O with `noodles`): it introduces the one missing piece that ties them together.
+Start with [**00 — Concepts**](00-concepts.qmd) for a reference overview of traits (companion to the slides). Day 8 sits between day 3 (structs, enums, recursion) and day 4 (I/O with `noodles`): it introduces the one missing piece that ties them together.
 
 | # | Topic | Rust concepts | Crate |
 |---|---|---|---|

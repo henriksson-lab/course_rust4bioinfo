@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="600" fill="#222">
+    Linear search — visit each element once
+  </text>
+
+  <!-- Scan arrow -->
+  <line x1="80" y1="90" x2="820" y2="90" stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrow-blue)"/>
+  <text x="450" y="78" text-anchor="middle" font-size="14" fill="#1976d2" font-family="ui-monospace, monospace">scan</text>
+
+  <!-- 12 array cells, each 60 wide, starting at x=80, y=110, height=50 -->
+  <g stroke="#1976d2" stroke-width="1.2" fill="#e3f2fd">
+    <rect x="80"  y="110" width="60" height="50"/>
+    <rect x="140" y="110" width="60" height="50"/>
+    <rect x="200" y="110" width="60" height="50"/>
+    <rect x="260" y="110" width="60" height="50"/>
+    <rect x="320" y="110" width="60" height="50"/>
+    <rect x="380" y="110" width="60" height="50"/>
+    <rect x="440" y="110" width="60" height="50"/>
+    <rect x="500" y="110" width="60" height="50"/>
+    <rect x="560" y="110" width="60" height="50"/>
+    <rect x="620" y="110" width="60" height="50"/>
+    <rect x="680" y="110" width="60" height="50"/>
+    <rect x="740" y="110" width="60" height="50"/>
+  </g>
+
+  <!-- DNA bases inside -->
+  <g font-family="ui-monospace, monospace" font-size="20" font-weight="600" fill="#1976d2" text-anchor="middle">
+    <text x="110" y="143">A</text>
+    <text x="170" y="143">C</text>
+    <text x="230" y="143">G</text>
+    <text x="290" y="143">T</text>
+    <text x="350" y="143">A</text>
+    <text x="410" y="143">A</text>
+    <text x="470" y="143">G</text>
+    <text x="530" y="143">C</text>
+    <text x="590" y="143">T</text>
+    <text x="650" y="143">A</text>
+    <text x="710" y="143">G</text>
+    <text x="770" y="143">C</text>
+  </g>
+
+  <!-- Tick marks below each cell -->
+  <g stroke="#888" stroke-width="1">
+    <line x1="110" y1="165" x2="110" y2="175"/>
+    <line x1="170" y1="165" x2="170" y2="175"/>
+    <line x1="230" y1="165" x2="230" y2="175"/>
+    <line x1="290" y1="165" x2="290" y2="175"/>
+    <line x1="350" y1="165" x2="350" y2="175"/>
+    <line x1="410" y1="165" x2="410" y2="175"/>
+    <line x1="470" y1="165" x2="470" y2="175"/>
+    <line x1="530" y1="165" x2="530" y2="175"/>
+    <line x1="590" y1="165" x2="590" y2="175"/>
+    <line x1="650" y1="165" x2="650" y2="175"/>
+    <line x1="710" y1="165" x2="710" y2="175"/>
+    <line x1="770" y1="165" x2="770" y2="175"/>
+  </g>
+
+  <!-- Step labels (sparse: 1, 2, 3, ..., n) -->
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#666" text-anchor="middle">
+    <text x="110" y="195">step 1</text>
+    <text x="170" y="195">step 2</text>
+    <text x="230" y="195">step 3</text>
+    <text x="290" y="195">step 4</text>
+    <text x="410" y="195">...</text>
+    <text x="530" y="195">...</text>
+    <text x="650" y="195">...</text>
+    <text x="770" y="195">step n</text>
+  </g>
+
+  <!-- Annotation -->
+  <text x="450" y="240" text-anchor="middle" font-size="15" fill="#222" font-family="ui-monospace, monospace">
+    visit each cell once → n steps → O(n)
+  </text>
+</svg>

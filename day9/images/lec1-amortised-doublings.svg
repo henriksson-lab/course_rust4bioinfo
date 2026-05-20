@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="600" fill="#222">
+    Why Vec push is amortised O(1) — geometric reallocation
+  </text>
+
+  <!-- ================= Snapshots (left column) =================
+       Each snapshot: label on left, row of boxes, copy count on right.
+       Use cell size 18, gap 0.
+       y rows: 70, 120, 170, 220, 270, 320
+  -->
+
+  <!-- Snapshot 1: 1st push, cap 1, used 1 -->
+  <text x="40" y="83" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #1</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <rect x="160" y="70" width="18" height="18" fill="#fff3cd"/>
+  </g>
+  <text x="200" y="83" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 1 — copied 0 (initial alloc)</text>
+
+  <!-- Snapshot 2: 2nd push, cap 2, used 2 -->
+  <text x="40" y="133" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #2</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <rect x="160" y="120" width="18" height="18" fill="#fff3cd"/>
+    <rect x="178" y="120" width="18" height="18" fill="#fff3cd"/>
+  </g>
+  <text x="218" y="133" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 2 — copied 1 (doubled)</text>
+
+  <!-- Snapshot 3: 3rd push, cap 4, used 3 -->
+  <text x="40" y="183" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #3</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <rect x="160" y="170" width="18" height="18" fill="#fff3cd"/>
+    <rect x="178" y="170" width="18" height="18" fill="#fff3cd"/>
+    <rect x="196" y="170" width="18" height="18" fill="#fff3cd"/>
+    <rect x="214" y="170" width="18" height="18" fill="#eee"/>
+  </g>
+  <text x="254" y="183" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 4 — copied 2</text>
+
+  <!-- Snapshot 4: 5th push, cap 8, used 5 -->
+  <text x="40" y="233" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #5</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <rect x="160" y="220" width="18" height="18" fill="#fff3cd"/>
+    <rect x="178" y="220" width="18" height="18" fill="#fff3cd"/>
+    <rect x="196" y="220" width="18" height="18" fill="#fff3cd"/>
+    <rect x="214" y="220" width="18" height="18" fill="#fff3cd"/>
+    <rect x="232" y="220" width="18" height="18" fill="#fff3cd"/>
+    <rect x="250" y="220" width="18" height="18" fill="#eee"/>
+    <rect x="268" y="220" width="18" height="18" fill="#eee"/>
+    <rect x="286" y="220" width="18" height="18" fill="#eee"/>
+  </g>
+  <text x="326" y="233" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 8 — copied 4</text>
+
+  <!-- Snapshot 5: 9th push, cap 16, used 9 -->
+  <text x="40" y="283" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #9</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <rect x="160" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="178" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="196" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="214" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="232" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="250" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="268" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="286" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="304" y="270" width="18" height="18" fill="#fff3cd"/>
+    <rect x="322" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="340" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="358" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="376" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="394" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="412" y="270" width="18" height="18" fill="#eee"/>
+    <rect x="430" y="270" width="18" height="18" fill="#eee"/>
+  </g>
+  <text x="465" y="283" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 16 — copied 8</text>
+
+  <!-- Snapshot 6: 17th push, cap 32, used 17 -->
+  <text x="40" y="333" font-size="13" fill="#222" font-family="ui-monospace, monospace">push #17</text>
+  <g stroke="#d97706" stroke-width="0.8">
+    <!-- 17 orange, 15 grey -->
+    <rect x="160" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="178" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="196" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="214" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="232" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="250" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="268" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="286" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="304" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="322" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="340" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="358" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="376" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="394" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="412" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="430" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="448" y="320" width="18" height="18" fill="#fff3cd"/>
+    <rect x="466" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="484" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="502" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="520" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="538" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="556" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="574" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="592" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="610" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="628" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="646" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="664" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="682" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="700" y="320" width="18" height="18" fill="#eee"/>
+    <rect x="718" y="320" width="18" height="18" fill="#eee"/>
+  </g>
+  <text x="755" y="333" font-size="13" fill="#444" font-family="ui-monospace, monospace">cap 32 — copied 16</text>
+
+  <!-- legend -->
+  <g>
+    <rect x="700" y="70" width="14" height="14" fill="#fff3cd" stroke="#d97706" stroke-width="0.8"/>
+    <text x="720" y="82" font-size="12" fill="#444">used</text>
+    <rect x="700" y="92" width="14" height="14" fill="#eee" stroke="#888" stroke-width="0.8"/>
+    <text x="720" y="104" font-size="12" fill="#444">spare capacity</text>
+  </g>
+
+  <!-- Summation box -->
+  <rect x="60" y="370" width="780" height="90" rx="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="450" y="395" text-anchor="middle" font-size="14" fill="#222" font-family="ui-monospace, monospace">
+    total copies: 0 + 1 + 2 + 4 + 8 + 16 = 31 ≈ 2 × 16
+  </text>
+  <text x="450" y="420" text-anchor="middle" font-size="14" fill="#1976d2" font-weight="600" font-family="ui-monospace, monospace">
+    total work for n pushes ≈ 2n → per-push amortised cost is O(1)
+  </text>
+  <text x="450" y="445" text-anchor="middle" font-size="13" fill="#555">
+    The doubling strategy means total copying across n pushes is ~2n; spread over n pushes, that's a constant per push.
+  </text>
+
+  <!-- Caption -->
+  <text x="450" y="485" text-anchor="middle" font-size="13" fill="#888">
+    Geometric growth keeps the average per-push cost flat, even though some pushes are expensive.
+  </text>
+</svg>

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="600" fill="#222">
+    Same problem, two algorithms — n² vs n
+  </text>
+
+  <!-- =========================================================
+       LEFT PANEL — Naive O(n²)
+       ========================================================= -->
+  <rect x="30" y="55" width="410" height="380" rx="10" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="235" y="82" text-anchor="middle" font-size="18" font-weight="600" fill="#d97706">
+    Naive — O(n²)
+  </text>
+
+  <!-- 12x12 grid: 144 cells -->
+  <!-- start x=85, y=100, cell=20 -->
+  <g stroke="#d97706" stroke-width="0.8" fill="#ffffff">
+    <!-- 12 rows -->
+    <g>
+      <!-- Row 0 -->
+      <rect x="85" y="100" width="20" height="20"/><rect x="105" y="100" width="20" height="20"/><rect x="125" y="100" width="20" height="20"/><rect x="145" y="100" width="20" height="20"/><rect x="165" y="100" width="20" height="20"/><rect x="185" y="100" width="20" height="20"/><rect x="205" y="100" width="20" height="20"/><rect x="225" y="100" width="20" height="20"/><rect x="245" y="100" width="20" height="20"/><rect x="265" y="100" width="20" height="20"/><rect x="285" y="100" width="20" height="20"/><rect x="305" y="100" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="120" width="20" height="20"/><rect x="105" y="120" width="20" height="20"/><rect x="125" y="120" width="20" height="20"/><rect x="145" y="120" width="20" height="20"/><rect x="165" y="120" width="20" height="20"/><rect x="185" y="120" width="20" height="20"/><rect x="205" y="120" width="20" height="20"/><rect x="225" y="120" width="20" height="20"/><rect x="245" y="120" width="20" height="20"/><rect x="265" y="120" width="20" height="20"/><rect x="285" y="120" width="20" height="20"/><rect x="305" y="120" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="140" width="20" height="20"/><rect x="105" y="140" width="20" height="20"/><rect x="125" y="140" width="20" height="20"/><rect x="145" y="140" width="20" height="20"/><rect x="165" y="140" width="20" height="20"/><rect x="185" y="140" width="20" height="20"/><rect x="205" y="140" width="20" height="20"/><rect x="225" y="140" width="20" height="20"/><rect x="245" y="140" width="20" height="20"/><rect x="265" y="140" width="20" height="20"/><rect x="285" y="140" width="20" height="20"/><rect x="305" y="140" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="160" width="20" height="20"/><rect x="105" y="160" width="20" height="20"/><rect x="125" y="160" width="20" height="20"/><rect x="145" y="160" width="20" height="20"/><rect x="165" y="160" width="20" height="20"/><rect x="185" y="160" width="20" height="20"/><rect x="205" y="160" width="20" height="20"/><rect x="225" y="160" width="20" height="20"/><rect x="245" y="160" width="20" height="20"/><rect x="265" y="160" width="20" height="20"/><rect x="285" y="160" width="20" height="20"/><rect x="305" y="160" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="180" width="20" height="20"/><rect x="105" y="180" width="20" height="20"/><rect x="125" y="180" width="20" height="20"/><rect x="145" y="180" width="20" height="20"/><rect x="165" y="180" width="20" height="20"/><rect x="185" y="180" width="20" height="20"/><rect x="205" y="180" width="20" height="20"/><rect x="225" y="180" width="20" height="20"/><rect x="245" y="180" width="20" height="20"/><rect x="265" y="180" width="20" height="20"/><rect x="285" y="180" width="20" height="20"/><rect x="305" y="180" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="200" width="20" height="20"/><rect x="105" y="200" width="20" height="20"/><rect x="125" y="200" width="20" height="20"/><rect x="145" y="200" width="20" height="20"/><rect x="165" y="200" width="20" height="20"/><rect x="185" y="200" width="20" height="20"/><rect x="205" y="200" width="20" height="20"/><rect x="225" y="200" width="20" height="20"/><rect x="245" y="200" width="20" height="20"/><rect x="265" y="200" width="20" height="20"/><rect x="285" y="200" width="20" height="20"/><rect x="305" y="200" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="220" width="20" height="20"/><rect x="105" y="220" width="20" height="20"/><rect x="125" y="220" width="20" height="20"/><rect x="145" y="220" width="20" height="20"/><rect x="165" y="220" width="20" height="20"/><rect x="185" y="220" width="20" height="20"/><rect x="205" y="220" width="20" height="20"/><rect x="225" y="220" width="20" height="20"/><rect x="245" y="220" width="20" height="20"/><rect x="265" y="220" width="20" height="20"/><rect x="285" y="220" width="20" height="20"/><rect x="305" y="220" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="240" width="20" height="20"/><rect x="105" y="240" width="20" height="20"/><rect x="125" y="240" width="20" height="20"/><rect x="145" y="240" width="20" height="20"/><rect x="165" y="240" width="20" height="20"/><rect x="185" y="240" width="20" height="20"/><rect x="205" y="240" width="20" height="20"/><rect x="225" y="240" width="20" height="20"/><rect x="245" y="240" width="20" height="20"/><rect x="265" y="240" width="20" height="20"/><rect x="285" y="240" width="20" height="20"/><rect x="305" y="240" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="260" width="20" height="20"/><rect x="105" y="260" width="20" height="20"/><rect x="125" y="260" width="20" height="20"/><rect x="145" y="260" width="20" height="20"/><rect x="165" y="260" width="20" height="20"/><rect x="185" y="260" width="20" height="20"/><rect x="205" y="260" width="20" height="20"/><rect x="225" y="260" width="20" height="20"/><rect x="245" y="260" width="20" height="20"/><rect x="265" y="260" width="20" height="20"/><rect x="285" y="260" width="20" height="20"/><rect x="305" y="260" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="280" width="20" height="20"/><rect x="105" y="280" width="20" height="20"/><rect x="125" y="280" width="20" height="20"/><rect x="145" y="280" width="20" height="20"/><rect x="165" y="280" width="20" height="20"/><rect x="185" y="280" width="20" height="20"/><rect x="205" y="280" width="20" height="20"/><rect x="225" y="280" width="20" height="20"/><rect x="245" y="280" width="20" height="20"/><rect x="265" y="280" width="20" height="20"/><rect x="285" y="280" width="20" height="20"/><rect x="305" y="280" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="300" width="20" height="20"/><rect x="105" y="300" width="20" height="20"/><rect x="125" y="300" width="20" height="20"/><rect x="145" y="300" width="20" height="20"/><rect x="165" y="300" width="20" height="20"/><rect x="185" y="300" width="20" height="20"/><rect x="205" y="300" width="20" height="20"/><rect x="225" y="300" width="20" height="20"/><rect x="245" y="300" width="20" height="20"/><rect x="265" y="300" width="20" height="20"/><rect x="285" y="300" width="20" height="20"/><rect x="305" y="300" width="20" height="20"/>
+    </g>
+    <g>
+      <rect x="85" y="320" width="20" height="20"/><rect x="105" y="320" width="20" height="20"/><rect x="125" y="320" width="20" height="20"/><rect x="145" y="320" width="20" height="20"/><rect x="165" y="320" width="20" height="20"/><rect x="185" y="320" width="20" height="20"/><rect x="205" y="320" width="20" height="20"/><rect x="225" y="320" width="20" height="20"/><rect x="245" y="320" width="20" height="20"/><rect x="265" y="320" width="20" height="20"/><rect x="285" y="320" width="20" height="20"/><rect x="305" y="320" width="20" height="20"/>
+    </g>
+  </g>
+
+  <!-- axes labels -->
+  <text x="195" y="355" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">i = 0 .. n-1</text>
+  <text x="60" y="225" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace" transform="rotate(-90 60 225)">j = 0 .. n-1</text>
+
+  <!-- annotations -->
+  <text x="235" y="385" text-anchor="middle" font-size="14" fill="#222" font-family="ui-monospace, monospace">
+    n × n cells = n² visits
+  </text>
+  <text x="235" y="404" text-anchor="middle" font-size="14" fill="#222" font-family="ui-monospace, monospace">
+    for n = 12: 144 comparisons
+  </text>
+  <text x="235" y="425" text-anchor="middle" font-size="14" fill="#c62828" font-weight="600" font-family="ui-monospace, monospace">
+    for n = 10⁷: 10¹⁴ comparisons — years
+  </text>
+
+  <!-- =========================================================
+       RIGHT PANEL — HashMap O(n)
+       ========================================================= -->
+  <rect x="460" y="55" width="410" height="380" rx="10" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="665" y="82" text-anchor="middle" font-size="18" font-weight="600" fill="#2e7d32">
+    HashMap — O(n)
+  </text>
+
+  <!-- single row of 12 cells -->
+  <g stroke="#2e7d32" stroke-width="0.8" fill="#ffffff">
+    <rect x="515" y="210" width="25" height="25"/>
+    <rect x="540" y="210" width="25" height="25"/>
+    <rect x="565" y="210" width="25" height="25"/>
+    <rect x="590" y="210" width="25" height="25"/>
+    <rect x="615" y="210" width="25" height="25"/>
+    <rect x="640" y="210" width="25" height="25"/>
+    <rect x="665" y="210" width="25" height="25"/>
+    <rect x="690" y="210" width="25" height="25"/>
+    <rect x="715" y="210" width="25" height="25"/>
+    <rect x="740" y="210" width="25" height="25"/>
+    <rect x="765" y="210" width="25" height="25"/>
+    <rect x="790" y="210" width="25" height="25"/>
+  </g>
+
+  <!-- arrow above row -->
+  <line x1="515" y1="195" x2="815" y2="195" stroke="#1976d2" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="665" y="185" text-anchor="middle" font-size="13" fill="#1976d2" font-family="ui-monospace, monospace">scan once</text>
+
+  <!-- index labels -->
+  <text x="665" y="260" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">i = 0 .. n-1</text>
+
+  <!-- annotations -->
+  <text x="665" y="320" text-anchor="middle" font-size="14" fill="#222" font-family="ui-monospace, monospace">
+    n cells = n visits
+  </text>
+  <text x="665" y="339" text-anchor="middle" font-size="14" fill="#222" font-family="ui-monospace, monospace">
+    for n = 12: 12 hash insertions
+  </text>
+  <text x="665" y="360" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="600" font-family="ui-monospace, monospace">
+    for n = 10⁷: 10⁷ insertions — seconds
+  </text>
+
+  <!-- Caption -->
+  <text x="450" y="465" text-anchor="middle" font-size="14" fill="#555">
+    The grid scales square; the row scales linearly.
+  </text>
+  <text x="450" y="485" text-anchor="middle" font-size="14" fill="#555">
+    For 10 Mb of sequence the gap is hours vs seconds.
+  </text>
+</svg>

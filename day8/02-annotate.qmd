@@ -1,5 +1,5 @@
 ---
-title: "Day 3b — Exercise: a custom trait with multiple impls"
+title: "Day 8 — Exercise: a custom trait with multiple impls"
 format:
   html:
     toc: true
@@ -14,7 +14,7 @@ Define your own [trait](https://doc.rust-lang.org/book/ch10-02-traits.html) (Rus
 
 ## Background
 
-A [`trait`](https://doc.rust-lang.org/book/ch10-02-traits.html) declares a set of method signatures; an [`impl Trait for Type`](https://doc.rust-lang.org/book/ch10-02-traits.html#implementing-a-trait-on-a-type) block defines those methods for a specific type. Once you have one trait with several implementations, **the same calling code can use any of them interchangeably**: `x.description()` compiles for any `x` whose type implements `Annotate`, and on day 3b's next exercise we will write a single function that is generic (works for many types) over exactly that bound. This is the basic mechanism Rust uses in place of class inheritance — instead of "type B is-a type A", we say "types A and B both implement trait T", and the language guarantees at compile time that every method on T is provided.
+A [`trait`](https://doc.rust-lang.org/book/ch10-02-traits.html) declares a set of method signatures; an [`impl Trait for Type`](https://doc.rust-lang.org/book/ch10-02-traits.html#implementing-a-trait-on-a-type) block defines those methods for a specific type. Once you have one trait with several implementations, **the same calling code can use any of them interchangeably**: `x.description()` compiles for any `x` whose type implements `Annotate`, and on day 8's next exercise we will write a single function that is generic (works for many types) over exactly that bound. This is the basic mechanism Rust uses in place of class inheritance — instead of "type B is-a type A", we say "types A and B both implement trait T", and the language guarantees at compile time that every method on T is provided.
 
 The syntax looks like:
 

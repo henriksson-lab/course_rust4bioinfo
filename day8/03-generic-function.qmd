@@ -1,5 +1,5 @@
 ---
-title: "Day 3b — Exercise: a generic function with a trait bound"
+title: "Day 8 — Exercise: a generic function with a trait bound"
 format:
   html:
     toc: true

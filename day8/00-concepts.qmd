@@ -1,5 +1,5 @@
 ---
-title: "Day 3b — Concepts"
+title: "Day 8 — Concepts"
 format:
   html:
     toc: true
@@ -8,9 +8,9 @@ format:
     highlight-style: github
 ---
 
-Companion to the day-3b slides. Day 3b introduces **traits** — Rust's mechanism for shared interfaces. A trait [a named bundle of methods a type can opt in to implementing] is the rough equivalent of a Python *protocol*, a Java *interface*, or a Haskell *type class*, but checked at compile time. Traits are how the standard library says "anything you can print", "anything you can clone", "anything you can iterate over", without naming the concrete types up front.
+Companion to the day-8 slides. Day 8 introduces **traits** — Rust's mechanism for shared interfaces. A trait [a named bundle of methods a type can opt in to implementing] is the rough equivalent of a Python *protocol*, a Java *interface*, or a Haskell *type class*, but checked at compile time. Traits are how the standard library says "anything you can print", "anything you can clone", "anything you can iterate over", without naming the concrete types up front.
 
-You have actually been using traits since day 1 — every `#[derive(Debug, Clone)]` is a trait implementation written by the compiler. Day 3b makes the mechanism explicit and gives you the tools to define and consume your own.
+You have actually been using traits since day 1 — every `#[derive(Debug, Clone)]` is a trait implementation written by the compiler. Day 8 makes the mechanism explicit and gives you the tools to define and consume your own.
 
 ## What a trait is
 
