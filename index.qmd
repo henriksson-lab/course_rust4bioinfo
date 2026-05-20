@@ -19,107 +19,117 @@ An intensive course teaching Rust to 4th-year biology students who have already 
 ### Day 1 — Toolchain, scalars, control flow, functions
 
 0. [Concepts — reference companion to the slides](day1/00-concepts.qmd)
-1. [GC content](day1/01-gc-content.qmd)
-2. [Complement a single base](day1/02-complement.qmd)
-3. [Count A, C, G, T, and other](day1/03-base-counts.qmd)
-4. [Phred quality scores](day1/04-phred.qmd)
-5. [Hamming distance](day1/05-hamming.qmd)
+1. [Quiz: scalar types and ranges](day1/00e-types-quiz.qmd)
+2. [GC content](day1/01-gc-content.qmd)
+3. [Complement a single base](day1/02-complement.qmd)
+4. [Count A, C, G, T, and other](day1/03-base-counts.qmd)
+5. [Phred quality scores](day1/04-phred.qmd)
+6. [Hamming distance](day1/05-hamming.qmd)
 
 ### Day 2 — Ownership, borrowing, strings, slices, bytes
 
 0. [Concepts — reference companion to the slides](day2/00-concepts.qmd)
-1. [Reverse complement](day2/01-reverse-complement.qmd)
-2. [Reverse complement into a buffer](day2/02-revcomp-buf.qmd)
-3. [k-mers as slice views](day2/03-kmers.qmd)
-4. [Quality trimming as a slice view](day2/04-quality-trim.qmd)
+1. [Quiz: ownership and borrowing](day2/00a-ownership-quiz.qmd)
+2. [Reverse complement](day2/01-reverse-complement.qmd)
+3. [Reverse complement into a buffer](day2/02-revcomp-buf.qmd)
+4. [k-mers as slice views](day2/03-kmers.qmd)
+5. [Quality trimming as a slice view](day2/04-quality-trim.qmd)
 
 ### Day 3 — Structs, enums, iterators, recursion, error handling
 
 0. [Concepts — reference companion to the slides](day3/00-concepts.qmd)
-1. [Genomic interval](day3/01-genomic-interval.qmd)
-2. [Parsing a region string with `Result`](day3/02-parse-region.qmd)
-3. [A codon table with `Option`](day3/03-codon-table.qmd)
-4. [Counting k-mers with a `HashMap`](day3/04-kmer-counts.qmd)
-5. [A phylogenetic tree with recursion](day3/05-phylo-tree.qmd)
-6. [Sequence alignment with dynamic programming](day3/06-alignment.qmd)
+1. [Quiz: enums, Option, and Result](day3/00a-quiz.qmd)
+2. [Genomic interval](day3/01-genomic-interval.qmd)
+3. [Parsing a region string with `Result`](day3/02-parse-region.qmd)
+4. [A codon table with `Option`](day3/03-codon-table.qmd)
+5. [Counting k-mers with a `HashMap`](day3/04-kmer-counts.qmd)
+6. [A phylogenetic tree with recursion](day3/05-phylo-tree.qmd)
+7. [Sequence alignment with dynamic programming](day3/06-alignment.qmd)
 
 ### Day 4 — I/O, crates, modules, plotting, zip
 
 0. [Concepts — reference companion to the slides](day4/00-concepts.qmd)
-1. [Parsing BED by hand](day4/01-bed-parse.qmd)
-2. [Per-contig stats with `noodles-fasta`](day4/02-fasta-stats.qmd)
-3. [Filter FASTQ with `noodles-fastq`](day4/03-fastq-filter.qmd)
-4. [Read-length histogram with `plotters`](day4/04-plot-readlen.qmd)
-5. [Bundling outputs into a `.zip`](day4/05-zip-bundle.qmd)
+1. [Quiz: I/O, crates, and error handling](day4/00a-quiz.qmd)
+2. [Parsing BED by hand](day4/01-bed-parse.qmd)
+3. [Per-contig stats with `noodles-fasta`](day4/02-fasta-stats.qmd)
+4. [Filter FASTQ with `noodles-fastq`](day4/03-fastq-filter.qmd)
+5. [Read-length histogram with `plotters`](day4/04-plot-readlen.qmd)
+6. [Bundling outputs into a `.zip`](day4/05-zip-bundle.qmd)
 
 ### Day 5 — Tests, `--release`, parallelism, ecosystem
 
 0. [Concepts — reference companion to the slides](day5/00-concepts.qmd)
-1. [Use tests to find the bug](day5/01-find-the-bug.qmd)
-2. [`--release` is a 50× free lunch](day5/02-release-mode.qmd)
-3. [Parallel GC content with `rayon`](day5/03-parallel-gc.qmd)
+1. [Quiz: tests, `--release`, and parallelism](day5/00a-quiz.qmd)
+2. [Use tests to find the bug](day5/01-find-the-bug.qmd)
+3. [`--release` is a 50× free lunch](day5/02-release-mode.qmd)
+4. [Parallel GC content with `rayon`](day5/03-parallel-gc.qmd)
 
 ### Day 6 — Yew & WebAssembly
 
 A pure-Rust web app: Yew frontend (compiled to WebAssembly), axum backend, shared types crate — all in one cargo workspace.
 
 0. [Concepts — reference companion to the slides](day6/00-concepts.qmd)
-1. [Hello Yew](day6/01-hello-yew.qmd)
-2. [Reactive sequence statistics](day6/02-reactive-stats.qmd)
-3. [Fetch from the backend](day6/03-fetch-from-backend.qmd)
-4. [Capstone — GC sliding window](day6/04-sequence-inspector.qmd)
+1. [Quiz: Yew and WebAssembly](day6/00a-quiz.qmd)
+2. [Hello Yew](day6/01-hello-yew.qmd)
+3. [Reactive sequence statistics](day6/02-reactive-stats.qmd)
+4. [Fetch from the backend](day6/03-fetch-from-backend.qmd)
+5. [Capstone — GC sliding window](day6/04-sequence-inspector.qmd)
 
 ### Day 7 — SQL & SQLite
 
 Modelling data in relational form, querying it from the `sqlite` CLI, then reading and writing the same database from Rust.
 
 0. [Concepts — reference companion to the slides](day7/00-concepts.qmd)
-1. [Your first SQLite database](day7/01-sqlite-cli.qmd)
-2. [A second table and a join](day7/02-natural-join.qmd)
-3. [Reading a SQLite database from Rust](day7/03-read-from-rust.qmd)
-4. [Writing a SQLite database from Rust](day7/04-write-from-rust.qmd)
-5. [Joining two tables from Rust](day7/05-query-from-rust.qmd)
+1. [Quiz: SQL and SQLite](day7/00a-quiz.qmd)
+2. [Your first SQLite database](day7/01-sqlite-cli.qmd)
+3. [A second table and a join](day7/02-natural-join.qmd)
+4. [Reading a SQLite database from Rust](day7/03-read-from-rust.qmd)
+5. [Writing a SQLite database from Rust](day7/04-write-from-rust.qmd)
+6. [Joining two tables from Rust](day7/05-query-from-rust.qmd)
 
 ### Day 8 — Traits
 
 The Rust mechanism for *shared interfaces* — `impl Trait for Type`, generic functions with trait bounds, and `Box<dyn Trait>` for heterogeneous collections.
 
 0. [Concepts — reference companion to the slides](day8/00-concepts.qmd)
-1. [Implement `Display` for `GenomicInterval`](day8/01-display.qmd)
-2. [A custom trait with multiple impls](day8/02-annotate.qmd)
-3. [A generic function with a trait bound](day8/03-generic-function.qmd)
-4. [A `Box<dyn>` heterogeneous collection](day8/04-trait-objects.qmd)
+1. [Quiz: traits, generics, and dispatch](day8/00a-quiz.qmd)
+2. [Implement `Display` for `GenomicInterval`](day8/01-display.qmd)
+3. [A custom trait with multiple impls](day8/02-annotate.qmd)
+4. [A generic function with a trait bound](day8/03-generic-function.qmd)
+5. [A `Box<dyn>` heterogeneous collection](day8/04-trait-objects.qmd)
 
 ### Day 9 — Algorithms and complexity
 
 A short day on data-structure complexity (Big-O) and how to recognise it in code — two diagnostic quizzes that drive the lecture.
 
 0. [Concepts — reference companion to the slides](day9/00-concepts.qmd)
-1. [Warm-up quiz — data-structure complexity](day9/00a-ds-complexity-quiz.qmd)
-2. [Warm-up quiz — complexity from code](day9/00b-code-complexity-quiz.qmd)
+1. [Quiz: data-structure complexity](day9/00a-ds-complexity-quiz.qmd)
+2. [Quiz: complexity from code](day9/00b-code-complexity-quiz.qmd)
 
 ### Day 10 — Working with matrices
 
 Dense and sparse matrix representations (`ndarray`, `sprs`), iterative linear-system solvers, and Markov chains via power iteration.
 
 0. [Concepts — reference companion to the slides](day10/00-concepts.qmd)
-1. [Loading and operating on a dense matrix](day10/01-dense-matrix.qmd)
-2. [Sparse representations — memory comparison](day10/02-sparse-matrix.qmd)
-3. [Implement Gauss-Seidel](day10/03-gauss-seidel.qmd)
-4. [Markov chain — power iteration vs steady state](day10/04-markov-chain.qmd)
+1. [Quiz: dense, sparse, and iterative](day10/00a-quiz.qmd)
+2. [Loading and operating on a dense matrix](day10/01-dense-matrix.qmd)
+3. [Sparse representations — memory comparison](day10/02-sparse-matrix.qmd)
+4. [Implement Gauss-Seidel](day10/03-gauss-seidel.qmd)
+5. [Markov chain — power iteration vs steady state](day10/04-markov-chain.qmd)
 
 ### Day 11 — GPUs and tensors with Burn
 
 GPU-aware tensors via the [Burn](https://burn.dev/) framework, with every Rust example paired against the equivalent PyTorch / NumPy. Builds up to PCA via `nalgebra`, a PWM motif scanner as `Conv1d`, and a small trainable promoter classifier.
 
 0. [Concepts — reference companion to the slides](day11/00-concepts.qmd)
-1. [Tensors on any backend](day11/01-tensors.qmd)
-2. [One-hot encoding DNA](day11/02-one-hot.qmd)
-3. [GC content across a batch](day11/03-gc-content.qmd)
-4. [Pairwise distance matrix](day11/04-distance-matrix.qmd)
-5. [PCA with `nalgebra`](day11/05-pca.qmd)
-6. [1-D convolutional motif scanner](day11/06-motif-scanner.qmd)
-7. [Train a promoter classifier](day11/07-promoter-classifier.qmd)
+1. [Quiz: tensors, backends, and shapes](day11/00a-quiz.qmd)
+2. [Tensors on any backend](day11/01-tensors.qmd)
+3. [One-hot encoding DNA](day11/02-one-hot.qmd)
+4. [GC content across a batch](day11/03-gc-content.qmd)
+5. [Pairwise distance matrix](day11/04-distance-matrix.qmd)
+6. [PCA with `nalgebra`](day11/05-pca.qmd)
+7. [1-D convolutional motif scanner](day11/06-motif-scanner.qmd)
+8. [Train a promoter classifier](day11/07-promoter-classifier.qmd)
 
 ## Working with the exercises
 

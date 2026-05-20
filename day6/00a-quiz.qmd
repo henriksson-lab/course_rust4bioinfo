@@ -1,0 +1,167 @@
+---
+title: "Quiz: Yew and WebAssembly"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-6 material: how Rust runs in the browser via WebAssembly, the shape of a Yew component, and how a Yew frontend talks to a backend.
+
+10 questions, easy to trickier. The key idea: **the same Rust code can compile to a native binary or to a `.wasm` module that a browser executes**, with `wasm-bindgen` and `web-sys` covering the bridge to JavaScript / DOM APIs.
+
+---
+
+## 1. What is WebAssembly?
+
+In one sentence, what is WebAssembly?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A binary format, designed to run in browsers (and elsewhere) at near-native speed, that several languages can compile to.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**A portable, low-level bytecode format that runs inside a sandbox (browser, Node.js, Wasmtime, …) at near-native speed.** Originally designed as a compile target for C/C++ in the browser, now widely used for Rust, AssemblyScript, Go, .NET, and others. Source code is compiled once; the same `.wasm` runs on every platform that has a wasm runtime.
+:::
+
+---
+
+## 2. `wasm-pack`
+
+What does [`wasm-pack`](https://rustwasm.github.io/wasm-pack/) do?
+
+::: {.callout-tip collapse="true" title="Hint"}
+It's the build tool for "Rust → web". It does *two* things, not one.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Compiles a Rust crate to a `.wasm` binary AND emits the JavaScript glue code to load and call it from a webpage.** Internally it drives `cargo build --target wasm32-unknown-unknown` and then [`wasm-bindgen`](https://rustwasm.github.io/wasm-bindgen/), which generates the JS shim that marshals strings, structs, Promises, etc. between Rust and JS.
+:::
+
+---
+
+## 3. The Yew component trait
+
+In Yew, a component is a Rust type that implements which trait?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Same name as in React: the unit of UI.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`Component`](https://yew.rs/docs/concepts/components).** A `Component` type provides `create`, `view`, `update`, and (optionally) `changed`/`destroy`. Modern Yew also has [`#[function_component]`](https://yew.rs/docs/concepts/function-components) — a procedural macro that turns a regular function into a component, much like React function components and hooks.
+:::
+
+---
+
+## 4. When does Yew re-render?
+
+A Yew component's `view` is called again when…?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Like React, Yew is reactive — it only redraws when something forces it to.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**When the component's state (or props) change.** Calling `link.send_message(msg)` (or `state.set(new)` in function components) triggers `update`, which can return `true` to request a re-`view`. Pure DOM events that don't affect state do *not* re-render. The diff against the previous render is then applied to the real DOM — same virtual-DOM idea as React.
+:::
+
+---
+
+## 5. Calling JavaScript from Rust
+
+You want to call `window.alert("hi")` from your Yew app. What's the typical path?
+
+::: {.callout-tip collapse="true" title="Hint"}
+There's a crate that wraps "essentially everything in the browser API" as Rust bindings.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Use [`web_sys::window().unwrap().alert_with_message("hi")`](https://docs.rs/web-sys/).** The [`web-sys`](https://docs.rs/web-sys/) crate exposes every Web platform API (DOM, fetch, WebGL, audio, …) as Rust functions; each method is feature-gated so you only pay (in `.wasm` size) for the ones you use. Underneath, `web-sys` generates from the official WebIDL definitions.
+:::
+
+---
+
+## 6. Fetching from a backend
+
+In a Yew component, you want to GET `/api/seq_stats?seq=ACGT` and render the result. What kind of API call do you reach for?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The browser API is `fetch`, which returns a `Promise`. In Rust that maps onto an `async` function returning a `Future`.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**An `async` HTTP call, typically via [`gloo_net::http::Request`](https://docs.rs/gloo-net/) or `web_sys::fetch`.** The result is a `Future` that you `.await` (in a wasm-friendly executor like the one Yew ships). Once the response arrives you send a `Message` to the component, which updates state and triggers a re-render.
+:::
+
+---
+
+## 7. WASM binary size — order of magnitude
+
+A trivial "hello-world" Yew app, in release mode with stripping, typically lands at what size for the `.wasm` blob?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Not a few kilobytes (the runtime is non-trivial), but not megabytes either.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**~100–300 KB.** A bare `wasm-bindgen` "hello world" is around 50 KB; pulling in Yew + a small amount of `web-sys` adds ~150 KB. Real applications with rich `web-sys` usage and serde land in the 300 KB – 1 MB range. For comparison: a typical React bundle is several MB of JavaScript.
+:::
+
+---
+
+## 8. Workspace with frontend + backend
+
+Day 6 uses a Cargo *workspace* with three crates: `frontend` (Yew/wasm), `backend` (axum), `shared` (data types). What does the *shared* crate buy you?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The frontend and backend exchange JSON payloads. If both ends derive `Serialize`/`Deserialize` on the *same* struct, certain bugs become impossible.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Type-safe data exchange across the wire.** Define `SeqStats { gc: f32, length: u32, ... }` in `shared`, derive `Serialize`/`Deserialize`. Both the axum handler and the Yew component depend on `shared`, so they agree on field names and types at compile time. Rename a field in one place and the other end fails to compile — no "the JSON had `gc_content` instead of `gc`" runtime bugs.
+:::
+
+---
+
+## 9. SSR vs client-only
+
+Yew can render either entirely in the browser (CSR — client-side rendering) or pre-render on the server (SSR). True or false: SSR is required for SEO?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Search engines have got much better at running JavaScript over the last decade. Modern Googlebot does execute it. But some other crawlers don't.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**False (mostly).** Google's crawler renders JavaScript and can index CSR apps. Other crawlers and previewing tools (Twitter card preview, Slack link unfurling, smaller search engines) often don't. SSR also dramatically improves *first-paint* time on slow connections. For a public-facing site SSR is still a strong default; for a dashboard behind a login it usually isn't worth the complexity.
+:::
+
+---
+
+## 10. WASM + threads?
+
+Can your Yew app use `rayon::par_iter` directly?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Browsers support threads via Web Workers, but it's not enabled by default. The `wasm32-unknown-unknown` target is single-threaded out of the box.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Not directly — the default `wasm32-unknown-unknown` target has no threading.** Multi-threaded WASM requires the `atomics` and `bulk-memory` proposals (now stable) plus serving the page with the right cross-origin isolation headers. The crate [`wasm-bindgen-rayon`](https://github.com/RReverser/wasm-bindgen-rayon) wires `rayon` up to Web Workers when these conditions are met. For most Yew apps you push compute work to the backend instead.
+:::
+
+---
+
+## Where this leads
+
+The frontend/backend recipe:
+
+- **Compile to `wasm32-unknown-unknown`** with `wasm-pack`; the JS glue is generated for you.
+- **One Cargo workspace, three crates** — frontend, backend, shared types.
+- **`web-sys` / `gloo-net`** for browser APIs and HTTP.
+- **State changes trigger re-render**; pure DOM events don't.
+- **Heavy compute belongs on the server**, not in the WASM tab — until you really need it client-side.

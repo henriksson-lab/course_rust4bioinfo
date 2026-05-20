@@ -1,0 +1,202 @@
+---
+title: "Quiz: tensors, backends, and shapes"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-11 material: reading a `Tensor<B, D>` type, picking a backend, predicting shapes after broadcasts and reductions, and remembering when the GPU actually helps.
+
+10 questions, easy to trickier. The key idea: **`Tensor<B, D>` carries the device (B) and the rank (D) in the type; the per-axis sizes (`dims()`) live at runtime**. Most bugs are shape bugs — train yourself to predict shapes before writing code.
+
+---
+
+## 1. Reading the type
+
+```rust
+let x: Tensor<Wgpu, 3> = ...;
+```
+
+What does each part of the type tell you?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two type parameters: one for *where* it lives, one for *how many axes* it has.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- `Wgpu` — the **backend** — this tensor lives on a GPU accessed via the WebGPU abstraction (Vulkan / Metal / DX12 / browser).
+- `3` — the **rank** — the tensor has three axes. Typical sequence-ML shape `[N, C, L]` is rank 3.
+
+The per-axis *sizes* (e.g. `[32, 4, 100]`) are not in the type — they live in the value, accessible via `x.dims()`.
+:::
+
+---
+
+## 2. `dims()` vs `shape()`
+
+Given `let x: Tensor<B, 2> = Tensor::zeros([32, 100], &device);`, what does `x.dims()` return — type and value?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The return type is a fixed-size array (the rank `D` is in the type).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Type: `[usize; 2]`. Value: `[32, 100]`.** `dims()` returns the per-axis sizes as a fixed-size array whose length is the tensor's rank. (`x.shape()` returns a `Shape` struct that wraps the same information — `dims()` is the convenient direct accessor.)
+:::
+
+---
+
+## 3. Picking a backend for testing
+
+You're writing a function generic over `<B: Backend>` and want it to be CI-friendly (no GPU drivers on the runner). Which backend do you use in your tests?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One backend ships pure Rust, no system dependencies.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`NdArray`](https://docs.rs/burn-ndarray/).** Pure Rust, no LAPACK / no CUDA / no Vulkan needed; it's the default backend for tests. Production code can swap to `Wgpu` or `Cuda` by changing one type alias — the generic function body never changes.
+:::
+
+---
+
+## 4. `mean_dim` keeps the rank
+
+```rust
+let x: Tensor<B, 2> = Tensor::ones([4, 10], &device);
+let m = x.mean_dim(0);
+```
+
+What is `m.dims()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Burn's `mean_dim` *collapses* axis 0 but does *not* drop it — the axis becomes size 1, the rank stays the same.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`[1, 10]`** (rank still 2). To drop the leading size-1 axis and get a true rank-1 vector, follow up with `.squeeze_dim(0)` — then `dims()` is `[10]`. The PyTorch analogue is `keepdim=True` (Burn's default) vs `keepdim=False` (Burn's `.squeeze_dim(k)`).
+:::
+
+---
+
+## 5. Broadcasting rules
+
+```rust
+let a: Tensor<B, 2> = Tensor::ones([5, 3], &device);
+let b: Tensor<B, 2> = Tensor::ones([1, 3], &device);
+let c = a + b;
+```
+
+What is `c.dims()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Size-1 axes broadcast: each row of `a` is added to the single row of `b`.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`[5, 3]`** — the size-1 axis of `b` is virtually repeated 5 times to match `a`, without copying. The rule: align shapes from the right; each axis must either match or be 1. `[5, 3]` + `[3]` also works (rank promotion via implicit leading 1). `[5, 3]` + `[5]` does **not** work — the rightmost axes don't align.
+:::
+
+---
+
+## 6. `unsqueeze_dim`
+
+```rust
+let x: Tensor<B, 2> = ...; // shape [N, D]
+let y = x.unsqueeze_dim::<3>(1);
+```
+
+What is `y.dims()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`unsqueeze_dim::<D2>(k)` *inserts* a new axis of size 1 at position `k`, bumping the rank from D to D2. Burn's const generic syntax says "I'm promising the output is rank D2 = 3".
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`[N, 1, D]`** — a new size-1 axis is inserted at position 1, pushing `D` to position 2. The pattern shows up everywhere in tensor code: pairwise distances (`[N, 1, D]` minus `[1, N, D]` gives `[N, N, D]`), attention scores, outer products. The PyTorch equivalent is `x.unsqueeze(1)`.
+:::
+
+---
+
+## 7. One-hot encoding shape
+
+```rust
+let seqs: Tensor<B, 2, Int> = ...;          // [N, L] of integers in 0..4
+let oh = seqs.one_hot(4).float().swap_dims(1, 2);
+```
+
+What is `oh.dims()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`one_hot(4)` adds a trailing size-4 axis. `swap_dims(1, 2)` then exchanges the middle and trailing axes.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`[N, 4, L]`** — the canonical sequence-ML input shape (batch, channels, length). Channel axis 0 = A, 1 = C, 2 = G, 3 = T. This shape is what every 1-D Conv expects.
+:::
+
+---
+
+## 8. Cross-device addition
+
+```rust
+let cpu_tensor: Tensor<NdArray, 1> = ...;
+let gpu_tensor: Tensor<Wgpu, 1>    = ...;
+let sum = cpu_tensor + gpu_tensor;
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The backend `B` is part of the tensor's type. Two different backends mean two different types.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No — compile error**: `+` is defined for `Tensor<B, D>` + `Tensor<B, D>`, with the same `B`. Mixing backends is a type mismatch (which is exactly what we want — a cross-device add would silently triple in cost because of an upload or download). You must explicitly transport one side: `cpu_tensor.to_device(gpu_device)` or `gpu_tensor.to_device(cpu_device)`.
+:::
+
+---
+
+## 9. Autodiff
+
+What does wrapping a backend in `Autodiff<B>` do?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Same forward operations as `B`, plus a recording mechanism that lets you ask for gradients later.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Adds gradient tracking.** Every tensor op done with `Tensor<Autodiff<B>, D>` is recorded into a DAG (the *computation graph*). Calling `.backward()` on a scalar walks the graph in reverse via the chain rule, producing a gradient for every parameter that was created with `.require_grad()`. At inference time you can drop `Autodiff` (it has overhead) and run on plain `B`.
+:::
+
+---
+
+## 10. When the GPU loses
+
+You batch up 100 one-hot-encoded reads of length 100 and run a tiny single-layer Conv1d through them on a GPU. You measure 10× *slower* than on the CPU. Why?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Each GPU operation has launch overhead and PCIe transfer cost. For tiny problems those costs dominate.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Transfer + launch overhead dominates the actual compute.** Uploading 100 × 4 × 100 = 40 000 floats over PCIe, launching the kernel, then downloading the result, costs more wall time than the trivial conv multiply-adds would on a CPU. GPUs win when (a) the data already lives on the GPU and (b) the per-call compute is large. Rule of thumb: batch hundreds or thousands of samples, keep them on-device, and do many ops before any transfer back. Same advice as `rayon` from day 5 — parallelism only pays for meaningful amounts of work.
+:::
+
+---
+
+## Where this leads
+
+The tensor mental model to internalise:
+
+- **`Tensor<B, D>`**: backend in the type, rank in the type, sizes in the value.
+- **`<B: Backend>` everywhere**: one function body runs on CPU, Wgpu, Cuda, or Autodiff-wrapped.
+- **Broadcasting + `unsqueeze_dim`** replace nested loops; size-1 axes are virtual.
+- **`mean_dim`, `sum_dim`, `max_dim`** keep the rank; `squeeze_dim(k)` drops a size-1 axis.
+- **Autodiff** is "wrap any backend, gain gradients"; drop it at inference time for speed.
+- **GPUs win on big batches**, not on small ones — keep tensors on-device, vectorise.

@@ -1,0 +1,208 @@
+---
+title: "Quiz: tests, `--release`, and parallelism"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-5 craftsmanship: writing unit tests, the difference between debug and release builds, and the basics of parallelism with `rayon`.
+
+10 questions, easy to trickier. The key idea: **once you have tests pinning down behaviour, `--release` and `rayon` are nearly-free speed wins that you can apply with confidence**.
+
+---
+
+## 1. `cargo test` build mode
+
+When you run `cargo test` (no flags), what build mode is used?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two build modes — fast to compile vs fast to run. Which does `cargo test` pick?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Debug mode.** `cargo test` compiles in debug profile by default — fast compile, slow runtime, overflow checks turned on. That makes the test cycle quick to iterate. To run tests in release mode (e.g., to verify a `--release`-only optimisation doesn't break behaviour): `cargo test --release`.
+:::
+
+---
+
+## 2. The cost of debug builds
+
+A k-mer counter that takes 200 ms in `cargo run --release` typically takes ~10 s in `cargo run` (debug). Roughly what factor is that?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Debug builds turn off most LLVM optimisations and add overflow checks on every integer arithmetic op. The slowdown isn't subtle.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**~50× slower in debug.** A factor of 10× to 100× is normal for numerical code. The huge gap is one of the most common surprises for newcomers — and the reason "is it slow?" is the wrong question to ask without an explicit `--release` build.
+:::
+
+---
+
+## 3. `#[should_panic]`
+
+```rust
+#[test]
+#[should_panic]
+fn parse_bad_region() {
+    parse_region("not a region").unwrap();
+}
+```
+
+What does this test verify?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The attribute changes the success criterion of the test.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**It passes if and only if the test body panics.** Useful for testing that error paths really crash on bad input (here, an unwrap on an `Err`). You can also pin down *which* panic by adding `expected`: `#[should_panic(expected = "missing colon")]`. The downside is that `should_panic` tests don't distinguish between the panic *you wanted* and a panic for an unrelated reason — use sparingly.
+:::
+
+---
+
+## 4. `assert_eq!` vs `assert!`
+
+What's the practical advantage of `assert_eq!(got, want)` over `assert!(got == want)`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Both fail the test when the equality is false. One of them prints something more useful on failure.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`assert_eq!` prints both values on failure.** A failed `assert!(got == want)` says "assertion failed". A failed `assert_eq!(got, want)` prints `left: <got value>, right: <want value>`, which is what you actually want when debugging. The price is that both arguments must implement `Debug` (universally true for the types in this course).
+:::
+
+---
+
+## 5. What `cargo test` finds
+
+A function inside a `mod tests` block is annotated:
+
+```rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn check_gc() { ... }
+
+    fn helper() { ... }
+}
+```
+
+Does `cargo test` execute `helper`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two attributes matter: `#[cfg(test)]` (compiled only in test builds) and `#[test]` (run as a test).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** `cargo test` only runs functions annotated `#[test]`. `helper` is compiled (it lives inside a `#[cfg(test)]` module) but only called by other test functions. This is the standard pattern for shared test setup code — name it whatever you like, no `#[test]` on it.
+:::
+
+---
+
+## 6. `rayon::par_iter`
+
+```rust
+use rayon::prelude::*;
+
+let total: u64 = reads.par_iter()
+    .map(|read| gc_count(read))
+    .sum();
+```
+
+What does `.par_iter()` do?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The serial version `.iter().map(...).sum()` runs on one thread. The `par_` version distributes the same iterator across many threads.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Distributes the iterator work across a thread pool.** `rayon` spawns N worker threads (N = number of CPU cores by default), splits the slice into chunks, runs `map` on each chunk in parallel, and combines the results. The API is intentionally identical to the serial version — you swap `iter` for `par_iter` and the type system + closure capture rules do the rest.
+:::
+
+---
+
+## 7. Send/Sync — why `par_iter` cares
+
+Why does `rayon` require the closures and values you pass through `par_iter` to be `Send`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The closure runs on a worker thread, not the calling thread. What property does a type need for "can be sent to another thread"?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`Send` means "this type is safe to move to another thread".** Most owned data is `Send`. The notable exceptions are `Rc<T>` (reference-counted, not thread-safe — use `Arc<T>` instead) and raw pointers. The compiler enforces `Send` at the call site, so an attempted parallel iteration over `Rc`-containing data is a compile error, not a runtime data race.
+
+(Aside: `Sync` is the related "can be borrowed by multiple threads at once". `rayon::par_iter` uses both — and the borrow checker is what makes those guarantees hold up.)
+:::
+
+---
+
+## 8. Parallelism vs concurrency
+
+Are *parallelism* and *concurrency* the same thing in Rust?
+
+::: {.callout-tip collapse="true" title="Hint"}
+"Concurrency" is about being able to deal with many things at once (logically). "Parallelism" is about actually running them at once (physically).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** *Concurrency* is about *structure* — a program organised so multiple tasks can be in progress at once (async tasks, threads, event loops). *Parallelism* is about *execution* — actually using multiple CPU cores at the same time. A single-core machine can be highly concurrent (lots of async tasks waiting on I/O) but is not parallel.
+
+`rayon` gives you parallelism (data-parallel work over slices). `tokio` / `async-std` give you concurrency (many I/O tasks interleaved on one or a few threads). Both are useful; they solve different problems.
+:::
+
+---
+
+## 9. Overflow in release mode
+
+```rust
+let mut count: u32 = 0;
+for read in reads {
+    count += gc_count(read);
+}
+```
+
+`reads` is a 10-billion-read FASTQ. In release mode, what happens?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `u32` maxes at ~4.3 billion. Debug mode panics on overflow; release mode does something else by default.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`count` silently wraps around.** Release mode disables overflow checks for performance; an additive `u32` wraps modulo 2³². Your "GC count" comes out a billion or two short of the truth, with no error message. The fix is to pick a wider type from the start — `u64` here.
+
+This is the canonical reason to (a) think about ranges up-front (day-1 quiz!) and (b) run `cargo test --release` once on representative data before you trust performance numbers.
+:::
+
+---
+
+## 10. When `rayon` does *not* help
+
+You parallelise a one-pass GC counter over a 1 MB FASTQ. The parallel version is *slower* than the serial one. Why?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Spinning up worker threads, splitting the slice, joining the results — none of that is free.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**The thread-pool overhead dominates the actual work.** For tiny inputs the cost of splitting, dispatching, and joining exceeds the time it takes to do the work serially. `rayon` is for *embarrassingly parallel work over a meaningful amount of data* — a thousand reads, not a thousand bytes.
+
+Rule of thumb: parallelise the outer loop (one entry per read), not the inner loop (one entry per base). The same applies to GPU work on day 11.
+:::
+
+---
+
+## Where this leads
+
+Three habits to carry forward:
+
+- **Lock behaviour into tests first.** A function with five passing tests can be refactored, optimised, or parallelised aggressively without fear.
+- **Default to `--release` for performance claims.** Anything you measure in debug is measured wrong.
+- **`rayon::par_iter` is a one-line speed-up** for slice-shaped work over enough data. For finer-grained or async work, reach for `tokio` instead.

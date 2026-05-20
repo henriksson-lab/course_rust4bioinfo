@@ -1,0 +1,220 @@
+---
+title: "Quiz: SQL and SQLite"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-7 SQL fundamentals — the kinds of questions you'll meet the first time you put a bioinformatics dataset into SQLite and query it from both the shell and Rust.
+
+10 questions, easy to trickier. The key idea: **SQL is declarative — you describe the *result* you want, and the database figures out how to get it efficiently**.
+
+---
+
+## 1. Basic SELECT
+
+A table `strains` has columns `id`, `name`, `genome_size`. Which SQL returns the names of all strains with a genome larger than 5 Mbp?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two clauses: pick the columns (`SELECT`), filter the rows (`WHERE`).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+SELECT name FROM strains WHERE genome_size > 5000000;
+```
+
+`SELECT` picks columns; `FROM` picks the table; `WHERE` filters rows. In production code prefer `SELECT name FROM ...` over `SELECT * FROM ...` so future column additions don't silently change the shape of your result set.
+:::
+
+---
+
+## 2. Primary keys in SQLite
+
+SQLite gives a column declared `INTEGER PRIMARY KEY` one special property. Which?
+
+::: {.callout-tip collapse="true" title="Hint"}
+You don't have to specify a value when inserting a row — SQLite picks one for you. What's that called?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**It's the row's `ROWID` and auto-increments.** When you `INSERT INTO strains (name) VALUES ('K12')` without specifying `id`, SQLite allocates the next available rowid (usually `max(id) + 1`) and stores it. Subtlety: only `INTEGER PRIMARY KEY` (note: not `INT PRIMARY KEY`) maps to ROWID. Other primary-key column types (`TEXT PRIMARY KEY`, composite keys) get B-tree indices but no auto-increment.
+:::
+
+---
+
+## 3. INNER JOIN
+
+You have `strains(id, name)` and `mutations(strain_id, position, base)`. Which SQL returns each strain's name paired with each of its mutations?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Use `JOIN ... ON strain.column = mutation.column` to connect rows by the foreign-key relationship.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+SELECT s.name, m.position, m.base
+FROM strains s
+JOIN mutations m ON m.strain_id = s.id;
+```
+
+`INNER JOIN` (or just `JOIN`) keeps only rows where the match succeeds. If you also want strains with *no* mutations, use `LEFT JOIN` (every strain row, NULLs in the right-hand columns when no match). Aliases `s` / `m` keep the SELECT readable.
+:::
+
+---
+
+## 4. `WHERE` vs `HAVING`
+
+What is the difference between `WHERE` and `HAVING`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One filters individual rows *before* grouping; the other filters groups *after*.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`WHERE` filters rows before `GROUP BY`; `HAVING` filters groups after.**
+
+```sql
+SELECT strain_id, COUNT(*) AS n_mut
+FROM mutations
+WHERE position > 1000     -- filter individual mutation rows first
+GROUP BY strain_id
+HAVING n_mut >= 5;        -- then keep only strains with ≥ 5 such mutations
+```
+
+You can't say `WHERE COUNT(*) >= 5` because `COUNT(*)` is computed after grouping. That's exactly what `HAVING` is for.
+:::
+
+---
+
+## 5. SQL injection
+
+In `rusqlite`, which of these is unsafe?
+
+```rust
+// (A)
+let q = format!("SELECT * FROM strains WHERE name = '{}'", user_input);
+conn.execute(&q, [])?;
+
+// (B)
+conn.execute("SELECT * FROM strains WHERE name = ?1", [&user_input])?;
+```
+
+::: {.callout-tip collapse="true" title="Hint"}
+One of them lets a malicious user inject arbitrary SQL by including a `'` in their input.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**(A) is unsafe — vulnerable to SQL injection.** If `user_input` is `'; DROP TABLE strains; --`, the formatted query becomes `SELECT * FROM strains WHERE name = ''; DROP TABLE strains; --'` which executes both statements. The safe pattern is (B) — parameter binding with `?1`, `?2`, … (positional) or `:name` (named). `rusqlite` (and every other production SQL driver) escapes and quotes parameters for you. **Never** build SQL with string concatenation against untrusted input.
+:::
+
+---
+
+## 6. Foreign keys in SQLite
+
+You declare `strain_id INTEGER REFERENCES strains(id)` in the `mutations` table. Does SQLite enforce that referential integrity by default?
+
+::: {.callout-tip collapse="true" title="Hint"}
+SQLite parses and stores the foreign-key declaration, but enforcement is gated behind a runtime flag.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No — not by default.** SQLite parses `REFERENCES` clauses (so the schema documents them) but only enforces them when you turn on the pragma at the start of each connection:
+
+```sql
+PRAGMA foreign_keys = ON;
+```
+
+In `rusqlite`, call `conn.pragma_update(None, "foreign_keys", &true)?;`. Without it you can happily insert a mutation with `strain_id = 9999` even if no such strain exists — a frequent source of "where did this data go" bugs.
+:::
+
+---
+
+## 7. `COUNT(*)` vs `COUNT(column)`
+
+A `samples` table has 1000 rows; the `barcode` column is `NULL` in 30 of them.
+
+What do these return?
+
+```sql
+SELECT COUNT(*)        FROM samples;
+SELECT COUNT(barcode)  FROM samples;
+```
+
+::: {.callout-tip collapse="true" title="Hint"}
+`COUNT(*)` counts rows. `COUNT(column)` counts non-NULL values of that column.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- `COUNT(*)` → **1000** (every row).
+- `COUNT(barcode)` → **970** (rows where `barcode IS NOT NULL`).
+
+This is the standard SQL semantic and a common source of off-by-N bugs. To count *distinct* non-null barcodes use `COUNT(DISTINCT barcode)`.
+:::
+
+---
+
+## 8. Bulk inserts and transactions
+
+You're loading a 100 000-row mutations table from a TSV in Rust. The naïve loop does one `conn.execute("INSERT INTO mutations ...")` per row — and takes 90 seconds.
+
+Wrapping the whole loop in a transaction drops it to under a second. Why?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Without an explicit transaction, each `INSERT` commits on its own. Each commit triggers an `fsync` to durable storage.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Without an explicit transaction, SQLite autocommits each INSERT — meaning one `fsync()` per row.** On a typical SSD that's ~1 ms per insert, capping throughput around 1 000 ins/s. Wrapping the loop in `BEGIN; ... COMMIT;` (or `conn.transaction()` in `rusqlite`) batches them into a single durable commit at the end — typically 50–100× faster for bulk loads. Same advice for production tools like PostgreSQL.
+:::
+
+---
+
+## 9. Indexing
+
+You search `WHERE chrom = 'chr1' AND position BETWEEN 1000000 AND 1010000` on a 100 M-row mutations table — and it takes 8 seconds. The fix is one DDL statement. Which?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Without help, the database has to scan every row. What structure lets it skip directly to the matching range?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+```sql
+CREATE INDEX mut_loc ON mutations(chrom, position);
+```
+
+A composite **B-tree index** on `(chrom, position)` lets SQLite jump straight to the range, turning an O(n) full-table scan into O(log n) lookup + sequential read. The order of the columns matters: with `(chrom, position)`, the index helps both `WHERE chrom = X` alone and `WHERE chrom = X AND position BETWEEN ...`. With `(position, chrom)` it would help the first less than the second.
+:::
+
+---
+
+## 10. Choosing types in SQLite
+
+SQLite has only five storage classes: `NULL`, `INTEGER`, `REAL`, `TEXT`, `BLOB`. If you declare a column as `VARCHAR(50)`, what is actually enforced?
+
+::: {.callout-tip collapse="true" title="Hint"}
+SQLite's type system is famously loose — it's called "type affinity" rather than strict types.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Almost nothing — `VARCHAR(50)` is treated as `TEXT` with no length enforcement.** You can insert a 5 MB string. SQLite stores values according to their *affinity*, but the column declaration is a hint, not a constraint. To get real length enforcement you'd add a `CHECK(length(col) <= 50)`. Other DBs (PostgreSQL, MySQL) enforce `VARCHAR(N)` strictly; SQLite is the outlier here, and porting code between them sometimes surfaces this.
+
+(Aside: SQLite 3.37 introduced [`STRICT` tables](https://www.sqlite.org/stricttables.html) which *do* enforce types — but it's opt-in per table.)
+:::
+
+---
+
+## Where this leads
+
+A SQL/SQLite checklist for any new project:
+
+- **Specify columns** in `SELECT`, **parameter-bind** every value, **wrap bulk inserts in transactions**.
+- **Add indexes** to columns you query by; drop them again if writes become too slow.
+- **Turn on `PRAGMA foreign_keys = ON`** at the start of each connection if you want referential integrity enforced.
+- **`COUNT(*)` vs `COUNT(col)`** — different answers when NULLs are present.
+- **`WHERE` filters rows; `HAVING` filters groups.**

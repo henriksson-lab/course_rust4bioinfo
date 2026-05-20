@@ -1,5 +1,5 @@
 ---
-title: "Day 9 — Warm-up quiz: data-structure complexity"
+title: "Quiz: data-structure complexity"
 format:
   html:
     toc: true

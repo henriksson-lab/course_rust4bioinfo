@@ -58,6 +58,7 @@ website:
           - day1/00b-sequence-length.qmd
           - day1/00c-first-last-base.qmd
           - day1/00d-repeat-motif.qmd
+          - day1/00e-types-quiz.qmd
           - day1/01-gc-content.qmd
           - day1/02-complement.qmd
           - day1/03-base-counts.qmd
@@ -78,6 +79,7 @@ website:
           - day3/lec1-structs-enums.qmd
           - day3/lec2-recursion-and-trees.qmd
           - day3/lec3-dynamic-programming.qmd
+          - day3/00a-quiz.qmd
           - day3/01-genomic-interval.qmd
           - day3/02-parse-region.qmd
           - day3/03-codon-table.qmd
@@ -89,6 +91,7 @@ website:
           - day4/00-concepts.qmd
           - day4/lec1-io-and-crates.qmd
           - day4/lec3-archives.qmd
+          - day4/00a-quiz.qmd
           - day4/01-bed-parse.qmd
           - day4/02-fasta-stats.qmd
           - day4/03-fastq-filter.qmd
@@ -99,6 +102,7 @@ website:
         contents:
           - day5/00-concepts.qmd
           - day5/lec1-tests-release-parallel.qmd
+          - day5/00a-quiz.qmd
           - day5/01-find-the-bug.qmd
           - day5/02-release-mode.qmd
           - day5/03-parallel-gc.qmd
@@ -106,6 +110,7 @@ website:
         contents:
           - day6/00-concepts.qmd
           - day6/lec1-yew-wasm.qmd
+          - day6/00a-quiz.qmd
           - day6/01-hello-yew.qmd
           - day6/02-reactive-stats.qmd
           - day6/03-fetch-from-backend.qmd
@@ -114,6 +119,7 @@ website:
         contents:
           - day7/00-concepts.qmd
           - day7/lec1-relational-sqlite.qmd
+          - day7/00a-quiz.qmd
           - day7/01-sqlite-cli.qmd
           - day7/02-natural-join.qmd
           - day7/03-read-from-rust.qmd
@@ -124,6 +130,7 @@ website:
           - day8/00-concepts.qmd
           - day8/lec1-traits-basics.qmd
           - day8/lec2-trait-objects.qmd
+          - day8/00a-quiz.qmd
           - day8/01-display.qmd
           - day8/02-annotate.qmd
           - day8/03-generic-function.qmd
@@ -138,6 +145,7 @@ website:
         contents:
           - day10/00-concepts.qmd
           - day10/lec1-matrices-and-iterative-methods.qmd
+          - day10/00a-quiz.qmd
           - day10/01-dense-matrix.qmd
           - day10/02-sparse-matrix.qmd
           - day10/03-gauss-seidel.qmd
@@ -146,6 +154,7 @@ website:
         contents:
           - day11/00-concepts.qmd
           - day11/lec1-gpu-and-burn.qmd
+          - day11/00a-quiz.qmd
           - day11/01-tensors.qmd
           - day11/02-one-hot.qmd
           - day11/03-gc-content.qmd

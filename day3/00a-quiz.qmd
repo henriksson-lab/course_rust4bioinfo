@@ -1,0 +1,239 @@
+---
+title: "Quiz: enums, Option, and Result"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on the day-3 data-modelling vocabulary: `enum`, pattern matching, `Option<T>`, `Result<T, E>`, and recursive types. Reach for the answer before peeking.
+
+10 questions, easy to trickier. The key idea: **Rust uses the type system to make "missing", "succeeded-or-failed", and "one-of-several-shapes" explicit**, so they cannot be quietly ignored.
+
+---
+
+## 1. Variants of `Option`
+
+What are the two variants of [`Option<T>`](https://doc.rust-lang.org/std/option/enum.Option.html)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One carries a value of type `T`; the other carries nothing.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`Some(T)`** and **`None`**. `Option<T>` is Rust's "there might not be a value here" type. The closest analogues in other languages are `Optional<T>` in Java, `Maybe T` in Haskell, or `T | None` in modern Python. Rust uses it for HashMap lookups, parsing functions, the last element of a possibly-empty vector — anywhere a value might be absent.
+:::
+
+---
+
+## 2. Variants of `Result`
+
+What are the two variants of [`Result<T, E>`](https://doc.rust-lang.org/std/result/enum.Result.html)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One carries a successful value; the other carries an error.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`Ok(T)`** and **`Err(E)`**. `Result<T, E>` is Rust's "this might fail" type. Returning a `Result` instead of throwing an exception forces the caller to acknowledge the failure case — they must either match on it, use `?`, or call `.unwrap()` / `.expect("…")` to crash explicitly.
+:::
+
+---
+
+## 3. The `?` operator
+
+```rust
+fn parse_region(s: &str) -> Result<(String, u32, u32), MyErr> {
+    let (chrom, rest) = s.split_once(':').ok_or(MyErr::NoColon)?;
+    let (start, end)  = rest.split_once('-').ok_or(MyErr::NoDash)?;
+    let start: u32 = start.parse()?;
+    let end:   u32 = end.parse()?;
+    Ok((chrom.to_string(), start, end))
+}
+```
+
+What does `?` at the end of an expression do?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two outcomes: on success it unwraps; on failure it returns *from the enclosing function* with that failure.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**It's a shortcut for `match`.** If the expression is `Ok(v)`, `?` evaluates to `v` and execution continues. If it's `Err(e)`, `?` returns `Err(e.into())` from the *current* function — propagating the failure up the call chain without an explicit `match`. Works the same way on `Option`, where `None` becomes the early return.
+:::
+
+---
+
+## 4. Exhaustive match
+
+```rust
+enum Strand { Plus, Minus }
+
+fn label(s: Strand) -> &'static str {
+    match s {
+        Strand::Plus  => "+",
+    }
+}
+```
+
+Does this code compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The compiler checks every `match` against every variant of the enum. What happens if you forget one?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No — compile error**: *"non-exhaustive patterns: `Strand::Minus` not covered"*. Rust forces every `match` against an enum to handle every variant (or use `_` for a catch-all). This is one of the most useful safety nets in the language — when you later add a variant to an enum, every `match` that needs updating fails to compile.
+:::
+
+---
+
+## 5. `unwrap` vs `expect`
+
+```rust
+let x = my_option.unwrap();
+let y = my_option.expect("sequence must not be empty");
+```
+
+What's the difference?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Both panic on `None`; one gives a more useful crash message.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Both extract the `Some(value)` and panic on `None`.** The only difference is the panic message — `unwrap()` prints a generic "called `Option::unwrap()` on a `None` value", `expect("…")` prints your string. Use `.expect("why this can't be None")` in real code so the panic message documents the invariant. Reserve plain `.unwrap()` for one-off scripts and tests.
+:::
+
+---
+
+## 6. Recursive enum — why `Box`?
+
+```rust
+enum Tree {
+    Leaf(String),
+    Node(Tree, Tree),
+}
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The compiler needs to know how many bytes a `Tree` takes to lay it out in memory. What's the size of a `Tree` that contains *another* `Tree`?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No — error**: *"recursive type `Tree` has infinite size"*. A `Node` would need to contain two `Tree`s, each of which might be a `Node` containing two more `Tree`s — there's no finite size that works.
+
+The fix is to put indirection on the recursive branch: `Box<Tree>` (heap pointer, known size).
+
+```rust
+enum Tree {
+    Leaf(String),
+    Node(Box<Tree>, Box<Tree>),
+}
+```
+
+`Box<T>` is the cheapest form of "I'll allocate this on the heap and you just hold a pointer to it" — 8 bytes on a 64-bit machine, no matter how big the `Tree` it points to.
+:::
+
+---
+
+## 7. `HashMap::get` on a missing key
+
+```rust
+use std::collections::HashMap;
+let mut codons: HashMap<&str, char> = HashMap::new();
+codons.insert("ATG", 'M');
+let aa = codons.get("ZZZ");
+```
+
+What type and value does `aa` have?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The key isn't in the map. The API has to express that without crashing or returning a dummy value.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Type: `Option<&char>`. Value: `None`.** `HashMap::get` returns `Some(&value)` when the key is present and `None` when it isn't. The `&` is because it borrows the value out of the map (no copy). To use the value you must explicitly handle the `None` case — typically with `match`, `if let Some(c) = aa`, or `.unwrap_or(&'X')` for a default.
+:::
+
+---
+
+## 8. `match` on `Option`
+
+```rust
+fn first_base(seq: &str) -> &'static str {
+    match seq.chars().next() {
+        // your patterns here
+    }
+}
+```
+
+Fill in two patterns so the function returns either `"empty"` or the base as a `'static` string.
+
+::: {.callout-tip collapse="true" title="Hint"}
+`chars().next()` returns `Option<char>`. You need a pattern for `Some(c)` and one for `None`. Inside the `Some` arm you'll need to map four bases plus a fallback.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+```rust
+match seq.chars().next() {
+    None        => "empty",
+    Some('A')   => "A",
+    Some('C')   => "C",
+    Some('G')   => "G",
+    Some('T')   => "T",
+    Some(_)     => "unknown",
+}
+```
+
+Two notes:
+
+- The `Some(_)` arm is *required* — without it the match is non-exhaustive (chars can be anything from `'N'` to `'α'`).
+- Returning `&'static str` works because every arm is a string literal, which lives in the program's read-only data and exists for the whole program lifetime.
+:::
+
+---
+
+## 9. `Vec<u8>` vs `Vec<char>` for storing DNA
+
+You're loading a 100-Mbp chromosome into memory. Which is roughly **4× smaller**: storing the sequence as `Vec<u8>` or as `Vec<char>`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`u8` is one byte; `char` is a Unicode scalar value. How wide is a `char`?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`Vec<u8>` is 4× smaller.** Every `char` is 4 bytes (the width of a 32-bit Unicode scalar), regardless of what character it holds — even though `'A'` only needs one ASCII byte. A 100 Mbp chromosome takes 100 MB as `Vec<u8>` and 400 MB as `Vec<char>`. For ASCII-only data (DNA, IUPAC codes, Phred ASCII) always store bytes, not chars.
+:::
+
+---
+
+## 10. Dynamic programming for alignment — what's the state space?
+
+You're computing a Needleman-Wunsch alignment between two sequences of length `m` and `n`. The dynamic-programming table stores the best score reachable at every `(i, j)`. How many entries does the table have, and roughly how much memory if you store each as an `i32`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The table is rectangular: one row per prefix of the first sequence, one column per prefix of the second. `i32` is 4 bytes.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`(m + 1) × (n + 1)` entries, ≈ `4 · m · n` bytes.** For two sequences of length 1000 each, that's about 4 MB — fine. For two of length 100 000 each, it's ~40 GB — infeasible. This is why real aligners use linear-space tricks (Hirschberg) or banded variants (limit `|i − j|`), or switch to suffix-array / FM-index techniques entirely for whole-genome alignment.
+:::
+
+---
+
+## Where this leads
+
+The data-modelling patterns to internalise:
+
+- **`Option<T>`** for "might not exist" — `HashMap::get`, `.first()`, `.parse()` on an `Option`.
+- **`Result<T, E>`** for "might fail" — file I/O, parsing, network calls.
+- **`?`** for ergonomic propagation — turns "ten lines of error handling" into "ten lines of business logic plus question marks".
+- **Recursive enums need indirection** — `Box<T>` is the default; later we'll meet `Rc<T>` and `Arc<T>` for shared ownership.
+- **Pattern matching is exhaustive** — your safety net when you add a variant later.

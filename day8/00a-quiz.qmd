@@ -1,0 +1,211 @@
+---
+title: "Quiz: traits, generics, and dispatch"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-8 material: declaring traits, implementing them on types, writing generic functions with bounds, and choosing between static (`impl Trait`) and dynamic (`dyn Trait`) dispatch.
+
+10 questions, easy to trickier. The key idea: **traits are how Rust says "I'll work with any type that knows how to do X"**, and the type system enforces the contract at compile time.
+
+---
+
+## 1. `impl Trait for Type`
+
+You want to make `GenomicInterval` printable with `{}` via `println!`. Which trait do you implement?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two formatting traits in `std::fmt`: one for the developer-facing `{:?}` and one for the user-facing `{}`.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`std::fmt::Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html).** `Debug` (`{:?}`) is for developers; `Display` (`{}`) is for end users and is *not* derivable — you implement it by hand, deciding the exact human-readable form. Once `Display` is in place, every `format!`, `println!`, `to_string()`, and `eprintln!("{}", ...)` works without further changes.
+:::
+
+---
+
+## 2. Reading a trait bound
+
+```rust
+fn print_all<T: Display>(items: &[T]) { ... }
+```
+
+What does `T: Display` *promise* the function's body?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The bound is a contract between the caller (must supply a `T` that fulfils it) and the function body (may rely on it).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**That every value of type `T` supports `{}` formatting.** Inside the body, the compiler accepts `println!("{}", item)`. At each call site, the compiler checks that the concrete `T` (whatever the caller passes) really does implement `Display`; if not, the call fails to compile with a precise error naming the missing trait.
+:::
+
+---
+
+## 3. Static dispatch — monomorphisation
+
+What does the Rust compiler do when you call `print_all::<i32>(&v_i32)` and `print_all::<String>(&v_strings)` in the same program?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Generics are not erased at runtime — the compiler stamps out a specialised copy of the function for each concrete type you actually use.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Generates two specialised copies of `print_all` — one for `i32`, one for `String`.** This is called **monomorphisation**. Each copy is a regular non-generic function, fully inlined and optimised. The cost is binary size (more code) and compile time; the benefit is zero runtime overhead — the call is a direct function call, just as fast as if you had written the two specialised functions by hand.
+:::
+
+---
+
+## 4. `dyn Trait` is `?Sized`
+
+```rust
+let r: dyn std::io::Read = some_file;
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `dyn Trait` has no fixed size at compile time — it's a virtual type that could stand for many concrete sizes.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No — error**: *"the size for values of type `dyn Read` cannot be known at compilation time"*. `dyn Trait` is an *unsized* type — useful as the pointed-at part of `&dyn Trait`, `Box<dyn Trait>`, `Rc<dyn Trait>`, etc., but not as a direct binding. The fix is to put it behind a pointer: `let r: Box<dyn Read> = Box::new(some_file);`.
+:::
+
+---
+
+## 5. `&dyn Trait` vs `Box<dyn Trait>`
+
+When you write `fn process(r: &dyn Read)` vs `fn process(r: Box<dyn Read>)`, what's the difference?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Both pass a trait object. One borrows; the other owns the underlying value.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- **`&dyn Read`** — borrowed, no allocation; the caller still owns the reader.
+- **`Box<dyn Read>`** — owned, on the heap; the function (or whoever it hands the `Box` to) is responsible for dropping it.
+
+Both go through a vtable for method calls (dynamic dispatch). Prefer the borrow `&dyn Read` for read-only access; reach for `Box<dyn Read>` when you need to store the reader long-term in a struct field or send it across threads.
+:::
+
+---
+
+## 6. `impl Trait` in return position
+
+```rust
+fn make_iter() -> impl Iterator<Item = u8> {
+    (0..100).filter(|x| x % 2 == 0)
+}
+```
+
+What does `-> impl Iterator<...>` mean?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The actual return type is something complicated (a chained `Filter<Range>`). You don't want to write it out; you just promise *some* iterator type.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**"This returns some single concrete type that implements `Iterator`; I'm not telling you which one."** At compile time, the type is fully determined (it's `Filter<Range<u8>, ...>` here) and the compiler uses *static* dispatch. The caller can use any `Iterator` method without paying for a vtable. The price: you can only return *one* concrete type from the function — every branch must yield the same one (use `Box<dyn Iterator<...>>` if branches yield different concrete iterators).
+:::
+
+---
+
+## 7. Derivable traits
+
+Which of these traits can you `derive`?
+
+- `Debug`, `Clone`, `Copy`, `PartialEq`, `Eq`, `Hash`, `Default`, `Display`
+
+::: {.callout-tip collapse="true" title="Hint"}
+The compiler can mechanically write an implementation when the meaning is *field-by-field*. There's exactly one in the list where the mechanical rule doesn't work.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**All except `Display`.** `Debug` knows how to print every field; `Clone` clones every field; `PartialEq` compares every field; etc. — these have an unambiguous field-by-field meaning. `Display` doesn't — it depends on what *human-readable form* you want (`chr1:100-200`? `chr1\t100\t200`? `Interval(...)?`), which only you can decide. So `Display` is implemented by hand. Every other trait above lives in the canonical `#[derive(Debug, Clone, PartialEq, Eq, Hash, Default)]` line.
+:::
+
+---
+
+## 8. Heterogeneous collection
+
+You want a `Vec` containing a mix of `FastaRecord` and `FastqRecord` (both implement a `Sequence` trait). Which option compiles?
+
+```rust
+// (A)
+let v: Vec<Sequence> = vec![fa, fq];
+
+// (B)
+let v: Vec<Box<dyn Sequence>> = vec![Box::new(fa), Box::new(fq)];
+
+// (C)
+let v: Vec<impl Sequence> = vec![fa, fq];
+```
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `Vec` needs to know the size of one element. The two record types have different sizes; only one option lets them coexist behind a uniform-size handle.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Only (B) compiles.**
+
+- (A) is invalid: `Sequence` is a trait, not a type. (Modern Rust hints: "try `dyn Sequence`".)
+- (C) is invalid: `impl Sequence` in a binding position means "one single concrete type" — but the two records have different types.
+- (B) works: every element is the same size — a `Box<dyn Sequence>` heap pointer — and method calls go through the vtable. This is the canonical heterogeneous-collection pattern.
+:::
+
+---
+
+## 9. Generic vs trait object — when?
+
+You're writing a function that processes a stream of sequence records. The performance-critical inner loop is the same for FASTA and FASTQ. Should you use a generic `fn process<R: Sequence>(seq: R)` or `fn process(seq: &dyn Sequence)`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One specialises at compile time (zero runtime cost). The other uses a vtable (small per-call cost) but produces only one machine-code copy.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Use the generic `<R: Sequence>` form for performance-critical code.** It monomorphises into specialised copies that inline aggressively — typically a few percent to 10× faster than the trait-object version on a tight loop. Reserve `&dyn Trait` for the cases where (a) you really need heterogeneous handling at runtime, or (b) you want to keep binary size down across many concrete types.
+:::
+
+---
+
+## 10. `where` clauses
+
+What's the practical difference between these two signatures?
+
+```rust
+fn foo<T: Display + Clone, U: Score>(a: T, b: U) -> String { ... }
+
+fn foo<T, U>(a: T, b: U) -> String
+where
+    T: Display + Clone,
+    U: Score,
+{ ... }
+```
+
+::: {.callout-tip collapse="true" title="Hint"}
+Functionally — none. The compiler treats them identically.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No functional difference.** Both are valid; both compile to the same code. The `where` clause is just a readability win when the bounds get long (more than ~2 parameters, or any non-trivial bound like `T: Iterator<Item = u8> + Send + 'static`). The standard library uses `where` extensively for exactly this reason.
+:::
+
+---
+
+## Where this leads
+
+The trait playbook to keep:
+
+- **`impl Trait for Type`** is the syntax — order matters.
+- **Generic + bound** → static dispatch → monomorphisation → fastest, but binary grows.
+- **`&dyn Trait` / `Box<dyn Trait>`** → dynamic dispatch via vtable → one machine-code copy, slight per-call cost, allows heterogeneous storage.
+- **Derive every "mechanical" trait** (`Debug`, `Clone`, `PartialEq`, `Hash`, `Default`, …); implement `Display` by hand.
+- **`where` clauses** keep complicated bounds readable.

@@ -1,0 +1,181 @@
+---
+title: "Quiz: dense, sparse, and iterative"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-10 material: when to use dense vs sparse matrices, the trade-offs between COO / CSR / CSC, and the cost of matrix-vector multiplication and iterative solvers.
+
+10 questions, easy to trickier. The key idea: **the storage format you pick is half of the performance story** — same data, same algorithm, 100× difference in runtime depending on whether you matched the format to the access pattern.
+
+---
+
+## 1. Sparse vs dense — when to switch
+
+A single-cell RNA-seq matrix is `10 000 genes × 100 000 cells` with about 2% non-zero entries. Stored densely as `f64`, how much memory does it take?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`10⁴ × 10⁵ = 10⁹` entries. Each `f64` is 8 bytes.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**~8 GB.** `10⁹ × 8 bytes = 8 GB`. Sparse storage (e.g. CSR with `f64` values + `u32` indices) brings it down to roughly `2% × 10⁹ × 12 bytes ≈ 240 MB` — a ~30× saving in memory, and almost the same speed-up for matrix-vector multiply because zero × anything is zero.
+:::
+
+---
+
+## 2. Row-major or column-major?
+
+[`ndarray::Array2<f64>`](https://docs.rs/ndarray/) (day 10's dense type) uses which layout by default?
+
+::: {.callout-tip collapse="true" title="Hint"}
+NumPy's default, C's convention.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Row-major.** `Array2` stores `[r0c0, r0c1, ..., r0cN, r1c0, r1c1, ...]` — one row after another in a contiguous buffer. The offset formula is `i * cols + j`. This is the C / NumPy convention. Compare to `nalgebra::DMatrix` (day 11) which is *column-major* (Fortran / R / MATLAB convention) — same data, opposite memory layout.
+:::
+
+---
+
+## 3. Cache locality
+
+You have a row-major `Array2<f64>` of shape `[10 000, 10 000]`. Which loop is faster — outer-rows-then-inner-columns, or outer-columns-then-inner-rows?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The CPU loads memory in 64-byte cache lines. Iterating in the order data is stored stays inside one cache line per fetch.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Outer-rows-then-inner-columns is ~5–20× faster** on a row-major matrix. Walking one row reads consecutive bytes — one cache line covers ~8 `f64`s. Walking one column jumps `cols × 8` bytes between reads, so every access fetches a fresh cache line. Get this wrong and you can lose an order of magnitude on otherwise identical code.
+:::
+
+---
+
+## 4. COO format — when to use
+
+`sprs::TriMat<f64>` (COO under the hood) stores triplets `(row, col, value)` in three parallel arrays. When is COO the right format?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Easy to *build* (just push triplets), bad for matrix-vector multiply (no row or column order). Used as a staging format.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**As a building / staging format — load from a TSV, push triplets, then convert.** Once you need to *compute* with the matrix (matrix-vector multiply, iterative solvers, slicing), convert to CSR or CSC. The typical workflow:
+
+```rust
+let mut tri = TriMat::new((n_rows, n_cols));
+for line in tsv_reader { tri.add_triplet(r, c, v); }
+let csr: CsMat<f64> = tri.to_csr();
+```
+:::
+
+---
+
+## 5. CSR vs CSC
+
+You have an `n × n` CSR sparse matrix and want to compute `y = Ax`. The CSR layout makes one access pattern fast and the other slow. Which?
+
+::: {.callout-tip collapse="true" title="Hint"}
+CSR stores one row's non-zeros contiguously. Mat-vec multiply walks row by row, doing one inner dot product per row.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**CSR makes `y = Ax` (rows of `A` dotted with `x`) fast** — one row's `values` and `col_indices` are contiguous, so the inner loop is cache-friendly. CSR makes column extraction (`A[:, j]`) slow — you have to scan every row's index list for column `j`.
+
+CSC is the mirror image: fast column access, fast `Aᵀx`, slow `Ax`. If your hot path is `Ax` use CSR; if it's `Aᵀx` use CSC; if it's both, store both (or use a library that converts on demand).
+:::
+
+---
+
+## 6. Mat-vec cost
+
+`A` is `n × n` with `nnz` non-zeros. Roughly how many multiply-adds does one `y = Ax` cost?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Dense mat-vec is `n²`. Sparse skips zeros.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`nnz` multiply-adds for sparse; `n²` for dense.** For `n = 10⁵` and density 0.5% (`nnz = 5 × 10⁷`), the sparse multiply is ~`2 × 10⁴` × faster than dense (dense would be `10¹⁰` ops). The sparse constant factor is a bit worse (pointer indirection, less SIMD), but the asymptotic win dominates as soon as the density drops below a few percent.
+:::
+
+---
+
+## 7. Direct vs iterative solvers
+
+For solving `Ax = b` where `A` is `10 000 × 10 000` and sparse, would you reach for a *direct* solver (LU, Cholesky) or an *iterative* one (Jacobi, Gauss-Seidel, CG)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Direct factorisation builds a dense factor — for large sparse `A` that factor is too big to store.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Iterative.** LU / Cholesky factorisations of a sparse `A` typically *fill in* (the factor becomes much denser than `A`), eating O(n²) memory and O(n³) time — infeasible at `n = 10⁴`+. Iterative methods only multiply by the original sparse `A`, so each step is O(`nnz`); they converge in a few dozen to a few thousand sweeps for well-conditioned problems. For small dense `A` (say `n < 5 000`), direct is fast and exact and easier to reason about.
+:::
+
+---
+
+## 8. Gauss-Seidel convergence
+
+Gauss-Seidel is guaranteed to converge if `A` is — pick one — *symmetric positive-definite*, *strictly diagonally dominant*, *symmetric*, or *invertible*?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two of the four are textbook sufficient conditions. "Symmetric" alone isn't enough; "invertible" alone isn't enough.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**SPD *or* strictly diagonally dominant.** Either condition is sufficient for Gauss-Seidel to converge from any starting guess. "Symmetric" alone isn't (you also need positive-definite). "Invertible" certainly isn't — diagonally dominant matrices are invertible, but plenty of invertible matrices send Gauss-Seidel to infinity. In practice most physical / biological well-posed problems are SPD or close to it.
+:::
+
+---
+
+## 9. Power iteration
+
+What does **power iteration** compute, given a square matrix `P`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Multiplying a random vector by `P` over and over amplifies the eigenvector with the largest eigenvalue.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**The dominant eigenvector** of `P` (the eigenvector with the largest absolute eigenvalue). Start with any vector `p₀`; let `pₜ₊₁ = P pₜ / ‖P pₜ‖`. The sequence converges to the dominant eigenvector. For a row-stochastic transition matrix, the dominant eigenvalue is 1 and the dominant eigenvector is the **stationary distribution** of the Markov chain. Every iteration is one O(`nnz`) sparse matrix-vector multiply, which is why power iteration scales to huge graphs (Google PageRank, biological networks).
+:::
+
+---
+
+## 10. When power iteration fails
+
+Power iteration can fail to converge if…?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The chain must reach the stationary distribution. Two pathologies prevent that.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**…the chain isn't *ergodic*.** Two failure modes:
+
+- **Reducibility** — the graph splits into components that don't talk to each other (multiple stationary distributions, depending on starting point).
+- **Periodicity** — every closed cycle has length that's a multiple of `k ≥ 2` (the chain oscillates instead of settling).
+
+PageRank's "damping factor" trick adds a small uniform jump probability to fix both — it makes the chain irreducible and aperiodic by construction. The same trick (a small "teleport" probability) is used in random-walk algorithms on biological networks.
+:::
+
+---
+
+## Where this leads
+
+The matrix-format decision tree:
+
+- **Loading from disk, building incrementally?** → COO (`sprs::TriMat`).
+- **Sparse and computing with it (matvec, solvers)?** → CSR by default; CSC if your access pattern is column-oriented.
+- **Whole matrix dense and small?** → `ndarray::Array2` (row-major).
+- **Need SVD, eigen, classical linear algebra?** → `nalgebra::DMatrix` (day 11).
+- **Solving `Ax = b` for large sparse `A`?** → iterative (Gauss-Seidel, CG); never factorise.
+- **Markov chain on a big graph?** → power iteration.

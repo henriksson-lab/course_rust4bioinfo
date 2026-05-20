@@ -1,0 +1,254 @@
+---
+title: "Quiz: scalar types and ranges"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on Rust's scalar types — what each one stores, how much it can hold, and which one to reach for in common bioinformatics situations. Guess before peeking.
+
+12 questions, easy to trickier. The key idea behind every question: **the type you pick decides the range you can store**, and an overflow either panics (in debug builds) or silently wraps (in release builds), so picking too small is a real bug.
+
+---
+
+## 1. Type of an integer literal
+
+```rust
+let x = 42;
+```
+
+What type does the compiler infer for `x`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+When you don't tell the compiler, Rust falls back on a default integer type. It's the same default NumPy and many other languages use.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`i32`](https://doc.rust-lang.org/std/primitive.i32.html)** — Rust's default integer type when nothing in the context forces a different one. To pick a different type, write a suffix (`42_u8`, `42_i64`) or an annotation (`let x: u32 = 42;`).
+:::
+
+---
+
+## 2. `'A'` vs `b'A'`
+
+```rust
+let a = 'A';
+let b = b'A';
+```
+
+What types are `a` and `b`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Single quotes give you one character. Add the `b` prefix and you get the *byte* representation of that character. The two types are different sizes.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- `a` is [`char`](https://doc.rust-lang.org/std/primitive.char.html) — a 4-byte Unicode scalar value.
+- `b` is [`u8`](https://doc.rust-lang.org/std/primitive.u8.html) — an unsigned 8-bit byte. Numerically it equals 65 (the ASCII code for `'A'`).
+
+For DNA (A, C, G, T are pure ASCII) we almost always store bases as `u8`. `char` would waste 3 bytes per base.
+:::
+
+---
+
+## 3. Maximum value of `u8`
+
+What is the largest value a `u8` can hold?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `u8` is an *unsigned* 8-bit integer. 8 bits give you 2⁸ distinct values.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**255** (which is `2⁸ − 1`). A `u8` holds the values `0..=255`. That happens to be exactly enough to store one ASCII byte — and exactly enough to store a Phred quality score (Phred caps at Q93 in practice).
+:::
+
+---
+
+## 4. Range of `i8`
+
+What is the *range* of `i8`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A signed 8-bit integer uses one bit for the sign. The negative side has one more representable value than the positive side (two's-complement encoding).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`-128..=127`** (`−2⁷` to `2⁷ − 1`). In Rust you can write [`i8::MIN`](https://doc.rust-lang.org/std/primitive.i8.html#associatedconstant.MIN) and [`i8::MAX`](https://doc.rust-lang.org/std/primitive.i8.html#associatedconstant.MAX) — these constants exist for every integer type and are the safe way to reason about a type's bounds.
+:::
+
+---
+
+## 5. Right type for a Phred quality score
+
+A FASTQ quality character is an ASCII byte; subtracting 33 gives the Phred score (0..93 in real data).
+
+Which type should you use to store the score?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The values are 0..93 — well within the range of one specific small type.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`u8`.** Phred scores are non-negative and never exceed ~93, which fits in `u8` (`0..=255`) with room to spare. Using `i8` would work but wastes the negative half; using `i32` would work but waste 3 of the 4 bytes per score on a million-read FASTQ.
+:::
+
+---
+
+## 6. Right type for a position on human chromosome 1
+
+Human chr1 is about **250 million** base pairs long.
+
+Which unsigned integer type is the smallest one that holds any position?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`u16` maxes at 65 535 (~65k). `u32` maxes around 4.3 billion. Which fits 250 million?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`u32`** (maximum 4 294 967 295). `u16` is far too small. `u64` works but doubles the memory footprint of every position. For a BAM-sized table of read alignments, that doubling matters.
+
+For the *whole human genome* in one coordinate system (~3 billion bp) `u32` still works, but you're getting close to the limit. Most bioinformatics tools use `u32` for per-chromosome positions and `i64`/`u64` for global indexing into archives.
+:::
+
+---
+
+## 7. Default float type
+
+```rust
+let g = 0.42;
+```
+
+What is the type of `g`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Rust's default float type is the one that gets you the most precision — useful for accumulating things like GC fractions across millions of reads without rounding error compounding.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`f64`](https://doc.rust-lang.org/std/primitive.f64.html)** — 64-bit IEEE-754 double, ~15-17 significant decimal digits. To pick `f32` instead (smaller but less precise) you write a suffix: `0.42_f32`. ML / GPU code is the main place where `f32` is the default — half the memory, faster matrix multiplies, precision usually adequate.
+:::
+
+---
+
+## 8. Integer vs float division
+
+```rust
+let a = 5 / 2;
+let b = 5.0 / 2.0;
+```
+
+What are `a` and `b`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The two operands' types decide what operation the compiler runs. Integer arithmetic and float arithmetic give different results for non-divisible numerators.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- `a` is **`2`** (`i32`) — integer division, truncates toward zero.
+- `b` is **`2.5`** (`f64`) — float division.
+
+This is a common source of off-by-one bugs in GC-content code. Write `(gc_count as f64) / (total as f64)` to get a true fraction, never `gc_count / total`.
+:::
+
+---
+
+## 9. `255u8 + 1` — what happens?
+
+```rust
+let x: u8 = 255;
+let y = x + 1;
+```
+
+What does this code do?
+
+::: {.callout-tip collapse="true" title="Hint"}
+255 is the maximum `u8`. The behaviour differs between `cargo run` (debug build) and `cargo run --release` — and that difference is deliberate.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- **Debug build** (`cargo run`, `cargo test`): **panics** with an "attempt to add with overflow" message.
+- **Release build** (`cargo run --release`): **wraps to 0** silently.
+
+If you actually *want* wraparound, use [`x.wrapping_add(1)`](https://doc.rust-lang.org/std/primitive.u8.html#method.wrapping_add). If you want to fail gracefully, use [`x.checked_add(1)`](https://doc.rust-lang.org/std/primitive.u8.html#method.checked_add) which returns `Option<u8>` (`None` on overflow).
+:::
+
+---
+
+## 10. `'A' as u8`
+
+```rust
+let b: u8 = 'A' as u8;
+```
+
+What is the value of `b`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The `as` cast on a `char` gives you its Unicode code point as a number. For an ASCII character, that's just the ASCII value.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`65`** — the ASCII code for `'A'`. Going the other way, `b'A'` is itself the literal `65_u8`. Converting a `char` to `u8` with `as` only succeeds cleanly for ASCII; for non-ASCII it silently truncates the Unicode code point to the low 8 bits — almost never what you want for sequence data.
+:::
+
+---
+
+## 11. Type of `s.len()`
+
+```rust
+let s: &str = "ACGT";
+let n = s.len();
+```
+
+What is the type of `n`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Lengths and indices in Rust use a special type whose width depends on the machine — 64-bit on most laptops, 32-bit on embedded targets.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`usize`](https://doc.rust-lang.org/std/primitive.usize.html)** — "pointer-sized unsigned integer". On a 64-bit machine that's `u64`; on a 32-bit machine it's `u32`. Every length, capacity, slice index, and `Vec` size in Rust uses `usize`. To use one as an `f64` for an arithmetic ratio: `n as f64`.
+
+(Aside: `s.len()` here is **4 — the number of UTF-8 bytes**, not the number of `char`s. For an ASCII string like `"ACGT"` those numbers agree; for `"αβγ"` they don't.)
+:::
+
+---
+
+## 12. Mutability
+
+```rust
+let x = 5;
+x = 6;
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Rust bindings are immutable by default. You have to opt in to mutation with one keyword.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No** — compile error: *"cannot assign twice to immutable variable `x`"*. To allow reassignment you write `let mut x = 5;`. The default is immutable so the compiler can catch accidental rebinding — and so a reader can trust that an unmutated-looking binding really doesn't change.
+
+(Subtlety: Rust also allows *shadowing* — `let x = 5; let x = 6;` *does* compile, because the second `let` introduces a new binding with the same name. That is different from mutation.)
+:::
+
+---
+
+## Where this leads
+
+Four numbers to keep in your head:
+
+| Type | Max value | Use for |
+|---|---|---|
+| `u8` | 255 | DNA bases (as bytes), Phred scores, anything ≤ 255 |
+| `u32` | ~4.3 × 10⁹ | per-chromosome positions, k-mer counts in a single sample |
+| `u64` | ~1.8 × 10¹⁹ | global file offsets, read indices in giant FASTQs |
+| `f64` | — | any fractional quantity (GC fraction, p-value, score) |
+
+Pick the smallest type that comfortably holds your data, then reach for the helper methods (`checked_add`, `saturating_sub`, `wrapping_mul`) when you specifically need overflow control.

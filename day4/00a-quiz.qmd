@@ -1,0 +1,206 @@
+---
+title: "Quiz: I/O, crates, and error handling"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-4 material: how Rust reads and writes data, how to bring in a third-party crate, and how the standard library models "this might fail".
+
+10 questions, easy to trickier. The key idea: **the Rust ecosystem is small but converges on one or two crates per problem** — `noodles` for FASTA/FASTQ/BAM, `flate2` for gzip, `plotters` for charts, `zip` for archives — and the standard library's `Read`/`Write` traits make them all interoperable.
+
+---
+
+## 1. `Read` and `Write` are traits
+
+True or false: a `File` and standard input (`io::stdin()`) implement the same trait, so a function that takes one can usually take the other.
+
+::: {.callout-tip collapse="true" title="Hint"}
+Both let you pull bytes one buffer at a time. What is the trait that says "I produce bytes"?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**True.** Both implement [`std::io::Read`](https://doc.rust-lang.org/std/io/trait.Read.html). A function like `fn parse<R: Read>(r: R)` accepts a `File`, `io::Stdin`, a `&[u8]` byte slice, a `Cursor<Vec<u8>>` (for tests), and many more. Same story on the output side with [`Write`](https://doc.rust-lang.org/std/io/trait.Write.html). This is what makes "read from stdin or from a file" trivial to implement.
+:::
+
+---
+
+## 2. Why `BufReader`?
+
+```rust
+let f = File::open("reads.fa")?;
+for line in f.lines() { ... }
+```
+
+This doesn't compile — and even if you fix it, it would be slow. What's the fix?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`File` produces bytes, not lines. Reading one byte at a time means one system call per byte. There is a wrapper in the standard library that buffers bytes and adds a `lines()` method.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+Wrap the file in [`BufReader`](https://doc.rust-lang.org/std/io/struct.BufReader.html):
+
+```rust
+use std::io::{BufRead, BufReader};
+let f = BufReader::new(File::open("reads.fa")?);
+for line in f.lines() { ... }
+```
+
+`BufReader` reads in chunks (8 KiB by default), reducing one syscall per byte to one syscall per ~8 KiB. The [`BufRead`](https://doc.rust-lang.org/std/io/trait.BufRead.html) trait it implements provides `.lines()`, `.read_line(buf)`, `.read_until(byte, buf)` — the iterators you actually want.
+:::
+
+---
+
+## 3. Crate name conventions
+
+In `Cargo.toml`:
+
+```toml
+[dependencies]
+noodles-fasta = "0.50"
+```
+
+In `src/main.rs`, how do you import it?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Hyphens are illegal in Rust identifiers. Cargo automatically converts them when generating the crate name you `use`.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`use noodles_fasta;`** (with an underscore). Cargo allows hyphens in package names for readability; Rust source code requires identifiers to use underscores. The mapping is automatic and consistent. (Some crates also pick a "canonical" import alias via `[package].rename` — e.g. `noodles` itself is the parent crate.)
+:::
+
+---
+
+## 4. `?` requires a `Result` return type
+
+```rust
+fn read_file(path: &str) -> String {
+    let s = std::fs::read_to_string(path)?;
+    s
+}
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The `?` operator returns from the function on `Err`. What must the function's return type be for that to type-check?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** The function returns `String`, but `?` wants to return `Err(e)` — which is a `Result`. The fix is to change the return type to `Result<String, std::io::Error>` (or a more permissive error type like `Box<dyn std::error::Error>` or [`anyhow::Error`](https://docs.rs/anyhow/) — both common in application code).
+:::
+
+---
+
+## 5. `read_to_string` for a 30 GB file
+
+You write `std::fs::read_to_string("human_genome.fa")?` on a 30 GB FASTA file.
+
+What happens?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`read_to_string` allocates one `String` and copies the entire file into it. Where does the `String` live?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**The process tries to allocate 30 GB of RAM and either succeeds (eats your memory) or fails with an allocation error.** `read_to_string` is fine for small files (config, small VCF, a single short read). For anything big use buffered line-by-line iteration with `BufReader` (Q2) or a streaming parser like `noodles_fasta::reader::Reader`.
+
+Rule of thumb: if you wouldn't be happy keeping the whole file open in a text editor, don't `read_to_string` it.
+:::
+
+---
+
+## 6. Gzipped input — which crate?
+
+Most public FASTQ data ships as `.fastq.gz`. Which Rust crate decompresses gzip on the fly?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The crate name is the same as the wrapper format ("DEFLATE" and "gzip" are both members of one family).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`flate2`](https://docs.rs/flate2/).** Wrap any `Read` source with [`flate2::read::MultiGzDecoder`](https://docs.rs/flate2/latest/flate2/read/struct.MultiGzDecoder.html) (or `GzDecoder` for single-member files) and downstream code keeps seeing a `Read`-implementing handle. The same trick applies on the write side via `GzEncoder`. Newer projects sometimes use [`zstd`](https://docs.rs/zstd/) (Zstandard) which is faster and compresses slightly better; the pattern is identical.
+:::
+
+---
+
+## 7. `noodles` for sequence formats
+
+True or false: in 2026 Rust, [`noodles`](https://docs.rs/noodles/) is the closest thing to a "Biopython for Rust" — one crate (with sub-crates) covering FASTA, FASTQ, SAM/BAM, VCF/BCF, BED, GTF, GFF.
+
+::: {.callout-tip collapse="true" title="Hint"}
+You used `noodles_fasta` and `noodles_fastq` in today's exercises. They are sub-crates of one ecosystem.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**True.** [`noodles`](https://docs.rs/noodles/) is a family of crates by Michael Macias covering essentially every common bioinformatics file format, all with consistent API patterns. The reader / writer types take any `Read` / `Write`, which lets you compose them with `flate2`, `BufReader`, stdin, etc.
+:::
+
+---
+
+## 8. Plotting
+
+You want to draw a read-length histogram and save it as `histogram.svg`. Which crate (introduced on day 4) gives you a backend-agnostic chart API?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Its name is meta — it plots things.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**[`plotters`](https://docs.rs/plotters/).** It's a pure-Rust charting library that emits SVG, PNG, or bitmap output depending on the backend you pick at construction time. The API is verbose but stable, no external `gd`-style dependencies, and plays nicely with `wasm` for web frontends (day 6).
+:::
+
+---
+
+## 9. ZIP archives
+
+You want to bundle three output files into one `results.zip`. Which crate, and which standard-library traits does its writer hook into?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The crate name is literally the format. Underneath, it needs to know how to write *bytes* — i.e., something that implements one specific trait.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Crate: [`zip`](https://docs.rs/zip/).** Its `ZipWriter::new(...)` takes any [`Write`](https://doc.rust-lang.org/std/io/trait.Write.html) + [`Seek`](https://doc.rust-lang.org/std/io/trait.Seek.html) sink — a `File` works, a `Cursor<Vec<u8>>` works (handy for tests), and you can chain through `BufWriter` for performance. The `Seek` requirement is because ZIP needs to back-patch the central-directory offsets after writing each entry.
+:::
+
+---
+
+## 10. Error type — local enum vs `Box<dyn Error>`
+
+For a small CLI tool you write:
+
+```rust
+fn main() -> Result<(), Box<dyn std::error::Error>> { ... }
+```
+
+…and not a custom error enum. Defensible?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Custom error enums are great for libraries, where callers want to match on the variants. For an application, callers are humans reading panic messages.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Defensible — and idiomatic for binaries.** `Box<dyn std::error::Error>` accepts *any* error type via the `?` operator, so you can `?`-propagate `io::Error`, `ParseIntError`, parsing errors from `noodles`, etc., without a custom enum. The downside (callers can't match on it) doesn't apply when the only "caller" is `main` printing the error.
+
+For *libraries*, prefer a named error enum (or [`thiserror`](https://docs.rs/thiserror/)) so consumers can pattern-match. The two crates that dominate this space are `anyhow` (for applications) and `thiserror` (for libraries).
+:::
+
+---
+
+## Where this leads
+
+The plumbing checklist for any new I/O task:
+
+1. **What format?** → grab the right `noodles_*` (or `csv`, `serde_json`, ...).
+2. **Compressed?** → wrap in `flate2` / `zstd` first.
+3. **Big?** → use `BufReader` + line iterator, never `read_to_string` for anything you wouldn't put in a text editor.
+4. **Fails?** → return `Result` and use `?`; pick a permissive error type (`anyhow::Result`) in application code.
+5. **Output?** → mirror the same pattern with `BufWriter`, plotters, zip, etc.
