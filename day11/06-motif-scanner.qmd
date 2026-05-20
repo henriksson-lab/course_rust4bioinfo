@@ -21,13 +21,15 @@ By the time `cargo test` passes you will have used [`burn::tensor::module::conv1
 
 ## Background — PWM scanning is exactly 1-D conv
 
-A **PWM** [position weight matrix — a `[4, w]` matrix where entry `(b, p)` is the log-odds score for seeing base `b` at relative position `p`] is the classical motif representation in bioinformatics ([MEME](https://meme-suite.org/), [JASPAR](https://jaspar.genereg.net/)).
+A **PWM** [*position weight matrix — a `[4, w]` matrix where entry `(b, p)` is the log-odds score for seeing base `b` at relative position `p`*] is the classical motif representation in bioinformatics ([MEME](https://meme-suite.org/), [JASPAR](https://jaspar.genereg.net/)).
 
 Scanning a PWM along a DNA sequence means: at every position `p` along the genome, slide the PWM into place, look up the score for each (base, position) pair, sum them. That is **exactly** what a 1-D convolution computes:
 
-```
-score(n, m, p) = sum over (b, k) of   one_hot[n, b, p+k] * pwm[m, b, k]
-```
+$$
+\mathrm{score}(n,\, m,\, p) \;=\; \sum_{b=0}^{3} \sum_{k=0}^{w-1} \mathrm{one\_hot}[n,\, b,\, p+k] \cdot \mathrm{PWM}[m,\, b,\, k] .
+$$
+
+For each sample $n$, each motif $m$, and each valid starting position $p$, we sum the products of the one-hot indicator and the PWM weight over the 4 bases × $w$ positions of the window.
 
 The PyTorch one-liner:
 

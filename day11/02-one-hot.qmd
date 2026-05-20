@@ -18,14 +18,7 @@ By the time `cargo test` passes you will have used [`Int`](https://docs.rs/burn/
 
 The standard encoding for sequence ML:
 
-```text
-sequence:    A C G T A
-integer:    [0 1 2 3 0]              shape [L]   = [5]
-one-hot:    [[1 0 0 0 1]   A row     shape [4, L] = [4, 5]
-             [0 1 0 0 0]   C row
-             [0 0 1 0 0]   G row
-             [0 0 0 1 0]]  T row
-```
+![Each base in the sequence A C G T A picks exactly one row of the `[4, L]` block; the column sum is 1 at every position.](images/lec1-one-hot.svg){fig-alt="A DNA sequence of five coloured letter cells A C G T A on the left. An arrow to the right of it points at a 4-by-5 grid with row labels A, C, G, T and column labels 0 through 4. The hot cells are coloured: position 0 row A; position 1 row C; position 2 row G; position 3 row T; position 4 row A. All other cells contain 0." width="80%"}
 
 For a batch of `N` sequences the shape becomes `[N, 4, L]` — `N` is the batch axis, `4` is the channel axis (one channel per base), `L` is the position axis. This matches the `[batch, channels, length]` convention every 1-D convolution layer expects.
 

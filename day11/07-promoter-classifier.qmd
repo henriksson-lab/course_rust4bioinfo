@@ -14,16 +14,7 @@ Build a tiny **promoter classifier** [a neural network that says "this DNA seque
 
 Architecture:
 
-```text
-[N, 4, L]  one-hot DNA
-    ↓ Conv1d(in=4, out=8, kernel=6)      learnable PWMs
-[N, 8, L-5]
-    ↓ ReLU
-    ↓ global max-pool over the length axis
-[N, 8]
-    ↓ Linear(8 → 1)
-[N, 1]  logit
-```
+![PromoterNet: one-hot DNA → Conv1d (learnable PWMs + bias) → ReLU → global max-pool along the length axis → Linear → per-sequence promoter logit.](images/lec1-module-architecture.svg){fig-alt="A horizontal block diagram with six labelled boxes connected by arrows: Input [N, 4, L] one-hot DNA; Conv1d 4→C channels, k=6, learnable PWMs + bias; ReLU producing [N, C, L−5]; max over L collapsing to [N, C] (global max-pool); Linear C→1 with weight [1, C] and bias; Output [N, 1] promoter logit per sequence. A footnote indicates which boxes contain learnable parameters." width="100%"}
 
 The synthetic data: half the sequences have a `TATAAA`-like motif planted in them ("promoters", label `1.0`); the other half are random ("non-promoters", label `0.0`). After a couple of hundred Adam steps, the network should classify both groups with high accuracy.
 

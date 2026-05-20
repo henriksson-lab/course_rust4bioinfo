@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" font-family="sans-serif" font-size="13">
+  <text x="500" y="28" text-anchor="middle" font-size="17" font-weight="bold">Common shape operations leave the data alone, change the metadata</text>
+
+  <!-- zeros -->
+  <g transform="translate(20,60)">
+    <text x="160" y="14" text-anchor="middle" font-weight="bold">Tensor::zeros([32, 4, 100])</text>
+    <rect x="40" y="40" width="240" height="120" rx="4" fill="#eef5ff" stroke="#3a6fb5"/>
+    <text x="160" y="100" text-anchor="middle" font-size="22" fill="#3a6fb5">all 0.0</text>
+    <text x="160" y="180" text-anchor="middle">dims = [32, 4, 100]</text>
+    <text x="160" y="200" text-anchor="middle" font-size="11" fill="#666">12 800 floats, allocated on device</text>
+  </g>
+
+  <!-- swap_dims -->
+  <g transform="translate(355,60)">
+    <text x="160" y="14" text-anchor="middle" font-weight="bold">x.swap_dims(1, 2)</text>
+    <rect x="40" y="40" width="240" height="120" rx="4" fill="#eaf7ee" stroke="#3a9b54"/>
+    <text x="160" y="80" text-anchor="middle">[32, <tspan font-weight="bold" fill="#c97a13">4</tspan>, <tspan font-weight="bold" fill="#1a5c2c">100</tspan>]</text>
+    <text x="160" y="110" text-anchor="middle" font-size="24" fill="#3a9b54">↓</text>
+    <text x="160" y="140" text-anchor="middle">[32, <tspan font-weight="bold" fill="#1a5c2c">100</tspan>, <tspan font-weight="bold" fill="#c97a13">4</tspan>]</text>
+    <text x="160" y="180" text-anchor="middle">axes 1 and 2 swapped</text>
+    <text x="160" y="200" text-anchor="middle" font-size="11" fill="#666">no copy — only stride metadata changes</text>
+  </g>
+
+  <!-- reshape -->
+  <g transform="translate(690,60)">
+    <text x="160" y="14" text-anchor="middle" font-weight="bold">y.reshape([3200, 4])</text>
+    <rect x="40" y="40" width="240" height="120" rx="4" fill="#fde0c4" stroke="#c97a13"/>
+    <text x="160" y="80" text-anchor="middle">[<tspan font-weight="bold">32</tspan>, <tspan font-weight="bold">100</tspan>, 4]</text>
+    <text x="160" y="110" text-anchor="middle" font-size="24" fill="#c97a13">↓</text>
+    <text x="160" y="140" text-anchor="middle">[<tspan font-weight="bold">3200</tspan>, 4]</text>
+    <text x="160" y="180" text-anchor="middle">collapse first two axes</text>
+    <text x="160" y="200" text-anchor="middle" font-size="11" fill="#666">total element count unchanged</text>
+  </g>
+
+  <!-- Footer rule -->
+  <line x1="60" y1="280" x2="940" y2="280" stroke="#ddd"/>
+  <text x="500" y="305" text-anchor="middle" font-size="13" fill="#333">
+    Rule: every shape op must preserve the total element count
+    (32 × 4 × 100 = 32 × 100 × 4 = 3200 × 4 = 12 800).
+  </text>
+</svg>
