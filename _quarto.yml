@@ -128,6 +128,12 @@ website:
           - day8/02-annotate.qmd
           - day8/03-generic-function.qmd
           - day8/04-trait-objects.qmd
+      - section: "Day 9 — algorithms & complexity"
+        contents:
+          - day9/00-concepts.qmd
+          - day9/lec1-algorithms-and-complexity.qmd
+          - day9/00a-ds-complexity-quiz.qmd
+          - day9/00b-code-complexity-quiz.qmd
 
 format:
   html:

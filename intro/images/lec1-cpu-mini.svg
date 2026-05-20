@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" font-family="system-ui, -apple-system, sans-serif">
+  <title>What's inside the CPU</title>
+
+  <!-- Title -->
+  <text x="200" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#1976d2">What's inside the CPU</text>
+
+  <!-- Outer CPU package -->
+  <rect x="30" y="40" width="340" height="240" rx="10" ry="10"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="200" y="60" text-anchor="middle" font-size="12" fill="#1976d2" font-weight="bold">
+    CPU package (one chip)
+  </text>
+
+  <!-- Core 0 (top-left) -->
+  <rect x="55" y="75" width="140" height="70" rx="6" ry="6"
+        fill="#ffffff" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="125" y="105" text-anchor="middle" font-size="13" font-weight="bold" fill="#1976d2">Core 0</text>
+  <line x1="75" y1="120" x2="175" y2="120" stroke="#888" stroke-width="0.5"/>
+  <text x="125" y="135" text-anchor="middle" font-size="10" fill="#555" font-family="ui-monospace, monospace">L1</text>
+
+  <!-- Core 1 (top-right) -->
+  <rect x="205" y="75" width="140" height="70" rx="6" ry="6"
+        fill="#ffffff" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="275" y="105" text-anchor="middle" font-size="13" font-weight="bold" fill="#1976d2">Core 1</text>
+  <line x1="225" y1="120" x2="325" y2="120" stroke="#888" stroke-width="0.5"/>
+  <text x="275" y="135" text-anchor="middle" font-size="10" fill="#555" font-family="ui-monospace, monospace">L1</text>
+
+  <!-- Core 2 (bottom-left) -->
+  <rect x="55" y="155" width="140" height="70" rx="6" ry="6"
+        fill="#ffffff" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="125" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#1976d2">Core 2</text>
+  <line x1="75" y1="200" x2="175" y2="200" stroke="#888" stroke-width="0.5"/>
+  <text x="125" y="215" text-anchor="middle" font-size="10" fill="#555" font-family="ui-monospace, monospace">L1</text>
+
+  <!-- Core 3 (bottom-right) -->
+  <rect x="205" y="155" width="140" height="70" rx="6" ry="6"
+        fill="#ffffff" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="275" y="185" text-anchor="middle" font-size="13" font-weight="bold" fill="#1976d2">Core 3</text>
+  <line x1="225" y1="200" x2="325" y2="200" stroke="#888" stroke-width="0.5"/>
+  <text x="275" y="215" text-anchor="middle" font-size="10" fill="#555" font-family="ui-monospace, monospace">L1</text>
+
+  <!-- L3 shared cache -->
+  <rect x="55" y="237" width="290" height="32" rx="5" ry="5"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="200" y="257" text-anchor="middle" font-size="12" font-weight="bold" fill="#d97706">
+    L3 cache — shared
+  </text>
+</svg>

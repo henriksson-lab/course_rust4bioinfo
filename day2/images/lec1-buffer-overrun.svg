@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="bo-arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    Buffer overrun &#8212; C lets you write past the end
+  </text>
+
+  <!-- Top annotation -->
+  <text x="450" y="62" text-anchor="middle" font-size="14" fill="#c62828" font-weight="600">
+    16 bytes written into an 8-byte buffer
+  </text>
+
+  <!-- Big red arrow spanning the full region -->
+  <line x1="80" y1="100" x2="820" y2="100"
+        stroke="#c62828" stroke-width="3" marker-end="url(#bo-arrow-red)"/>
+  <text x="450" y="92" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">
+    strcpy(input, "ACGTACGTACGTACGT")
+  </text>
+
+  <!-- input[0..8] region label -->
+  <text x="240" y="135" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">
+    input[0..8]  (8-byte buffer, OK)
+  </text>
+
+  <!-- adjacent region label -->
+  <text x="640" y="135" text-anchor="middle" font-size="14"
+        font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">
+    adjacent variable / function return address
+  </text>
+
+  <!-- 8 cells for input[] (green) -->
+  <g>
+    <rect x="80"  y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="120" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="160" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="200" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="240" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="280" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="320" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="360" y="150" width="40" height="50" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <text x="100" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">A</text>
+    <text x="140" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">C</text>
+    <text x="180" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">G</text>
+    <text x="220" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">T</text>
+    <text x="260" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">A</text>
+    <text x="300" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">C</text>
+    <text x="340" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">G</text>
+    <text x="380" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#2e7d32" font-weight="700">T</text>
+  </g>
+
+  <!-- 8 cells for adjacent region (red - corrupted) -->
+  <g>
+    <rect x="400" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="440" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="480" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="520" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="560" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="600" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="640" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <rect x="680" y="150" width="40" height="50" fill="#fdecea" stroke="#c62828" stroke-width="1.8"/>
+    <text x="420" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">A</text>
+    <text x="460" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">C</text>
+    <text x="500" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">G</text>
+    <text x="540" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">T</text>
+    <text x="580" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">A</text>
+    <text x="620" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">C</text>
+    <text x="660" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">G</text>
+    <text x="700" y="183" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#c62828" font-weight="700">T</text>
+  </g>
+
+  <!-- Boundary marker between input[] and adjacent region -->
+  <line x1="400" y1="140" x2="400" y2="210" stroke="#333" stroke-width="2" stroke-dasharray="4,3"/>
+  <text x="400" y="225" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    end of input[]
+  </text>
+
+  <!-- Byte index labels -->
+  <text x="100" y="245" text-anchor="middle" font-size="11" fill="#888" font-family="ui-monospace, monospace">0</text>
+  <text x="380" y="245" text-anchor="middle" font-size="11" fill="#888" font-family="ui-monospace, monospace">7</text>
+  <text x="420" y="245" text-anchor="middle" font-size="11" fill="#888" font-family="ui-monospace, monospace">8</text>
+  <text x="700" y="245" text-anchor="middle" font-size="11" fill="#888" font-family="ui-monospace, monospace">15</text>
+
+  <!-- Bottom annotation -->
+  <text x="450" y="290" text-anchor="middle" font-size="14" fill="#333">
+    The 8 extra bytes silently corrupt whatever sat next to <tspan font-family="ui-monospace, monospace">input</tspan>.
+  </text>
+  <text x="450" y="310" text-anchor="middle" font-size="14" fill="#333">
+    If that was a function-return address, an attacker can choose what runs next.
+  </text>
+
+  <!-- Caption -->
+  <line x1="60" y1="335" x2="840" y2="335" stroke="#ccc" stroke-width="1"/>
+  <text x="450" y="360" text-anchor="middle" font-size="14" fill="#1976d2" font-weight="600">
+    Rust's slice indexing checks bounds on every access &#8212;
+  </text>
+  <text x="450" y="380" text-anchor="middle" font-size="14" fill="#1976d2" font-weight="600">
+    out-of-range index panics with a clear message, no corruption.
+  </text>
+
+</svg>

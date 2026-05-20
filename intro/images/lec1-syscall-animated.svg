@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 560" font-family="system-ui, -apple-system, sans-serif">
+  <title>What open() and read() actually do</title>
+
+  <defs>
+    <marker id="arrDown" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrUp" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#1976d2">
+    What `open()` and `read()` actually do
+  </text>
+
+  <!-- =============== Band 1: User program (light blue) =============== -->
+  <rect x="40" y="50" width="640" height="100" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="55" y="72" font-size="13" font-weight="bold" fill="#1976d2">User program (your process)</text>
+  <rect x="220" y="82" width="280" height="55" rx="4" ry="4"
+        fill="#ffffff" stroke="#1976d2" stroke-width="1"/>
+  <text x="232" y="103" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    f = open("data.fa")
+  </text>
+  <text x="232" y="125" font-size="13" font-family="ui-monospace, monospace" fill="#333">
+    buf = read(f, 1024)
+  </text>
+
+  <!-- =============== Band 2: Kernel (orange) =============== -->
+  <rect x="40" y="180" width="640" height="90" rx="8" ry="8"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  <text x="55" y="202" font-size="13" font-weight="bold" fill="#d97706">Kernel</text>
+  <text x="360" y="232" text-anchor="middle" font-size="13" fill="#333">
+    Linux kernel — file system, scheduler, device drivers
+  </text>
+
+  <!-- =============== Band 3: Disk controller (yellow) =============== -->
+  <rect x="40" y="300" width="640" height="90" rx="8" ry="8"
+        fill="#fffbe6" stroke="#a07a00" stroke-width="1.5"/>
+  <text x="55" y="322" font-size="13" font-weight="bold" fill="#a07a00">Disk controller</text>
+  <rect x="220" y="332" width="130" height="42" rx="4" ry="4"
+        fill="#ffffff" stroke="#a07a00" stroke-width="1"/>
+  <text x="285" y="358" text-anchor="middle" font-size="12" fill="#333">controller</text>
+  <rect x="380" y="332" width="130" height="42" rx="4" ry="4"
+        fill="#ffffff" stroke="#a07a00" stroke-width="1"/>
+  <text x="445" y="358" text-anchor="middle" font-size="12" fill="#333">storage device</text>
+
+  <!-- =============== Band 4: Platters / SSD chips (grey) =============== -->
+  <rect x="40" y="420" width="640" height="80" rx="8" ry="8"
+        fill="#eeeeee" stroke="#888" stroke-width="1.5"/>
+  <text x="55" y="442" font-size="13" font-weight="bold" fill="#555">Disk platters / SSD chips</text>
+  <g fill="#cccccc" stroke="#888" stroke-width="1">
+    <circle cx="230" cy="475" r="16"/>
+    <circle cx="270" cy="475" r="16"/>
+  </g>
+  <g fill="#bbbbbb" stroke="#666" stroke-width="0.5">
+    <rect x="340" y="463" width="28" height="24" rx="2"/>
+    <rect x="372" y="463" width="28" height="24" rx="2"/>
+    <rect x="404" y="463" width="28" height="24" rx="2"/>
+    <rect x="436" y="463" width="28" height="24" rx="2"/>
+  </g>
+  <text x="490" y="479" font-size="11" fill="#555">(actual bytes live here)</text>
+
+  <!-- =============== Downward request arrows (green) — appear over time =============== -->
+
+  <!-- Arrow 1: program -> kernel (t=0.5s) -->
+  <g opacity="0">
+    <line x1="160" y1="150" x2="160" y2="178"
+          stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
+    <text x="170" y="170" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
+      open("data.fa")
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="0.5s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Arrow 2: kernel -> disk controller (t=1.0s) -->
+  <g opacity="0">
+    <line x1="160" y1="270" x2="160" y2="298"
+          stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
+    <text x="170" y="290" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
+      SCSI/NVMe command
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="1.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Arrow 3: disk controller -> platters/chips (t=1.5s) -->
+  <g opacity="0">
+    <line x1="160" y1="390" x2="160" y2="418"
+          stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
+    <text x="170" y="410" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
+      seek + read sector
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="1.5s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- =============== Upward response arrows (blue) — appear after pause =============== -->
+
+  <!-- Arrow 4: chips -> controller (t=3.0s) -->
+  <g opacity="0">
+    <line x1="600" y1="418" x2="600" y2="390"
+          stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
+    <text x="510" y="410" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      bytes
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="3.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Arrow 5: controller -> kernel (t=3.5s) -->
+  <g opacity="0">
+    <line x1="600" y1="298" x2="600" y2="270"
+          stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
+    <text x="470" y="290" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      bytes received
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="3.5s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Arrow 6: kernel -> program (t=4.0s) -->
+  <g opacity="0">
+    <line x1="600" y1="178" x2="600" y2="150"
+          stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
+    <text x="390" y="170" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      buf now contains 1024 bytes
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="4.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Final caption at t=5.0s -->
+  <g opacity="0">
+    <text x="360" y="538" text-anchor="middle" font-size="13" font-style="italic" fill="#c62828">
+      your program never touched the disk — the kernel did it for you, then handed back the bytes
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="5.0s" dur="0.4s" fill="freeze"/>
+  </g>
+</svg>

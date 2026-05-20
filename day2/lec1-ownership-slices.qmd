@@ -87,6 +87,30 @@ Rust's answer is to make the compiler track it. Every value has exactly one owne
 Everything else in this lecture &mdash; move semantics, borrowing, slices &mdash; is machinery in service of this one guarantee.
 :::
 
+## Another classic — buffer overrun
+
+```c
+char input[8];                  // a buffer that holds 8 bytes
+strcpy(input, "ACGTACGTACGTACGT");  // writes 16 bytes!
+// the extra 8 bytes overwrite whatever happened to sit
+// just past `input` in memory — could be another variable,
+// could be the function's return address, could be anything.
+```
+
+C lets you write past the end of an array silently. The first bytes go where they should; the rest **corrupt adjacent memory**. The program either crashes (if you're lucky), prints garbage (if not), or — if the overwritten region is a function pointer — runs whatever code the attacker chose.
+
+![A 16-byte write into an 8-byte buffer spills into the next allocation; that adjacent allocation might be a function-return address.](images/lec1-buffer-overrun.svg){fig-alt="A small diagram: a buffer of 8 cells labelled 'input' with the bytes ACGTACGT, followed by 8 more cells labelled 'adjacent variable' or 'return address'. A red arrow shows the strcpy writing through the buffer boundary into the adjacent region, with the labels turning red."}
+
+**Where this bites the web**: every browser, every JavaScript engine, every PDF reader has been hacked through this pattern. CVE catalogues are full of "out-of-bounds write" entries.
+
+**Where this bites bioinformatics**: visualisation tools (genome browsers, alignment viewers) parsing untrusted BAM/VCF/GFF data are exactly the kind of C code where one malformed input record can corrupt memory. The bug shows up as a viewer crash; the security implication is the same as anywhere else.
+
+Rust's slice indexing checks bounds on every access — out-of-range index panics cleanly with a clear message instead of silently corrupting memory.
+
+::: notes
+Pair this with the use-after-free slide. The two together cover ~70% of the C/C++ vulnerability class. Buffer overruns are arguably more famous because they enable remote code execution, not just crashes.
+:::
+
 ## Move: assignment transfers ownership
 
 ```rust
@@ -108,7 +132,7 @@ If you try to use `v` after the move, the compiler stops you with a clear error 
 
 ## What "move" actually moves
 
-![Ownership moves; the heap data doesn't.](images/lec1-move-semantics.svg){fig-alt="Stack/heap diagram with v greyed out and crossed in red, w now holding the same ptr/len/cap as v had, and the 4-byte heap allocation unchanged — only the 24-byte Vec header was copied; the old binding is now invalid."}
+![Watch the move happen: stack header copies from v to w; the heap allocation stays put; the old binding becomes invalid.](images/lec1-move-step-by-step.svg){fig-alt="An SMIL-animated diagram. Step 1: `let v = vec![b'A', b'C', b'G', b'T'];` is highlighted; a stack box for v appears with its three fields (ptr, len, cap) and arrows to a heap box holding ACGT. Step 2: `let w = v;` is highlighted; a stack box for w appears beside v and the three fields copy across. Step 3: v is greyed out and crossed in red; w's arrow remains pointing at the same heap box; the data has not moved." width="80%"}
 
 ::: notes
 This is what's actually happening at the machine level. The 24-byte Vec header — ptr, len, cap — gets copied bit-for-bit from v's stack slot to w's stack slot. That's fast: 24 bytes.
@@ -167,6 +191,8 @@ println!("{:?}", v);             // v still owns the data
 
 `&v` makes a reference; the function reads through it. `v` is never moved.
 
+![Two shared references (`&Vec<u8>`) both pointing at the same heap data — read-only views, no mutation allowed through either.](images/lec1-shared-refs-readonly.svg){fig-alt="A stack region with three small boxes labelled v, r, s — v contains the Vec header (ptr/len/cap), r and s are both &Vec<u8> pointers. All three point at the same heap allocation holding A C G T. Both r and s have a small 'read-only' annotation; v has 'owner'." width="80%"}
+
 ::: notes
 Think of borrowing a library book: you can read it, put a bookmark in it, but the book still belongs to the library. You must return it eventually, and while you're holding it the library can't lend the same copy mutably to someone else.
 
@@ -202,7 +228,7 @@ This rule — "many readers OR one writer, never both" — is checked at compile
 
 ## Many shared borrows, all at once
 
-![Any number of read-only views are fine.](images/lec1-borrow-immutable.svg){fig-alt="v with ptr/len/cap on the stack, two &Vec<u8> references r and s also on the stack, all three pointing at the same 4-cell heap allocation containing ACGT."}
+![](images/lec1-shared-borrows-add.svg){fig-alt="An SMIL-animated diagram that starts with the owner `v` and its first borrow `r1`, then animates the addition of `r2` and `r3` — three pointer arrows accumulating to the same heap region. The animation freezes on the final state showing three read-only views of the same data." width="80%"}
 
 ::: notes
 Three names — v, r, s — all touching the same four bytes. v owns them; r and s borrow them. All three can read. None of them can write. None of them can free.
@@ -214,7 +240,7 @@ This is the "many readers" half of the rule.
 
 ## One mutable borrow, alone
 
-![A `&mut` is exclusive — no other borrow is allowed while it lives.](images/lec1-borrow-mut-exclusive.svg){fig-alt="Left panel labeled OK: v with one &mut v borrow, with note 'sole writer'. Right panel labeled compile error: v with both &mut v and &v, the &v crossed out and the compiler error printed below — trying to add a second borrow while a &mut is alive is rejected."}
+![One `&mut` is the only outstanding borrow — exclusive write access, no shared readers.](images/lec1-borrow-mut-exclusive.svg){fig-alt="Left panel labeled OK: v with one &mut v borrow, with note 'sole writer'. Right panel labeled compile error: v with both &mut v and &v, the &v crossed out and the compiler error printed below — trying to add a second borrow while a &mut is alive is rejected."}
 
 ::: notes
 The other half: exclusive writers. On the left, we have a `&mut v` and nothing else. That compiles — m can mutate the Vec, push to it, even cause a reallocation. Safe, because no other borrow could be invalidated.
@@ -224,21 +250,48 @@ On the right, we tried to add a read-only borrow `r = &v` while the mutable borr
 You will see this error often in week one. It is almost always the compiler protecting you from a real bug. Read the message; the suggestion at the bottom usually contains the fix.
 :::
 
-## Why the borrow rules pay off — a concrete trap
+## The same bug in Python — silent
 
-```rust
-let mut v = vec![b'A', b'C', b'G'];
-let first = &v[0];          // shared borrow into v's heap memory
-v.push(b'T');               // error: v is already borrowed by first
-println!("{}", first);
+Python doesn't have a borrow checker. The same shape of bug compiles, runs, and gives you wrong answers:
+
+```python
+v = [[1, 2], [3, 4]]
+first = v[0]         # `first` IS the same list object as v[0]
+v.append([5, 6])     # grows v — but [1, 2] is still the same object
+v[0].append(99)      # mutate through the original
+print(first)         # [1, 2, 99] — `first` silently changed
 ```
 
-`push` may reallocate (move the bytes to a bigger chunk of heap memory); the old reference would dangle (point at freed memory). Rust rejects this at compile time — in C++ it would be silent corruption.
+Because Python lists hold *references* to mutable objects, two variables can quietly point at the same underlying data. Changing one changes the other, with no warning. The bug is famous enough to have its own anti-pattern name — *aliasing*.
+
+The same thing happens with pandas DataFrames (the chained-assignment SettingWithCopyWarning), with NumPy views, with R reference semantics.
+
+::: notes
+Pandas users know this pain — `df_subset = df[df.col > 0]; df_subset.col = ...` then a cryptic warning saying "you've created a view, not a copy". Rust catches this entire category at compile time. Python and R don't catch it at all — you find it by reading the wrong answer in a downstream plot.
+:::
+
+## Why the borrow rules pay off — a concrete trap
+
+This snippet would compile in C; it would silently work in Python. Rust rejects it:
+
+```rust
+let mut v = vec![1u8, 2, 3];
+let first = &v[0];       // shared borrow of the first element
+v.push(4);               // pushes — may cause a reallocation
+println!("{}", first);   // ❌ compile error: cannot borrow v as mutable
+                         //                  while first is alive
+```
+
+- `let first = &v[0];` — fine, valid in any language; `first` points at the byte `1`.
+- `v.push(4);` — if `v` is full, this allocates a new bigger buffer, *copies the bytes over, and frees the old buffer*. `first` now points at freed memory.
+- In C: undefined behaviour, often silent. In Python (with mutable elements): silent aliasing, wrong answer downstream. In Rust: **compile error before you even run the program**.
+
+The previous slide showed the Python version of this same trap. Below is the Rust version — note the compiler refuses to build.
 
 ::: notes
 This is the canonical example of why the rule matters, and it's drawn straight from real-world bioinformatics code. You're walking through a sequence; you decide to append something to the same sequence inside the loop; the buffer grows; your loop reference now points at memory that doesn't belong to anyone any more.
 
-In C++ this is one of the most common sources of silent crashes in production code &mdash; the famous `std::vector::iterator` invalidation. In Java, it's a `ConcurrentModificationException` thrown at runtime, *if you're lucky*. In Rust, the compiler refuses to build the program. Same bug, three different consequences. Rust's is the only one that catches it before you ship.
+In C++ this is one of the most common sources of silent crashes in production code &mdash; the famous `std::vector::iterator` invalidation. In Java, it's a `ConcurrentModificationException` thrown at runtime, *if you're lucky*. In Python, as the previous slide showed, the aliasing simply succeeds and corrupts your data quietly. In Rust, the compiler refuses to build the program. Same bug, four different consequences. Rust's is the only one that catches it before you ship.
 
 The fix is mechanical: don't keep `first` alive across the push, or use an index `i` instead of a reference. The compiler tells you exactly which line is the problem.
 :::
@@ -346,29 +399,9 @@ A slice is two fields — a pointer to the first element, and a length. 16 bytes
 ::: notes
 This picture is the whole slice abstraction in one diagram. The owning Vec on the left has its three-field header. The slice s has just two fields — pointer and length. Both point into the same heap allocation.
 
-Notice what's *not* there: no separate copy of the bytes. The slice is purely metadata. That's why `&v[2..6]` is O(1) — you're not copying four bytes, you're computing one address and writing one length.
+Notice what's *not* there: no separate copy of the bytes. The slice is purely metadata. That's why `&v[2..6]` is essentially free — you're not copying four bytes, you're computing one address and writing one length.
 
 This is also why the same `fn gc_content(seq: &[u8])` works on `b"ACGT"`, on a piece of a chromosome, or on a chunk of a FASTA record. The function never knows or cares where the bytes came from. It just sees pointer-plus-length.
-:::
-
-## What does O(1) and O(n) mean?
-
-*Big-O* is computer-scientist shorthand for **"how does the time grow as the input gets bigger?"** A one-minute crash course:
-
-| Notation | Meaning | Bioinformatics example |
-|---|---|---|
-| **O(1)** | constant &mdash; same time regardless of size | looking up `seq[1000]` takes the same time as `seq[1_000_000]` |
-| **O(n)** | linear &mdash; time grows in proportion to size | counting every G in a sequence of length `n` |
-| **O(n^2)** | quadratic &mdash; time grows with the square | comparing every read against every other read in a FASTQ file &mdash; *avoid* |
-
-For the rest of the lecture, when you see "O(1)" just read it as "free, doesn't matter how big the input is".
-
-::: notes
-We'll use O(1) and O(n) freely from here on, so a one-minute primer.
-
-The point of big-O is not to predict exact wall-clock time &mdash; it's to predict how a routine behaves as you scale up. An O(1) operation is fine even on a human genome. An O(n) operation is fine for a single sequence but you should think before doing it billions of times. An O(n^2) operation on a million reads is a tool that never finishes.
-
-You'll see O(1) used in this lecture mostly to mean "constant-time pointer arithmetic, no copy". Indexing into a byte slice is O(1). Taking a sub-slice is O(1). Counting bases in a sequence is O(n). That's almost the whole vocabulary you need today.
 :::
 
 ## DNA is `&[u8]`, not `&str`
@@ -382,17 +415,17 @@ fn gc_content(seq: &[u8]) -> f64 {       // YES
     gc as f64 / seq.len() as f64
 }
 
-// fn gc_content(seq: &str) -> f64 { ... }   // worse: UTF-8 tax, no O(1) index
+// fn gc_content(seq: &str) -> f64 { ... }   // worse: UTF-8 tax, slow indexing
 ```
 
-`&[u8]` is just bytes — O(1) indexing, drops straight into byte-literal patterns.
+`&[u8]` is just bytes — fast indexing (covered Day 9), drops straight into byte-literal patterns.
 
 ::: notes
 A reminder from day 1 that gets reinforced today: DNA functions take `&[u8]`, not `&str`.
 
-`&str` is UTF-8. Every byte has to be valid Unicode. Indexing is O(n) because a character may span 1 to 4 bytes. That's right for natural-language text. It is wrong for DNA, where every base is exactly one ASCII byte.
+`&str` is UTF-8. Every byte has to be valid Unicode. Indexing is slow because a character may span 1 to 4 bytes — you have to walk the string from the beginning. That's right for natural-language text. It is wrong for DNA, where every base is exactly one ASCII byte.
 
-`&[u8]` has none of that overhead. Indexing is O(1). Byte literals like `b'G'` drop into match patterns without conversion. And — this is the new bit — a `&[u8]` is a slice, which means it's a fat pointer into someone else's buffer. Zero allocation, zero copy.
+`&[u8]` has none of that overhead. Indexing is one pointer offset. Byte literals like `b'G'` drop into match patterns without conversion. And — this is the new bit — a `&[u8]` is a slice, which means it's a fat pointer into someone else's buffer. Zero allocation, zero copy.
 
 For the rest of the week, any function that touches DNA takes `&[u8]`. Any function that touches FASTQ quality takes `&[u8]`. You will rarely see `&str` in real bioinformatics Rust.
 :::
@@ -417,7 +450,7 @@ let bad = &seq[2..10];   // panics: "byte index 10 out of bounds"
 ::: notes
 The compiler only sees that you took a slice; it can't predict the length of `seq` at the use-site, so it can't statically check that `10 <= seq.len()`.
 
-The full menu of slice notations. They all produce a `&[T]` of the appropriate length, all in O(1), all without copying.
+The full menu of slice notations. They all produce a `&[T]` of the appropriate length, all in essentially zero work, all without copying.
 
 The empty form `&seq[..]` is the whole thing — a slice covering the entire Vec. This is how you turn a `Vec<u8>` into a `&[u8]` when calling a function that expects one. (In many cases, Rust does this conversion implicitly via a feature called Deref coercion — the compiler quietly turning `&Vec<u8>` into `&[u8]` because `Vec` has opted in to the conversion — but the explicit form is always available.)
 
@@ -519,7 +552,7 @@ Zero allocation. The returned slice borrows from `qual`.
 ::: notes
 Exercise 4 this afternoon. Two-pointer trim: walk start rightward until you find a base that passes, walk end leftward until you find one, return the slice in between.
 
-The signature returns `&[u8]` — a borrow of the input, not a fresh allocation. This is the right shape because trimming never needs to produce new bytes; it just narrows the range of existing ones. Returning a slice is O(1) regardless of how long the input is.
+The signature returns `&[u8]` — a borrow of the input, not a fresh allocation. This is the right shape because trimming never needs to produce new bytes; it just narrows the range of existing ones. Returning a slice is a fixed tiny amount of work regardless of how long the input is.
 
 The returned slice's lifetime is tied to qual. The caller cannot use the trimmed slice after qual itself is gone. Again — no annotation needed; the compiler infers it from the single input reference.
 :::

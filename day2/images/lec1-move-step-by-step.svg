@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="mv-arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="mv-arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="mv-arrow-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    How <tspan font-family="ui-monospace, monospace">let w = v;</tspan> actually works
+  </text>
+
+  <!-- =========== CODE PANEL =========== -->
+  <rect x="30" y="60" width="340" height="180" fill="#fafafa" stroke="#ccc" stroke-width="1" rx="6"/>
+  <text x="200" y="82" text-anchor="middle" font-size="13" fill="#888" font-weight="600">code</text>
+
+  <!-- line 1 highlight (appears t=1s, fades t=2.5s) -->
+  <rect x="40" y="95" width="320" height="26" fill="#fff3cd" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.5s" dur="0.3s" fill="freeze"/>
+  </rect>
+
+  <!-- line 1 -->
+  <text x="50" y="114" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    let v = vec![b'A', b'C', b'G', b'T'];
+  </text>
+
+  <!-- line 2 highlight (appears t=2.5s, fades t=5.5s) -->
+  <rect x="40" y="128" width="320" height="26" fill="#fff3cd" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0" begin="5.5s" dur="0.3s" fill="freeze"/>
+  </rect>
+
+  <!-- line 2 -->
+  <text x="50" y="147" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    let w = v;
+  </text>
+
+  <!-- line 3 -->
+  <text x="50" y="180" font-size="14" font-family="ui-monospace, monospace" fill="#888">
+    // v is no longer valid
+  </text>
+
+  <!-- =========== DIAGRAM PANEL =========== -->
+  <!-- Stack region -->
+  <rect x="400" y="60" width="470" height="200" fill="#e3f2fd" stroke="#1976d2"
+        stroke-width="1.5" rx="6"/>
+  <text x="635" y="82" text-anchor="middle" font-size="14" fill="#1976d2" font-weight="700">
+    Stack
+  </text>
+
+  <!-- v box (appears t=1s) -->
+  <g opacity="0">
+    <rect id="v-box" x="420" y="100" width="180" height="120" fill="white"
+          stroke="#1976d2" stroke-width="1.8"/>
+    <text x="430" y="122" font-size="13" font-family="ui-monospace, monospace" fill="#333" font-weight="700">
+      v: Vec&lt;u8&gt;
+    </text>
+    <line x1="420" y1="132" x2="600" y2="132" stroke="#ccc" stroke-width="1"/>
+    <text x="430" y="152" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      ptr  &#8594; 0x7f..
+    </text>
+    <text x="430" y="172" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      len  = 4
+    </text>
+    <text x="430" y="192" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
+      cap  = 4
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="1s" dur="0.4s" fill="freeze"/>
+    <!-- v greys out at t=5s -->
+    <animate attributeName="opacity" from="1" to="0.4" begin="5s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- Red X on v (appears t=5s) -->
+  <g opacity="0">
+    <line x1="420" y1="100" x2="600" y2="220" stroke="#c62828" stroke-width="3"/>
+    <line x1="600" y1="100" x2="420" y2="220" stroke="#c62828" stroke-width="3"/>
+    <animate attributeName="opacity" from="0" to="1" begin="5s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- w box (appears t=3s, greyed out at first) -->
+  <g>
+    <rect x="670" y="100" width="180" height="120" fill="white"
+          stroke="#888" stroke-width="1.8" stroke-dasharray="4,3" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+      <!-- Becomes solid at t=4.5s -->
+      <animate attributeName="stroke-dasharray" from="4,3" to="0,0" begin="4.5s" dur="0.3s" fill="freeze"/>
+      <animate attributeName="stroke" from="#888" to="#1976d2" begin="4.5s" dur="0.3s" fill="freeze"/>
+    </rect>
+    <text x="680" y="122" font-size="13" font-family="ui-monospace, monospace" fill="#888" font-weight="700" opacity="0">
+      w: Vec&lt;u8&gt;
+      <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+      <animate attributeName="fill" from="#888" to="#333" begin="4.5s" dur="0.3s" fill="freeze"/>
+    </text>
+    <line x1="670" y1="132" x2="850" y2="132" stroke="#ccc" stroke-width="1" opacity="0">
+      <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+    </line>
+  </g>
+
+  <!-- w fields - greyed at first, filled in at t=4.5s -->
+  <text x="680" y="152" font-size="12" font-family="ui-monospace, monospace" fill="#bbb" opacity="0">
+    ptr  &#8594; 0x7f..
+    <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="fill" from="#bbb" to="#1976d2" begin="4.5s" dur="0.3s" fill="freeze"/>
+  </text>
+  <text x="680" y="172" font-size="12" font-family="ui-monospace, monospace" fill="#bbb" opacity="0">
+    len  = 4
+    <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="fill" from="#bbb" to="#1976d2" begin="4.5s" dur="0.3s" fill="freeze"/>
+  </text>
+  <text x="680" y="192" font-size="12" font-family="ui-monospace, monospace" fill="#bbb" opacity="0">
+    cap  = 4
+    <animate attributeName="opacity" from="0" to="1" begin="3s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="fill" from="#bbb" to="#1976d2" begin="4.5s" dur="0.3s" fill="freeze"/>
+  </text>
+
+  <!-- Copy arrows (appear t=3.5s, fade out at t=4.5s after their job is done) -->
+  <g opacity="0">
+    <text x="625" y="156" text-anchor="middle" font-size="18"
+          font-family="ui-monospace, monospace" fill="#d97706" font-weight="700">&#8594;</text>
+    <text x="625" y="176" text-anchor="middle" font-size="18"
+          font-family="ui-monospace, monospace" fill="#d97706" font-weight="700">&#8594;</text>
+    <text x="625" y="196" text-anchor="middle" font-size="18"
+          font-family="ui-monospace, monospace" fill="#d97706" font-weight="700">&#8594;</text>
+    <animate attributeName="opacity" from="0" to="1" begin="3.5s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0" begin="5s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- Heap region -->
+  <rect x="400" y="280" width="470" height="120" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="6"/>
+  <text x="635" y="302" text-anchor="middle" font-size="14" fill="#d97706" font-weight="700">
+    Heap (the data itself never moves)
+  </text>
+
+  <!-- Heap 4 cells (appear t=1s) -->
+  <g opacity="0">
+    <rect x="535" y="320" width="50" height="55" fill="white" stroke="#d97706" stroke-width="1.8"/>
+    <rect x="585" y="320" width="50" height="55" fill="white" stroke="#d97706" stroke-width="1.8"/>
+    <rect x="635" y="320" width="50" height="55" fill="white" stroke="#d97706" stroke-width="1.8"/>
+    <rect x="685" y="320" width="50" height="55" fill="white" stroke="#d97706" stroke-width="1.8"/>
+    <text x="560" y="356" text-anchor="middle" font-size="20" font-family="ui-monospace, monospace" fill="#333" font-weight="700">A</text>
+    <text x="610" y="356" text-anchor="middle" font-size="20" font-family="ui-monospace, monospace" fill="#333" font-weight="700">C</text>
+    <text x="660" y="356" text-anchor="middle" font-size="20" font-family="ui-monospace, monospace" fill="#333" font-weight="700">G</text>
+    <text x="710" y="356" text-anchor="middle" font-size="20" font-family="ui-monospace, monospace" fill="#333" font-weight="700">T</text>
+    <animate attributeName="opacity" from="0" to="1" begin="1s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- v ptr -> heap (blue, appears t=1s, fades grey at t=5s) -->
+  <line x1="500" y1="220" x2="555" y2="320"
+        stroke="#1976d2" stroke-width="2.2" marker-end="url(#mv-arrow-blue)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="1s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0.3" begin="5s" dur="0.4s" fill="freeze"/>
+  </line>
+
+  <!-- w ptr -> heap (blue, appears t=4.5s) -->
+  <line x1="750" y1="220" x2="690" y2="320"
+        stroke="#1976d2" stroke-width="2.2" marker-end="url(#mv-arrow-blue)" opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="4.5s" dur="0.4s" fill="freeze"/>
+  </line>
+
+  <!-- Caption (appears t=5.5s) -->
+  <line x1="30" y1="430" x2="870" y2="430" stroke="#ccc" stroke-width="1"/>
+  <text x="450" y="460" text-anchor="middle" font-size="14" fill="#333" opacity="0">
+    <tspan font-family="ui-monospace, monospace">v</tspan> is no longer valid &#8212;
+    <tspan font-family="ui-monospace, monospace">w</tspan> owns the data.
+    <animate attributeName="opacity" from="0" to="1" begin="5.5s" dur="0.5s" fill="freeze"/>
+  </text>
+  <text x="450" y="482" text-anchor="middle" font-size="14" fill="#333" opacity="0">
+    The heap data itself never moved.
+    <animate attributeName="opacity" from="0" to="1" begin="5.5s" dur="0.5s" fill="freeze"/>
+  </text>
+
+</svg>

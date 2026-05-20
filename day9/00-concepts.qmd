@@ -1,0 +1,251 @@
+---
+title: "Day 9 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-9 slides. Day 9 introduces **algorithmic complexity** — a vocabulary for talking about how fast a piece of code is, in a way that is independent of the machine you run it on, and **the standard-library data structures** with their respective operation costs. The point of the day is to give you a quick mental check before you write a loop: *how does the running time of this loop grow as the input grows?*
+
+You have written enough Rust now (days 1–8) to have a feel for what a "fast" or "slow" loop looks like in practice. Day 9 names the patterns.
+
+## What Big-O notation is
+
+**Big-O notation** [a way to describe how a function's running time grows as the input size grows, ignoring constant factors and lower-order terms] is the standard shorthand for talking about algorithmic cost.
+
+Write it as `O(...)` where the `...` is some function of the input size `n`. The notation throws away constants and small terms:
+
+- `3·n + 50` is `O(n)`
+- `2·n² + 10·n + 7` is `O(n²)`
+- `log₂(n) + 4` is `O(log n)`
+
+The point is not to predict wall-clock time. It is to predict how the running time *changes* when the input gets bigger.
+
+→ [Wikipedia: Big O notation](https://en.wikipedia.org/wiki/Big_O_notation)
+
+## The big-five complexities
+
+In day-to-day bioinformatics code, almost everything you write falls into one of these classes:
+
+| Class | Name | One-line explanation | Biology example |
+|---|---|---|---|
+| `O(1)` | constant | runtime does not grow with input | look up base 1000 of a genome via `seq[1000]` |
+| `O(log n)` | logarithmic | doubling input adds one step | binary search for a position in a sorted index |
+| `O(n)` | linear | doubling input doubles the time | count GC content across a sequence |
+| `O(n log n)` | linearithmic | doubling input slightly more than doubles the time | sort a list of read positions |
+| `O(n²)` | quadratic | doubling input quadruples the time | all-vs-all pairwise alignment with naive recursion |
+| `O(n!)` | factorial | grows faster than anything else you will meet | exhaustively enumerate every multiple-sequence alignment |
+
+The big practical jump is between `O(n log n)` and `O(n²)`. For `n = 1,000,000`, `n log n ≈ 2 × 10⁷` operations (milliseconds); `n²` is `10¹²` operations (about 17 minutes). One you can wait for; the other you cannot.
+
+### O(1) — constant time
+
+```rust
+let seq: Vec<u8> = b"ACGTACGT".to_vec();
+let base = seq[3];           // O(1): index into a Vec
+```
+
+The Vec stores its elements contiguously in memory. Indexing computes a memory address by simple arithmetic and reads one byte.
+
+### O(log n) — logarithmic
+
+```rust
+let positions: Vec<u32> = vec![10, 42, 100, 250, 1000, 5000];
+let hit = positions.binary_search(&100);   // O(log n)
+```
+
+Each comparison halves the remaining range. For a million elements you need only about 20 comparisons.
+
+→ [`slice::binary_search`](https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search)
+
+### O(n) — linear
+
+```rust
+let seq = b"ACGTACGT";
+let gc = seq.iter().filter(|&&b| b == b'G' || b == b'C').count();  // O(n)
+```
+
+Every base is inspected once.
+
+### O(n log n) — linearithmic
+
+```rust
+let mut positions = vec![5000, 10, 1000, 42, 250, 100];
+positions.sort();    // O(n log n)
+```
+
+The standard sort is a stable merge sort with strong worst-case guarantees.
+
+→ [`slice::sort`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort)
+
+### O(n²) — quadratic
+
+```rust
+// Hamming distance between every pair of reads — O(n²) pairs.
+let reads: Vec<&[u8]> = vec![b"ACGT", b"ACGA", b"TCGT"];
+for i in 0..reads.len() {
+    for j in (i + 1)..reads.len() {
+        let d = hamming(reads[i], reads[j]);
+        println!("{i} vs {j}: {d}");
+    }
+}
+```
+
+Two nested loops over the same collection: the number of iterations grows with the square of the input size.
+
+### O(n!) — factorial
+
+Exhaustively enumerating every ordering of `n` items takes `n!` steps. For `n = 12` that is already `479,001,600`. For `n = 20` it is more atoms than fit in a small village. Algorithms in this class are restricted to very small `n` or replaced with heuristics (greedy, dynamic programming, branch-and-bound).
+
+## Best-case vs worst-case vs amortised
+
+Every algorithm has three running times worth thinking about:
+
+- **Best case** — the luckiest possible input. Often `O(1)`. Rarely informative.
+- **Worst case** — the unluckiest possible input. The number you quote in a paper.
+- **Amortised** [the *average* cost per operation across a long sequence of operations, even if individual operations are occasionally expensive] — the right number when an operation is *usually* cheap but *occasionally* expensive.
+
+`Vec::push` is the classic example. Most pushes write to a pre-allocated slot in `O(1)`. Occasionally the Vec is full, so push allocates a bigger backing array and copies the old contents — that single push costs `O(n)`. But because the reallocation happens only every doubling, the average cost across many pushes is still `O(1)`. We say "push is amortised `O(1)`".
+
+→ [Wikipedia: Amortized analysis](https://en.wikipedia.org/wiki/Amortized_analysis)
+
+## Standard-library data structures and their complexities
+
+The four collections you will reach for 95% of the time.
+
+### `Vec<T>` — the indexed list
+
+```rust
+let mut v: Vec<u8> = vec![b'A', b'C', b'G', b'T'];
+v.push(b'A');                 // O(1) amortised
+let x = v[2];                 // O(1)
+let pos = v.iter().position(|&b| b == b'G');  // O(n) linear search
+```
+
+- Index by position: **O(1)**
+- Push at the end: **O(1) amortised**
+- Linear search (`.iter().position`, `.contains`): **O(n)**
+- Insert/remove in the middle: **O(n)** (everything after shifts)
+
+→ [`Vec` documentation — complexity table at top](https://doc.rust-lang.org/std/vec/struct.Vec.html)
+
+### `HashMap<K, V>` — the hash table
+
+```rust
+use std::collections::HashMap;
+
+let mut counts: HashMap<&str, u32> = HashMap::new();
+counts.insert("chr1", 0);      // O(1) average
+let c = counts.get("chr1");    // O(1) average
+*counts.entry("chr1").or_insert(0) += 1;  // O(1) average
+```
+
+- Insert: **O(1) average**, O(n) worst case (rare; bad hash collisions)
+- Lookup: **O(1) average**
+- Iteration order: **unspecified** — do not rely on it
+
+A *hash table* [a data structure that turns a key into an array index by hashing the key, then stores the value at that index] is the workhorse for "I need to look things up by name".
+
+→ [`HashMap` documentation](https://doc.rust-lang.org/std/collections/struct.HashMap.html)
+
+### `BTreeMap<K, V>` — the balanced tree
+
+```rust
+use std::collections::BTreeMap;
+
+let mut by_pos: BTreeMap<u32, &str> = BTreeMap::new();
+by_pos.insert(1000, "gene_A");    // O(log n)
+by_pos.insert(50, "gene_B");
+for (pos, name) in &by_pos {       // iterates in *sorted* key order
+    println!("{pos}: {name}");
+}
+```
+
+- Insert: **O(log n)**
+- Lookup: **O(log n)**
+- Iteration order: **sorted by key** — for free
+
+A *balanced tree* [a tree-shaped data structure that keeps its depth proportional to `log n` so that every operation stays cheap] is what you want when you need keys in order.
+
+→ [`BTreeMap` documentation](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html)
+
+### `HashSet<T>` — the membership tester
+
+```rust
+use std::collections::HashSet;
+
+let blacklist: HashSet<&str> = ["chrM", "chrUn"].into_iter().collect();
+if blacklist.contains("chr1") {    // O(1) average
+    // ...
+}
+```
+
+- Insert: **O(1) average**
+- Membership test (`.contains`): **O(1) average**
+
+Use a `HashSet` whenever the question is "have I seen this before?" — adapter trimming seen-barcodes, deduplication, blocklists.
+
+→ [`HashSet` documentation](https://doc.rust-lang.org/std/collections/struct.HashSet.html)
+
+## Why Big-O matters — and when it does not
+
+Big-O is the right tool when:
+
+- You expect the input to **grow**: more reads, longer genomes, more samples.
+- The constants are roughly comparable across the alternatives.
+- The difference is large: `O(n)` vs `O(n²)` is night and day.
+
+Big-O is the **wrong** tool when:
+
+- `n` is small and known to stay small (say, the 22 autosomes).
+- The constants differ wildly. A *cache-friendly* [accessing nearby memory addresses in sequence, so the CPU can pre-fetch them] `O(n²)` over a small `Vec` can beat a "faster" `O(n log n)` over a pointer-chasing tree.
+- You have not yet **profiled** [run the program with a tool that measures where the time is actually being spent]. Big-O predicts *where the bottleneck will appear at scale*; profilers tell you *where it actually is right now*.
+
+The honest rule: pick a data structure with the right asymptotic complexity for your access pattern, then measure.
+
+## Iterator combinator complexities
+
+Day 3 introduced iterators. Each combinator carries its own cost; chaining is usually `O(n)` total because the data is walked once.
+
+| Combinator | Cost | Notes |
+|---|---|---|
+| [`.count()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.count) | O(n) | walks the whole iterator |
+| [`.find(...)`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.find) | O(n) worst | stops at the first match |
+| [`.min()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.min) / [`.max()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.max) | O(n) | one pass to find the extreme |
+| [`.sum()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.sum) | O(n) | one pass adding everything |
+| [`.collect::<Vec<_>>()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect) | O(n) | one pass to materialise |
+| [`.sort()`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort) on a slice | O(n log n) | merge sort |
+| [`.dedup()`](https://doc.rust-lang.org/std/primitive.slice.html#method.dedup) on a slice | O(n) | requires the input to be sorted first |
+
+A chain like `seq.iter().filter(|b| is_gc(b)).count()` is `O(n)` overall — one pass, constant work per element.
+
+## Space complexity — the same notation, the other resource
+
+Memory has its own Big-O. `O(n)` space means the memory used grows linearly with the input.
+
+- A `Vec<u8>` of `n` bases: **O(n)** bytes.
+- A `HashMap` counting all 21-mers in a 10 Mb genome: **O(n)** entries (one per distinct k-mer).
+- An all-vs-all alignment matrix for two sequences of length `n`: **O(n²)** cells.
+
+Sometimes the *space* complexity is the binding constraint, not time — a 21-mer table over a large pangenome can run you out of RAM long before it runs out of CPU.
+
+## Pointers to standard-library complexity tables
+
+The Rust standard library documents the complexity of every collection operation at the top of each module page:
+
+- [`std::collections` overview — when to use which](https://doc.rust-lang.org/std/collections/index.html#when-should-you-use-which-collection)
+- [`Vec` complexity tables](https://doc.rust-lang.org/std/vec/struct.Vec.html#guarantees)
+- [`HashMap`](https://doc.rust-lang.org/std/collections/struct.HashMap.html) — see method descriptions for per-method costs
+- [`BTreeMap`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html) — same
+
+When you are deciding between two collections and the lecture isn't open, this is the page to bookmark.
+
+## Recap
+
+- **Big-O** describes how running time grows with input size.
+- The big-five classes you will meet are `O(1)`, `O(log n)`, `O(n)`, `O(n log n)`, `O(n²)`, `O(n!)`.
+- The standard library gives you `Vec`, `HashMap`, `BTreeMap`, `HashSet` — pick by your access pattern.
+- For small `n` or unusual constants, **measure** before you optimise.

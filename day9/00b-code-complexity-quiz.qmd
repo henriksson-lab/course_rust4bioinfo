@@ -1,0 +1,330 @@
+---
+title: "Day 9 — Warm-up quiz: complexity from code"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Read a snippet, decide its time complexity. The skill: spot nested loops over the input, recognise iterator chains, and distinguish "work per element" from "work per pair of elements." The previous quiz drilled the cost of individual operations; this one drills the cost of whole snippets.
+
+12 questions, simple to gotcha.
+
+- Express each answer in terms of the input sizes (`n`, `m`, `k`) — not absolute numbers.
+- *Worst case* is the costliest possible input. *Average case* is the cost averaged over all (or typical) inputs. Unless we say otherwise, give the worst case.
+- A single-pass iterator chain costs as much as one walk over the data, regardless of how many `.map`/`.filter` calls you bolt on — it does *not* multiply the cost.
+
+---
+
+## 1. A simple `for` loop
+
+```rust
+fn count_gc(seq: &[u8]) -> usize {
+    let mut count = 0;
+    for &b in seq {
+        if b == b'G' || b == b'C' {
+            count += 1;
+        }
+    }
+    count
+}
+```
+
+What's the complexity in terms of `n = seq.len()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+How many times does the loop body run? What's the cost per iteration?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** The loop runs `n` times, each iteration is constant time (one comparison-or, one optional increment). Total: O(n). This is the canonical single-pass linear scan.
+:::
+
+---
+
+## 2. An iterator chain doing the same job
+
+```rust
+fn count_gc(seq: &[u8]) -> usize {
+    seq.iter()
+        .filter(|&&b| b == b'G' || b == b'C')
+        .count()
+}
+```
+
+Complexity in terms of `n`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A [`.filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter) does no allocation — it just decides whether to yield each element. [`.count`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.count) walks the (filtered) iterator. How many times does each element get visited?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** Each element is visited exactly once: filtered (constant work) and then counted if kept (constant work). Identical complexity to the `for`-loop version — iterator chains don't multiply costs, they compose them into a single pass. *Lesson*: a chain like `.iter().filter(...).map(...).count()` is one pass, not three.
+:::
+
+---
+
+## 3. Nested loop comparing every pair
+
+```rust
+fn count_matches(a: &[u8], b: &[u8]) -> usize {
+    let mut count = 0;
+    for x in a {
+        for y in b {
+            if x == y { count += 1; }
+        }
+    }
+    count
+}
+```
+
+Complexity in terms of `|a|` and `|b|`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+How many times does the innermost line run?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(|a| × |b|)**, which is **O(n²)** if both slices have length `n`. The inner body runs once per (x, y) pair, of which there are `|a| · |b|`. This is the textbook quadratic pattern — and the one to recognise before you write it on a million-element input. If you only care which elements of `a` also appear in `b`, see Q12 for the O(n) fix.
+:::
+
+---
+
+## 4. A `HashMap` lookup inside a loop
+
+```rust
+use std::collections::HashMap;
+
+fn count_distinct_keys(keys: &[String], lookup: &HashMap<String, u32>) -> usize {
+    let mut hits = 0;
+    for k in keys {
+        if lookup.contains_key(k) { hits += 1; }
+    }
+    hits
+}
+```
+
+Complexity in terms of `n = keys.len()` and `m = lookup.len()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The loop runs once per key. What's the per-iteration cost of [`HashMap::contains_key`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.contains_key)?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n) average**, independent of `m`. The loop runs `n` times. Each `contains_key` is O(1) on *average* (hash, jump to bucket, compare key). Total: O(n) on average. The *worst* case is O(n·m) if every key hashes into the same bucket, but with Rust's default hasher you won't see this in practice.
+:::
+
+---
+
+## 5. A linear-scan lookup inside a loop
+
+```rust
+fn count_in_unsorted(needles: &[u32], haystack: &[u32]) -> usize {
+    let mut hits = 0;
+    for n in needles {
+        if haystack.contains(n) { hits += 1; }
+    }
+    hits
+}
+```
+
+Complexity in terms of `n = needles.len()` and `m = haystack.len()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+This looks like Q4, but with one critical difference: [`<[T]>::contains`](https://doc.rust-lang.org/std/primitive.slice.html#method.contains) on a slice is a linear scan, not a hash lookup.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n × m).** The outer loop runs `n` times; each `haystack.contains(n)` is O(m). Identical loop *shape* to Q4 — but the choice of data structure for `haystack` changes the complexity from O(n) to O(n·m). This is the classic "I should have built a `HashSet`" mistake.
+:::
+
+---
+
+## 6. Triple-nested loop
+
+```rust
+fn waste_time(n: usize) -> u64 {
+    let mut total: u64 = 0;
+    for i in 0..n {
+        for j in 0..n {
+            for k in 0..n {
+                total = total.wrapping_add((i * j + k) as u64);
+            }
+        }
+    }
+    total
+}
+```
+
+Complexity in terms of `n`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Three independent loops, each running `n` times. The body is constant work. Multiply.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n³).** The innermost line runs `n × n × n = n³` times, each with constant work. Even at `n = 1000` this is 10⁹ operations — pushing one second of compute. At `n = 10_000` it's 10¹² — about 17 minutes. Triple loops scale badly fast.
+:::
+
+---
+
+## 7. Sliding window k-mer iteration
+
+```rust
+fn count_kmers(seq: &[u8], k: usize) -> usize {
+    seq.windows(k).count()
+}
+```
+
+Complexity in terms of `n = seq.len()` and `k`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+[`<[T]>::windows(k)`](https://doc.rust-lang.org/std/primitive.slice.html#method.windows) yields `n − k + 1` overlapping slices. Each yielded slice is a *fat pointer* (pointer + length), not a copy of `k` bytes — what does that mean for the per-window cost?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** `windows(k)` produces `n − k + 1` slices, each in O(1) — no copying, the slice is just a `(ptr, len)` pair into the original buffer. `.count()` walks them all. Total: O(n − k + 1) = O(n). The cost would only become O(n·k) if you *examined* every byte of every window (e.g. comparing or hashing the k bytes per step).
+:::
+
+---
+
+## 8. Sort then dedup
+
+```rust
+fn unique_count(mut v: Vec<u32>) -> usize {
+    v.sort();
+    v.dedup();
+    v.len()
+}
+```
+
+Complexity in terms of `n = v.len()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What's the cost of [`sort`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort)? Of [`dedup`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.dedup)? Add them and keep the larger term.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n log n)** — dominated by the sort. `sort` is O(n log n); `dedup` is O(n) (it walks the (now sorted) Vec and removes *consecutive* duplicates in place); `len` is O(1). Summing: `O(n log n) + O(n) + O(1) = O(n log n)`. *Gotcha*: `dedup` on its own (without sorting first) only removes consecutive duplicates, so for an unsorted Vec it does not give you the set of distinct values.
+:::
+
+---
+
+## 9. Binary search after a sort
+
+```rust
+fn count_present(mut v: Vec<u32>, queries: &[u32]) -> usize {
+    v.sort();
+    let mut hits = 0;
+    for target in queries {
+        if v.binary_search(target).is_ok() {
+            hits += 1;
+        }
+    }
+    hits
+}
+```
+
+Complexity in terms of `n = v.len()` and `m = queries.len()`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One sort, then `m` binary searches. Add them.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n log n + m log n).** The sort costs O(n log n). Each binary search costs O(log n), and there are `m` of them, so the search phase is O(m log n). Total: O(n log n + m log n). The sort is a *one-off* cost — amortised over enough queries it disappears, which is why "sort once, query many times" is a good pattern.
+:::
+
+---
+
+## 10. Naive recursive Fibonacci
+
+```rust
+fn fib(n: u32) -> u64 {
+    if n < 2 {
+        n as u64
+    } else {
+        fib(n - 1) + fib(n - 2)
+    }
+}
+```
+
+Complexity in terms of `n`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Each call spawns two more calls. The recursion tree has a branching factor of about 2 and a depth of `n`. What does that give you?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Exponential — O(φⁿ)** where φ ≈ 1.618 is the golden ratio (a fact that falls out of the Fibonacci recurrence). For practical mental arithmetic, call it **O(2ⁿ)** — close enough and easier to remember. The same value is recomputed exponentially many times.
+
+A *memoised* version (cache previously computed values in a HashMap or array) is O(n). An iterative version is also O(n) and uses constant extra memory. This is the canonical motivating example for dynamic programming.
+:::
+
+---
+
+## 11. Nested loop with an early return
+
+```rust
+fn find_pair(n: usize) -> Option<(usize, usize)> {
+    for i in 0..n {
+        for j in 0..n {
+            if (i * j) % 9999 == 7 {
+                return Some((i, j));
+            }
+        }
+    }
+    None
+}
+```
+
+What's the worst-case complexity?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Best case the function returns on the very first match. Worst case, no match exists. What does the loop do then?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n²) worst case.** If no pair matches, both loops run to completion: `n × n = n²` iterations. The early `return` helps the *best* and *average* cases but does not change the worst case — and Big-O conventionally reports the worst case unless stated otherwise. Don't be fooled by `return` into thinking a nested loop is cheap.
+:::
+
+---
+
+## 12. A `HashSet` membership pattern
+
+```rust
+use std::collections::HashSet;
+
+fn shared(a: &[u32], b: &[u32]) -> usize {
+    let set: HashSet<&u32> = a.iter().collect();
+    b.iter().filter(|x| set.contains(x)).count()
+}
+```
+
+Complexity in terms of `|a|` and `|b|`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+This *looks* like Q3 (pairwise comparison) but isn't. What's the cost of building the [`HashSet`](https://doc.rust-lang.org/std/collections/struct.HashSet.html)? What's the cost of one membership test?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(|a| + |b|) average**, i.e. **O(n)** if both have length `n`. Building the `HashSet` from `a` is O(|a|) — one insert per element, O(1) average each. Filtering `b` through the set is O(|b|), with each `contains` an O(1)-average lookup. Total O(|a| + |b|). The nested-looking structure is misleading — the inner work is constant, not linear, so we get linear total instead of quadratic.
+
+Compare with Q3 (linear-scan `contains` on a slice): same intent, O(n²) cost. Same intent as Q5: O(n·m) cost. Building the right index drops two orders of magnitude.
+:::
+
+---
+
+## Where this leads
+
+Most performance work in real code is recognising what shape your code's loops make. A bad O(n²) inside a hot path eats hours; the same algorithm restructured around a `HashMap` or `HashSet` drops it to O(n). The recipe is almost always:
+
+- Spot the nested loop where the inner operation scans a slice
+- Replace the inner slice with a `HashSet` or `HashMap` built once outside the outer loop
+- Total cost goes from O(n·m) or O(n²) to O(n + m) or O(n)
+
+Tomorrow's exercises (when added) will give you starter code with deliberately bad complexity to fix — the patterns here are exactly the ones you'll be looking for.

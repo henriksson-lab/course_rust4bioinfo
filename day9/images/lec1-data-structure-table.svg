@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" font-family="system-ui, -apple-system, sans-serif">
+  <title>Standard library collections — what each is fast at</title>
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-size="20" font-weight="600" fill="#222">Standard library collections &#8212; what each is fast at</text>
+
+  <!-- Table geometry:
+       table top y = 60, bottom y = 410
+       col x boundaries: 30, 190, 340, 490, 640, 870  (5 cols, 160/150/150/150/230 wide)
+       row heights: header 50, then 5 rows of 60 each => 60..110..170..230..290..350..410
+  -->
+
+  <!-- Table background -->
+  <rect x="30" y="60" width="840" height="350" fill="#fff" stroke="#bbb" stroke-width="1"/>
+
+  <!-- Header background -->
+  <rect x="30" y="60" width="840" height="50" fill="#e3f2fd" stroke="#bbb" stroke-width="1"/>
+
+  <!-- Row separators -->
+  <g stroke="#ddd" stroke-width="1">
+    <line x1="30" y1="110" x2="870" y2="110"/>
+    <line x1="30" y1="170" x2="870" y2="170"/>
+    <line x1="30" y1="230" x2="870" y2="230"/>
+    <line x1="30" y1="290" x2="870" y2="290"/>
+    <line x1="30" y1="350" x2="870" y2="350"/>
+  </g>
+
+  <!-- Column separators -->
+  <g stroke="#ddd" stroke-width="1">
+    <line x1="190" y1="60" x2="190" y2="410"/>
+    <line x1="340" y1="60" x2="340" y2="410"/>
+    <line x1="490" y1="60" x2="490" y2="410"/>
+    <line x1="640" y1="60" x2="640" y2="410"/>
+  </g>
+
+  <!-- Header text -->
+  <g font-size="15" font-weight="600" fill="#1976d2" text-anchor="middle">
+    <text x="110" y="92">Collection</text>
+    <text x="265" y="92">Lookup by key</text>
+    <text x="415" y="92">Lookup by index</text>
+    <text x="565" y="92">Insert</text>
+    <text x="755" y="92">Iterate sorted</text>
+  </g>
+
+  <!-- Row 1: Vec<T> at y center = 140 -->
+  <text x="110" y="146" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" font-weight="600" fill="#222">Vec&lt;T&gt;</text>
+  <text x="265" y="146" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n)</text>
+  <text x="415" y="146" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+  <g text-anchor="middle">
+    <text x="565" y="140" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="565" y="158" font-size="12" fill="#2e7d32">amortised</text>
+  </g>
+  <g text-anchor="middle">
+    <text x="755" y="140" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n log n)</text>
+    <text x="755" y="158" font-size="12" fill="#d97706">needs sort</text>
+  </g>
+
+  <!-- Row 2: HashMap<K, V> at y center = 200 -->
+  <text x="110" y="206" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" font-weight="600" fill="#222">HashMap&lt;K, V&gt;</text>
+  <g text-anchor="middle">
+    <text x="265" y="200" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="265" y="218" font-size="12" fill="#2e7d32">avg</text>
+  </g>
+  <text x="415" y="206" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#888">N/A</text>
+  <g text-anchor="middle">
+    <text x="565" y="200" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="565" y="218" font-size="12" fill="#2e7d32">avg</text>
+  </g>
+  <g text-anchor="middle">
+    <text x="755" y="200" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n log n)</text>
+    <text x="755" y="218" font-size="12" fill="#d97706">needs sort</text>
+  </g>
+
+  <!-- Row 3: BTreeMap<K, V> at y center = 260 -->
+  <text x="110" y="266" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" font-weight="600" fill="#222">BTreeMap&lt;K, V&gt;</text>
+  <text x="265" y="266" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(log n)</text>
+  <text x="415" y="266" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#888">N/A</text>
+  <text x="565" y="266" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(log n)</text>
+  <g text-anchor="middle">
+    <text x="755" y="260" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(n)</text>
+    <text x="755" y="278" font-size="12" fill="#2e7d32">already sorted</text>
+  </g>
+
+  <!-- Row 4: HashSet<T> at y center = 320 -->
+  <text x="110" y="326" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" font-weight="600" fill="#222">HashSet&lt;T&gt;</text>
+  <g text-anchor="middle">
+    <text x="265" y="320" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="265" y="338" font-size="12" fill="#2e7d32">avg</text>
+  </g>
+  <text x="415" y="326" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#888">N/A</text>
+  <g text-anchor="middle">
+    <text x="565" y="320" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="565" y="338" font-size="12" fill="#2e7d32">avg</text>
+  </g>
+  <g text-anchor="middle">
+    <text x="755" y="320" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n log n)</text>
+    <text x="755" y="338" font-size="12" fill="#d97706">needs sort</text>
+  </g>
+
+  <!-- Row 5: VecDeque<T> at y center = 380 -->
+  <text x="110" y="386" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" font-weight="600" fill="#222">VecDeque&lt;T&gt;</text>
+  <text x="265" y="386" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n)</text>
+  <text x="415" y="386" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+  <g text-anchor="middle">
+    <text x="565" y="380" font-family="ui-monospace, monospace" font-size="14" fill="#2e7d32">O(1)</text>
+    <text x="565" y="398" font-size="12" fill="#2e7d32">at either end</text>
+  </g>
+  <text x="755" y="386" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#d97706">O(n log n)</text>
+
+  <!-- Caption -->
+  <text x="450" y="445" text-anchor="middle" font-size="13" font-style="italic" fill="#888">Pick the data structure whose green column matches your operation mix.</text>
+</svg>

@@ -37,20 +37,10 @@ Forget desktop computers for a moment. Phones, laptops, HPC nodes — they are a
 
 ## The same machine in the wild
 
-![A real motherboard — the same components as the schematic. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-photo.jpg){width="65%" fig-alt="Photograph of an ASRock K7VT4A Pro motherboard top-down, showing the CPU socket, RAM slots, chipset heatsink, PCI and AGP expansion slots, capacitors, and rear I/O ports; provided as a real-world complement to the abstract schematic above."}
+![The same components as the schematic, in the wild — arrows show where each part lives on a real motherboard. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-annotated.svg){width="80%" fig-alt="An ASRock K7VT4A Pro motherboard photo with overlaid annotation arrows labelling the CPU socket, RAM DIMM slots, PCI/AGP expansion slots, chipset heatsink, capacitors, and rear I/O ports."}
 
 ::: notes
 The same components as the schematic, in the wild. CPU socket, RAM slots, chipset heatsink, PCI/AGP expansion slots, capacitors, rear I/O ports. Every machine you own — phone, laptop, server — is a variant of this layout.
-:::
-
-## The CPU — arithmetic + decisions
-
-The central processing unit is the one component that actually *runs* code. Everything else just feeds it or stores its results.
-
-![From registers to RAM in nanoseconds — what the CPU actually waits on.](images/lec1-latency-ladder.svg){fig-alt="A horizontal flow chart from register → L1 → L2 → L3 → RAM with each transition labelled with its access latency in nanoseconds. Each level coloured from green (fast) to red (slow)."}
-
-::: notes
-A modern CPU core does on the order of a few billion simple operations per second. Add two numbers, compare them, branch — that is what an operation is. The hardware tricks that make this possible (pipelining, out-of-order execution, branch prediction, superscalar issue) are fascinating but out of scope; for our purposes, the CPU is a very fast arithmetic-and-decisions box. Modern laptops have 4 to 16 of these cores running in parallel.
 :::
 
 ## Registers — the CPU's hands
@@ -126,16 +116,32 @@ A **cache** is a small block of fast memory inside the CPU that automatically ho
 Caches are completely invisible to your program. You never write code that says "put this in L1". The CPU decides what to keep based on what you have touched recently. The implication is huge: the order in which you visit memory determines whether you hit cache (1 ns) or miss and go to RAM (100 ns). Sequential access patterns win; jumping all over memory loses. We will use this fact on day 2.
 :::
 
+## The CPU — arithmetic + decisions
+
+The central processing unit is the one component that actually *runs* code. Everything else just feeds it or stores its results.
+
+![From registers to RAM in nanoseconds — what the CPU actually waits on. *Each arrow is a cache miss — the requested byte wasn't in the faster level above, so the CPU has to fetch from the next level down.*](images/lec1-latency-ladder.svg){width="90%" fig-alt="A horizontal flow chart from register → L1 → L2 → L3 → RAM with each transition labelled with its access latency in nanoseconds. Each level coloured from green (fast) to red (slow)."}
+
+::: {layout-ncol=2}
+![A CPU die — registers, ALU, L1/L2/L3 all live on the same silicon chip.](images/lec1-cpu-mini.svg){fig-alt="A small schematic of a CPU package showing 4 cores in a 2x2 grid, each with private L1 cache, L2 cache, and a shared L3 cache at the bottom."}
+
+![A RAM module — separate chip board sitting in a DIMM slot.](images/lec1-ram-mini.svg){fig-alt="A small schematic of a DDR4 RAM stick: 8 memory chips arranged in a row on a PCB with edge connector at the bottom."}
+:::
+
+::: notes
+A modern CPU core does on the order of a few billion simple operations per second. Add two numbers, compare them, branch — that is what an operation is. The hardware tricks that make this possible (pipelining, out-of-order execution, branch prediction, superscalar issue) are fascinating but out of scope; for our purposes, the CPU is a very fast arithmetic-and-decisions box. Modern laptops have 4 to 16 of these cores running in parallel.
+:::
+
 ## A cache line — 64 bytes at a time
 
 When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line.
 
 ::: {.fragment}
-![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){width="60%" fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
+![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){width="70%" fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
 :::
 
 ::: {.fragment}
-![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){width="60%" fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
+![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){width="70%" fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
 :::
 
 ::: notes
@@ -144,7 +150,7 @@ The CPU fetches whole cache lines, not single bytes. Each fetch costs about a hu
 
 ## Cache lines — and why sequential access wins
 
-![Step 3: nearby byte reads are cache hits, fast and free.](images/lec1-cache-line-step3.svg){width="65%" fig-alt="Subsequent reads from adjacent bytes within the same 64-byte line are served from the cache, marked as fast cache hits."}
+![Step 3: nearby byte reads are cache hits, fast and free.](images/lec1-cache-line-step3.svg){width="70%" fig-alt="Subsequent reads from adjacent bytes within the same 64-byte line are served from the cache, marked as fast cache hits."}
 
 Sequential reads inside a line are essentially free.
 
@@ -163,6 +169,16 @@ This is why iterating over an array in order is so much faster than jumping arou
 
 ![Most real datasets overflow RAM; streaming is the rule.](images/lec1-bio-file-sizes.svg){width="55%" fig-alt="Bar chart of common bioinformatics file sizes on a log scale, with horizontal markers for L3 cache, RAM, SSD."}
 
+::: {layout-ncol=3}
+![DDR3 RAM stick.](images/lec1-ram-photo.jpg){fig-alt="Photo of a DDR3 RAM module — a long thin green PCB with memory chips along it and a notched gold edge connector at the bottom."}
+
+![NVMe SSD (M.2 form factor).](images/lec1-ssd-photo.jpg){fig-alt="Photo of an NVMe M.2 SSD — a small green PCB about the size of a stick of gum with a single controller chip and 1-2 memory chips."}
+
+![Hard disk drive with platter visible.](images/lec1-hdd-photo.jpg){fig-alt="Photo of a hard drive with the cover removed, showing the silver platter and the read/write arm hovering over it."}
+:::
+
+*Photos (left to right): Alan Lorenzo, [DDR3 RAM](https://commons.wikimedia.org/wiki/File:Memoria_DDR3_Patriot_Viper_PVS34G1333LLK_-_2.JPG), CC BY-SA 3.0; Wikimedia user `-stk`, [Toshiba M.2 SSD](https://commons.wikimedia.org/wiki/File:Toshiba_M2_2280_256_GB_SSD_front.jpg), CC BY-SA 4.0; Evan-Amos (Vanamo Media), [laptop HDD exposed](https://commons.wikimedia.org/wiki/File:Laptop-hard-drive-exposed.jpg), CC BY-SA 3.0.*
+
 ::: notes
 SSDs replaced HDDs in laptops because they are about a hundred times faster for the small, random reads that modern software does — opening files, launching apps, paging memory. HDDs are still cheaper per terabyte for cold storage. For bioinformatics: your raw sequencing data probably lives on HDD or networked storage; your working dataset gets copied to local SSD or RAM. When a tool feels slow, the first question is almost always "where is the data sitting right now?"
 
@@ -175,9 +191,13 @@ A GPU is **thousands of small, simple cores** versus a CPU's small number of lar
 
 ![A modern GPU has thousands of small cores, all running the same instruction on different data — perfect for image rendering, deep learning, and bioinformatics basecalling.](images/lec1-gpu-many-cores.svg){fig-alt="Schematic of a modern NVIDIA-style GPU: a large grid of small core squares (e.g. 16 x 32 = 512+ shown), grouped into Streaming Multiprocessors, with shared L2 cache and HBM/GDDR memory at the edges."}
 
+![An NVIDIA RTX 3090 Founders Edition. *Photo: Adam Kapetanakis, [Wikimedia](https://commons.wikimedia.org/wiki/File:RTX_3090_Founders_Edition!.jpg), CC BY-SA 4.0.*](images/lec1-gpu-photo.jpg){width="40%" fig-alt="Photo of an NVIDIA RTX 3090 Founders Edition graphics card showing the integrated cooler."}
+
 ::: notes
 GPUs entered general computing through deep learning, but they have been used in bioinformatics for sequence alignment and variant calling too. Nanopore basecalling (Dorado) runs roughly 100x faster on GPU than CPU; AlphaFold and ESMFold predict protein structure in hours instead of weeks; DeepVariant uses a CNN for variant calling. The programming model is very different from CPU code — you write a small kernel and the runtime fans it out across thousands of threads. For this course we stay on the CPU; just be aware that the GPU exists and that it is sometimes the right tool when you have a very regular, data-parallel inner loop.
 :::
+
+# Inside the running program
 
 ## A running program in memory
 
@@ -185,19 +205,10 @@ The OS sets up four regions of memory for every process: **code**, **static data
 
 ![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="55%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom 'text (machine code)', then 'static data', then a 'heap' band with an upward arrow, then a big empty middle, then mapped libraries, then 'stack' at the top with a downward arrow."}
 
+![Real RAM — this is where the running program lives. Each byte has an address; the OS gives each process its own private address space. *Photo: Alan Lorenzo, [Wikimedia](https://commons.wikimedia.org/wiki/File:Memoria_DDR3_Patriot_Viper_PVS34G1333LLK_-_2.JPG), CC BY-SA 3.0.*](images/lec1-ram-photo.jpg){width="50%" fig-alt="Photo of a DDR3 RAM module."}
+
 ::: notes
 Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code (the program's instructions, loaded from your binary) and static data (fixed values known before the program starts — constants, string literals) at the bottom, the heap (a flexible pool the program asks for as it runs) growing up, and the stack (a small fast region used for function calls and local variables) growing down. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
-:::
-
-## When a program touches memory it doesn't own — segfault
-
-The middle of the address space is empty and unmapped. If your program tries to read or write there — say, by following a stale pointer or running off the end of an array — the kernel notices and kills the process.
-
-- **Segfault** (segmentation fault — what happens when a program touches memory it doesn't own) is the symptom you see in C and C++ when this goes wrong
-- Python and Rust are designed so you almost never see one: Python checks at runtime, Rust checks at compile time
-
-::: notes
-A segfault is the operating system slamming the door. The hardware (the memory management unit) compares every address your program touches against a map of what is allowed; an out-of-bounds access traps into the kernel, and the kernel sends your process a signal that, by default, terminates it. It is the single most common crash mode for C programs. One of the design goals of Rust is to make this class of bug impossible without a runtime cost — we will see how on day 2.
 :::
 
 ## Stack — fast, structured, automatic
@@ -286,7 +297,7 @@ This is the model that every modern OS — Linux, macOS, Windows — implements.
 
 When your Python code does `f = open("data.fa")`, the runtime issues an `open` syscall — a controlled jump into the kernel, which checks permissions, locates the file, and returns a file descriptor.
 
-![Your program asks; the OS does. A syscall is the boundary.](images/lec1-syscall-flow.svg){width="65%" fig-alt="Flow diagram showing a user-space program issuing a syscall, control transferring into the kernel which performs the privileged operation on hardware, and then control returning to the user-space program with a result."}
+![](images/lec1-syscall-animated.svg){width="80%" fig-alt="An animated diagram (auto-plays) showing the steps from your program calling `open()` and `read()` down through the kernel to the disk controller and back: the request flows down, the bytes flow back up over ~5 seconds, with stage labels appearing one at a time."}
 
 ::: notes
 Every interesting thing a program does crosses this boundary. Opening a file. Allocating heap memory (eventually). Reading from the network. Even printing to the screen. The syscall is the only legal way down. Crossing the boundary costs about a microsecond — much more than a function call within your program, much less than a disk read. This is why "do one big syscall not a million small ones" is universally good advice. Buffer your reads.
@@ -323,6 +334,26 @@ This is the pitch for the course in one slide. Our inputs are huge ($10^8$ to $1
 Research bioinformatics: large indexes, tight inner loops — Rust + C win. Clinical diagnostics: variant calling pipelines that must return a result in hours (rare disease, cancer panel turnaround) — language choice affects whether a patient waits days or hours. Environmental / metagenomics: soil and ocean microbiome sequencing produces TB-scale datasets — streaming and parallelism are non-negotiable. Public health surveillance: SARS-CoV-2 sequencing scaled to thousands of samples per week; pipelines designed for cache-friendly streaming.
 
 Bioinformatics workloads sit precisely where the architectural facts of this lecture bite hardest. A language that lets you write code with the cache in mind, that produces a single static binary, and that catches concurrency bugs at compile time, is going to pay back the time you spend learning it.
+:::
+
+## Why latency matters — clinical turnaround
+
+Same machine speed, very different acceptable wait times depending on the question:
+
+| Scenario | Acceptable turnaround |
+|---|---|
+| ER: suspected sepsis — which antibiotic? | < 1 hour |
+| ICU: drug-resistance variant calling | hours |
+| Rare-disease workup: full WGS analysis | days |
+| Cancer panel: tumour mutation report | days to a week |
+| Public-health outbreak: SARS-CoV-2 surveillance | days |
+| Cohort study / GWAS: hundreds of genomes | weeks-months |
+| Research method development | months |
+
+The bottom rows are tolerant of slow code. The top rows are NOT — every second your pipeline takes is a second the clinical decision is waiting on you. Rust's "compile-time-free of a class of bugs, runtime-fast" combination is most valuable up there.
+
+::: notes
+Tie this back to the latency ladder: nanoseconds and microseconds matter at the machine level; hours and days matter at the human-decision level. The point is that "fast code" matters more in some scenarios than others — and Rust pays off most where it matters most.
 :::
 
 ## What's next

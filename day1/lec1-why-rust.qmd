@@ -200,6 +200,17 @@ When I say Rust is safe, I mean the compiler catches at compile time the class o
 This is not a runtime check. There is no garbage collector (the background process Python and Java run to free unused memory automatically). It is the compiler refusing to compile broken code. The error message you see here is the actual output for the snippet above — and notice the message tells you what is wrong, where, and why. We will have more to say about borrow checker (the part of the Rust compiler that tracks who owns each piece of memory) errors on day 2.
 :::
 
+## What a segfault actually is
+
+When a program tries to read or write a memory address it doesn't own — say, by following a stale pointer or running off the end of an array — the operating system notices and kills the process.
+
+- **Segfault** (segmentation fault — what happens when a program touches memory it doesn't own) is the symptom you see in C and C++ when this goes wrong
+- Python and Rust are designed so you almost never see one: Python checks at runtime, Rust checks at compile time
+
+::: notes
+A segfault is the operating system slamming the door. The hardware (the memory management unit) compares every address your program touches against a map of what is allowed; an out-of-bounds access traps into the OS, and the OS sends your process a signal that, by default, terminates it. It is the single most common crash mode for C programs. One of the design goals of Rust is to make this class of bug impossible without a runtime cost — we will see how on day 2.
+:::
+
 ## Safety in our context — parallel `count_kmers`
 
 ```rust

@@ -1,0 +1,277 @@
+---
+title: "Day 9 — Warm-up quiz: data-structure complexity"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz to drill the time complexity of the most common operations on Rust's standard-library collections. Reach for the answer before peeking. If you get tripped up by amortised vs worst-case, that's worth a re-read of the lecture.
+
+12 questions, easy to trickier. A few notes:
+
+- Every answer expands inline; guess before you click.
+- *Amortised* means "the average per-operation cost across a long sequence of operations, even when occasional individual operations are expensive." It is a real, defensible average — not a fudge.
+- *Average case* (for hash tables) means "assuming the hash function spreads keys evenly." The *worst case* assumes pathological hash collisions, and is different.
+- `n` always means the number of elements currently in the collection.
+
+---
+
+## 1. Pushing to the end of a `Vec`
+
+```rust
+let mut v: Vec<u8> = Vec::new();
+for x in 0..1_000_000 {
+    v.push(x as u8);
+}
+```
+
+What's the time complexity per [`push`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Most pushes are O(1). Occasionally one push triggers a re-allocation that copies all existing elements to a larger buffer. What's the *average* cost?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Amortised O(1).** Most `push` calls are O(1) — write to the next pre-allocated slot. About log₂(n) of them trigger a re-allocation that copies all current elements (the backing buffer typically doubles). Total work across n pushes is bounded by `n + n/2 + n/4 + ... < 2n`, so the per-push average is O(1). Individual pushes can be O(n) — the amortised cost stays constant.
+:::
+
+---
+
+## 2. Indexing into a `Vec`
+
+```rust
+let v: Vec<u8> = vec![10, 20, 30, 40, 50];
+let x = v[3];
+```
+
+What's the cost of [`v[i]`](https://doc.rust-lang.org/std/vec/struct.Vec.html#impl-Index%3CI%3E-for-Vec%3CT,+A%3E)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `Vec` stores its elements contiguously in a single heap allocation. What does indexing translate to in machine terms?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(1).** `Vec` is a contiguous array: the address of element `i` is `base_ptr + i * size_of::<T>()`. One pointer add, one load — independent of `n`. The plus-one cost is the bounds check (`i < len`), which is also O(1).
+:::
+
+---
+
+## 3. Removing the last element of a `Vec`
+
+```rust
+let mut v = vec![1, 2, 3, 4, 5];
+let last = v.pop();
+```
+
+What's the cost of [`pop`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.pop)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Nothing has to shift — we are removing from the end of a contiguous array.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(1).** `pop` just decrements the length and returns the value at the old last index. No elements move. The backing allocation is not shrunk (that would defeat the amortised analysis of `push`).
+:::
+
+---
+
+## 4. Removing the first element of a `Vec`
+
+```rust
+let mut v = vec![1, 2, 3, 4, 5];
+let first = v.remove(0);
+```
+
+What's the cost of [`remove(0)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.remove)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `Vec` is contiguous — if you take an element out of the middle (or front), what has to happen to the elements after it?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** Removing from the front means every remaining element has to shift left by one to keep the array contiguous. For a Vec of length n, that is n−1 element copies. If you need front removal, reach for [`VecDeque`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html) instead.
+:::
+
+---
+
+## 5. Inserting at the front of a `VecDeque`
+
+```rust
+use std::collections::VecDeque;
+let mut q: VecDeque<u32> = VecDeque::new();
+q.push_front(42);
+```
+
+What's the cost of [`push_front`](https://doc.rust-lang.org/std/collections/struct.VecDeque.html#method.push_front)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `VecDeque` is a *ring buffer* — a contiguous array with a moving start index, so both ends are equally cheap.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Amortised O(1).** `VecDeque` stores its elements in a circular buffer with a `head` index that can move backwards. `push_front` writes one element and decrements `head` modulo capacity — no shift. Like `Vec::push`, occasional re-allocations make the cost *amortised* O(1) rather than strictly O(1).
+:::
+
+---
+
+## 6. Looking up a key in a `HashMap`
+
+```rust
+use std::collections::HashMap;
+let mut m: HashMap<String, u32> = HashMap::new();
+m.insert("ACGT".into(), 5);
+let v = m.get("ACGT");
+```
+
+What's the cost of [`get`](https://doc.rust-lang.org/std/collections/struct.HashMap.html#method.get)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A hash table computes a hash of the key, jumps to the matching bucket, and checks the keys there. What's the cost if the hash spreads keys evenly? What's the cost if every key hashes to the same bucket?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(1) average, O(n) worst case.** In the *average* case the hash function distributes keys evenly across buckets; lookup is one hash, one pointer indirection, one (or a few) key comparisons — constant time independent of `n`. The *worst* case is when every key collides into the same bucket — then `get` degenerates to a linear scan, O(n). With Rust's default `SipHash` and well-behaved keys, the average case is what you get in practice; the worst case only matters for adversarial input (e.g. a web server taking untrusted keys).
+:::
+
+---
+
+## 7. Looking up a key in a `BTreeMap`
+
+```rust
+use std::collections::BTreeMap;
+let mut m: BTreeMap<u32, &str> = BTreeMap::new();
+m.insert(42, "hi");
+let v = m.get(&42);
+```
+
+What's the cost of [`BTreeMap::get`](https://doc.rust-lang.org/std/collections/struct.BTreeMap.html#method.get)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `BTreeMap` is a balanced search tree — each lookup descends the tree, halving (roughly) the remaining search space at each step.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(log n)** — both average and worst case. A B-tree of `n` keys has depth O(log n); each level does a small key comparison to pick a child. Slower per operation than `HashMap`, but with no worst-case blow-up and the bonus of sorted iteration for free.
+:::
+
+---
+
+## 8. `contains` on an unsorted `Vec`
+
+```rust
+let v: Vec<u32> = vec![10, 20, 30, 40, 50];
+let present = v.contains(&30);
+```
+
+What's the cost of [`Vec::contains`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.contains)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `Vec` doesn't know anything about its contents — `contains` has to walk the elements one by one.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** `contains` is a linear scan: compare each element until a match is found, or fall off the end. Best case O(1) (match at index 0), worst case O(n) (no match), average O(n). If you find yourself doing `contains` inside a loop, you almost certainly want a `HashSet` instead — see Q12 in the next quiz.
+:::
+
+---
+
+## 9. Binary search on a sorted slice
+
+```rust
+let v: Vec<u32> = vec![10, 20, 30, 40, 50];   // already sorted
+let pos = v.binary_search(&30);
+```
+
+What's the cost of [`binary_search`](https://doc.rust-lang.org/std/primitive.slice.html#method.binary_search)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Each comparison eliminates half of the remaining range.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(log n).** Binary search halves the candidate range each step, so it takes about log₂(n) comparisons. *Precondition*: the slice must already be sorted — `binary_search` does not check, and gives undefined (but safe) results on unsorted input. The sort itself is O(n log n), so binary search is only a win if you do many lookups on the same sorted data.
+:::
+
+---
+
+## 10. `vec.sort()`
+
+```rust
+let mut v: Vec<u32> = vec![5, 2, 9, 1, 7, 3];
+v.sort();
+```
+
+What's the cost of [`sort`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The standard library's sort is a comparison sort. There is a well-known lower bound on the cost of comparison sorting.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n log n).** Rust's slice `sort` is a stable merge sort variant (Timsort-derived); the standard comparison-sort lower bound is `Ω(n log n)`, and the standard library matches it. [`sort_unstable`](https://doc.rust-lang.org/std/primitive.slice.html#method.sort_unstable) is the same complexity class but with a smaller constant factor — preferable when you don't care about preserving the relative order of equal elements.
+:::
+
+---
+
+## 11. Iterating a `BTreeMap` in sorted key order
+
+```rust
+use std::collections::BTreeMap;
+let m: BTreeMap<u32, &str> = BTreeMap::from([(3, "c"), (1, "a"), (2, "b")]);
+for (k, v) in &m {
+    println!("{k} = {v}");
+}
+```
+
+What's the cost of iterating `m` in sorted-key order?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `BTreeMap` already stores its keys in sorted order — iteration is just an in-order tree walk.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n).** A `BTreeMap` keeps its keys sorted by construction (the tree's in-order traversal *is* the sorted order). Iterating visits each entry once, with constant amortised work per step. No extra sorting is needed — this is the headline reason to pick `BTreeMap` over `HashMap`.
+:::
+
+---
+
+## 12. Iterating a `HashMap` in sorted key order
+
+```rust
+use std::collections::HashMap;
+let m: HashMap<u32, &str> = HashMap::from([(3, "c"), (1, "a"), (2, "b")]);
+
+let mut keys: Vec<&u32> = m.keys().collect();
+keys.sort();
+for k in keys {
+    println!("{k} = {}", m[k]);
+}
+```
+
+What's the cost of iterating `m` in sorted-key order?
+
+::: {.callout-tip collapse="true" title="Hint"}
+A `HashMap` stores keys in hash-bucket order, which is essentially random. To get them sorted, you have to do the sort yourself — what does that cost?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**O(n log n).** Walking the HashMap to collect keys is O(n); sorting them is O(n log n), which dominates. If you need sorted iteration *often*, use a `BTreeMap` from the start — its sorted iteration is O(n) and you pay an O(log n) lookup tax in exchange. If you only need sorted iteration once, sorting a HashMap's keys is fine.
+:::
+
+---
+
+## Where this leads
+
+The pattern to internalise:
+
+- **Indexed access on contiguous storage is O(1)** — `Vec[i]`, `Vec::push` (amortised), `Vec::pop`, `VecDeque::push_front` (amortised).
+- **Key lookup is O(1) average on hash tables, O(log n) on balanced trees** — `HashMap::get`, `BTreeMap::get`.
+- **Anything that touches every element is O(n)** — `Vec::contains`, iteration, `min`, `max`, `sum`.
+- **Sorting is O(n log n).** Anything that *needs* sorted data (binary search, dedup, sorted iteration of a HashMap) inherits that cost unless the data is sorted by construction.
+
+Hold those four numbers and you can reason about most code you'll write. Next quiz: identifying the complexity from a code snippet rather than from the API docs.

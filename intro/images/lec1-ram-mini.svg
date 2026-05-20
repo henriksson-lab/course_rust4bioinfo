@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" font-family="system-ui, -apple-system, sans-serif">
+  <title>What's inside a RAM stick</title>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="200" y="22" text-anchor="middle" font-size="14" font-weight="bold" fill="#d97706">What's inside a RAM stick</text>
+
+  <!-- DIMM PCB rectangle -->
+  <rect x="40" y="130" width="320" height="70" rx="3" ry="3"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+
+  <!-- Memory chips on top -->
+  <g fill="#333" stroke="#000" stroke-width="0.5">
+    <rect x="55" y="140" width="30" height="32" rx="2"/>
+    <rect x="92" y="140" width="30" height="32" rx="2"/>
+    <rect x="129" y="140" width="30" height="32" rx="2"/>
+    <rect x="166" y="140" width="30" height="32" rx="2"/>
+    <rect x="203" y="140" width="30" height="32" rx="2"/>
+    <rect x="240" y="140" width="30" height="32" rx="2"/>
+    <rect x="277" y="140" width="30" height="32" rx="2"/>
+    <rect x="314" y="140" width="30" height="32" rx="2"/>
+  </g>
+
+  <!-- Gold edge connector at the bottom of the PCB -->
+  <rect x="40" y="195" width="320" height="8" fill="#f5c518" stroke="#a07a00" stroke-width="0.5"/>
+  <!-- contact lines on the edge connector -->
+  <g stroke="#a07a00" stroke-width="0.5">
+    <line x1="50"  y1="195" x2="50"  y2="203"/>
+    <line x1="70"  y1="195" x2="70"  y2="203"/>
+    <line x1="90"  y1="195" x2="90"  y2="203"/>
+    <line x1="110" y1="195" x2="110" y2="203"/>
+    <line x1="130" y1="195" x2="130" y2="203"/>
+    <line x1="150" y1="195" x2="150" y2="203"/>
+    <line x1="170" y1="195" x2="170" y2="203"/>
+    <line x1="190" y1="195" x2="190" y2="203"/>
+    <line x1="210" y1="195" x2="210" y2="203"/>
+    <line x1="230" y1="195" x2="230" y2="203"/>
+    <line x1="250" y1="195" x2="250" y2="203"/>
+    <line x1="270" y1="195" x2="270" y2="203"/>
+    <line x1="290" y1="195" x2="290" y2="203"/>
+    <line x1="310" y1="195" x2="310" y2="203"/>
+    <line x1="330" y1="195" x2="330" y2="203"/>
+    <line x1="350" y1="195" x2="350" y2="203"/>
+  </g>
+
+  <!-- Annotation: memory chip (top) -->
+  <text x="120" y="65" font-size="11" fill="#555">memory chip</text>
+  <line x1="135" y1="70" x2="140" y2="138" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- Annotation: PCB (middle, side) -->
+  <text x="305" y="115" font-size="11" fill="#555">PCB</text>
+  <line x1="320" y1="120" x2="320" y2="135" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- Annotation: edge connector (bottom) -->
+  <text x="60" y="245" font-size="11" fill="#555">edge connector — plugs into DIMM slot</text>
+  <line x1="200" y1="240" x2="200" y2="208" stroke="#888" stroke-width="1" marker-end="url(#arr)"/>
+</svg>

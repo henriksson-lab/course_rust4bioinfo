@@ -238,6 +238,49 @@ Day 3 introduced these as a slate. Today they get a second reading: each one is 
 Display is conspicuously absent from this list because there is no obvious "field-by-field" Display — what should `GenomicInterval { chrom: "chr1", start: 100, end: 200 }` print as? `chr1:100-200`? `chr1\t100\t200`? Only you know. That is why Display is not derivable.
 :::
 
+## How other languages do this — Python duck typing
+
+Python doesn't have traits. Instead, if an object happens to have a method called `sequence`, it can be used wherever something with `.sequence()` is expected — *duck typing* (gloss: "if it walks like a duck and quacks like a duck, it's a duck — the language never checks").
+
+```python
+class FastaRecord:
+    def sequence(self): return self.dna
+
+class FastqRecord:
+    def sequence(self): return self.dna
+
+def gc_content(rec):
+    seq = rec.sequence()           # no static check that rec has a sequence() method
+    return sum(b in "GC" for b in seq) / len(seq)
+```
+
+The function `gc_content` doesn't say what types it accepts. You find out at runtime when someone passes the wrong thing in and you get an `AttributeError`. Rust's trait bounds (`<T: Sequence>`) move that check to compile time.
+
+::: notes
+Same problem, different solution. Python is faster to prototype (no annotations, no interface declarations) but the errors arrive late, often in production. Rust traits are more verbose at the definition site and totally invisible at the call site once you've got it working.
+:::
+
+## How other languages do this — R S4 classes
+
+R has two object systems. The lightweight `S3` is just attributes on a list. The strict `S4` system has formal class definitions and *generic functions* (gloss: a function whose actual implementation is picked at call time based on the argument's class).
+
+```r
+setClass("FastaRecord", representation(name = "character", dna = "character"))
+setClass("FastqRecord", representation(name = "character", dna = "character",
+                                       quality = "character"))
+
+setGeneric("sequence_of", function(rec) standardGeneric("sequence_of"))
+
+setMethod("sequence_of", "FastaRecord", function(rec) rec@dna)
+setMethod("sequence_of", "FastqRecord", function(rec) rec@dna)
+```
+
+Bioconductor packages are built on S4. It looks heavyweight because it is — declarations, generics, methods, slot accessors with `@`. Rust traits are similar in spirit (formal interfaces, dispatch by type) but a fraction of the ceremony.
+
+::: notes
+S4 students will recognise generics + methods as the same pattern as traits + impls. Mention Bioconductor briefly so they have a touchstone — most R bioinformatics they'll meet uses S4 under the hood.
+:::
+
 ## Traits `Vec` already implements
 
 You have been calling these methods all week without thinking of them as trait methods.
@@ -252,6 +295,8 @@ You have been calling these methods all week without thinking of them as trait m
 | [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html) | `vec_a == vec_b` | equality |
 
 `Vec`'s "syntax" is not built into the language — it is trait impls in the standard library. Any of your own types can opt in to the same syntax by implementing the same traits.
+
+![Vec is itself generic — Vec<u64> and Vec<String> share the same methods (`.push`, `.iter`, `[i]`) because Vec implements the same traits regardless of its element type.](images/lec1-vec-different-content.svg){fig-alt="Two Vec instances side by side: on the left Vec<u64> with elements [42, 100, 7]; on the right Vec<String> with elements [\"chr1\", \"chr2\", \"chrX\"]. Both have arrows pointing at the same method set (.iter(), .push(), [i], .len()) — implemented once on Vec<T>, available for any T." width="80%"}
 
 ::: notes
 This is where the penny tends to drop. The `for` loop is not a Vec feature — it is an IntoIterator feature; `Vec` happens to implement IntoIterator. The square brackets are not a Vec feature — they are an Index feature; `Vec` happens to implement Index. `HashMap` also implements Index, which is why `map[&key]` works.
@@ -335,6 +380,8 @@ fn count_tips<T>(node: &Node<T>) -> usize {
 ```
 
 `count_tips` does not look at `T` at all — so it works for **any** `T`. `Node<SpeciesName>`, `Node<Sample>`, `Node<GeneSymbol>` — same function.
+
+![The same tree shape with different tip content: a tree of species names, a tree of sample IDs, a tree of gene symbols. The recursive structure stays the same; only the type T inside the leaves changes.](images/lec1-generic-tree-replaceable.svg){fig-alt="Three side-by-side small phylogenetic trees with identical topology. Left tree has tips labelled with species names (Human, Chimp, Gorilla). Middle tree has tips labelled with sample IDs (S001, S002, S003). Right tree has tips labelled with gene symbols (BRCA1, BRCA2, RAD51). All three are 'Node<T>' with T different." width="80%"}
 
 ::: notes
 The recursive shape — leaf or internal — does not depend on what is stored at the tips. The compiler lets you express that with a generic parameter `T`. Same enum, same recursion, three different tip kinds.
