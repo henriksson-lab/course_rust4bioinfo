@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 2: one-hot encoding DNA"
+title: "Exercise: one-hot encoding DNA"
 format:
   html:
     toc: true

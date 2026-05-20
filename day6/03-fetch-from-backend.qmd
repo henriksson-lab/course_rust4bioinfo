@@ -1,5 +1,5 @@
 ---
-title: "Day 6 — Exercise: Fetch sequences from the backend"
+title: "Exercise: Fetch sequences from the backend"
 format:
   html:
     toc: true

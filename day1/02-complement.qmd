@@ -1,5 +1,5 @@
 ---
-title: "Day 1 — Exercise: Complement a single base"
+title: "Exercise: Complement a single base"
 format:
   html:
     toc: true

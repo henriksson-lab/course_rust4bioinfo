@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 6: 1-D convolutional motif scanner"
+title: "Exercise: 1-D convolutional motif scanner"
 format:
   html:
     toc: true

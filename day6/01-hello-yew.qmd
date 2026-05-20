@@ -1,5 +1,5 @@
 ---
-title: "Day 6 — Exercise: Hello Yew"
+title: "Exercise: Hello Yew"
 format:
   html:
     toc: true

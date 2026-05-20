@@ -1,5 +1,5 @@
 ---
-title: "Day 7 — Exercise: A second table and a join"
+title: "Exercise: A second table and a join"
 format:
   html:
     toc: true

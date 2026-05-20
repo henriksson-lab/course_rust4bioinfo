@@ -1,5 +1,5 @@
 ---
-title: "Day 7 — Exercise: Writing a SQLite database from Rust"
+title: "Exercise: Writing a SQLite database from Rust"
 format:
   html:
     toc: true

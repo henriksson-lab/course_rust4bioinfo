@@ -1,5 +1,5 @@
 ---
-title: "Day 3 — Exercise: A codon table with `Option`"
+title: "Exercise: A codon table with `Option`"
 format:
   html:
     toc: true

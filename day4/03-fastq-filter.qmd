@@ -1,5 +1,5 @@
 ---
-title: "Day 4 — Exercise: Filter FASTQ with `noodles-fastq`"
+title: "Exercise: Filter FASTQ with `noodles-fastq`"
 format:
   html:
     toc: true

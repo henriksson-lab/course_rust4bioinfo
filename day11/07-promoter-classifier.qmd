@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 7: a trainable promoter classifier"
+title: "Exercise: a trainable promoter classifier"
 format:
   html:
     toc: true

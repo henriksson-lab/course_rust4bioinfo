@@ -1,5 +1,5 @@
 ---
-title: "Day 1 — Warm-up: Hello, DNA"
+title: "Warm-up: Hello, DNA"
 format:
   html:
     toc: true

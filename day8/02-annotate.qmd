@@ -1,5 +1,5 @@
 ---
-title: "Day 8 — Exercise: a custom trait with multiple impls"
+title: "Exercise: a custom trait with multiple impls"
 format:
   html:
     toc: true

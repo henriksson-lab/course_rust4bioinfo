@@ -20,10 +20,6 @@ website:
         menu:
           - text: Audience
             href: audience.md
-          - text: Learning outcomes
-            href: elo.md
-          - text: Design principles
-            href: designprinciples.md
           - text: Authors
             href: authors.md
   sidebar:
@@ -36,23 +32,18 @@ website:
         contents:
           - text: Audience
             href: audience.md
+          - text: Install Rust
+            href: intro/install.qmd
           - text: Glossary
             href: dictionary.qmd
-          - text: Learning outcomes
-            href: elo.md
-          - text: Design principles
-            href: designprinciples.md
           - text: Authors
             href: authors.md
-      - section: "Before you start"
-        contents:
-          - intro/lec1-how-computers-work.qmd
-          - intro/install.qmd
-          - intro/install-sqlite.qmd
       - section: "Day 1 — toolchain & syntax"
         contents:
-          - day1/00-concepts.qmd
+          - text: "Concept summary"
+            href: day1/00-concepts.qmd
           - day1/lec1-why-rust.qmd
+          - intro/lec1-how-computers-work.qmd
           - day1/lec2-rust-syntax.qmd
           - text: "Quiz"
             href: day1/00e-types-quiz.qmd
@@ -67,7 +58,8 @@ website:
           - day1/05-hamming.qmd
       - section: "Day 2 — ownership & slices"
         contents:
-          - day2/00-concepts.qmd
+          - text: "Concept summary"
+            href: day2/00-concepts.qmd
           - day2/lec1-ownership-slices.qmd
           - text: "Quiz"
             href: day2/00a-ownership-quiz.qmd
@@ -77,7 +69,8 @@ website:
           - day2/04-quality-trim.qmd
       - section: "Day 3 — structs, enums, recursion"
         contents:
-          - day3/00-concepts.qmd
+          - text: "Concept summary"
+            href: day3/00-concepts.qmd
           - day3/lec1-structs-enums.qmd
           - day3/lec2-recursion-and-trees.qmd
           - day3/lec3-dynamic-programming.qmd
@@ -91,7 +84,8 @@ website:
           - day3/06-alignment.qmd
       - section: "Day 4 — I/O & ecosystem"
         contents:
-          - day4/00-concepts.qmd
+          - text: "Concept summary"
+            href: day4/00-concepts.qmd
           - day4/lec1-io-and-crates.qmd
           - day4/lec3-archives.qmd
           - text: "Quiz"
@@ -104,16 +98,18 @@ website:
           - day4/05-zip-bundle.qmd
       - section: "Day 5 — tests, release, parallel"
         contents:
-          - day5/00-concepts.qmd
+          - text: "Concept summary"
+            href: day5/00-concepts.qmd
           - day5/lec1-tests-release-parallel.qmd
           - text: "Quiz"
             href: day5/00a-quiz.qmd
           - day5/01-find-the-bug.qmd
           - day5/02-release-mode.qmd
           - day5/03-parallel-gc.qmd
-      - section: "Day 6 — Yew & WebAssembly"
+      - section: "Day 6 — Rust for the web"
         contents:
-          - day6/00-concepts.qmd
+          - text: "Concept summary"
+            href: day6/00-concepts.qmd
           - day6/lec1-yew-wasm.qmd
           - text: "Quiz"
             href: day6/00a-quiz.qmd
@@ -121,9 +117,11 @@ website:
           - day6/02-reactive-stats.qmd
           - day6/03-fetch-from-backend.qmd
           - day6/04-sequence-inspector.qmd
-      - section: "Day 7 — SQL & SQLite"
+      - section: "Day 7 — SQL and databases"
         contents:
-          - day7/00-concepts.qmd
+          - intro/install-sqlite.qmd
+          - text: "Concept summary"
+            href: day7/00-concepts.qmd
           - day7/lec1-relational-sqlite.qmd
           - text: "Quiz"
             href: day7/00a-quiz.qmd
@@ -134,7 +132,8 @@ website:
           - day7/05-query-from-rust.qmd
       - section: "Day 8 — traits"
         contents:
-          - day8/00-concepts.qmd
+          - text: "Concept summary"
+            href: day8/00-concepts.qmd
           - day8/lec1-traits-basics.qmd
           - day8/lec2-trait-objects.qmd
           - text: "Quiz"
@@ -145,7 +144,8 @@ website:
           - day8/04-trait-objects.qmd
       - section: "Day 9 — algorithms & complexity"
         contents:
-          - day9/00-concepts.qmd
+          - text: "Concept summary"
+            href: day9/00-concepts.qmd
           - day9/lec1-algorithms-and-complexity.qmd
           - text: "Quiz 1"
             href: day9/00a-ds-complexity-quiz.qmd
@@ -153,7 +153,8 @@ website:
             href: day9/00b-code-complexity-quiz.qmd
       - section: "Day 10 — working with matrices"
         contents:
-          - day10/00-concepts.qmd
+          - text: "Concept summary"
+            href: day10/00-concepts.qmd
           - day10/lec1-matrices-and-iterative-methods.qmd
           - text: "Quiz"
             href: day10/00a-quiz.qmd
@@ -163,7 +164,8 @@ website:
           - day10/04-markov-chain.qmd
       - section: "Day 11 — GPUs and tensors with Burn"
         contents:
-          - day11/00-concepts.qmd
+          - text: "Concept summary"
+            href: day11/00-concepts.qmd
           - day11/lec1-gpu-and-burn.qmd
           - text: "Quiz"
             href: day11/00a-quiz.qmd

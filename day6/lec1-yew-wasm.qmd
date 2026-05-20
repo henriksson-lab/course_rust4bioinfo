@@ -1,5 +1,5 @@
 ---
-title: "Yew + WebAssembly + axum — a pure-Rust web stack"
+title: "Full-stack Rust"
 subtitle: "Day 6"
 author: "Rust for bioinformaticians"
 format:

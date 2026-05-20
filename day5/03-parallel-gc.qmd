@@ -1,5 +1,5 @@
 ---
-title: "Day 5 — Exercise: Parallel GC content with `rayon`"
+title: "Exercise: Parallel GC content with `rayon`"
 format:
   html:
     toc: true

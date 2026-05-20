@@ -1,5 +1,5 @@
 ---
-title: "Day 6 — Exercise (capstone): GC sliding window as inline SVG"
+title: "Exercise (capstone): GC sliding window as inline SVG"
 format:
   html:
     toc: true

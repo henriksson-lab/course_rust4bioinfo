@@ -1,5 +1,5 @@
 ---
-title: "Day 5 — Exercise: `--release` is a 50× free lunch"
+title: "Exercise: `--release` is a 50× free lunch"
 format:
   html:
     toc: true

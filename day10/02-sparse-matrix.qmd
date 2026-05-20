@@ -1,5 +1,5 @@
 ---
-title: "Day 10 — Exercise: Sparse matrix basics"
+title: "Exercise: Sparse matrix basics"
 format:
   html:
     toc: true

@@ -1,5 +1,5 @@
 ---
-title: "Day 3 — Exercise: Parsing a region string with `Result`"
+title: "Exercise: Parsing a region string with `Result`"
 format:
   html:
     toc: true

@@ -1,153 +1,115 @@
 # Expected Learning Outcomes
 
-An intensive course of roughly a working week. Each day has at most two prerecorded ~30-minute lectures (one in the morning, one after lunch). The remaining time is self-paced study material and exercises built around bioinformatics tasks.
-
-The day-by-day structure below is a working draft rather than a fixed plan: the unit of pacing is the **concept–topic pairing**, and we are willing to shift, merge, or split days once we have a clearer picture of how the material flows. The guiding principle: each Rust concept is introduced together with a biological topic that naturally motivates it, so that students never learn a language feature in the abstract.
+A two-week intensive course in Rust, framed around bioinformatics problems. Each day pairs a Rust concept with a biological topic that motivates it: students never learn a language feature in the abstract.
 
 See [audience.md](audience.md) for the assumed background.
 
 ## Overall course outcome
 
-By the end of the week, a student should be able to take a small, well-defined bioinformatics task — for example, parsing a FASTA file, computing per-record statistics, filtering by a criterion, and writing the result back out — and implement it in idiomatic Rust as a `cargo` project, using community crates where appropriate, with basic tests and a readable error story.
+By the end of the course, a student should be able to take a small, well-defined bioinformatics task — for example, parsing a FASTA file, computing per-record statistics, querying it from SQL, or training a small sequence model — and implement it in idiomatic Rust as a `cargo` project, using community crates where appropriate, with basic tests and a readable error story.
 
 Equally important: the student should know **when Rust is the right tool** (and when to stay in Python/R), and have a realistic mental model of what they would need to learn next to tackle larger projects.
 
-## Cross-cutting outcomes (apply throughout the week)
+## Cross-cutting outcomes (apply throughout the course)
 
 A student who finishes the course can:
 
-- Explain in one or two sentences why Rust is used in modern bioinformatics tooling (e.g. samtools rewrites, single-cell tools, alignment indexes) — performance, safety, single static binary, ecosystem trajectory
-- Read a Rust compiler error message and act on the suggested fix without panic
-- Use `cargo` to create a project, add a dependency, build, run, test, and produce a release binary
-- Read idiomatic Rust well enough to follow examples in crate documentation on docs.rs
-- Compare a Rust solution to its R/Python equivalent and articulate the trade-offs (development time, runtime, memory, deployability)
+- Explain why Rust is used in modern bioinformatics tooling (samtools rewrites, single-cell tools, alignment indexes) — performance, safety, single static binary, ecosystem trajectory.
+- Read a Rust compiler error message and act on the suggested fix without panic.
+- Use `cargo` to create a project, add a dependency, build, run, test, and produce a release binary.
+- Read idiomatic Rust well enough to follow examples in crate documentation on [docs.rs](https://docs.rs).
+- Compare a Rust solution to its R/Python equivalent and articulate the trade-offs (development time, runtime, memory, deployability).
 
 ## Day-by-day outcomes
 
-### Day 1 — Orientation and the toolchain
+### Day 1 — Toolchain, scalars, control flow, functions
 
-By end of day 1 the student can:
+- Install Rust via `rustup`; explain what `rustup`, `cargo`, and `rustc` each do.
+- Create, build, run, and test a project with `cargo`.
+- Use the scalar types (`u8`, `i32`, `u32`, `u64`, `usize`, `f64`, `bool`, `char`); understand why Rust has so many integer types and pick appropriately for read counts, coordinates, and quality scores ([Quiz: scalar types and ranges](day1/00e-types-quiz.qmd)).
+- Declare immutable and mutable bindings; use `if`, `match`, `loop`, `while`, `for`.
+- Define and call functions with typed parameters and return values.
+- **Bio examples:** GC content; base counts; complementing a single nucleotide; Phred quality decoding; Hamming distance.
 
-- Install Rust via `rustup` and explain what `rustup`, `cargo`, and `rustc` each do
-- Create a new project with `cargo new`, build it, and run it
-- Write a `main` function that reads command-line arguments and prints to stdout
-- Use the basic scalar types (`i32`, `u64`, `f64`, `bool`, `char`) and understand why Rust has so many integer types (record counts, coordinates, quality scores)
-- Declare variables with `let` and `let mut`, and explain why immutability is the default
-- Write `if`/`else`, `loop`, `while`, and `for` and recognise that `if` and `match` are expressions, not statements
-- Define and call functions with typed parameters and return values
+### Day 2 — Ownership, borrowing, strings, slices, bytes
 
-**Biological examples to cover:**
-- GC content of a DNA string passed on the command line
-- Counting each base (A/C/G/T/N) with a `for` loop and `match`
-- Complementing a single nucleotide via `match` on a `u8`
-- Converting a Phred quality character to a numeric score (`q = c - 33`) with a sanity check that the result is in the expected range
-- Hamming distance between two equal-length sequences — motivating typed function signatures and an early taste of why Rust forces you to handle the "different lengths" case
+- State the three ownership rules and predict whether a snippet compiles ([Quiz: ownership and borrowing](day2/00a-ownership-quiz.qmd)).
+- Distinguish `String` from `&str`; pass slices (`&[u8]`, `&str`) instead of owning data.
+- Treat DNA sequences as `&[u8]` and explain why.
+- **Bio examples:** Reverse complement (owned vs. into a buffer); k-mer sliding window; quality trimming as a slice view.
 
-**Lecture topics (suggested):** (1) Why Rust for bioinformatics; (2) Hello cargo — the toolchain tour.
+### Day 3 — Structs, enums, iterators, recursion, error handling
 
-### Day 2 — Ownership, borrowing, and strings
+- Use `Vec<T>`, `HashMap<K, V>`, arrays; pick between them for a given task ([Quiz: enums, Option, and Result](day3/00a-quiz.qmd)).
+- Define `struct`s and `enum`s; pattern-match exhaustively.
+- Use `Option<T>` and `Result<T, E>`; propagate errors with `?`.
+- Define a recursive enum (e.g. a phylogenetic tree) and explain why it needs `Box<T>`.
+- **Bio examples:** Genomic intervals; codon table; k-mer counter; phylogenetic tree; Needleman–Wunsch alignment (dynamic programming).
 
-By end of day 2 the student can:
+### Day 4 — I/O, crates, modules, plotting, zip
 
-- State the three ownership rules and predict whether a given snippet will compile
-- Distinguish `String` from `&str` and explain when to use each (e.g. holding a parsed sequence vs. inspecting a slice of one)
-- Use `&` and `&mut` references and follow the borrow checker's reasoning in simple cases
-- Recognise common borrow-checker error messages and apply the standard fixes (clone, take a reference, shorten a borrow's scope)
-- Pass slices (`&[u8]`, `&str`) to functions instead of owning data unnecessarily
-- Treat DNA sequences as `&[u8]` rather than `&str` where appropriate and explain why
+- Read and write files with `std::io`, buffered I/O, and `flate2` for gzip ([Quiz: I/O, crates, and error handling](day4/00a-quiz.qmd)).
+- Add and use crates from crates.io; navigate docs.rs.
+- Use the [`noodles`](https://docs.rs/noodles/) family for FASTA, FASTQ, BAM, VCF, …
+- Produce a publication-style figure with [`plotters`](https://docs.rs/plotters/).
+- Bundle outputs into a `.zip` archive.
+- **Bio examples:** BED parsing by hand; per-contig FASTA stats; FASTQ filtering by quality; read-length histogram; bundled results archive.
 
-**Biological examples to cover:**
-- Reverse complement of a DNA sequence — first as an owned `String` return, then as a function that writes into a caller-provided buffer, to make the cost of allocation visible
-- A sliding k-mer window over a long sequence using slice indexing — no copies, just `&seq[i..i+k]`
-- Trimming a read down to a high-quality interior region by returning a slice (`&[u8]`) instead of a new `Vec<u8>`
-- Why DNA is naturally `&[u8]` and not `&str`: indexable in O(1), no UTF-8 multi-byte surprises, and bytes map directly into codon-table indices
-- Demonstrate that the same `gc_content(seq: &[u8])` function works on a literal `b"ACGT"`, on a chunk loaded from a FASTA, and on a slice of a chromosome — without copying
+### Day 5 — Tests, `--release`, parallelism
 
-**Lecture topics (suggested):** (1) Ownership and borrowing with sequence data; (2) Strings, slices, and bytes — choosing the right representation.
+- Write unit tests with `#[test]`; run with `cargo test` ([Quiz: tests, `--release`, and parallelism](day5/00a-quiz.qmd)).
+- Build release binaries; measure the 10–100× speed-up vs. debug.
+- Identify allocation hotspots and remove them.
+- Parallelise with `rayon::par_iter`; reason about `Send`/`Sync`.
+- **Bio examples:** Find-the-bug via tests; release-mode timing on a k-mer counter; parallel GC content across a FASTQ.
 
-### Day 3 — Data structures, iterators, and error handling
+### Day 6 — Rust for the web
 
-By end of day 3 the student can:
+- Compile Rust to WebAssembly with `wasm-pack` ([Quiz: Yew and WebAssembly](day6/00a-quiz.qmd)).
+- Write a Yew component; understand state, props, and re-renders.
+- Talk to a backend via `gloo-net` / `web-sys`.
+- Share types between frontend and backend via a workspace `shared` crate.
+- **Bio examples:** Reactive sequence statistics; fetching from a Rust backend; GC sliding-window inspector.
 
-- Use `Vec<T>`, `HashMap<K, V>`, and arrays appropriately, and pick between them for a given task (e.g. a k-mer counter)
-- Define a `struct` to model a domain object (e.g. a FASTA record, a genomic interval) and implement methods with `impl`
-- Define and pattern-match on an `enum`, including variants with data (e.g. a strand `enum`, or a parsed VCF field)
-- Use `Option<T>` and `Result<T, E>` and propagate errors with `?`
-- Write iterator chains using `map`, `filter`, `collect`, `sum`, `count`, and `fold`, and explain why iterators are zero-cost
-- Convert a Python/R-style indexed loop into an iterator chain and judge which is more readable
-- Define a **recursive** data type — for example a phylogenetic tree node whose children are themselves nodes — and explain why this requires indirection through `Box<T>` (a recursive struct has unknown size on the stack)
-- Write recursive functions over such a tree: counting leaves, computing tree depth, summing branch lengths, collecting tip labels, and pretty-printing in Newick-like form
-- Recognise when a recursive solution is clearer than an iterative one (tree traversal, divide-and-conquer) and when the reverse is true (long flat sequences, where deep recursion risks stack overflow)
+### Day 7 — SQL and databases
 
-**Biological examples to cover:**
-- `struct FastaRecord { id, description, sequence }` and `struct GenomicInterval { chrom, start, end, strand }`
-- `enum Strand { Plus, Minus }` and `enum VariantType { Snp, Insertion, Deletion, Complex }`, with `match` driving downstream logic
-- A k-mer counter using `HashMap<Vec<u8>, u32>` over a streamed sequence
-- A codon → amino acid lookup that returns `Option<AminoAcid>` (`None` for unknown or ambiguous codons containing `N`)
-- Parsing a region string like `"chr1:1000-2000"` into a `GenomicInterval`, returning a `Result` with a meaningful error type
-- An iterator pipeline that filters reads by length, computes per-read GC content, and aggregates the mean with `fold`
-- Phylogenetic trees as the headline recursion example:
-  - `enum Node { Leaf { name, branch_length }, Internal { children: Vec<Box<Node>>, branch_length } }`
-  - Recursive functions: count tips, compute maximum depth, sum total branch length, collect all tip labels, pretty-print as a Newick string, find the most recent common ancestor of two tips
+- Install and use `sqlite3` (see [Install SQLite](intro/install-sqlite.qmd)).
+- Write `SELECT`, `JOIN`, `WHERE`, `GROUP BY`, `HAVING`, `COUNT` ([Quiz: SQL and SQLite](day7/00a-quiz.qmd)).
+- Use parameter binding (`?1`, `:name`) and prevent SQL injection.
+- Read and write SQLite from Rust with [`rusqlite`](https://docs.rs/rusqlite/).
+- Enable `PRAGMA foreign_keys = ON`; wrap bulk inserts in transactions.
+- **Bio examples:** Strain database with mutations and joins; Rust CLI that reads, writes, and queries it.
 
-**Lecture topics (suggested):** (1) Structs, enums, and modelling biological data — including recursive types for phylogenetic trees; (2) Iterators, recursion, and the `?` operator — the everyday Rust control flow.
+### Day 8 — Traits
 
-### Day 4 — Real bioinformatics: I/O, crates, and modules
+- Implement `Display` and other named traits ([Quiz: traits, generics, and dispatch](day8/00a-quiz.qmd)).
+- Write generic functions with trait bounds; understand monomorphisation.
+- Use `Box<dyn Trait>` for heterogeneous collections; compare static vs. dynamic dispatch.
+- Derive the standard "mechanical" traits (`Debug`, `Clone`, `PartialEq`, …).
+- **Bio examples:** `Display` for `GenomicInterval`; a custom `Annotate` trait; generic `summarize<T: Score>`; heterogeneous readers.
 
-By end of day 4 the student can:
+### Day 9 — Algorithms and complexity
 
-- Read and write files using `std::fs` and `std::io`, including buffered I/O (`BufReader`, `BufWriter`) and gzip-compressed input where needed
-- Add a crate from crates.io (e.g. `clap`, `anyhow`, `serde`, `flate2`, `zip`, `plotters`, `noodles`, `bio`, or `rust-htslib`) and read its documentation on docs.rs
-- Use the [`noodles`](https://docs.rs/noodles/latest/noodles/) family of crates as the default toolbox for bioinformatics file formats — recognise that it is a pure-Rust workspace of per-format crates (`noodles-fasta`, `noodles-fastq`, `noodles-sam`, `noodles-bam`, `noodles-vcf`, `noodles-bcf`, `noodles-bed`, `noodles-gff`, `noodles-cram`, …) reached through the `noodles` umbrella crate via feature flags
-- Parse a FASTA or FASTQ file with `noodles` and process records in a streaming fashion (without loading the whole file into memory)
-- Read a BAM/SAM file with `noodles-bam` / `noodles-sam`: iterate records, inspect flags, filter by mapping quality, and look up reference names via the header
-- Read a VCF file with `noodles-vcf`: iterate records, classify variants (SNP vs. indel) using the enums from day 3, and report per-chromosome counts
-- Explain when to reach for `noodles` (pure Rust, no system library, broad format coverage, actively maintained) vs. `rust-htslib` (thin FFI wrapper around the canonical C library, useful when you need bit-for-bit parity with `samtools`/`bcftools`)
-- Distinguish a gzip stream (`.fa.gz`, single compressed stream — use `flate2`) from a zip archive (`.zip`, multiple named entries — use the `zip` crate), and pick the right tool for each; recognise that `noodles` handles BGZF (the block-gzip variant used in `.bam`, `.vcf.gz`, `.bgz`) transparently
-- Read entries from a `.zip` archive by name, and create a new `.zip` archive that bundles several output files (e.g. a per-sample report plus a summary table)
-- Split a program across multiple files using `mod` and `pub`, and understand the difference between a binary crate, a library crate, and a workspace
-- Write a small CLI tool with subcommands or flags using `clap`
-- Produce a publication-style figure (PNG or SVG) from computed data using the [`plotters`](https://docs.rs/plotters/latest/plotters/) crate, and recognise the building blocks of its API (`DrawingArea`, `ChartBuilder`, series such as `LineSeries` and `Histogram`) well enough to adapt examples from its documentation
-- Compare `plotters` mentally to `ggplot2` / `matplotlib`: an imperative builder API rather than a layered grammar, but with the same conceptual pieces (axes, scales, series, labels)
-- Handle errors at the application boundary using `anyhow` (or equivalent) and emit a useful message instead of a panic
+- Predict the Big-O of standard-library collection operations ([Quiz: data-structure complexity](day9/00a-ds-complexity-quiz.qmd), [Quiz: complexity from code](day9/00b-code-complexity-quiz.qmd)).
+- Recognise complexity from a code snippet (nested loops, hash vs. tree, sort vs. scan).
+- Pick `HashMap` vs. `BTreeMap` vs. `Vec` for a given access pattern.
 
-**Biological examples to cover:**
-- Streaming a `.fa` or `.fa.gz` reference one record at a time with `noodles-fasta` and computing per-contig length and GC
-- Filtering a `.fastq.gz` file by mean read quality with `noodles-fastq` and writing the surviving reads to a new `.fastq.gz`
-- Parsing a simple BED file by hand (split-on-tabs, parse coordinates) before reaching for `noodles-bed` — to reinforce slicing and `Result` handling, and then doing the same task with the crate so the trade-off is visible
-- A `noodles-bam` walk over a small aligned BAM: count primary alignments per reference, count reads passing a mapping-quality cutoff, and tally how many are secondary or supplementary using the SAM flag bits
-- A `noodles-vcf` walk over a small VCF: classify each record as SNP / insertion / deletion / complex using the `VariantType` enum from day 3, and emit a per-chromosome summary table
-- A `clap`-driven CLI like `seqtool stats <in>` and `seqtool filter --min-len 100 --min-qual 20 <in> <out>`, organised into multiple modules (`io`, `seq`, `cli`)
-- Plotting with `plotters`:
-  - A read-length distribution as a histogram from a FASTQ
-  - Mean per-base quality vs. read position as a line plot (the classic FastQC-style profile)
-  - Per-contig GC vs. length as a scatter plot
-  - Saving each figure as both PNG (for the report) and SVG (for embedding)
-- Bundling per-sample QC outputs (a small TSV, a JSON summary, the figures produced above) into a single results `.zip` for handover to a collaborator
-- Reading entries from a reference dataset distributed as a `.zip` archive (e.g. a bundle of small annotation files), to contrast with the gzip-stream case from earlier
+### Day 10 — Working with matrices
 
-**Lecture topics (suggested):** (1) Cargo, crates.io, and the bioinformatics ecosystem — with `noodles` as the worked example; (2) Streaming I/O — how to process files bigger than RAM.
+- Use `ndarray::Array2` for dense matrices; slicing and matrix-vector multiplication ([Quiz: dense, sparse, and iterative](day10/00a-quiz.qmd)).
+- Use `sprs::CsMat` for sparse data (single-cell, k-mer tables, networks).
+- Implement Gauss–Seidel as a simple iterative solver.
+- Run power iteration on a Markov chain to find a stationary distribution.
+- **Bio examples:** Single-cell-style sparse expression matrix; viral-strain Markov chain.
 
-### Day 5 — Going faster, testing, and what comes next
+### Day 11 — GPUs and tensors with Burn
 
-By end of day 5 the student can:
-
-- Write unit tests with `#[test]` and run them with `cargo test`
-- Build a release binary with `cargo build --release` and measure the speed difference against a debug build and against an equivalent Python/R implementation
-- Identify obvious performance pitfalls in their own code: unnecessary allocations, cloning in hot loops, repeated hash lookups, unbuffered I/O
-- Use `rayon`'s `par_iter` to parallelise an embarrassingly parallel computation (e.g. per-record statistics across FASTQ reads) and reason about whether it is safe to do so
-- Explain at a high level what traits and generics are, and recognise common ones (`Display`, `Debug`, `Clone`, `From`, `Iterator`) when reading code
-- Name at least two Rust bioinformatics projects in active use and locate their source code
-- Articulate, for a future project of their own choosing, whether Rust is a reasonable language choice and what the first concrete step would be
-
-**Biological examples to cover:**
-- Unit tests for reverse-complement and codon translation against textbook answers, plus a property-style check that "reverse-complement twice = identity"
-- Timing a k-mer counter on a real `.fastq.gz` in debug vs `--release`, and against a one-line Python/Biopython equivalent — concrete numbers, not hand-waving
-- Identifying allocation hotspots in a naive implementation (e.g. a per-read `to_string()` inside the inner loop) and removing them
-- Parallelising per-read GC content or per-read length statistics over a FASTQ with `rayon::par_iter`, including a brief discussion of why this particular computation is safe to parallelise (no shared mutable state per read)
-- A short tour of real Rust bioinformatics projects so students know where to look next: `noodles` (htslib-style I/O), `rust-bio`, `rust-htslib`, `varlociraptor` (variant calling), `alevin-fry` (single-cell RNA-seq), `nanoq` and `chopper` (long-read QC) — and a note that `pyo3` is how many of these expose Python bindings
-
-**Lecture topics (suggested):** (1) Testing and `--release` — the two switches that matter most; (2) Parallelism with `rayon` and a tour of the wider ecosystem.
+- Read a `Tensor<B, D>` signature; recognise rank vs. shape ([Quiz: tensors, backends, and shapes](day11/00a-quiz.qmd)).
+- Write functions generic over `<B: Backend>` so the same code runs on CPU and GPU.
+- Use broadcasting and reductions to replace explicit loops.
+- Compute PCA via [`nalgebra::DMatrix::svd`](https://nalgebra.org/).
+- Implement PWM scanning as `Conv1d`; train a tiny classifier with Burn's autodiff.
+- **Bio examples:** One-hot DNA; GC content as a tensor reduction; pairwise distance matrix; PCA on expression data; promoter classifier.
 
 ## Explicit non-outcomes
 
@@ -160,11 +122,8 @@ To keep the course honest and the cognitive load survivable, the following are *
 - Writing or reasoning about `unsafe` code
 - Foreign function interface (FFI) to C or Python
 - Building Python extension modules with `pyo3` / `maturin`
-- WebAssembly, embedded Rust, or GPU programming
 - Deep knowledge of any one bioinformatics crate's full API — students will know how to *find* what they need, not memorise it
-
-Students who want to pursue these topics will be pointed to follow-up resources on day 5.
 
 ## Assessment (informal)
 
-Each day's self-paced material ends with a short hands-on exercise tied to that day's outcomes. The week culminates in a small capstone task on day 5 that touches outcomes from every preceding day: parse a bioinformatics file, compute something useful per record, optionally in parallel, with tests and a clean CLI. Success on the capstone is the working definition of "passed the course."
+Each day's self-paced material ends with hands-on exercises tied to that day's outcomes, plus a short [quiz](day1/00e-types-quiz.qmd) that drills the core concepts. The course culminates in a capstone task that touches outcomes from across the week — parse a bioinformatics file, compute something useful per record, optionally in parallel or on the GPU, with tests and a clean CLI. Success on the capstone is the working definition of "passed the course."

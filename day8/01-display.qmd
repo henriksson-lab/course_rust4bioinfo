@@ -1,5 +1,5 @@
 ---
-title: "Day 8 — Exercise: implement Display for GenomicInterval"
+title: "Exercise: implement Display for GenomicInterval"
 format:
   html:
     toc: true

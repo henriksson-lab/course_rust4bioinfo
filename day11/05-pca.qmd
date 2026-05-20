@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 5: PCA with `nalgebra`"
+title: "Exercise: PCA with `nalgebra`"
 format:
   html:
     toc: true

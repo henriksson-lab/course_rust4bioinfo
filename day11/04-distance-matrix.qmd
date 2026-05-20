@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 4: pairwise distance matrix"
+title: "Exercise: pairwise distance matrix"
 format:
   html:
     toc: true

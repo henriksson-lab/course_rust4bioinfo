@@ -1,5 +1,5 @@
 ---
-title: "Day 5 — Exercise: Use tests to find the bug"
+title: "Exercise: Use tests to find the bug"
 format:
   html:
     toc: true

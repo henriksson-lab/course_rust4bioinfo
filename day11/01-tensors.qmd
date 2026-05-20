@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 1: tensors on any backend"
+title: "Exercise: tensors on any backend"
 format:
   html:
     toc: true

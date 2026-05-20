@@ -1,5 +1,5 @@
 ---
-title: "Day 6 — Exercise: Reactive sequence statistics"
+title: "Exercise: Reactive sequence statistics"
 format:
   html:
     toc: true

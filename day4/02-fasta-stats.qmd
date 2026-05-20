@@ -1,5 +1,5 @@
 ---
-title: "Day 4 — Exercise: Per-contig stats with `noodles-fasta`"
+title: "Exercise: Per-contig stats with `noodles-fasta`"
 format:
   html:
     toc: true

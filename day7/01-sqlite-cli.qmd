@@ -1,5 +1,5 @@
 ---
-title: "Day 7 — Exercise: Your first SQLite database"
+title: "Exercise: Your first SQLite database"
 format:
   html:
     toc: true

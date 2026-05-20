@@ -1,5 +1,5 @@
 ---
-title: "Day 4 — Exercise: Plot a read-length histogram with `plotters`"
+title: "Exercise: Plot a read-length histogram with `plotters`"
 format:
   html:
     toc: true

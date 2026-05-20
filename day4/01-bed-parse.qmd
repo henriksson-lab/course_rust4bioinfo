@@ -1,5 +1,5 @@
 ---
-title: "Day 4 — Exercise: Parsing BED by hand"
+title: "Exercise: Parsing BED by hand"
 format:
   html:
     toc: true

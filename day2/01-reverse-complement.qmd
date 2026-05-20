@@ -1,5 +1,5 @@
 ---
-title: "Day 2 — Exercise: Reverse complement"
+title: "Exercise: Reverse complement"
 format:
   html:
     toc: true

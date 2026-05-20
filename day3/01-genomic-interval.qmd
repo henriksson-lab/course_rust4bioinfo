@@ -1,5 +1,5 @@
 ---
-title: "Day 3 — Exercise: A genomic interval struct"
+title: "Exercise: A genomic interval struct"
 format:
   html:
     toc: true

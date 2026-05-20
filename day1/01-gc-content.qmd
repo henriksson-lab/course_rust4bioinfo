@@ -1,5 +1,5 @@
 ---
-title: "Day 1 — Exercise: GC content"
+title: "Exercise: GC content"
 format:
   html:
     toc: true

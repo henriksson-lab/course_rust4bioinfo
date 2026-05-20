@@ -1,5 +1,5 @@
 ---
-title: "Day 10 — Exercise: Gauss-Seidel"
+title: "Exercise: Gauss-Seidel"
 format:
   html:
     toc: true

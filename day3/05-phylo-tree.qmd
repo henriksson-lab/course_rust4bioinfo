@@ -1,5 +1,5 @@
 ---
-title: "Day 3 — Exercise: A phylogenetic tree with recursion"
+title: "Exercise: A phylogenetic tree with recursion"
 format:
   html:
     toc: true

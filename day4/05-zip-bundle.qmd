@@ -1,5 +1,5 @@
 ---
-title: "Day 4 — Exercise: Bundling outputs into a `.zip`"
+title: "Exercise: Bundling outputs into a `.zip`"
 format:
   html:
     toc: true

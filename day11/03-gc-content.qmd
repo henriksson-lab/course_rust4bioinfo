@@ -1,5 +1,5 @@
 ---
-title: "Day 11 — Exercise 3: GC content across a batch"
+title: "Exercise: GC content across a batch"
 format:
   html:
     toc: true

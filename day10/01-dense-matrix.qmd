@@ -1,5 +1,5 @@
 ---
-title: "Day 10 — Exercise: Dense matrix basics"
+title: "Exercise: Dense matrix basics"
 format:
   html:
     toc: true

@@ -1,5 +1,5 @@
 ---
-title: "Day 3 — Exercise: Sequence alignment with dynamic programming"
+title: "Exercise: Sequence alignment with dynamic programming"
 format:
   html:
     toc: true

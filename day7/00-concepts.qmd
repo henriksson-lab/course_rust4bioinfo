@@ -1,5 +1,5 @@
 ---
-title: "Day 7 — Concepts"
+title: "Concepts"
 format:
   html:
     toc: true

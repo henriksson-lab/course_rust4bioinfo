@@ -1,5 +1,5 @@
 ---
-title: "Day 10 — Exercise: Markov chain power iteration"
+title: "Exercise: Markov chain power iteration"
 format:
   html:
     toc: true
