@@ -17,7 +17,7 @@ Start with [**00 — Concepts**](00-concepts.qmd) for a reference overview of tr
 For each exercise:
 
 ```bash
-cd day3b/ex-<name>
+cd day8/ex-<name>
 cargo test           # see what is expected — some tests will fail at first
 # edit src/lib.rs (or src/main.rs) until cargo test reports: 0 failed
 ```

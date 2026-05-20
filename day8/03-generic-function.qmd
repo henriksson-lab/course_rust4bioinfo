@@ -18,14 +18,14 @@ Without generics you would write one `count_matching_u8` for bytes, another `cou
 
 ## The exercise
 
-Open `day3b/ex-generic-function/`, fill in the TODO body so all six tests pass. The tests call the function with three different `T` types: [`u8`](https://doc.rust-lang.org/std/primitive.u8.html), [`String`](https://doc.rust-lang.org/std/string/struct.String.html), and a custom enum.
+Open `day8/ex-generic-function/`, fill in the TODO body so all six tests pass. The tests call the function with three different `T` types: [`u8`](https://doc.rust-lang.org/std/primitive.u8.html), [`String`](https://doc.rust-lang.org/std/string/struct.String.html), and a custom enum.
 
 You may **not** change the function signature or the tests.
 
 ## How to run
 
 ```bash
-cd day3b/ex-generic-function
+cd day8/ex-generic-function
 cargo test
 ```
 
@@ -50,7 +50,7 @@ The pattern `|&item|` destructures the `&&T` the filter closure receives into a 
 ## Solution
 
 ::: {.callout-note collapse="true" title="Solution"}
-The full reference implementation lives in `day3b/ex-generic-function-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
+The full reference implementation lives in `day8/ex-generic-function-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
 :::
 
 ## Where this leads

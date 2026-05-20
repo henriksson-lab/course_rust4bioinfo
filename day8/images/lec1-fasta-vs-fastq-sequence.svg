@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="400" y="30" text-anchor="middle" font-size="20" font-weight="bold" fill="#1976d2">
+    Two structs, one trait &#8212; both implement Sequence
+  </text>
+
+  <!-- LEFT: FastaRecord -->
+  <rect x="20" y="70" width="240" height="100" rx="8" ry="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="140" y="98" text-anchor="middle" font-size="15" font-weight="bold" fill="#1976d2">struct FastaRecord</text>
+  <text x="140" y="125" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#222">name: String,</text>
+  <text x="140" y="148" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#d97706" font-weight="bold" text-decoration="underline">dna: String</text>
+
+  <!-- LEFT: FastqRecord -->
+  <rect x="20" y="210" width="240" height="120" rx="8" ry="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+  <text x="140" y="238" text-anchor="middle" font-size="15" font-weight="bold" fill="#1976d2">struct FastqRecord</text>
+  <text x="140" y="263" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#222">name: String,</text>
+  <text x="140" y="285" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#d97706" font-weight="bold" text-decoration="underline">dna: String,</text>
+  <text x="140" y="307" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#222">quality: String</text>
+
+  <!-- MIDDLE: trait method box -->
+  <rect x="320" y="155" width="240" height="90" rx="10" ry="10" fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+  <text x="440" y="185" text-anchor="middle" font-size="15" font-weight="bold" fill="#d97706">trait Sequence</text>
+  <text x="440" y="215" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#222">fn sequence(&amp;self)</text>
+  <text x="440" y="234" text-anchor="middle" font-size="14" font-family="ui-monospace, monospace" fill="#222">    -&gt; &amp;str</text>
+
+  <!-- RIGHT: output -->
+  <rect x="620" y="160" width="160" height="80" rx="8" ry="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="700" y="190" text-anchor="middle" font-size="13" fill="#2e7d32">returns</text>
+  <text x="700" y="218" text-anchor="middle" font-size="18" font-family="ui-monospace, monospace" fill="#222" font-weight="bold">"ACGT"</text>
+
+  <!-- Arrows from structs to trait -->
+  <line x1="260" y1="120" x2="320" y2="180" stroke="#888" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="260" y1="270" x2="320" y2="220" stroke="#888" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Arrow from trait to output -->
+  <line x1="560" y1="200" x2="620" y2="200" stroke="#888" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Caption -->
+  <text x="400" y="355" text-anchor="middle" font-size="14" fill="#444">
+    Functions that take
+    <tspan font-family="ui-monospace, monospace" fill="#222">&amp;impl Sequence</tspan>
+    accept either type; the trait is the contract.
+  </text>
+</svg>

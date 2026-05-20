@@ -84,15 +84,6 @@ website:
           - day3/04-kmer-counts.qmd
           - day3/05-phylo-tree.qmd
           - day3/06-alignment.qmd
-      - section: "Day 3b — traits"
-        contents:
-          - day3b/00-concepts.qmd
-          - day3b/lec1-traits-basics.qmd
-          - day3b/lec2-trait-objects.qmd
-          - day3b/01-display.qmd
-          - day3b/02-annotate.qmd
-          - day3b/03-generic-function.qmd
-          - day3b/04-trait-objects.qmd
       - section: "Day 4 — I/O & ecosystem"
         contents:
           - day4/00-concepts.qmd
@@ -128,6 +119,15 @@ website:
           - day7/03-read-from-rust.qmd
           - day7/04-write-from-rust.qmd
           - day7/05-query-from-rust.qmd
+      - section: "Day 8 — traits"
+        contents:
+          - day8/00-concepts.qmd
+          - day8/lec1-traits-basics.qmd
+          - day8/lec2-trait-objects.qmd
+          - day8/01-display.qmd
+          - day8/02-annotate.qmd
+          - day8/03-generic-function.qmd
+          - day8/04-trait-objects.qmd
 
 format:
   html:

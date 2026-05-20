@@ -23,7 +23,7 @@ For `GenomicInterval` the convention in BED-style tools is `chrom:start-end`, e.
 Open the starter project:
 
 ```bash
-cd day3b/ex-display
+cd day8/ex-display
 ```
 
 You will see a single Rust source file at `src/main.rs`. It already contains:
@@ -37,10 +37,10 @@ Your job: fill in the TODO inside the `impl Display for GenomicInterval` block s
 
 ## How to run
 
-From inside `day3b/ex-display/`:
+From inside `day8/ex-display/`:
 
 ```bash
-cd day3b/ex-display
+cd day8/ex-display
 cargo test                       # all four tests should fail at first
 cargo run -- chr1 1000 2000      # prints: chr1:1000-2000
 ```
@@ -70,7 +70,7 @@ A few things to notice:
 ## Solution
 
 ::: {.callout-note collapse="true" title="Solution"}
-The full reference implementation lives in `day3b/ex-display-solution/src/main.rs`. The whole `impl` block reduces to:
+The full reference implementation lives in `day8/ex-display-solution/src/main.rs`. The whole `impl` block reduces to:
 
 ```rust
 impl fmt::Display for GenomicInterval {

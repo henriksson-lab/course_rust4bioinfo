@@ -78,75 +78,6 @@ The trait itself is just a contract. It lists method signatures with no bodies. 
 This is the same idea as a Java interface or a C# interface — declare the shape, defer the bodies to the implementing classes. The key Rust difference: types opt in by writing a separate `impl` block, not by declaring "implements Score" at the type definition.
 :::
 
-## Implementing your own trait
-
-```rust
-trait Score {
-    fn score(&self) -> i32;
-}
-
-enum Strand { Plus, Minus }
-
-impl Score for Strand {
-    fn score(&self) -> i32 {
-        match self {
-            Strand::Plus  =>  1,
-            Strand::Minus => -1,
-        }
-    }
-}
-
-let s = Strand::Plus;
-println!("{}", s.score());     // 1
-```
-
-`impl <Trait> for <Type>` — note the `for`. Body must define every method the trait requires.
-
-::: notes
-The syntax to remember: `impl SomeTrait for SomeType`. The body provides the method bodies the trait declared.
-
-The biology hook: alignment scores, quality summaries, phylogenetic branch supports — any value that has a meaningful numeric summary is a candidate. A `match`-score-from-an-alignment, a Phred quality average, a posterior probability — all become `impl Score for ...`.
-
-In exercise 2 you will define your own `Annotate` trait and implement it for several biological types.
-:::
-
-## A trait as a contract — picture
-
-```
-                       ┌── impl Display for GenomicInterval
-                       │
-        trait Display ─┼── impl Display for Strand
-                       │
-                       └── impl Display for f64   (already in std)
-```
-
-One trait, three concrete types signing the same contract. Code that knows only "this implements `Display`" can use any of them — without knowing which.
-
-::: notes
-This picture is the mental model for the whole lecture. One trait at the centre; many concrete types attached, each via its own impl block. A function that asks for "anything that implements Display" can then take any of them, and treat them uniformly.
-
-The standard library already supplies `impl Display for f64`, `impl Display for i32`, `impl Display for String`, and so on. When you add `impl Display for GenomicInterval`, your type joins the same club, and from that moment can be used wherever the standard library asks for a Display.
-:::
-
-## The traits that `derive` gives you for free
-
-| Trait | What it gives you |
-|---|---|
-| [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) | `{:?}` formatting for diagnostics |
-| [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) | explicit `.clone()` deep copy |
-| [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html) | assignment copies instead of moves (every field must be `Copy`) |
-| [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html), [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) | `==` and `!=` |
-| [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html) | use as a `HashMap` / `HashSet` key |
-| [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) | `T::default()` zero-argument constructor |
-
-Every one of these is a real trait you could implement by hand. `derive` writes the obvious field-by-field impl on your behalf.
-
-::: notes
-Day 3 introduced these as a slate. Today they get a second reading: each one is a trait, and the derive macro writes the implementation. Knowing this lets you read the standard library — when you see `where T: Eq + Hash`, you know exactly what the trait names refer to.
-
-Display is conspicuously absent from this list because there is no obvious "field-by-field" Display — what should `GenomicInterval { chrom: "chr1", start: 100, end: 200 }` print as? `chr1:100-200`? `chr1\t100\t200`? Only you know. That is why Display is not derivable.
-:::
-
 ## `Display` — the human-readable face
 
 Implementing [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) gives a type a meaningful `{}` formatter.
@@ -192,6 +123,119 @@ Rule of thumb: every type should derive `Debug`. Implement `Display` only when t
 The split is intentional. Debug is for you, the developer, when something goes wrong and you want to print every field. Display is for the user, who wants the meaningful one-line summary.
 
 Many types only have Debug. That is fine — `eprintln!("{:?}", call)` in error paths is the standard pattern. Reach for Display when the type has a natural canonical form: a genomic interval as `chr1:100-200`, a Phred quality as `Q30`, a strand as `+`.
+:::
+
+## Two structs, one trait — `Sequence`
+
+A common shape: two record types from different file formats, both carrying a DNA sequence. Define a trait once, implement it twice.
+
+::: {.fragment}
+```rust
+trait Sequence {
+    fn sequence(&self) -> &str;
+}
+```
+
+The trait declares a single method. Any type that implements it promises to hand back a DNA sequence as a `&str`.
+:::
+
+::: {.fragment}
+```rust
+struct FastaRecord  { name: String, dna: String }
+struct FastqRecord  { name: String, dna: String, quality: String }
+```
+
+Two record types. Same shape, different metadata.
+:::
+
+::: {.fragment}
+```rust
+impl Sequence for FastaRecord {
+    fn sequence(&self) -> &str { &self.dna }
+}
+impl Sequence for FastqRecord {
+    fn sequence(&self) -> &str { &self.dna }
+}
+```
+
+Both implement `Sequence` by handing back `&self.dna`. Now any function that wants "a thing with a DNA sequence" can take `&impl Sequence` and accept both.
+
+![Two structs, both pointing at the same trait method.](images/lec1-fasta-vs-fastq-sequence.svg){fig-alt="A FastaRecord box and a FastqRecord box on the left, both with an arrow pointing right at a single `fn sequence() -> &str` trait method box, which then has an arrow to the same example output 'ACGT'." width="80%"}
+:::
+
+::: notes
+The fragments let you walk through this one piece at a time — trait first, then types, then impls. The point is to show that one trait can be implemented by many types and the code that uses it doesn't need to care which.
+:::
+
+## Implementing your own trait
+
+```rust
+trait Score {
+    fn score(&self) -> i32;
+}
+
+enum Strand { Plus, Minus }
+
+impl Score for Strand {
+    fn score(&self) -> i32 {
+        match self {
+            Strand::Plus  =>  1,
+            Strand::Minus => -1,
+        }
+    }
+}
+
+let s = Strand::Plus;
+println!("{}", s.score());     // 1
+```
+
+`impl <Trait> for <Type>` — note the `for`. Body must define every method the trait requires.
+
+::: notes
+The syntax to remember: `impl SomeTrait for SomeType`. The body provides the method bodies the trait declared.
+
+The biology hook: alignment scores, quality summaries, phylogenetic branch supports — any value that has a meaningful numeric summary is a candidate. A `match`-score-from-an-alignment, a Phred quality average, a posterior probability — all become `impl Score for ...`.
+
+In exercise 2 you will define your own `Annotate` trait and implement it for several biological types.
+:::
+
+## A trait as a contract — picture
+
+```
+                       ┌── impl Display for GenomicInterval
+                       │
+        trait Display ─┼── impl Display for Strand
+                       │
+                       └── impl Display for f64   (already in std)
+```
+
+One trait, three concrete types signing the same contract. Code that knows only "this implements `Display`" can use any of them — without knowing which.
+
+![Three different types implementing the same `Display` trait — each produces its own formatted string when `format!("{}", x)` is called.](images/lec1-trait-contract.svg){fig-alt="Three structs on the left — GenomicInterval, Strand, f64 — each connected by an arrow to a single Display trait box in the middle, which then has arrows to three output strings on the right: 'chr1:1000-2000', 'forward', '0.42'. The same trait, three impls, three concrete outputs." width="80%"}
+
+::: notes
+This picture is the mental model for the whole lecture. One trait at the centre; many concrete types attached, each via its own impl block. A function that asks for "anything that implements Display" can then take any of them, and treat them uniformly.
+
+The standard library already supplies `impl Display for f64`, `impl Display for i32`, `impl Display for String`, and so on. When you add `impl Display for GenomicInterval`, your type joins the same club, and from that moment can be used wherever the standard library asks for a Display.
+:::
+
+## The traits that `derive` gives you for free
+
+| Trait | What it gives you |
+|---|---|
+| [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) | `{:?}` formatting for diagnostics |
+| [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) | explicit `.clone()` deep copy |
+| [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html) | assignment copies instead of moves (every field must be `Copy`) |
+| [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html), [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) | `==` and `!=` |
+| [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html) | use as a `HashMap` / `HashSet` key |
+| [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) | `T::default()` zero-argument constructor |
+
+Every one of these is a real trait you could implement by hand. `derive` writes the obvious field-by-field impl on your behalf.
+
+::: notes
+Day 3 introduced these as a slate. Today they get a second reading: each one is a trait, and the derive macro writes the implementation. Knowing this lets you read the standard library — when you see `where T: Eq + Hash`, you know exactly what the trait names refer to.
+
+Display is conspicuously absent from this list because there is no obvious "field-by-field" Display — what should `GenomicInterval { chrom: "chr1", start: 100, end: 200 }` print as? `chr1:100-200`? `chr1\t100\t200`? Only you know. That is why Display is not derivable.
 :::
 
 ## Traits `Vec` already implements

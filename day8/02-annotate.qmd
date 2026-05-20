@@ -33,7 +33,7 @@ impl Annotate for GenomicInterval {
 Open the starter project:
 
 ```bash
-cd day3b/ex-annotate
+cd day8/ex-annotate
 ```
 
 You will see a single Rust source file at `src/main.rs`. It already contains:
@@ -50,7 +50,7 @@ You may **not** change the trait, the type definitions, or the tests. You may ad
 
 ## How to run
 
-From inside `day3b/ex-annotate/`:
+From inside `day8/ex-annotate/`:
 
 ```bash
 cargo build           # compile
@@ -79,7 +79,7 @@ Each `description` can be a single expression:
 ## Solution
 
 ::: {.callout-note collapse="true" title="Solution"}
-The full reference implementation lives in `day3b/ex-annotate-solution/src/main.rs`. Try not to peek at it until you have your own version passing all seven tests — the point of the exercise is the practice, not the final code.
+The full reference implementation lives in `day8/ex-annotate-solution/src/main.rs`. Try not to peek at it until you have your own version passing all seven tests — the point of the exercise is the practice, not the final code.
 :::
 
 ## Where this leads

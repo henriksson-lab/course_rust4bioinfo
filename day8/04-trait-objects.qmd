@@ -25,7 +25,7 @@ When you call `r.name()` on a `Box<dyn BioRecord>`, Rust performs **dynamic disp
 Open the starter project:
 
 ```bash
-cd day3b/ex-trait-objects
+cd day8/ex-trait-objects
 ```
 
 You will see a single Rust source file at `src/main.rs`. It already contains:
@@ -42,7 +42,7 @@ You may **not** change the trait, the struct definitions, the tests, `main`, or 
 
 ## How to run
 
-From inside `day3b/ex-trait-objects/`:
+From inside `day8/ex-trait-objects/`:
 
 ```bash
 cargo build           # compile
@@ -99,7 +99,7 @@ Note the [`as` cast](https://doc.rust-lang.org/reference/expressions/operator-ex
 ## Solution
 
 ::: {.callout-note collapse="true" title="Solution"}
-The full reference implementation lives in `day3b/ex-trait-objects-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
+The full reference implementation lives in `day8/ex-trait-objects-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
 :::
 
 ## Where this leads
