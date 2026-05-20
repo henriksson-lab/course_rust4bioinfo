@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 580" font-family="system-ui, -apple-system, sans-serif">
+  <title>Power iteration — the distribution converges to pi</title>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrFlow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="32" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Power iteration — the distribution converges to π</text>
+
+  <!-- ============== Top: state diagram ============== -->
+  <g transform="translate(330,55)">
+    <text x="220" y="14" text-anchor="middle" font-size="15" font-weight="600" fill="#1976d2">3-state Markov chain (rows of P)</text>
+
+    <!-- Nodes: A at (80,110), B at (360,110), C at (220,210) -->
+
+    <!-- A -> B (curved upper) -->
+    <path d="M105,100 Q220,55 335,100" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="220" y="55" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.2</text>
+
+    <!-- B -> A (curved lower) -->
+    <path d="M335,120 Q220,145 105,120" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="220" y="143" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.3</text>
+
+    <!-- A -> C -->
+    <path d="M90,130 Q140,180 200,200" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="120" y="195" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.1</text>
+
+    <!-- C -> A -->
+    <path d="M205,193 Q160,160 100,135" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="135" y="148" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.1</text>
+
+    <!-- B -> C -->
+    <path d="M345,130 Q300,180 240,200" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="320" y="195" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.2</text>
+
+    <!-- C -> B -->
+    <path d="M243,193 Q295,160 350,135" stroke="#1976d2" stroke-width="1.6" fill="none" marker-end="url(#arr)"/>
+    <text x="305" y="148" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.1</text>
+
+    <!-- A self-loop (top-left) -->
+    <path d="M62,95 C40,55 100,55 80,95" stroke="#d97706" stroke-width="1.4" fill="none" marker-end="url(#arr)"/>
+    <text x="64" y="48" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.7</text>
+
+    <!-- B self-loop (top-right) -->
+    <path d="M345,95 C325,55 385,55 365,95" stroke="#d97706" stroke-width="1.4" fill="none" marker-end="url(#arr)"/>
+    <text x="360" y="48" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.5</text>
+
+    <!-- C self-loop (bottom) -->
+    <path d="M205,225 C190,265 250,265 235,225" stroke="#d97706" stroke-width="1.4" fill="none" marker-end="url(#arr)"/>
+    <text x="220" y="275" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.8</text>
+
+    <!-- Nodes -->
+    <circle cx="80"  cy="110" r="22" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+    <text x="80" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#0d47a1">A</text>
+
+    <circle cx="360" cy="110" r="22" fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+    <text x="360" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#7a3d00">B</text>
+
+    <circle cx="220" cy="210" r="22" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+    <text x="220" y="215" text-anchor="middle" font-size="16" font-weight="700" fill="#1b5e20">C</text>
+  </g>
+
+  <!-- Side note: transition matrix P -->
+  <g transform="translate(40,80)" font-family="ui-monospace, monospace" font-size="12">
+    <text x="0" y="0" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#555">P =</text>
+    <text x="0" y="22" fill="#0d47a1">| 0.7  0.2  0.1 |  from A</text>
+    <text x="0" y="42" fill="#7a3d00">| 0.3  0.5  0.2 |  from B</text>
+    <text x="0" y="62" fill="#1b5e20">| 0.1  0.1  0.8 |  from C</text>
+    <text x="0" y="92" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#555" font-style="italic">start with all mass on A:</text>
+    <text x="0" y="112" fill="#222">p_0 = [1, 0, 0]</text>
+  </g>
+
+  <!-- ============== Bottom: four bar charts ============== -->
+  <!-- Each chart: width ~210, gap ~30. Y-axis 0..1, height 140 pixels (so 0.1 = 14px) -->
+  <!-- Chart positions: x=40, 270, 530, 820 (left edges); plot area inside. -->
+
+  <!-- Reusable elements per chart -->
+
+  <!-- ===== p_0 chart ===== -->
+  <g transform="translate(40,360)">
+    <text x="100" y="0" text-anchor="middle" font-size="15" font-weight="600" fill="#333">p_0</text>
+    <text x="100" y="18" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">[1.00, 0.00, 0.00]</text>
+
+    <!-- axes (plot area: x 40..190, y 30..170) -->
+    <g stroke="#333" stroke-width="1" fill="none">
+      <line x1="40" y1="170" x2="190" y2="170"/>
+      <line x1="40" y1="30"  x2="40"  y2="170"/>
+    </g>
+    <!-- gridlines -->
+    <g stroke="#eee" stroke-width="1">
+      <line x1="40" y1="142" x2="190" y2="142"/>
+      <line x1="40" y1="114" x2="190" y2="114"/>
+      <line x1="40" y1="86"  x2="190" y2="86"/>
+      <line x1="40" y1="58"  x2="190" y2="58"/>
+    </g>
+    <!-- y labels -->
+    <g font-size="10" fill="#666" text-anchor="end">
+      <text x="36" y="173">0</text>
+      <text x="36" y="145">.2</text>
+      <text x="36" y="117">.4</text>
+      <text x="36" y="89">.6</text>
+      <text x="36" y="61">.8</text>
+      <text x="36" y="33">1</text>
+    </g>
+
+    <!-- Bars: A=1.0 (h=140), B=0, C=0 -->
+    <rect x="60"  y="30"  width="32" height="140" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.4"/>
+    <rect x="105" y="170" width="32" height="0"   fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+    <rect x="150" y="170" width="32" height="0"   fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+
+    <!-- baseline tiny marks for empty bars -->
+    <line x1="105" y1="170" x2="137" y2="170" stroke="#d97706" stroke-width="2"/>
+    <line x1="150" y1="170" x2="182" y2="170" stroke="#2e7d32" stroke-width="2"/>
+
+    <!-- x labels -->
+    <g font-size="12" fill="#333" text-anchor="middle" font-weight="600">
+      <text x="76"  y="188">A</text>
+      <text x="121" y="188">B</text>
+      <text x="166" y="188">C</text>
+    </g>
+  </g>
+
+  <!-- ===== p_1 chart ===== -->
+  <g transform="translate(270,360)">
+    <text x="100" y="0" text-anchor="middle" font-size="15" font-weight="600" fill="#333">p_1</text>
+    <text x="100" y="18" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">[0.70, 0.20, 0.10]</text>
+
+    <g stroke="#333" stroke-width="1" fill="none">
+      <line x1="40" y1="170" x2="190" y2="170"/>
+      <line x1="40" y1="30"  x2="40"  y2="170"/>
+    </g>
+    <g stroke="#eee" stroke-width="1">
+      <line x1="40" y1="142" x2="190" y2="142"/>
+      <line x1="40" y1="114" x2="190" y2="114"/>
+      <line x1="40" y1="86"  x2="190" y2="86"/>
+      <line x1="40" y1="58"  x2="190" y2="58"/>
+    </g>
+    <g font-size="10" fill="#666" text-anchor="end">
+      <text x="36" y="173">0</text>
+      <text x="36" y="145">.2</text>
+      <text x="36" y="117">.4</text>
+      <text x="36" y="89">.6</text>
+      <text x="36" y="61">.8</text>
+      <text x="36" y="33">1</text>
+    </g>
+
+    <!-- A=0.70 (h=98), B=0.20 (h=28), C=0.10 (h=14) -->
+    <rect x="60"  y="72"  width="32" height="98" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.4"/>
+    <rect x="105" y="142" width="32" height="28" fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+    <rect x="150" y="156" width="32" height="14" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+
+    <g font-size="12" fill="#333" text-anchor="middle" font-weight="600">
+      <text x="76"  y="188">A</text>
+      <text x="121" y="188">B</text>
+      <text x="166" y="188">C</text>
+    </g>
+  </g>
+
+  <!-- ===== p_2 chart ===== -->
+  <g transform="translate(530,360)">
+    <text x="100" y="0" text-anchor="middle" font-size="15" font-weight="600" fill="#333">p_2</text>
+    <text x="100" y="18" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">[0.56, 0.25, 0.19]</text>
+
+    <g stroke="#333" stroke-width="1" fill="none">
+      <line x1="40" y1="170" x2="190" y2="170"/>
+      <line x1="40" y1="30"  x2="40"  y2="170"/>
+    </g>
+    <g stroke="#eee" stroke-width="1">
+      <line x1="40" y1="142" x2="190" y2="142"/>
+      <line x1="40" y1="114" x2="190" y2="114"/>
+      <line x1="40" y1="86"  x2="190" y2="86"/>
+      <line x1="40" y1="58"  x2="190" y2="58"/>
+    </g>
+    <g font-size="10" fill="#666" text-anchor="end">
+      <text x="36" y="173">0</text>
+      <text x="36" y="145">.2</text>
+      <text x="36" y="117">.4</text>
+      <text x="36" y="89">.6</text>
+      <text x="36" y="61">.8</text>
+      <text x="36" y="33">1</text>
+    </g>
+
+    <!-- A=0.56 (h=78.4 -> 78), B=0.25 (h=35), C=0.19 (h=26.6 -> 27) -->
+    <rect x="60"  y="92"  width="32" height="78" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.4"/>
+    <rect x="105" y="135" width="32" height="35" fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+    <rect x="150" y="143" width="32" height="27" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+
+    <g font-size="12" fill="#333" text-anchor="middle" font-weight="600">
+      <text x="76"  y="188">A</text>
+      <text x="121" y="188">B</text>
+      <text x="166" y="188">C</text>
+    </g>
+  </g>
+
+  <!-- ===== p_inf chart ===== -->
+  <g transform="translate(820,360)">
+    <text x="100" y="0" text-anchor="middle" font-size="15" font-weight="600" fill="#c62828">p_∞  ≈ π</text>
+    <text x="100" y="18" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">[0.296, 0.185, 0.519]</text>
+
+    <g stroke="#333" stroke-width="1" fill="none">
+      <line x1="40" y1="170" x2="190" y2="170"/>
+      <line x1="40" y1="30"  x2="40"  y2="170"/>
+    </g>
+    <g stroke="#eee" stroke-width="1">
+      <line x1="40" y1="142" x2="190" y2="142"/>
+      <line x1="40" y1="114" x2="190" y2="114"/>
+      <line x1="40" y1="86"  x2="190" y2="86"/>
+      <line x1="40" y1="58"  x2="190" y2="58"/>
+    </g>
+    <g font-size="10" fill="#666" text-anchor="end">
+      <text x="36" y="173">0</text>
+      <text x="36" y="145">.2</text>
+      <text x="36" y="117">.4</text>
+      <text x="36" y="89">.6</text>
+      <text x="36" y="61">.8</text>
+      <text x="36" y="33">1</text>
+    </g>
+
+    <!-- A=0.296 (h=41.4 -> 41), B=0.185 (h=25.9 -> 26), C=0.519 (h=72.7 -> 73) -->
+    <rect x="60"  y="129" width="32" height="41" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.4"/>
+    <rect x="105" y="144" width="32" height="26" fill="#fff3cd" stroke="#d97706" stroke-width="1.4"/>
+    <rect x="150" y="97"  width="32" height="73" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.4"/>
+
+    <g font-size="12" fill="#333" text-anchor="middle" font-weight="600">
+      <text x="76"  y="188">A</text>
+      <text x="121" y="188">B</text>
+      <text x="166" y="188">C</text>
+    </g>
+  </g>
+
+  <!-- ============== Flow arrows between charts ============== -->
+  <g font-family="system-ui, -apple-system, sans-serif">
+    <!-- p_0 -> p_1 -->
+    <line x1="232" y1="455" x2="298" y2="455" stroke="#555" stroke-width="1.4" marker-end="url(#arrFlow)"/>
+    <text x="265" y="445" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">× P^T</text>
+
+    <!-- p_1 -> p_2 -->
+    <line x1="462" y1="455" x2="558" y2="455" stroke="#555" stroke-width="1.4" marker-end="url(#arrFlow)"/>
+    <text x="510" y="445" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#555">× P^T</text>
+
+    <!-- p_2 -> p_inf (dashed, longer) -->
+    <line x1="722" y1="455" x2="848" y2="455" stroke="#555" stroke-width="1.4" stroke-dasharray="6,4" marker-end="url(#arrFlow)"/>
+    <text x="785" y="445" text-anchor="middle" font-size="11" fill="#555" font-style="italic">many steps later</text>
+  </g>
+
+  <!-- ============== Caption ============== -->
+  <text x="550" y="555" text-anchor="middle" font-size="14" fill="#333">
+    After enough steps the distribution stops changing — that is the stationary distribution π.
+  </text>
+</svg>

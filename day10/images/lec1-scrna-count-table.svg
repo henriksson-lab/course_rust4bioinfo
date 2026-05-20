@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 520" font-family="system-ui, -apple-system, sans-serif">
+  <title>Single-cell expression count table (mostly zero)</title>
+
+  <!-- ============== Title ============== -->
+  <text x="550" y="32" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Single-cell expression — genes x cells (mostly zero)</text>
+
+  <!-- ============== Table ============== -->
+  <!-- Layout: gene-label column at x=120 (width 140, right-aligned text ends at 250)
+       Data cells start at x=270, cell width = 110, 6 columns => ends at x=930
+       Header row at y=90 (cell-id labels)
+       Data rows start at y=110, cell height = 44, 7 rows => ends at y=418 -->
+
+  <!-- Cell ID header (column labels) -->
+  <g font-family="ui-monospace, monospace" font-size="15" text-anchor="middle" fill="#555">
+    <text x="325" y="90">AAACCT-1</text>
+    <text x="435" y="90">AAAGTC-2</text>
+    <text x="545" y="90">AACGCA-3</text>
+    <text x="655" y="90">AACTGA-4</text>
+    <text x="765" y="90">AAGCCG-5</text>
+    <text x="875" y="90">AAGGTT-6</text>
+  </g>
+
+  <!-- Gene names (row labels) -->
+  <g font-family="ui-monospace, monospace" font-size="15" text-anchor="end" fill="#555">
+    <text x="255" y="138">GAPDH</text>
+    <text x="255" y="182">ACTB</text>
+    <text x="255" y="226">MALAT1</text>
+    <text x="255" y="270">B2M</text>
+    <text x="255" y="314">RPL13</text>
+    <text x="255" y="358">SOX2</text>
+    <text x="255" y="402">MT-CO1</text>
+  </g>
+
+  <!-- Empty/zero cells (light grey, faint dot) -->
+  <!-- We'll draw all 42 cells, then redraw the 8 non-zero ones on top with the blue style. -->
+  <g>
+    <!-- Row 0 (GAPDH, y=110..154) -->
+    <rect x="270" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="110" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 1 (ACTB, y=154..198) -->
+    <rect x="270" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="154" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 2 (MALAT1, y=198..242) -->
+    <rect x="270" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="198" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 3 (B2M, y=242..286) -->
+    <rect x="270" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="242" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 4 (RPL13, y=286..330) -->
+    <rect x="270" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="286" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 5 (SOX2, y=330..374) -->
+    <rect x="270" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="330" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <!-- Row 6 (MT-CO1, y=374..418) -->
+    <rect x="270" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="380" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="490" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="600" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="710" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+    <rect x="820" y="374" width="110" height="44" fill="#fafafa" stroke="#ddd"/>
+  </g>
+
+  <!-- Faint dot in every empty cell (text-anchor middle, x=cell center, y=cell middle+~5) -->
+  <g font-family="ui-monospace, monospace" font-size="16" fill="#bbb" text-anchor="middle">
+    <!-- row 0 -->
+    <text x="435" y="140">.</text>
+    <text x="655" y="140">.</text>
+    <text x="765" y="140">.</text>
+    <text x="875" y="140">.</text>
+    <!-- row 1 -->
+    <text x="325" y="184">.</text>
+    <text x="545" y="184">.</text>
+    <text x="655" y="184">.</text>
+    <text x="765" y="184">.</text>
+    <text x="875" y="184">.</text>
+    <!-- row 2 -->
+    <text x="435" y="228">.</text>
+    <text x="545" y="228">.</text>
+    <text x="765" y="228">.</text>
+    <text x="875" y="228">.</text>
+    <!-- row 3 (B2M, all empty) -->
+    <text x="325" y="272">.</text>
+    <text x="435" y="272">.</text>
+    <text x="545" y="272">.</text>
+    <text x="655" y="272">.</text>
+    <text x="765" y="272">.</text>
+    <text x="875" y="272">.</text>
+    <!-- row 4 -->
+    <text x="325" y="316">.</text>
+    <text x="435" y="316">.</text>
+    <text x="545" y="316">.</text>
+    <text x="655" y="316">.</text>
+    <text x="875" y="316">.</text>
+    <!-- row 5 -->
+    <text x="325" y="360">.</text>
+    <text x="435" y="360">.</text>
+    <text x="545" y="360">.</text>
+    <text x="655" y="360">.</text>
+    <text x="765" y="360">.</text>
+    <!-- row 6 -->
+    <text x="325" y="404">.</text>
+    <text x="435" y="404">.</text>
+    <text x="545" y="404">.</text>
+    <text x="655" y="404">.</text>
+    <text x="875" y="404">.</text>
+  </g>
+
+  <!-- Non-zero cells (blue fill) overlaid -->
+  <g>
+    <!-- (GAPDH, AAACCT-1) = 5 -->
+    <rect x="270" y="110" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (GAPDH, AACGCA-3) = 3 -->
+    <rect x="490" y="110" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (ACTB, AAAGTC-2) = 7 -->
+    <rect x="380" y="154" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (MALAT1, AAACCT-1) = 12 -->
+    <rect x="270" y="198" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (MALAT1, AACTGA-4) = 4 -->
+    <rect x="600" y="198" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (RPL13, AAGCCG-5) = 2 -->
+    <rect x="710" y="286" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (SOX2, AAGGTT-6) = 1 -->
+    <rect x="820" y="330" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+    <!-- (MT-CO1, AAGCCG-5) = 6 -->
+    <rect x="710" y="374" width="110" height="44" fill="#e3f2fd" stroke="#1976d2"/>
+  </g>
+
+  <!-- Non-zero numbers -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="700" fill="#0d47a1" text-anchor="middle">
+    <text x="325" y="140">5</text>
+    <text x="545" y="140">3</text>
+    <text x="435" y="184">7</text>
+    <text x="325" y="228">12</text>
+    <text x="655" y="228">4</text>
+    <text x="765" y="316">2</text>
+    <text x="875" y="360">1</text>
+    <text x="765" y="404">6</text>
+  </g>
+
+  <!-- Caption -->
+  <text x="550" y="465" text-anchor="middle" font-size="14" fill="#555">
+    real scRNA: 7 x 6 = 42 cells, 8 non-zero (~19%); a real dataset would be ~1-5% non-zero
+  </text>
+</svg>
