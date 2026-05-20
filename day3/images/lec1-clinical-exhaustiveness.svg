@@ -40,13 +40,13 @@
   <!-- code block -->
   <rect x="32" y="126" width="400" height="130" rx="4" ry="4"
         fill="white" stroke="#c62828" stroke-width="1"/>
-  <text x="42" y="144" font-size="12" font-family="ui-monospace, monospace">def annotate(zygosity):</text>
-  <text x="42" y="160" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;if zygosity == "het":</text>
-  <text x="42" y="176" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "potential disease variant"</text>
-  <text x="42" y="192" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;elif zygosity == "hom_alt":</text>
-  <text x="42" y="208" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "likely pathogenic — confirm in lab"</text>
-  <text x="42" y="226" font-size="12" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# what about "hom_ref"?</text>
-  <text x="42" y="242" font-size="12" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# the function returns None.</text>
+  <text x="42" y="144" font-size="11" font-family="ui-monospace, monospace">def annotate(zygosity):</text>
+  <text x="42" y="160" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;if zygosity == "het":</text>
+  <text x="42" y="176" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "potential disease"</text>
+  <text x="42" y="192" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;elif zygosity == "hom_alt":</text>
+  <text x="42" y="208" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;return "likely pathogenic"</text>
+  <text x="42" y="226" font-size="11" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# what about "hom_ref"?</text>
+  <text x="42" y="242" font-size="11" font-family="ui-monospace, monospace" fill="#888">&#160;&#160;&#160;&#160;# the function returns None.</text>
 
   <!-- sample row -->
   <rect x="32" y="270" width="220" height="32" rx="4" ry="4"
@@ -93,14 +93,14 @@
   <!-- code block -->
   <rect x="467" y="126" width="400" height="146" rx="4" ry="4"
         fill="white" stroke="#2e7d32" stroke-width="1"/>
-  <text x="477" y="144" font-size="12" font-family="ui-monospace, monospace">enum Zygosity { Het, HomAlt, HomRef }</text>
-  <text x="477" y="162" font-size="12" font-family="ui-monospace, monospace"></text>
-  <text x="477" y="178" font-size="12" font-family="ui-monospace, monospace">fn annotate(z: Zygosity) -&gt; &amp;'static str {</text>
-  <text x="477" y="194" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;match z {</text>
-  <text x="477" y="210" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::Het    =&gt; "potential disease variant",</text>
-  <text x="477" y="226" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::HomAlt =&gt; "likely pathogenic — confirm in lab",</text>
-  <text x="477" y="242" font-size="12" font-family="ui-monospace, monospace" fill="#c62828">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;// forgot Zygosity::HomRef</text>
-  <text x="477" y="258" font-size="12" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;}</text>
+  <text x="477" y="144" font-size="11" font-family="ui-monospace, monospace">enum Zygosity { Het, HomAlt, HomRef }</text>
+  <text x="477" y="162" font-size="11" font-family="ui-monospace, monospace"></text>
+  <text x="477" y="178" font-size="11" font-family="ui-monospace, monospace">fn annotate(z: Zygosity) -&gt; &amp;'static str {</text>
+  <text x="477" y="194" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;match z {</text>
+  <text x="477" y="210" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::Het    =&gt; "potential disease",</text>
+  <text x="477" y="226" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;Zygosity::HomAlt =&gt; "likely pathogenic",</text>
+  <text x="477" y="242" font-size="11" font-family="ui-monospace, monospace" fill="#c62828">&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;// forgot Zygosity::HomRef</text>
+  <text x="477" y="258" font-size="11" font-family="ui-monospace, monospace">&#160;&#160;&#160;&#160;}</text>
 
   <!-- compiler error box -->
   <rect x="467" y="284" width="400" height="92" rx="4" ry="4"

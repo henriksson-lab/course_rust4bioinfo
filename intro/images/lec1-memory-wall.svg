@@ -93,10 +93,10 @@
   <circle cx="820" cy="108" r="3" fill="#1976d2"/>
 
   <!-- CPU end label -->
-  <text x="828" y="104" font-size="14" font-weight="700" fill="#1976d2">
+  <text x="815" y="98" text-anchor="end" font-size="14" font-weight="700" fill="#1976d2">
     CPU performance
   </text>
-  <text x="828" y="119" font-size="11" font-style="italic" fill="#1976d2">
+  <text x="815" y="80" text-anchor="end" font-size="11" font-style="italic" fill="#1976d2">
     (Moore's Law slowdown after ~2005)
   </text>
 
@@ -113,7 +113,7 @@
   <circle cx="820" cy="278" r="3" fill="#d97706"/>
 
   <!-- DRAM end label -->
-  <text x="828" y="282" font-size="14" font-weight="700" fill="#d97706">
+  <text x="815" y="272" text-anchor="end" font-size="14" font-weight="700" fill="#d97706">
     DRAM bandwidth
   </text>
 

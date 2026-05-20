@@ -1,0 +1,357 @@
+---
+title: "Day 2 — Warm-up quiz: ownership and borrowing"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short multiple-snippet quiz to warm up your borrow-checker intuition before the day's hands-on exercises. Read each snippet, decide whether it compiles (and if not, why), then expand the answer.
+
+15 questions, gentle to tricky. Don't skip — if you can answer them all, the afternoon's exercises will land much faster.
+
+A few notes:
+
+- Every answer expands inline; resist the temptation to peek before guessing.
+- "Compiles" here means *with the current borrow checker (NLL — non-lexical lifetimes)*. Rust got smarter about borrow scopes a few years ago; the answers reflect modern Rust.
+- A few questions ask about an expression's behaviour, not just whether it compiles.
+
+---
+
+## 1. Copying a small value
+
+```rust
+let x: u8 = 30;
+let y = x;
+println!("{} {}", x, y);
+```
+
+Does this compile? What does it print?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Is `u8` a `Copy` (duplicated on assignment, not moved) type?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes, it compiles, and prints `30 30`.** `u8` implements [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html), so `let y = x;` duplicates the byte rather than moving ownership. Both `x` and `y` remain valid afterwards.
+:::
+
+---
+
+## 2. Moving a `Vec`
+
+```rust
+let v = vec![1, 2, 3];
+let w = v;
+println!("{:?}", v);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`Vec<T>` does not implement `Copy` — assigning it moves ownership.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** `Vec<u8>` owns a heap allocation (the bytes live on the heap; the stack header holds `ptr`, `len`, `cap`). `let w = v;` transfers that ownership to `w`; the binding `v` is now invalid and the compiler refuses to print it (`error[E0382]: borrow of moved value: \`v\``).
+:::
+
+---
+
+## 3. Passing a `Vec` into a function
+
+```rust
+fn take(v: Vec<u8>) {
+    println!("len = {}", v.len());
+}
+
+let v = vec![1, 2, 3];
+take(v);
+println!("{:?}", v);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What does the function signature say about ownership of `v`?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** The function `take` takes `v` by value (consumes it), so calling `take(v)` moves ownership into the function. After the call, `v` in the caller is gone and the final `println!` is a compile error.
+:::
+
+---
+
+## 4. Passing a `Vec` by shared reference
+
+```rust
+fn read(v: &Vec<u8>) {
+    println!("len = {}", v.len());
+}
+
+let v = vec![1, 2, 3];
+read(&v);
+println!("{:?}", v);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`&Vec<u8>` is a *shared borrow* — `read` looks at the Vec without taking ownership.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes.** `read` borrows `v` shared-and-read-only for the duration of the call. After the call returns, the borrow ends and `v` is still owned by the caller, so the final `println!` is fine.
+:::
+
+---
+
+## 5. Two shared borrows at once
+
+```rust
+let v = vec![1, 2, 3];
+let a = &v;
+let b = &v;
+println!("{:?} {:?}", a, b);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+The borrow rule is "any number of readers OR exactly one writer."
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes.** Both `a` and `b` are shared (`&T`) borrows. You can have as many shared borrows as you like simultaneously; they're read-only views and can't conflict.
+:::
+
+---
+
+## 6. Mixing shared and mutable borrows
+
+```rust
+let mut v = vec![1, 2, 3];
+let a = &v;
+let b = &mut v;
+println!("{:?} {:?}", a, b);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+"Any number of readers OR exactly one writer" — never both.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** A `&mut v` cannot coexist with any other live borrow, shared or mutable. The compiler rejects this with `error[E0502]: cannot borrow \`v\` as mutable because it is also borrowed as immutable`.
+:::
+
+---
+
+## 7. Two mutable borrows at once
+
+```rust
+let mut v = vec![1, 2, 3];
+let a = &mut v;
+let b = &mut v;
+a.push(4);
+b.push(5);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+"Exactly one writer."
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** Only one outstanding `&mut` borrow may exist at a time. Two `&mut`s to the same value is rejected (`error[E0499]: cannot borrow \`v\` as mutable more than once at a time`).
+:::
+
+---
+
+## 8. Borrows end at their last use (NLL)
+
+```rust
+let mut v = vec![1, 2, 3];
+let a = &v;
+println!("{:?}", a);   // last use of `a`
+let b = &mut v;
+b.push(4);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Modern Rust ends a borrow at its *last use*, not at the end of the lexical scope. This is called NLL (non-lexical lifetimes — borrow lives only while you actually need it).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes.** Even though `a` is declared before `b` lexically, the compiler sees that `a`'s last use is the `println!`. The shared borrow ends there, so by the time `&mut v` is created, no other borrow is alive.
+:::
+
+---
+
+## 9. Slicing a `Vec`
+
+```rust
+let v: Vec<u8> = vec![10, 20, 30, 40];
+let s: &[u8] = &v[1..3];
+println!("{:?}", s);
+```
+
+Does this compile? What does it print?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`&v[1..3]` is a shared borrow of a sub-range of the Vec.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes, it compiles, and prints `[20, 30]`.** `&v[1..3]` produces a `&[u8]` (a *fat pointer* — pointer plus length, 16 bytes on a 64-bit machine) that views elements at indices 1 and 2 (the end is exclusive).
+:::
+
+---
+
+## 10. Method calls and implicit borrows
+
+```rust
+let mut v = vec![1, 2, 3];
+v.push(4);
+println!("{:?}", v);
+```
+
+What kind of borrow does `v.push(4)` take?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Look at the signature: [`Vec::push(&mut self, value: T)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.push).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Mutable.** `push` is declared `fn push(&mut self, value: T)`, so the method call `v.push(4)` is equivalent to `Vec::push(&mut v, 4)` — a mutable borrow of `v` for the duration of the call. The borrow ends as soon as `push` returns, so the next `println!` is fine.
+:::
+
+---
+
+## 11. Moving out of a `Vec` by indexing
+
+```rust
+let v: Vec<String> = vec![String::from("A"), String::from("C")];
+let s: String = v[0];
+println!("{}", s);
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Indexing a `Vec<String>` would *move* a `String` out, leaving a hole. Rust doesn't allow holes inside Vecs.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** `v[0]` would move the `String` out of the Vec, but that would leave the Vec in an undefined state (a hole at index 0). The compiler rejects this with `error[E0507]: cannot move out of index of \`Vec<String>\``.
+
+The fixes: borrow instead (`let s: &String = &v[0];`), clone (`let s = v[0].clone();`), or consume the whole Vec (`let s = v.into_iter().next().unwrap();`).
+:::
+
+---
+
+## 12. Returning a reference to a local
+
+```rust
+fn make() -> &Vec<u8> {
+    let v = vec![1, 2, 3];
+    &v
+}
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What happens to `v` when `make` returns?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** `v` is dropped at the closing brace; returning `&v` would hand the caller a reference to freed memory — a use-after-free in C terms (using memory after it's been freed). The borrow checker rejects this at compile time (`error: missing lifetime specifier` plus `cannot return reference to local variable \`v\``).
+
+If you need to return owned data, return `Vec<u8>` directly, not `&Vec<u8>`.
+:::
+
+---
+
+## 13. Mutating while iterating
+
+```rust
+let mut v = vec![1u8, 2, 3];
+for x in &v {
+    v.push(*x);
+}
+```
+
+Does this compile?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`for x in &v` holds a shared borrow of `v` for the duration of the loop. `v.push(...)` wants a mutable borrow.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**No.** The `for` loop holds a shared borrow of `v` for as long as it's iterating, so `v.push(...)` inside the loop body needs a mutable borrow at the same time — the same conflict as Q6. (`error[E0502]: cannot borrow \`v\` as mutable because it is also borrowed as immutable`.)
+
+This is the same bug class that causes `ConcurrentModificationException` in Java and silent corruption when modifying a `pandas.DataFrame` mid-iteration. Rust catches it at compile time.
+:::
+
+---
+
+## 14. `String` and `&str`
+
+```rust
+let s: String = String::from("ACGT");
+let r: &str = &s;
+println!("{} {}", s, r);
+```
+
+Does this compile? What's the relationship between `s` and `r`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`&str` is a borrowed view (a *fat pointer* — pointer plus length) into someone else's UTF-8 bytes. `String` owns its bytes on the heap.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Yes, it compiles, and prints `ACGT ACGT`.** `s` owns the heap allocation holding the bytes `ACGT`. `r` is a shared borrow viewing the same bytes — no copy, no extra allocation. As long as `r` is alive, `s` cannot be mutated or moved.
+:::
+
+---
+
+## 15. When is heap memory freed?
+
+```rust
+fn main() {
+    {
+        let v = vec![1u8, 2, 3];
+        println!("{:?}", v);
+    } // <-- when does v's heap allocation get freed?
+    println!("done");
+}
+```
+
+When does `v`'s heap allocation get freed?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What happens at the closing brace of a scope?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**At the inner closing brace `}`** — the moment `v` goes out of scope. The compiler inserted a call to `Vec`'s destructor (Rust calls this *dropping* the value), which frees the heap allocation. No garbage collector, no manual `free()`, no leak. By the time `done` prints, the allocation is already gone.
+
+This is the heart of Rust's memory model: ownership decides who is responsible for freeing, and the compiler inserts the free call at the unique scope where the owner dies.
+:::
+
+---
+
+## Where this leads
+
+If most of those felt obvious, you've already absorbed the borrow checker's worldview. If some were surprising, that's fine — the four exercises this afternoon (reverse-complement, buffer reuse, k-mers as slices, quality trim) drill the same rules with biological data until they become reflex.
+
+If you got tripped up by Q11 (`cannot move out of index`) or Q13 (mutate while iterating), expect to see the same compile errors in your own code today. The fix is always one of: borrow, clone, or consume — covered on the [day 2 concepts page](00-concepts.qmd).

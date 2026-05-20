@@ -1,0 +1,71 @@
+---
+title: "Day 1 — Warm-up: first and last base"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write two one-line functions: `first_base(seq)` returns `seq[0]`; `last_base(seq)` returns `seq[seq.len() - 1]`. First contact with slice indexing and [`u8`](https://doc.rust-lang.org/std/primitive.u8.html) (an 8-bit unsigned byte — a whole number from 0 to 255) byte literals like `b'A'`.
+
+## Background
+
+A [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html) is a slice (a borrowed view) of bytes. Writing `seq[0]` indexes into the slice and returns the byte at that position; `seq[seq.len() - 1]` returns the byte at the last position. Both of these are [indexing expressions](https://doc.rust-lang.org/reference/expressions/array-expr.html#array-and-slice-indexing-expressions) and they will [panic](https://doc.rust-lang.org/std/macro.panic.html) (abort the program with an error) if the index is out of bounds — we won't worry about that here.
+
+Bytes are written as numbers, but for DNA it is more readable to use [byte literals](https://doc.rust-lang.org/reference/tokens.html#byte-literals): `b'A'` is exactly the same value as the number `65` (the ASCII code for A). We use byte literals throughout the course because DNA fits in one byte per base — there is no need for the multi-byte machinery of full [Unicode strings](https://doc.rust-lang.org/std/primitive.str.html).
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-first-last-base
+```
+
+Fill in the `TODO`s in `src/main.rs` so that all three tests pass. Each function body should be a single expression. Don't worry about what happens on an empty slice — that case isn't tested (and would panic).
+
+## How to run
+
+From inside `day1/ex-first-last-base/`:
+
+```bash
+cargo build           # compile
+cargo test            # run the tests — failing at first
+cargo run -- ACGT     # run the program with a sample sequence
+```
+
+When the tests pass, `cargo run -- ACGT` should print:
+
+```
+first: A, last: T
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — Show me the bodies"}
+Slice indexing with `seq[0]` returns the first byte; `seq[seq.len() - 1]` returns the last. See [`<[T]>::len`](https://doc.rust-lang.org/std/primitive.slice.html#method.len) for the length method.
+
+```rust
+fn first_base(seq: &[u8]) -> u8 {
+    seq[0]
+}
+
+fn last_base(seq: &[u8]) -> u8 {
+    seq[seq.len() - 1]
+}
+```
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day1/ex-first-last-base-solution/src/main.rs`. Try not to peek until your own version passes all three tests.
+:::
+
+## Where this leads
+
+The next warm-up moves from reading a slice to building one: you will use a [`for`](https://doc.rust-lang.org/book/ch03-05-control-flow.html#looping-through-a-collection-with-for) loop to construct a [`Vec<u8>`](https://doc.rust-lang.org/std/vec/struct.Vec.html) (a growable heap-allocated array of bytes) base by base.

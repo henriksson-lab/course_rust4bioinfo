@@ -68,7 +68,7 @@
   <text x="235" y="118" font-size="13" font-family="ui-monospace, monospace" fill="#333">
     clap  4.4.7
   </text>
-  <text x="235" y="138" font-size="11" fill="#555">
+  <text x="360" y="138" text-anchor="middle" font-size="10" fill="#555">
     (fetched from crates.io, cached in ~/.cargo/registry)
   </text>
 

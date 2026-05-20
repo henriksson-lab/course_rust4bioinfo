@@ -154,12 +154,12 @@
         font-style="italic">retreat while Q &lt; 20</text>
 
   <!-- ====== Bottom result note ====== -->
-  <rect x="80" y="290" width="600" height="56" fill="#e8f5e9" stroke="#2e7d32"/>
-  <text x="380" y="316" text-anchor="middle" font-size="16" fill="#1b5e20" font-weight="700">
+  <rect x="60" y="290" width="660" height="56" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="390" y="316" text-anchor="middle" font-size="16" fill="#1b5e20" font-weight="700">
     result = <tspan font-family="ui-monospace, monospace">seq[3..8]</tspan>
     — 5 high-quality bases, zero bytes copied
   </text>
-  <text x="380" y="336" text-anchor="middle" font-size="14" fill="#333">
+  <text x="390" y="336" text-anchor="middle" font-size="13" fill="#333">
     The trimmed cells (grey) stay in the original buffer; only the slice indices change.
   </text>
 

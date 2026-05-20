@@ -69,8 +69,8 @@
     <text x="420" y="288" fill="#2e7d32" font-weight="700">C → pass</text>
     <text x="420" y="310" fill="#c62828">A → drop</text>
   </g>
-  <text x="420" y="350" text-anchor="middle" font-size="12" fill="#555">
-    one byte in, zero or one byte out — no buffering
+  <text x="420" y="350" text-anchor="middle" font-size="11" fill="#555">
+    one byte in, zero or one out — no buffering
   </text>
 
   <!-- arrows source → filter (one per row) -->

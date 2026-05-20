@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
      font-family="system-ui, -apple-system, sans-serif">
 
   <!-- ===== Title ===== -->
@@ -293,10 +293,9 @@
   <!-- ============================================================ -->
   <!-- Footer caption                                               -->
   <!-- ============================================================ -->
-  <rect x="30" y="460" width="850" height="34" fill="#e8f5e9"
+  <rect x="30" y="460" width="850" height="50" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="1.2" rx="4"/>
-  <text x="455" y="482" text-anchor="middle" font-size="13" fill="#1b5e20">
-    GPUs win when the same simple operation must run on millions of independent data points: pixels, neural-net weights, k-mers, base-call probabilities.
-  </text>
+  <text x="455" y="478" text-anchor="middle" font-size="13" fill="#1b5e20">GPUs win when the same simple operation must run on millions of independent data points:</text>
+  <text x="455" y="496" text-anchor="middle" font-size="13" fill="#1b5e20">pixels, neural-net weights, k-mers, base-call probabilities.</text>
 
 </svg>

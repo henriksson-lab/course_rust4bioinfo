@@ -82,8 +82,8 @@
   <!-- ===== Explanatory band ===== -->
   <rect x="40" y="282" width="820" height="58" fill="#fff3cd"
         stroke="#d97706" stroke-width="1.2" rx="4"/>
-  <text x="450" y="304" text-anchor="middle" font-size="14" fill="#333">
-    For types that are entirely stack-stored bytes (no heap allocation involved) &#8212;
+  <text x="450" y="304" text-anchor="middle" font-size="13" fill="#333">
+    For types that are entirely stack-stored bytes (no heap allocation) &#8212;
     <tspan font-family="ui-monospace, monospace">u8</tspan>,
     <tspan font-family="ui-monospace, monospace">u16</tspan>,
     <tspan font-family="ui-monospace, monospace">i32</tspan>,
@@ -91,8 +91,8 @@
     <tspan font-family="ui-monospace, monospace">char</tspan>,
     fixed arrays of those &#8212;
   </text>
-  <text x="450" y="326" text-anchor="middle" font-size="14" fill="#333">
-    copying is one CPU instruction. Rust does it for you and lets both variables remain valid.
+  <text x="450" y="326" text-anchor="middle" font-size="13" fill="#333">
+    copying is one CPU instruction. Rust does it for you and both variables stay valid.
     This is the <tspan font-family="ui-monospace, monospace" font-weight="700">Copy</tspan> trait.
   </text>
 

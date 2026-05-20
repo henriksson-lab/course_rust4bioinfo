@@ -22,7 +22,7 @@
        => coord 100 -> x=260, coord 200 -> x=460
   -->
   <rect x="260" y="95" width="200" height="26" fill="#e3f2fd" stroke="#90caf9"/>
-  <text x="360" y="113" text-anchor="middle" font-size="15"
+  <text x="360" y="113" text-anchor="middle" font-size="13"
         font-family="ui-monospace, monospace" fill="#0d47a1">
     length = end − start = 100
   </text>

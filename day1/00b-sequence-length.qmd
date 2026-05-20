@@ -1,0 +1,79 @@
+---
+title: "Day 1 — Warm-up: sequence length"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+First contact with [`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html) (a borrowed view of bytes) — write the one-line function that returns its length. This is the smallest possible Rust function over a sequence, and a gentle way to check that your toolchain (Rust compiler + `cargo`) is wired up correctly before tackling [GC content](01-gc-content.qmd).
+
+## Background
+
+In Rust, the length of a slice is a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html) (Rust's unsigned integer type for lengths and indices, sized to fit any address on your machine). Every slice supports the [`seq.len()`](https://doc.rust-lang.org/std/primitive.slice.html#method.len) method (the standard slice-length method), which returns that `usize` in constant time — the slice already knows how long it is.
+
+That is the entire problem: take a `&[u8]`, return its `len()`.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-sequence-length
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A function `fn length(seq: &[u8]) -> usize` with a `// TODO` body
+- A `main` function that reads a string from the command line and calls `length`
+- A `#[cfg(test)] mod tests` block with three unit tests (empty input, `ACGT`, and a longer string)
+
+Your job: replace the `TODO` body so that all three tests pass.
+
+## How to run
+
+From inside `day1/ex-sequence-length/`:
+
+```bash
+cargo test            # run the tests — these should be failing at first
+cargo run -- ACGT     # run the program and see the length printed
+```
+
+When the function is correct, `cargo test` will print:
+
+```
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and your program should print:
+
+```
+$ cargo run -- ACGT
+length: 4
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — One method call"}
+Every slice in Rust has a [`len()`](https://doc.rust-lang.org/std/primitive.slice.html#method.len) method that returns its length as a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html). Just call it on `seq` and return the result.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn length(seq: &[u8]) -> usize {
+    seq.len()
+}
+```
+
+The full reference implementation lives in `day1/ex-sequence-length-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+The next warm-up looks at the *first* and *last* base of a slice — same shape of function, but now you have to think about what to return when the slice is empty.

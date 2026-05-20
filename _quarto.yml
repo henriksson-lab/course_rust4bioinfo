@@ -54,6 +54,10 @@ website:
           - day1/00-concepts.qmd
           - day1/lec1-why-rust.qmd
           - day1/lec2-rust-syntax.qmd
+          - day1/00a-hello-dna.qmd
+          - day1/00b-sequence-length.qmd
+          - day1/00c-first-last-base.qmd
+          - day1/00d-repeat-motif.qmd
           - day1/01-gc-content.qmd
           - day1/02-complement.qmd
           - day1/03-base-counts.qmd
@@ -63,6 +67,7 @@ website:
         contents:
           - day2/00-concepts.qmd
           - day2/lec1-ownership-slices.qmd
+          - day2/00a-ownership-quiz.qmd
           - day2/01-reverse-complement.qmd
           - day2/02-revcomp-buf.qmd
           - day2/03-kmers.qmd

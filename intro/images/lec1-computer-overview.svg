@@ -138,11 +138,11 @@
   <!-- CPU <-> Network bus: thin -->
   <line x1="520" y1="215" x2="690" y2="240" stroke="#aaa" stroke-width="1.5"
         marker-end="url(#bus-arrow)" marker-start="url(#bus-arrow)"/>
-  <text x="610" y="240" text-anchor="middle" font-size="10" fill="#666" font-weight="700">
-    PCIe -&gt; NIC
+  <text x="535" y="208" text-anchor="start" font-size="10" fill="#666" font-weight="700">
+    PCIe
   </text>
-  <text x="610" y="254" text-anchor="middle" font-size="10" fill="#666">
-    varies (ms+)
+  <text x="535" y="222" text-anchor="start" font-size="10" fill="#666">
+    NIC
   </text>
 
   <!-- CPU <-> GPU bus -->

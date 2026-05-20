@@ -179,15 +179,9 @@
     Same conceptual value. ~9x the memory in Python, plus pointer chasing.
   </text>
 
-  <text x="450" y="440" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
-    100 Python ints = ~3600 bytes, scattered across the heap (cache-hostile).
-    This is the cost of dynamic typing and automatic garbage collection.
-  </text>
-  <text x="450" y="458" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
-    For a few scalars, it's free. For millions of bases or k-mers, it dominates.
-  </text>
-  <text x="450" y="480" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
-    Rust gives you C's directness with safety. That's what the rest of the course is about.
-  </text>
+  <text x="450" y="434" text-anchor="middle" font-size="12" fill="#888" font-style="italic">100 Python ints = ~3600 bytes, scattered across the heap (cache-hostile).</text>
+  <text x="450" y="450" text-anchor="middle" font-size="12" fill="#888" font-style="italic">This is the cost of dynamic typing and automatic garbage collection.</text>
+  <text x="450" y="468" text-anchor="middle" font-size="12" fill="#888" font-style="italic">For a few scalars, it's free. For millions of bases or k-mers, it dominates.</text>
+  <text x="450" y="484" text-anchor="middle" font-size="12" fill="#888" font-style="italic">Rust gives you C's directness with safety. That's what the rest of the course is about.</text>
 
 </svg>

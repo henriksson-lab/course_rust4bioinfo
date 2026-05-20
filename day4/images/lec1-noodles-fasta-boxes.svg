@@ -68,7 +68,7 @@
   <g id="line-file">
     <rect x="525" y="320" width="340" height="40" rx="4" ry="4"
           fill="white" stroke="#666" stroke-width="1.4"/>
-    <text x="540" y="346" font-size="14" font-weight="700"
+    <text x="540" y="346" font-size="13" font-weight="700"
           font-family="ui-monospace, monospace" fill="#333">
       let file   = File::open(path)?;
     </text>
@@ -78,7 +78,7 @@
   <g id="line-buf">
     <rect x="525" y="220" width="340" height="40" rx="4" ry="4"
           fill="white" stroke="#1565c0" stroke-width="1.4"/>
-    <text x="540" y="246" font-size="14" font-weight="700"
+    <text x="540" y="246" font-size="13" font-weight="700"
           font-family="ui-monospace, monospace" fill="#1565c0">
       let buffer = BufReader::new(file);
     </text>
@@ -88,7 +88,7 @@
   <g id="line-reader">
     <rect x="525" y="140" width="340" height="40" rx="4" ry="4"
           fill="white" stroke="#d97706" stroke-width="1.4"/>
-    <text x="540" y="166" font-size="14" font-weight="700"
+    <text x="540" y="166" font-size="13" font-weight="700"
           font-family="ui-monospace, monospace" fill="#8a5a07">
       let reader = fasta::Reader::new(buffer);
     </text>

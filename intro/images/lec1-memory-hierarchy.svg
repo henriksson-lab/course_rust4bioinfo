@@ -105,7 +105,7 @@
   <!-- Layer 8: Network -->
   <rect x="120" y="354" width="620" height="40" fill="#b71c1c" stroke="#7f0000" stroke-width="1"/>
   <text x="115" y="380" text-anchor="end" font-size="14" font-weight="700"
-        font-family="ui-monospace, monospace" fill="#b71c1c">Network (LAN/cloud)</text>
+        font-family="ui-monospace, monospace" fill="#b71c1c">Network</text>
   <text x="430" y="380" text-anchor="middle" font-size="14" font-weight="700"
         font-family="ui-monospace, monospace" fill="white">basically unlimited</text>
   <text x="745" y="380" font-size="14" font-weight="700"

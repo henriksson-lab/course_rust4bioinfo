@@ -135,7 +135,7 @@
   <text x="700" y="402" font-size="20" font-weight="700" fill="#c62828">NO</text>
   <text x="740" y="402" font-size="11" fill="#666">single-thread only</text>
 
-  <text x="665" y="430" text-anchor="middle" font-size="12" fill="#666" font-style="italic">
+  <text x="665" y="430" text-anchor="middle" font-size="11" fill="#666" font-style="italic">
     rayon refuses to compile any closure that captures a non-Sync borrow
   </text>
 

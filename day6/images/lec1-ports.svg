@@ -54,7 +54,7 @@
   <!-- :8080 yew frontend -->
   <rect x="410" y="318" width="400" height="42" rx="6" ry="6"
         fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
-  <text x="425" y="345" font-size="15" font-family="ui-monospace, monospace" fill="#1565c0">
+  <text x="425" y="345" font-size="13" font-family="ui-monospace, monospace" fill="#1565c0">
     :8080  — your Yew frontend (trunk dev server)
   </text>
 

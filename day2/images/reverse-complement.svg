@@ -68,7 +68,7 @@
   </text>
 
   <!-- ===== Row 3: reverse complement GCAAT (highlighted) ===== -->
-  <text x="120" y="292" text-anchor="end" font-size="12" fill="#555">reverse complement:</text>
+  <text x="120" y="292" text-anchor="end" font-size="11" fill="#555">reverse complement:</text>
 
   <rect x="185" y="260" width="50" height="50" fill="#fff3cd" stroke="#d97706" stroke-width="2.5"/>
   <rect x="235" y="260" width="50" height="50" fill="#fff3cd" stroke="#d97706" stroke-width="2.5"/>

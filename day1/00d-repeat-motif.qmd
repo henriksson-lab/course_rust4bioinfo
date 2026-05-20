@@ -1,0 +1,99 @@
+---
+title: "Day 1 — Warm-up: repeat a motif"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Build a [`Vec<u8>`](https://doc.rust-lang.org/std/vec/struct.Vec.html) (a growable byte array on the heap) by appending a motif `N` times. This is your first contact with mutable variables ([`let mut`](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html), Rust's way of saying "this binding can change"), [`for` loops](https://doc.rust-lang.org/book/ch03-05-control-flow.html#looping-through-a-collection-with-for) over a [range](https://doc.rust-lang.org/std/ops/struct.Range.html) (`0..n`), and the [`extend_from_slice`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice) method (which appends every element of a slice to the end of a `Vec`).
+
+## Background
+
+The two ways you usually create an empty `Vec` are [`Vec::new()`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.new), which allocates nothing up front, and [`Vec::with_capacity(n)`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity), which pre-allocates room for `n` elements so subsequent pushes do not have to reallocate (grow the backing buffer). When you already know the final size — and here you do, it is `motif.len() * n` — `with_capacity` is the polite choice. To actually append bytes, [`extend_from_slice`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice) copies every byte of a `&[u8]` onto the end of the `Vec` in one call.
+
+One detail: because we modify the same `Vec` on every iteration of the loop, the binding has to be declared with [`let mut`](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html) (not just `let`). Plain `let` in Rust makes the binding immutable by default.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-repeat-motif
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A function `fn repeat(motif: &[u8], n: usize) -> Vec<u8>` with a `// TODO` body
+- A `main` function that reads a motif and a count from the command line and calls `repeat`
+- A `#[cfg(test)] mod tests` block with four unit tests (empty motif, `n == 0`, `AT` three times, and `G` five times)
+
+Your job: replace the `TODO` body so that all four tests pass.
+
+## How to run
+
+From inside `day1/ex-repeat-motif/`:
+
+```bash
+cargo test            # run the tests — these should be failing at first
+cargo run -- AT 5     # run the program and see ATATATATAT
+```
+
+When the function is correct, `cargo test` will print:
+
+```
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and your program should print:
+
+```
+$ cargo run -- AT 5
+ATATATATAT
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — Three lines"}
+Pre-allocate, append in a loop, return:
+
+```rust
+let mut out = Vec::with_capacity(motif.len() * n);
+for _ in 0..n {
+    out.extend_from_slice(motif);
+}
+out
+```
+
+The pieces:
+
+- [`Vec::with_capacity`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) makes an empty `Vec` with room for `motif.len() * n` bytes already reserved.
+- [`let mut`](https://doc.rust-lang.org/book/ch03-01-variables-and-mutability.html) is required because `extend_from_slice` mutates `out`.
+- `0..n` is a [`Range`](https://doc.rust-lang.org/std/ops/struct.Range.html), and `for _ in 0..n` iterates exactly `n` times — the `_` says we do not care about the index.
+- [`extend_from_slice`](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.extend_from_slice) copies every byte of `motif` onto the end of `out`.
+- The final `out` (no semicolon) is the function's return value.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn repeat(motif: &[u8], n: usize) -> Vec<u8> {
+    let mut out = Vec::with_capacity(motif.len() * n);
+    for _ in 0..n {
+        out.extend_from_slice(motif);
+    }
+    out
+}
+```
+
+The full reference implementation lives in `day1/ex-repeat-motif-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+The upcoming exercises ([GC content](01-gc-content.qmd), [complement](02-complement.qmd), [base counts](03-base-counts.qmd), ...) all build on these basics: a function over `&[u8]`, a `for` loop, and — for the ones that produce a new sequence — a `Vec<u8>` built up with `extend_from_slice` or `push`.

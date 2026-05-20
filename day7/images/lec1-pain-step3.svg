@@ -103,7 +103,7 @@
         font-family="ui-monospace, monospace">species</text>
   <text x="550" y="219" text-anchor="middle" font-size="12" font-weight="700"
         font-family="ui-monospace, monospace">isolation_source</text>
-  <text x="660" y="219" text-anchor="middle" font-size="12" font-weight="700"
+  <text x="660" y="219" text-anchor="middle" font-size="10" font-weight="700"
         font-family="ui-monospace, monospace">year_isolated</text>
 
   <!-- Column dividers (column boundaries: 200, 340, 480, 615, 700) -->

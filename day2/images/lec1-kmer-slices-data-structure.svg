@@ -163,7 +163,7 @@
   <!-- Slice n-1 -->
   <rect x="590" y="180" width="130" height="58" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="655" y="198" text-anchor="middle" font-size="10"
+  <text x="655" y="198" text-anchor="middle" font-size="8"
         font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[99_999_978..99_999_999]</text>
   <text x="600" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21
@@ -175,7 +175,7 @@
   <!-- Slice n -->
   <rect x="730" y="180" width="130" height="58" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="1.5"/>
-  <text x="795" y="198" text-anchor="middle" font-size="10"
+  <text x="795" y="198" text-anchor="middle" font-size="8"
         font-family="ui-monospace, monospace" fill="#2e7d32">&amp;seq[99_999_979..100_000_000]</text>
   <text x="740" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     ptr: <tspan fill="#2e7d32">&#9679;</tspan>  len: 21

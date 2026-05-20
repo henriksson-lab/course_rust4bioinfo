@@ -1,0 +1,75 @@
+---
+title: "Day 1 — Warm-up: Hello, DNA"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Before we do any bioinformatics, make sure `cargo test` works on your machine. Your task is to write a one-line function that returns a string — nothing more. If this exercise compiles and tests pass, your Rust toolchain is healthy and you are ready for the real exercises.
+
+## Background
+
+Every Rust function declares its return type after the `->` in its signature; the body must produce a value of exactly that type. This function returns a `&'static str` [a fixed string baked into the binary at compile time, with a reference that is valid for the entire run of the program].
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day1/ex-hello-dna
+```
+
+You will see a single Rust source file at `src/main.rs`. It contains a function `first_message() -> &'static str` with a `// TODO` body, a `main` that prints whatever the function returns, and one unit test.
+
+Fill in the TODO so that `cargo test` passes. The function must return exactly the string `"Hello, ACGT!"`.
+
+## How to run
+
+From inside `day1/ex-hello-dna/`:
+
+```bash
+cargo test            # run the test — it should FAIL the first time
+# now edit src/main.rs and replace the TODO
+cargo test            # run the test again — it should PASS
+cargo run             # print the greeting
+```
+
+When the test passes, `cargo test` will print:
+
+```
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and your program should print:
+
+```
+$ cargo run
+Hello, ACGT!
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — What goes in the function body?"}
+The body of the function is just the string literal itself:
+
+```rust
+"Hello, ACGT!"
+```
+
+No [`return`](https://doc.rust-lang.org/std/keyword.return.html) keyword is needed — in Rust, the last expression in a block is the value of the block, and so the value of the function. (See the Rust Book on [expressions vs. statements](https://doc.rust-lang.org/book/ch03-03-how-functions-work.html#statements-and-expressions) if you want the formal rule.)
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day1/ex-hello-dna-solution/src/main.rs`. Try the one-line fix yourself first.
+:::
+
+## Where this leads
+
+The next warm-up exercises take the same `cargo test` workflow and apply it to byte slices ([`&[u8]`](https://doc.rust-lang.org/std/primitive.slice.html)) and owned byte vectors ([`Vec<u8>`](https://doc.rust-lang.org/std/vec/struct.Vec.html)) before the proper exercises begin.

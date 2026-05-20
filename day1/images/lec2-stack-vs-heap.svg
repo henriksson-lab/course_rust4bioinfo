@@ -62,7 +62,7 @@
   </text>
 
   <!-- Bulleted facts -->
-  <text x="480" y="210" font-size="16" fill="#333">
+  <text x="480" y="210" font-size="15" fill="#333">
     <tspan x="480" dy="0">&#8226; Variable-size chunks, allocated on request</tspan>
     <tspan x="480" dy="26">&#8226; Allocate and free in any order</tspan>
     <tspan x="500" dy="20" fill="#555" font-size="14">(slower)</tspan>

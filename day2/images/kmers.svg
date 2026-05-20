@@ -85,7 +85,7 @@
   <text x="75" y="392" font-size="15" font-weight="700" fill="#0d47a1">
     What is a slice?
   </text>
-  <text x="75" y="412" font-size="13" fill="#333">
+  <text x="75" y="412" font-size="12" fill="#333">
     Each <tspan font-family="ui-monospace, monospace">&amp;[u8]</tspan> is a pointer plus a length — 16 bytes on a 64-bit machine — into the same <tspan font-family="ui-monospace, monospace">Vec&lt;u8&gt;</tspan>.
   </text>
   <text x="75" y="430" font-size="13" fill="#333">
