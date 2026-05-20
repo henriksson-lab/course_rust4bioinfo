@@ -1,0 +1,286 @@
+---
+title: "Day 11 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-11 slides. Day 11 introduces the **GPU** as a numerical accelerator from Rust, via the [**Burn**](https://burn.dev/) framework — a PyTorch-style tensor library with multiple backends (CUDA, wgpu, Metal, CPU). Every example in this day pairs the Rust code with the equivalent PyTorch / NumPy snippet.
+
+You met `ndarray::Array2` on day 10 — a 2-D `f64` block in CPU memory. The new layer is a **tensor**: a possibly-higher-dimensional array that may live in CPU RAM, on a GPU, or on some other device, with the *same code* working on all of them. The mechanism that makes this work is a Rust trait — exactly the kind we covered on day 8 — called [`Backend`](https://docs.rs/burn/latest/burn/tensor/backend/trait.Backend.html).
+
+## Why a GPU at all
+
+A modern CPU has of order 10 cores; a single GPU has tens of thousands of arithmetic units running in lockstep. The trade-off:
+
+- **CPUs** are good at irregular control flow — branches, pointer chasing, system calls.
+- **GPUs** are good at *the same arithmetic operation, applied to a lot of numbers at once* — matrix multiplication, element-wise tensor ops, convolutions.
+
+A 10 000 × 10 000 matrix multiply on a laptop CPU takes a few seconds; on a mid-range GPU it takes tens of milliseconds — a 100× speed-up that gets larger as the matrices grow. For bioinformatics that means PCA on whole single-cell datasets, pairwise distance matrices between thousands of samples, or training a sequence classifier on millions of reads — all in seconds rather than hours.
+
+→ [Wikipedia: GPGPU](https://en.wikipedia.org/wiki/General-purpose_computing_on_graphics_processing_units)
+
+## Tensor — the central data type
+
+A **tensor** [an N-dimensional array of numbers, typically `f32` or `f16` on the GPU, with a known shape and a device it lives on] is the GPU-aware generalisation of `ndarray::Array2`. A 0-D tensor is a scalar, a 1-D tensor is a vector, a 2-D tensor is a matrix, a 3-D tensor adds another axis (e.g., `[batch, channels, length]` for a batch of sequences).
+
+```rust
+use burn::backend::NdArray;
+use burn::tensor::Tensor;
+
+type B = NdArray;
+let device = Default::default();
+
+// 2-D tensor of shape [2, 3] on the chosen backend's default device.
+let x: Tensor<B, 2> = Tensor::from_floats(
+    [[1.0, 2.0, 3.0],
+     [4.0, 5.0, 6.0]],
+    &device,
+);
+let y = x.clone() + x;          // element-wise add
+let z = x.transpose();          // shape [3, 2]
+let s = y.sum();                // 0-D tensor, value 42.0
+```
+
+The PyTorch equivalent:
+
+```python
+import torch
+x = torch.tensor([[1., 2., 3.], [4., 5., 6.]], device="cpu")
+y = x + x
+z = x.t()
+s = y.sum()
+```
+
+→ [`burn::tensor::Tensor`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html) · [Wikipedia: Tensor (machine learning)](https://en.wikipedia.org/wiki/Tensor_(machine_learning))
+
+## Backend — the trait that abstracts the device
+
+Burn does not hard-code one GPU vendor. Instead, it defines a **`Backend`** [a Rust trait specifying everything a device must provide — element type, tensor storage, kernels for add/multiply/matmul/etc.] trait, and ships several concrete impls:
+
+| Backend | Where it runs | When to use |
+|---|---|---|
+| [`NdArray`](https://docs.rs/burn-ndarray/) | CPU, pure Rust | default for tests, no driver needed |
+| [`Wgpu`](https://docs.rs/burn-wgpu/) | any GPU via WebGPU (Vulkan/Metal/DX12) | portable, runs on laptops and on the web |
+| [`Cuda`](https://docs.rs/burn-cuda/) | NVIDIA GPUs | maximum performance on NVIDIA hardware |
+| `Candle` | CPU or CUDA via Hugging Face's [candle](https://github.com/huggingface/candle) | when you want candle's kernels |
+| `Autodiff<B>` | wraps any of the above | adds gradient tracking for training |
+
+A function written over `<B: Backend>` works for *all* of these — without changing one line. This is the trait-bound pattern from day 8 applied to GPU code:
+
+```rust
+use burn::tensor::{Tensor, backend::Backend};
+
+fn squared_norm<B: Backend>(x: Tensor<B, 1>) -> Tensor<B, 1> {
+    x.clone().powf_scalar(2.0).sum()
+}
+```
+
+```python
+# PyTorch is also device-generic — same op on CPU or GPU:
+def squared_norm(x: torch.Tensor) -> torch.Tensor:
+    return (x ** 2).sum()
+```
+
+→ [`burn::tensor::backend::Backend`](https://docs.rs/burn/latest/burn/tensor/backend/trait.Backend.html) · day 8 traits review: [generic functions with trait bounds](../day8/lec1-traits-basics.qmd)
+
+## Device — *where* a tensor lives
+
+Every tensor carries a **device** [a handle to a specific piece of hardware — `cpu`, `cuda:0`, `cuda:1`, ...]. Operations between tensors on the same device are direct; operations across devices require an explicit copy. In Burn the device is part of the constructor:
+
+```rust
+let device = burn::backend::NdArray::default_device();
+let x: Tensor<B, 1> = Tensor::from_floats([1.0, 2.0, 3.0], &device);
+```
+
+```python
+# PyTorch:
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+x = torch.tensor([1.0, 2.0, 3.0], device=device)
+```
+
+For CPU work the device is trivial; for GPU work you may have several devices on one machine (a workstation with two GPUs) and you choose which.
+
+## Shape, dimensions, and broadcasting
+
+A tensor's **shape** [the tuple of sizes along each axis, e.g. `[batch, channels, length]`] is the most important piece of metadata. Many bugs are shape bugs — the values are fine, the dimensions are wrong.
+
+```rust
+let x: Tensor<B, 3> = Tensor::zeros([32, 4, 100], &device);   // [N, C, L]
+let n = x.dims()[0];           // 32
+let l = x.dims()[2];           // 100
+let y = x.swap_dims(1, 2);           // shape [32, 100, 4]
+```
+
+**Broadcasting** [stretching a smaller tensor to match a larger one along axes of size 1, without copying] is the standard way two tensors of nearly-but-not-quite the same shape get combined:
+
+```rust
+let a: Tensor<B, 2> = Tensor::ones([5, 3], &device);
+let b: Tensor<B, 2> = Tensor::ones([1, 3], &device);
+let c = a + b;                       // shape [5, 3] — b stretched along axis 0
+```
+
+```python
+# NumPy / PyTorch are identical here:
+a = np.ones((5, 3)); b = np.ones((1, 3))
+c = a + b                            # shape (5, 3)
+```
+
+→ [NumPy broadcasting rules](https://numpy.org/doc/stable/user/basics.broadcasting.html) (the same rules apply in Burn)
+
+## Reductions
+
+A **reduction** [an operation that collapses one or more axes into a scalar or smaller tensor — `sum`, `mean`, `max`, ...] is the second-most-used family after element-wise ops:
+
+```rust
+let x: Tensor<B, 2> = Tensor::from_floats([[1.0, 2.0, 3.0],
+                                           [4.0, 5.0, 6.0]], &device);
+let total      = x.clone().sum();                  // scalar tensor: 21.0
+let per_row    = x.clone().sum_dim(1);             // shape [2]: [6.0, 15.0]
+let per_col    = x.mean_dim(0);                    // shape [3]: [2.5, 3.5, 4.5]
+```
+
+```python
+total = x.sum()
+per_row = x.sum(dim=1)
+per_col = x.mean(dim=0)
+```
+
+GC content, k-mer counts, per-sample averages — all reductions.
+
+## Why "no for-loops" matters on the GPU
+
+A `for` loop in Rust runs one iteration per CPU thread. On the GPU, what runs is a **kernel** [a compiled GPU program that processes many tensor elements in parallel] — and you launch it once for the whole tensor.
+
+```rust
+// BAD on GPU: this allocates and dispatches a kernel per element.
+let mut x = Tensor::<B, 1>::zeros([1_000_000], &device);
+for i in 0..1_000_000 {
+    x = x.slice_assign([i..i+1], scalar);
+}
+
+// GOOD: one allocation, one kernel.
+let x = Tensor::<B, 1>::from_floats(vec![scalar; 1_000_000], &device);
+```
+
+The mental shift from CPU to GPU: replace every per-element `for` with a whole-tensor operation. This is the same shift Python users make moving from `for x in xs:` to NumPy / PyTorch — and the reason a vectorised line beats a loop by orders of magnitude.
+
+## Autodiff — gradients through tensor code
+
+Burn's [`Autodiff<B>`](https://docs.rs/burn-autodiff/) backend wraps any other backend and **records every tensor operation into a graph**. Calling `.backward()` on a scalar walks that graph backwards and fills in the gradient with respect to every parameter that was created `.require_grad()`.
+
+```rust
+use burn::backend::{Autodiff, NdArray};
+type B = Autodiff<NdArray>;
+
+let x: Tensor<B, 1> = Tensor::from_floats([3.0], &device).require_grad();
+let y = x.clone().powf_scalar(2.0);            // y = x^2
+let grads = y.backward();                       // dy/dx
+let dx = x.grad(&grads).unwrap();              // 6.0
+```
+
+```python
+import torch
+x = torch.tensor([3.0], requires_grad=True)
+y = x ** 2
+y.backward()
+print(x.grad)                                  # tensor([6.])
+```
+
+This is the mechanism that makes training neural networks possible. You build the forward pass with tensor ops; the framework computes the gradient automatically.
+
+→ [Wikipedia: Automatic differentiation](https://en.wikipedia.org/wiki/Automatic_differentiation) · [`burn-autodiff` docs](https://docs.rs/burn-autodiff/)
+
+## `Module` — a parameterised function
+
+A **`Module`** [a struct containing trainable parameters (tensors) plus a `forward` method that uses them — the Rust analogue of PyTorch's `nn.Module`] is the unit you compose neural networks out of. Burn provides [`Linear`](https://docs.rs/burn/latest/burn/nn/struct.Linear.html), [`Conv1d`](https://docs.rs/burn/latest/burn/nn/conv/struct.Conv1d.html), `ReLU`, `Dropout`, etc., and you derive `Module` on your own structs.
+
+```rust
+use burn::module::Module;
+use burn::nn::{Linear, LinearConfig};
+use burn::tensor::backend::Backend;
+
+#[derive(Module, Debug)]
+struct Classifier<B: Backend> {
+    fc1: Linear<B>,
+    fc2: Linear<B>,
+}
+
+impl<B: Backend> Classifier<B> {
+    fn forward(&self, x: Tensor<B, 2>) -> Tensor<B, 2> {
+        self.fc2.forward(relu(self.fc1.forward(x)))
+    }
+}
+```
+
+```python
+import torch.nn as nn
+
+class Classifier(nn.Module):
+    def __init__(self, d_in, d_hidden, d_out):
+        super().__init__()
+        self.fc1 = nn.Linear(d_in, d_hidden)
+        self.fc2 = nn.Linear(d_hidden, d_out)
+    def forward(self, x):
+        return self.fc2(self.fc1(x).relu())
+```
+
+The two pieces of code are doing the same thing. The Rust version is statically typed — the compiler checks every shape and every backend at compile time — but the structure is one-to-one with PyTorch.
+
+→ [`burn::module`](https://docs.rs/burn/latest/burn/module/index.html) · [PyTorch `nn.Module`](https://pytorch.org/docs/stable/generated/torch.nn.Module.html)
+
+## Linear algebra outside of Burn — `nalgebra`
+
+For "classical" linear algebra (SVD, eigenvalues, dense solves) on the CPU, the standard Rust crate is [**`nalgebra`**](https://nalgebra.org/) — pure Rust, no LAPACK build dependency, similar in spirit to Eigen (C++) or Armadillo (C++/R).
+
+Day 10 used `ndarray`, which is row-major and NumPy-like but provides only basic operations. `nalgebra` is column-major (like R, MATLAB, Fortran) and provides the full decomposition catalogue:
+
+```rust
+use nalgebra::DMatrix;
+
+let m = DMatrix::from_row_slice(3, 2, &[
+    1.0, 2.0,
+    3.0, 4.0,
+    5.0, 6.0,
+]);
+
+let svd = m.svd(true, true);                    // singular value decomposition
+let singular_values = svd.singular_values;      // length min(3,2) = 2
+let u = svd.u.unwrap();                         // 3x3 orthogonal
+let v_t = svd.v_t.unwrap();                     // 2x2 orthogonal
+```
+
+```python
+import numpy as np
+m = np.array([[1., 2.], [3., 4.], [5., 6.]])
+u, s, vt = np.linalg.svd(m, full_matrices=True)
+```
+
+We use `nalgebra` in exercise 5 (PCA) — see [the PCA exercise](05-pca.qmd) for the connection to day-10 `ndarray`.
+
+→ [`nalgebra` user guide](https://nalgebra.org/docs/user_guide/getting_started) · [Wikipedia: Singular value decomposition](https://en.wikipedia.org/wiki/Singular_value_decomposition)
+
+## Bioinformatics on the GPU — what shows up where
+
+| Task | Tensor shape | Op |
+|---|---|---|
+| One-hot DNA | `[N, 4, L]` | gather / `one_hot` |
+| GC content per read | `[N]` from `[N, L]` | mean over axis 1 |
+| k-mer count vectors | `[N, 4^k]` | gather + sum |
+| Pairwise distances | `[N, N]` from `[N, D]` | broadcasting + L2 |
+| PWM motif scan | `[N, M, L−w+1]` | `Conv1d` of `[N, 4, L]` with `[M, 4, w]` |
+| Promoter classifier | `[N, 1]` from `[N, 4, L]` | conv + pool + linear |
+| Embedding nearest-neighbour | `[N, k]` indices | `cdist` + `topk` |
+
+You will write small versions of all of these in today's exercises.
+
+## Recap
+
+- A **tensor** is the GPU-aware generalisation of `ndarray::Array2`; it lives on a specific device and has a shape.
+- The **`Backend` trait** abstracts the device: write `fn op<B: Backend>(...)` once, run on CPU or GPU.
+- **Broadcasting + reductions** replace `for` loops; that is what makes GPU code fast.
+- **Autodiff** records tensor ops into a graph and gives gradients on demand — the basis of training.
+- For non-GPU linear algebra (SVD, eigenvalues), use **`nalgebra`** alongside ndarray from day 10.

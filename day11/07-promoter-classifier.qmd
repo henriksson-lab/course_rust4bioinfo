@@ -1,0 +1,203 @@
+---
+title: "Day 11 — Exercise 7: a trainable promoter classifier"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Build a tiny **promoter classifier** [a neural network that says "this DNA sequence looks like a promoter" vs "this looks like random DNA"] using Burn's `Module` system and train it with autodiff and Adam.
+
+Architecture:
+
+```text
+[N, 4, L]  one-hot DNA
+    ↓ Conv1d(in=4, out=8, kernel=6)      learnable PWMs
+[N, 8, L-5]
+    ↓ ReLU
+    ↓ global max-pool over the length axis
+[N, 8]
+    ↓ Linear(8 → 1)
+[N, 1]  logit
+```
+
+The synthetic data: half the sequences have a `TATAAA`-like motif planted in them ("promoters", label `1.0`); the other half are random ("non-promoters", label `0.0`). After a couple of hundred Adam steps, the network should classify both groups with high accuracy.
+
+By the time `cargo test` passes you will have used [`Module`](https://docs.rs/burn/latest/burn/module/trait.Module.html), [`Conv1d`](https://docs.rs/burn/latest/burn/nn/conv/struct.Conv1d.html), [`Linear`](https://docs.rs/burn/latest/burn/nn/struct.Linear.html), [`Autodiff`](https://docs.rs/burn-autodiff/), [`Optimizer`](https://docs.rs/burn/latest/burn/optim/trait.Optimizer.html), and [`AdamConfig`](https://docs.rs/burn/latest/burn/optim/struct.AdamConfig.html).
+
+## Background — a Module is a struct of parameters plus `forward`
+
+A Burn **`Module`** [the trait that marks a struct as containing trainable parameters; deriving it lets Burn collect, save, load, and gradient-step those parameters] is the Rust equivalent of PyTorch's `nn.Module`:
+
+```rust
+use burn::module::Module;
+use burn::nn::{Linear, LinearConfig};
+use burn::nn::conv::{Conv1d, Conv1dConfig};
+use burn::tensor::{Tensor, backend::Backend};
+
+#[derive(Module, Debug)]
+pub struct PromoterNet<B: Backend> {
+    conv: Conv1d<B>,
+    fc:   Linear<B>,
+}
+```
+
+```python
+import torch.nn as nn
+
+class PromoterNet(nn.Module):
+    def __init__(self, kernel: int, channels: int):
+        super().__init__()
+        self.conv = nn.Conv1d(in_channels=4, out_channels=channels, kernel_size=kernel)
+        self.fc   = nn.Linear(channels, 1)
+
+    def forward(self, x):
+        h = self.conv(x).relu()                      # [N, C, L-k+1]
+        h, _ = h.max(dim=2)                          # global max-pool → [N, C]
+        return self.fc(h)                            # [N, 1]
+```
+
+The training loop in Burn:
+
+```rust
+let loss = (logits - labels).powf_scalar(2.0).mean();   // MSE on logits
+let grads = loss.backward();
+let grads = GradientsParams::from_grads(grads, &model);
+model = optim.step(lr, model, grads);
+```
+
+The PyTorch equivalent:
+
+```python
+loss = (logits - labels).pow(2).mean()
+optim.zero_grad()
+loss.backward()
+optim.step()
+```
+
+The only structural difference is ownership — Burn's `optim.step` takes the model and returns the updated model rather than mutating in place.
+
+## The exercise
+
+Open `day11/ex-promoter-classifier/`. The starter contains:
+
+- The `PromoterNet<B: Backend>` struct, with its `Conv1d` and `Linear` fields already declared.
+- The `new` constructor, fully written.
+- The `forward` method body — `// TODO` for you to fill in.
+- A `train_step` function — `// TODO` for the four-line training body.
+- A `main` that builds synthetic data, calls `train_step` 200 times, and reports final accuracy.
+- Three unit tests: forward-shape, gradient-flow, and end-to-end accuracy after training.
+
+You may **not** change the function signatures or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-promoter-classifier
+cargo test                              # all three tests must pass
+cargo run                               # 200 training steps + accuracy printout
+```
+
+When the bodies are right:
+
+```
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — forward pass"}
+Four chained operations:
+
+```rust
+use burn::tensor::activation::relu;
+
+fn forward(&self, x: Tensor<B, 3>) -> Tensor<B, 2> {
+    let h: Tensor<B, 3> = relu(self.conv.forward(x));     // [N, C, L-k+1]
+    let h: Tensor<B, 2> = h.max_dim(2).squeeze_dim(2);    // [N, C]
+    self.fc.forward(h)                                    // [N, 1]
+}
+```
+
+ReLU is a free function in [`burn::tensor::activation`](https://docs.rs/burn/latest/burn/tensor/activation/index.html), not a method on `Tensor`. [`max_dim(dim)`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.max_dim) returns the max along that axis, keeping the rank with a size-1 axis; `.squeeze_dim(2)` drops it.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — one training step"}
+```rust
+let logits = model.forward(x);
+let loss = (logits - y).powf_scalar(2.0).mean();
+let loss_value: f32 = loss.clone().into_data().to_vec::<f32>().unwrap()[0];
+let grads = loss.backward();
+let grads = GradientsParams::from_grads(grads, &model);
+let model = optim.step(lr, model, grads);
+```
+
+Six lines: forward, loss, extract value for logging, backward, gradient bookkeeping, optimiser step. The optimiser **returns** the new model — bind it back to the same name so the next iteration uses the updated parameters.
+
+Pulling a single `f32` out of a scalar tensor goes through `into_data().to_vec::<f32>()` because Burn keeps the element type generic in `B::FloatElem`. The `.unwrap()[0]` is the conventional shortcut.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — what MSE on logits actually does"}
+We use MSE rather than binary cross-entropy here because it is one line and is enough to get the classifier learning on this synthetic problem. In real work you would use [`BinaryCrossEntropyLossConfig`](https://docs.rs/burn/latest/burn/nn/loss/struct.BinaryCrossEntropyLossConfig.html) on top of a sigmoid — same structure, more numerically stable.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — Autodiff backend"}
+The type alias for the *training* backend is:
+
+```rust
+type Train = Autodiff<NdArray>;
+```
+
+`Autodiff<B>` wraps any other backend and *records* every tensor operation so that `.backward()` knows how to propagate gradients. The forward pass is identical to the non-autodiff version; you only pay for the extra bookkeeping when you call `.backward()`.
+
+At test/inference time you can use plain `NdArray` and skip the overhead.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+impl<B: Backend> PromoterNet<B> {
+    pub fn forward(&self, x: Tensor<B, 3>) -> Tensor<B, 2> {
+        let h = relu(self.conv.forward(x));
+        let h: Tensor<B, 2> = h.max_dim(2).squeeze_dim(2);
+        self.fc.forward(h)
+    }
+}
+
+fn train_step<B, O>(
+    model: PromoterNet<B>,
+    optim: &mut O,
+    lr: f64,
+    x: Tensor<B, 3>,
+    y: Tensor<B, 2>,
+) -> (PromoterNet<B>, f32)
+where
+    B: AutodiffBackend,
+    O: Optimizer<PromoterNet<B>, B>,
+{
+    let logits = model.forward(x);
+    let loss = (logits - y).powf_scalar(2.0).mean();
+    let loss_value: f32 = loss.clone().into_data().to_vec::<f32>().unwrap()[0];
+    let grads = loss.backward();
+    let grads = GradientsParams::from_grads(grads, &model);
+    let model = optim.step(lr, model, grads);
+    (model, loss_value)
+}
+```
+
+The full reference is in `day11/ex-promoter-classifier-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Replace MSE with binary cross-entropy** and add a sigmoid layer — better calibrated probabilities.
+- **Add more conv layers** to see longer-range context — this is the path that ends at Basenji / Enformer.
+- **Save and load** the trained model with [`burn::record`](https://docs.rs/burn/latest/burn/record/index.html) — the Burn analogue of `torch.save` / `torch.load`.
+- **Train on a real dataset** — [DeepBind](https://www.nature.com/articles/nbt.3300) used ChIP-seq peaks for ~500 transcription factors; the architecture is exactly this network with more filters.
+
+This is the end of day 11 — you now have a complete GPU-ready Rust pipeline from raw DNA strings to a trained binary classifier.

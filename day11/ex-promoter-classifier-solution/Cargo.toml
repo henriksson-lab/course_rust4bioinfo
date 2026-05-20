@@ -1,0 +1,8 @@
+[package]
+name = "ex-promoter-classifier-solution"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+burn = { version = "0.21", default-features = false, features = ["std", "ndarray", "autodiff"] }
+rand = "0.8"

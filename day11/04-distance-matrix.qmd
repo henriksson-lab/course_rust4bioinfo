@@ -1,0 +1,158 @@
+---
+title: "Day 11 — Exercise 4: pairwise distance matrix"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Given an `[N, D]` matrix of `N` samples each described by a `D`-dimensional vector (e.g., k-mer frequency vectors), compute the `[N, N]` **pairwise Euclidean distance matrix** — entry `(i, j)` is the L2 distance between row `i` and row `j`.
+
+You will write the function generic over `<B: Backend>` and the same body will run on CPU and GPU. This is the daily workhorse for sample similarity, kNN graph construction (the first step of UMAP / Leiden), and embedding nearest-neighbour search.
+
+By the time `cargo test` passes you will have used [`unsqueeze_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.unsqueeze_dim), multi-axis broadcasting, [`powf_scalar`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.powf_scalar), and [`sum_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.sum_dim).
+
+## Background
+
+The brute-force Python loop is `O(N²·D)` operations done one at a time:
+
+```python
+def pairwise_l2_loop(x):
+    N, D = x.shape
+    out = np.zeros((N, N))
+    for i in range(N):
+        for j in range(N):
+            d = x[i] - x[j]
+            out[i, j] = np.sqrt((d ** 2).sum())
+    return out
+```
+
+The tensor one-liner does **the same `O(N²·D)` work in one kernel** — and on the GPU that kernel is genuinely parallel across the N² pairs:
+
+```python
+def pairwise_l2(x):                                  # x: [N, D]
+    return torch.cdist(x, x)                         # [N, N]
+
+# Equivalently, written out by hand to see the trick:
+def pairwise_l2_explicit(x):
+    a = x.unsqueeze(1)                               # [N, 1, D]
+    b = x.unsqueeze(0)                               # [1, N, D]
+    diff = a - b                                     # [N, N, D] by broadcasting
+    return (diff ** 2).sum(dim=2).sqrt()             # [N, N]
+```
+
+The `[N, 1, D]` minus `[1, N, D]` is the trick. Broadcasting stretches both into `[N, N, D]` *without copying* — the kernel walks the virtual `N×N×D` cube once. The square, sum, sqrt then produce one number per pair.
+
+The Burn equivalent uses [`unsqueeze_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.unsqueeze_dim) (gloss: insert a new axis of size 1 at the given position — Burn's version of NumPy's `np.expand_dims` or PyTorch's `.unsqueeze`):
+
+```rust
+let a = x.clone().unsqueeze_dim::<3>(1);             // [N, 1, D]
+let b = x.unsqueeze_dim::<3>(0);                     // [1, N, D]
+let diff: Tensor<B, 3> = a - b;                      // [N, N, D]
+let sq_sum = diff.powf_scalar(2.0).sum_dim(2);       // [N, N, 1]
+let dists  = sq_sum.sqrt().squeeze_dim(2);               // [N, N]
+```
+
+The const generic `::<3>` on `unsqueeze_dim` tells the compiler the *output rank* — Burn carries the rank in the type system, so going from `Tensor<B, 2>` to `Tensor<B, 3>` is an explicit type-level step.
+
+## The exercise
+
+Open `day11/ex-distance-matrix/`. Implement:
+
+```rust
+fn pairwise_l2<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 2>;
+```
+
+so that the tests pass. The starter `main` runs it on the `NdArray` backend with a small `[4, 2]` matrix and prints the resulting `[4, 4]` distance matrix.
+
+You may **not** change the function signature or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-distance-matrix
+cargo test
+cargo run
+```
+
+When the body is right you will see:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — what unsqueeze_dim does"}
+For a 2-D tensor `x` of shape `[N, D]`:
+
+- `x.unsqueeze_dim::<3>(0)` → `[1, N, D]` (insert at the front)
+- `x.unsqueeze_dim::<3>(1)` → `[N, 1, D]` (insert in the middle)
+- `x.unsqueeze_dim::<3>(2)` → `[N, D, 1]` (insert at the end)
+
+You want the first two — `[N, 1, D]` minus `[1, N, D]` gives `[N, N, D]` after broadcasting.
+
+The PyTorch equivalents are `x.unsqueeze(1)` and `x.unsqueeze(0)`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — the broadcast"}
+```rust
+let diff: Tensor<B, 3> = a - b;                     // [N, N, D]
+```
+
+Burn's `-` operator broadcasts the same way NumPy does. You do not need to do anything special — just subtract and the size-1 axes are stretched silently.
+
+If you got the shapes wrong, the error message will name the mismatched axes.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — square, sum along D, sqrt"}
+Three operations turn `[N, N, D]` into `[N, N]`:
+
+```rust
+let sq:     Tensor<B, 3> = diff.powf_scalar(2.0);    // [N, N, D]
+let sq_sum: Tensor<B, 3> = sq.sum_dim(2);            // [N, N, 1]
+let dists:  Tensor<B, 2> = sq_sum.sqrt().squeeze_dim(2); // [N, N]
+```
+
+The `.squeeze_dim(2)` collapses the trailing size-1 axis left over from `sum_dim`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — sanity-check the values"}
+For `x = [[0, 0], [3, 4], [6, 0], [3, -4]]`:
+
+| pair | distance |
+|---|---|
+| (0, 1) | 5 (3-4-5 triangle) |
+| (0, 2) | 6 |
+| (0, 3) | 5 |
+| (1, 3) | 8 (vertical) |
+| (i, i) | 0 |
+
+The matrix is symmetric: `D[i, j] == D[j, i]`. The diagonal is zero.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn pairwise_l2<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 2> {
+    let a = x.clone().unsqueeze_dim::<3>(1);         // [N, 1, D]
+    let b = x.unsqueeze_dim::<3>(0);                 // [1, N, D]
+    let diff = a - b;                                // [N, N, D]
+    diff.powf_scalar(2.0).sum_dim(2).sqrt().squeeze_dim(2)
+}
+```
+
+The full reference is in `day11/ex-distance-matrix-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **kNN graph for UMAP / Leiden**: pairwise distances → [`topk`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.topk) along axis 1 to get each row's `k` nearest neighbours.
+- **k-mer-based sample distances**: compute k-mer count vectors first (one row per sample), then call `pairwise_l2` — gives a phylogeny-friendly distance matrix.
+- **Why GPUs matter here**: for `N = 10 000` samples in `D = 1000` dimensions you compute `10⁸` differences and `10⁸` squares. CPU: ~5 s. GPU: ~50 ms.
+- **The same broadcast pattern** scales to attention (`[N, N]` from `[N, D]` queries and keys) — modern sequence models like Enformer compute exactly this kind of `[N, N]` matrix at every layer.

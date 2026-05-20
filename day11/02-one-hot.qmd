@@ -1,0 +1,134 @@
+---
+title: "Day 11 — Exercise 2: one-hot encoding DNA"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Convert a batch of integer-encoded DNA sequences (`A=0, C=1, G=2, T=3`) of shape `[N, L]` into a **one-hot tensor** [a tensor where the integer category becomes a 1 in a dedicated channel, all other channels 0] of shape `[N, 4, L]`. This is the universal input shape for every sequence model — DeepBind, Basenji, Enformer all start here.
+
+By the time `cargo test` passes you will have used [`Int`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#impl-Tensor%3CB,+D,+Int%3E) tensors, [`one_hot`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.one_hot), [`swap_dims`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.swap_dims), and [`float()`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.float).
+
+## Background
+
+The standard encoding for sequence ML:
+
+```text
+sequence:    A C G T A
+integer:    [0 1 2 3 0]              shape [L]   = [5]
+one-hot:    [[1 0 0 0 1]   A row     shape [4, L] = [4, 5]
+             [0 1 0 0 0]   C row
+             [0 0 1 0 0]   G row
+             [0 0 0 1 0]]  T row
+```
+
+For a batch of `N` sequences the shape becomes `[N, 4, L]` — `N` is the batch axis, `4` is the channel axis (one channel per base), `L` is the position axis. This matches the `[batch, channels, length]` convention every 1-D convolution layer expects.
+
+The PyTorch one-liner:
+
+```python
+import torch.nn.functional as F
+seqs = torch.tensor([[0, 1, 2, 3, 0]])           # [N, L] = [1, 5]
+oh = F.one_hot(seqs, num_classes=4).float()      # [N, L, 4]
+oh = oh.transpose(1, 2)                           # [N, 4, L]
+```
+
+The Burn version of the same three steps:
+
+```rust
+let seqs: Tensor<B, 2, Int> = ...;               // [N, L]
+let oh = seqs.one_hot(4);                        // [N, L, 4], still Int
+let oh = oh.float();                             // [N, L, 4], now Float
+let oh = oh.swap_dims(1, 2);                     // [N, 4, L]
+```
+
+[`Tensor<B, D, Int>`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html) is the integer-typed tensor (Burn defaults to floats; the `Int` marker switches to integers). Sequences are integers; their one-hot encoding is floats — `.float()` casts.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day11/ex-one-hot
+```
+
+`src/main.rs` contains:
+
+- A function `seq_to_ints(seq: &str) -> Vec<i64>` that maps `A/C/G/T` to `0/1/2/3` (already written for you).
+- A function `one_hot_dna<B: Backend>(seqs: Tensor<B, 2, Int>) -> Tensor<B, 3>` with a `// TODO` body — this is what you implement.
+- A `main` that builds an `[N, L]` integer tensor from some sample sequences and prints the resulting `[N, 4, L]` one-hot.
+- Four unit tests.
+
+You may **not** change the function signature or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-one-hot
+cargo test
+cargo run
+```
+
+When the body is right you will see:
+
+```
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — `one_hot` on an Int tensor"}
+[`one_hot(num_classes)`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.one_hot) is a method on the integer-typed tensor. It adds a *new last axis* of size `num_classes` and puts a 1 in the slot named by the integer, zeros elsewhere:
+
+```rust
+let s: Tensor<B, 2, Int> = ...;             // [N, L]
+let oh = s.one_hot(4);                      // [N, L, 4]
+```
+
+Note the channel axis ends up *last*, not in the middle. The next step rearranges that.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — swap_dims to get [N, 4, L]"}
+[`swap_dims(d1, d2)`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.swap_dims) reorders axes without copying data (it just changes the stride metadata). To go from `[N, L, 4]` to `[N, 4, L]`:
+
+```rust
+let oh = oh.swap_dims(1, 2);                // [N, 4, L]
+```
+
+PyTorch equivalent: `oh.transpose(1, 2)`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Float vs Int"}
+The integer one-hot is technically a tensor of 0s and 1s — perfectly representable as ints. But every conv layer and matmul expects *floats*. Convert with [`.float()`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.float):
+
+```rust
+let oh = s.one_hot(4).float();
+```
+
+Do this *before* `swap_dims` or after — it does not matter, both axis orders are valid.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn one_hot_dna<B: Backend>(seqs: Tensor<B, 2, Int>) -> Tensor<B, 3> {
+    seqs.one_hot(4)             // [N, L, 4] Int
+        .float()                // [N, L, 4] Float
+        .swap_dims(1, 2)        // [N, 4, L]
+}
+```
+
+The full reference is in `day11/ex-one-hot-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Exercise 3 (GC content)** uses the *integer* form directly — no one-hot needed for reductions like "fraction of bases equal to G or C".
+- **Exercise 6 (motif scanner)** consumes the `[N, 4, L]` float tensor you produced here as input to a 1-D conv layer.
+- The `[N, channels, L]` convention is universal — protein models use `[N, 20, L]`, RNA models with secondary-structure annotations use `[N, 5, L]`, etc.

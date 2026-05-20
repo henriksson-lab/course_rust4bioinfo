@@ -1,0 +1,157 @@
+---
+title: "Day 11 — Exercise 1: tensors on any backend"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write three small tensor functions, each generic over [Burn's `Backend`](https://docs.rs/burn/latest/burn/tensor/backend/trait.Backend.html) trait. The same function bodies will run on the CPU (`NdArray` backend) and — if you opt in to the `gpu` feature — on the GPU (`Wgpu` backend).
+
+You will implement:
+
+1. `column_means(x)` — return a 1-D tensor with the mean of each column.
+2. `centre_columns(x)` — subtract `column_means` from each row, returning a 2-D tensor of the same shape.
+3. `row_l2_norms(x)` — return a 1-D tensor with the L2 norm of each row.
+
+By the time `cargo test` passes you will have used [`Tensor::from_floats`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html), [`mean_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.mean_dim), [`sum_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.sum_dim), [`powf_scalar`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.powf_scalar), [`sqrt`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.sqrt), and the [`Backend`](https://docs.rs/burn/latest/burn/tensor/backend/trait.Backend.html) trait bound from day 8.
+
+## Background
+
+A **`Tensor<B, D>`** [an N-dimensional array where `B` is the backend (CPU / GPU device) and `D` is the rank (number of axes)] is Burn's central type. Today you write code over `<B: Backend>` — a trait bound just like day 8's `<T: Display>` — so the same function compiles for every device Burn supports.
+
+The PyTorch comparison is one-to-one:
+
+| Rust (Burn) | Python (PyTorch / NumPy) |
+|---|---|
+| `Tensor::<B, 2>::from_floats([[1.0, 2.0]], &device)` | `torch.tensor([[1.0, 2.0]])` |
+| `x.clone().mean_dim(0)` | `x.mean(dim=0, keepdim=True)` |
+| `x.clone().sum_dim(1)` | `x.sum(dim=1, keepdim=True)` |
+| `x.powf_scalar(2.0)` | `x ** 2` |
+| `x.sqrt()` | `x.sqrt()` |
+| `a.clone() - b` | `a - b` |
+
+The Burn methods consume `self` (Rust ownership), which is why you will see `.clone()` more often than in PyTorch. Cloning a tensor is cheap — it does not copy the underlying buffer.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day11/ex-tensors
+```
+
+`src/main.rs` already contains:
+
+- The three function signatures with `// TODO` bodies — generic over `<B: Backend>`.
+- A `main` that runs them on the `NdArray` (CPU) backend and prints the results.
+- A `#[cfg(feature = "gpu")] fn run_on_gpu()` that runs the *same* functions on the `Wgpu` (GPU) backend — uncomment and build with `--features gpu` once your tests pass.
+- A `#[cfg(test)] mod tests` block with six unit tests.
+
+Your job: replace the three `TODO` bodies so all six tests pass.
+
+You may **not** change the function signatures, the tests, or the helper data. You may add helper functions, but they should also be generic over `<B: Backend>`.
+
+## How to run
+
+From inside `day11/ex-tensors/`:
+
+```bash
+cargo build           # first build downloads burn — takes a few minutes
+cargo test            # six tests, all on the CPU NdArray backend
+cargo run             # prints the matrix and the three results
+```
+
+To also run on a GPU (Vulkan / Metal / DX12 — any platform `wgpu` supports):
+
+```bash
+cargo run --features gpu
+```
+
+When all six tests pass, `cargo test` will print:
+
+```
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — column_means"}
+[`mean_dim(dim)`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.mean_dim) collapses one axis but **keeps the rank** — for an `[N, D]` tensor `x`, `x.mean_dim(0)` returns shape `[1, D]`, not `[D]`. To get a 1-D tensor of length `D` you need to drop the leading 1-axis with [`squeeze_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.squeeze_dim):
+
+```rust
+let means_2d: Tensor<B, 2> = x.mean_dim(0);                 // [1, D]
+let means_1d: Tensor<B, 1> = means_2d.squeeze_dim(0);          // [D]
+```
+
+The Python parallel is the difference between `x.mean(dim=0)` (returns 1-D) and `x.mean(dim=0, keepdim=True)` (returns 2-D with a size-1 axis).
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — centre_columns by broadcasting"}
+You want to subtract `[1, D]` from `[N, D]`. Broadcasting handles the shape stretching, so you can just write:
+
+```rust
+let means: Tensor<B, 2> = x.clone().mean_dim(0);            // [1, D]
+let centred = x - means;                                    // [N, D]
+```
+
+This is the same broadcasting rule as NumPy: align from the right, size-1 axes get stretched. Identical to `x - x.mean(axis=0, keepdims=True)` in NumPy.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — row_l2_norms"}
+The L2 norm of each row is `sqrt(sum(x^2, dim=1))`. In Burn:
+
+```rust
+let sq:  Tensor<B, 2> = x.powf_scalar(2.0);                 // [N, D]
+let s:   Tensor<B, 2> = sq.sum_dim(1);                      // [N, 1]
+let n:   Tensor<B, 1> = s.sqrt().squeeze_dim(1);                // [N]
+```
+
+The PyTorch one-liner is `(x ** 2).sum(dim=1).sqrt()`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — the trait bound"}
+Every function signature you write starts with `<B: Backend>`:
+
+```rust
+fn column_means<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 1> {
+    // TODO
+}
+```
+
+Inside the body you do not say `NdArray` or `Wgpu` anywhere. That is the whole point — the function compiles to a different specialised copy for every backend the caller picks. Same pattern as `fn summarize<T: Score>(items: &[T])` from day 8.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn column_means<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 1> {
+    x.mean_dim(0).squeeze_dim(0)
+}
+
+fn centre_columns<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 2> {
+    let means: Tensor<B, 2> = x.clone().mean_dim(0);
+    x - means
+}
+
+fn row_l2_norms<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 1> {
+    let sq: Tensor<B, 2> = x.powf_scalar(2.0);
+    sq.sum_dim(1).sqrt().squeeze_dim(1)
+}
+```
+
+The full reference implementation lives in `day11/ex-tensors-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
+:::
+
+## Where this leads
+
+- **One-hot encoding (exercise 2)** introduces integer tensors and `one_hot`.
+- **Distance matrices (exercise 4)** push broadcasting further — `[N, 1, D]` and `[1, N, D]` give pairwise distances.
+- **PCA (exercise 5)** drops out of Burn entirely and uses the [`nalgebra`](https://nalgebra.org/) crate for SVD — the linear-algebra companion to day 10's `ndarray`.
+
+The pattern from this exercise — `<B: Backend>`, broadcast where possible, reduce with `_dim` — is the daily idiom for the rest of the day.

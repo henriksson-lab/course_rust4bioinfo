@@ -1,0 +1,144 @@
+---
+title: "Day 11 — Exercise 6: 1-D convolutional motif scanner"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement a **PWM motif scanner** [scan a position weight matrix along DNA, producing a score at every position] as a 1-D convolution. Given:
+
+- `one_hot: Tensor<B, 3>` of shape `[N, 4, L]` — one-hot DNA from exercise 2
+- `pwm:     Tensor<B, 3>` of shape `[M, 4, w]` — `M` motifs, each a `4 × w` weight matrix
+
+return a tensor of shape `[N, M, L − w + 1]` where entry `(n, m, p)` is the score of motif `m` at position `p` in sequence `n`.
+
+By the time `cargo test` passes you will have used [`burn::tensor::module::conv1d`](https://docs.rs/burn/latest/burn/tensor/module/fn.conv1d.html) and [`ConvOptions`](https://docs.rs/burn/latest/burn/tensor/ops/struct.ConvOptions.html).
+
+## Background — PWM scanning is exactly 1-D conv
+
+A **PWM** [position weight matrix — a `[4, w]` matrix where entry `(b, p)` is the log-odds score for seeing base `b` at relative position `p`] is the classical motif representation in bioinformatics ([MEME](https://meme-suite.org/), [JASPAR](https://jaspar.genereg.net/)).
+
+Scanning a PWM along a DNA sequence means: at every position `p` along the genome, slide the PWM into place, look up the score for each (base, position) pair, sum them. That is **exactly** what a 1-D convolution computes:
+
+```
+score(n, m, p) = sum over (b, k) of   one_hot[n, b, p+k] * pwm[m, b, k]
+```
+
+The PyTorch one-liner:
+
+```python
+import torch.nn.functional as F
+scores = F.conv1d(one_hot, pwm)              # [N, M, L-w+1]
+```
+
+The Burn version uses [`burn::tensor::module::conv1d`](https://docs.rs/burn/latest/burn/tensor/module/fn.conv1d.html) — the functional-style conv that takes raw input and weight tensors (no `nn::Conv1d` module needed):
+
+```rust
+use burn::tensor::module::conv1d;
+use burn::tensor::ops::ConvOptions;
+
+let scores = conv1d(
+    one_hot,                                 // [N, 4, L]
+    pwm,                                     // [M, 4, w]
+    None,                                    // no bias
+    ConvOptions::new([1], [0], [1], 1),      // stride 1, no padding, no dilation, 1 group
+);
+// scores: [N, M, L - w + 1]
+```
+
+This is the *same* operation that every modern sequence-ML model (DeepBind, DanQ, Basenji, Enformer) starts with. The historical PWM scan and the input layer of a 2020s genomics neural network are the same line of code.
+
+## The exercise
+
+Open `day11/ex-motif-scanner/`. Implement:
+
+```rust
+fn scan_motifs<B: Backend>(
+    one_hot: Tensor<B, 3>,
+    pwm:     Tensor<B, 3>,
+) -> Tensor<B, 3>;
+```
+
+so the tests pass. The starter includes a helper that builds a one-hot tensor from string sequences (reusing the code from exercise 2) and constructs a small handcrafted PWM for the motif `"GATA"`.
+
+You may **not** change the function signature or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-motif-scanner
+cargo test
+cargo run
+```
+
+When the body is right you will see:
+
+```
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
+```
+
+`cargo run` will print, for a small batch of sequences, the score of the `GATA` motif at every position — high scores at positions where `GATA` actually occurs.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — ConvOptions arguments"}
+[`ConvOptions::new(stride, padding, dilation, groups)`](https://docs.rs/burn/latest/burn/tensor/ops/struct.ConvOptions.html):
+
+- **stride** — how far to slide the kernel between outputs. `[1]` for PWM scanning (every position).
+- **padding** — how many zeros to prepend/append. `[0]` for now (output is shorter than input).
+- **dilation** — gap between kernel elements. `[1]` for contiguous motifs.
+- **groups** — `1` (standard convolution; group convolutions are an optimisation we don't need here).
+
+For 1-D conv every argument is a length-1 array. The values above are the defaults you want.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — what conv1d returns"}
+For input `[N, C_in, L]` and weight `[C_out, C_in, w]`:
+
+- output shape `[N, C_out, L − w + 1]` with default stride/padding/dilation
+- here: `C_in = 4` (the four bases), `C_out = M` (number of motifs)
+
+So `[N, 4, L]` × `[M, 4, w]` → `[N, M, L − w + 1]`. Verify the output shape in your tests.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the GATA PWM"}
+A perfect PWM for the motif `GATA` looks like:
+
+```text
+position:   0 1 2 3
+A         [ 0 1 0 1 ]
+C         [ 0 0 0 0 ]
+G         [ 1 0 0 0 ]
+T         [ 0 0 1 0 ]
+```
+
+When this PWM is convolved with a one-hot sequence containing `GATA` somewhere, the score at the start position of the motif is `4` (one match per column), and at non-matching positions is `≤ 3`. This is why the test below checks for `argmax = 4` in a sequence with `"GATA"` starting at position 4.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn scan_motifs<B: Backend>(
+    one_hot: Tensor<B, 3>,
+    pwm:     Tensor<B, 3>,
+) -> Tensor<B, 3> {
+    use burn::tensor::module::conv1d;
+    use burn::tensor::ops::ConvOptions;
+    conv1d(one_hot, pwm, None, ConvOptions::new([1], [0], [1], 1))
+}
+```
+
+The full reference is in `day11/ex-motif-scanner-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Real PWMs** are *log-odds* (positive for over-represented bases, negative for under-represented). Loading PWMs from [JASPAR](https://jaspar.genereg.net/) and convolving them against a genome with `conv1d` reproduces classical tools like FIMO in a few lines of Rust.
+- **Trainable filters** — replace the handcrafted PWM with a Burn `nn::Conv1d` whose weights are learned by gradient descent (exercise 7). This is the [DeepBind](https://www.nature.com/articles/nbt.3300) idea: each conv filter ends up learning a motif from data.
+- **Wider receptive fields** — stacking conv layers (or using dilated convolutions like [Basenji](https://genome.cshlp.org/content/28/5/739.long)) lets a network see thousands of bases of context. Same `conv1d` function, more layers.

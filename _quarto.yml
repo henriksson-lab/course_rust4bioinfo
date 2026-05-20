@@ -142,6 +142,17 @@ website:
           - day10/02-sparse-matrix.qmd
           - day10/03-gauss-seidel.qmd
           - day10/04-markov-chain.qmd
+      - section: "Day 11 — GPUs and tensors with Burn"
+        contents:
+          - day11/00-concepts.qmd
+          - day11/lec1-gpu-and-burn.qmd
+          - day11/01-tensors.qmd
+          - day11/02-one-hot.qmd
+          - day11/03-gc-content.qmd
+          - day11/04-distance-matrix.qmd
+          - day11/05-pca.qmd
+          - day11/06-motif-scanner.qmd
+          - day11/07-promoter-classifier.qmd
 
 format:
   html:

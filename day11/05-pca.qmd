@@ -1,0 +1,191 @@
+---
+title: "Day 11 — Exercise 5: PCA with `nalgebra`"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement **PCA** [principal component analysis — a linear projection of high-dimensional samples onto the directions of greatest variance, the standard first-step dimensionality reduction in single-cell and population biology] on a small `[n_samples, n_genes]` expression matrix, using the [`nalgebra`](https://nalgebra.org/) crate's [SVD](https://docs.rs/nalgebra/latest/nalgebra/linalg/struct.SVD.html).
+
+You will write two functions:
+
+1. `centre_columns(m)` — subtract each column's mean.
+2. `pca(m, k)` — return the top `k` principal-component scores as an `[n_samples, k]` matrix.
+
+By the time `cargo test` passes you will have used [`nalgebra::DMatrix`](https://docs.rs/nalgebra/latest/nalgebra/base/type.DMatrix.html), [`m.svd(true, true)`](https://docs.rs/nalgebra/latest/nalgebra/linalg/struct.SVD.html), and the column-major indexing convention.
+
+## Background — `nalgebra` vs `ndarray`
+
+You met **`ndarray`** [the row-major N-dimensional array crate, NumPy-like; uses `Array2<f64>`] on [day 10](../day10/lec1-matrices-and-iterative-methods.qmd). It is excellent for *holding* and *iterating* over numerical data. What `ndarray` does **not** ship is the full classical linear-algebra catalogue — SVD, eigendecomposition, Cholesky, QR.
+
+For that, the standard Rust crate is **`nalgebra`** [a pure-Rust linear algebra library, similar in spirit to Eigen (C++) or Armadillo (C++/R); uses `DMatrix<f64>`].
+
+| | `ndarray` (day 10) | `nalgebra` (today) |
+|---|---|---|
+| 2-D type | `Array2<f64>` | `DMatrix<f64>` |
+| Layout | row-major (C, NumPy) | column-major (Fortran, R, MATLAB) |
+| Indexing | `a[[i, j]]` | `m[(i, j)]` |
+| Sizing | dynamic | dynamic (`DMatrix`) or static (`Matrix3<f64>`) |
+| Decompositions | none built-in | SVD, eig, QR, Cholesky, ... |
+| Dependency on LAPACK | not by default | none (pure Rust) |
+
+In practice, many pipelines use both — `ndarray` to load and slice the data, `nalgebra` for the heavy linalg, and a tiny conversion at the boundary. Today we stay in `nalgebra` end-to-end.
+
+The PyTorch / NumPy comparison:
+
+```python
+import numpy as np
+from sklearn.decomposition import PCA
+
+X = np.array([...])                          # [n_samples, n_genes]
+X_centred = X - X.mean(axis=0, keepdims=True)
+pcs = PCA(n_components=k).fit_transform(X)   # [n_samples, k]
+
+# Or equivalently, by hand:
+U, s, Vt = np.linalg.svd(X_centred, full_matrices=False)
+pcs_manual = U[:, :k] * s[:k]                # [n_samples, k]
+```
+
+The Rust version of the by-hand path:
+
+```rust
+use nalgebra::DMatrix;
+
+let x: DMatrix<f64> = DMatrix::from_row_slice(n, p, &data);
+let centred = centre_columns(&x);                            // (your function)
+let svd = centred.svd(true, true);
+let u = svd.u.unwrap();                                      // [n, n]
+let s = svd.singular_values;                                 // [min(n, p)]
+let pcs = u.columns(0, k) * DMatrix::from_diagonal(&s.rows(0, k));
+```
+
+## What PCA is computing, in one sentence
+
+For a centred matrix `X` of `n` samples × `p` features:
+
+`X = U · Σ · V^T`
+
+- `V` is `[p × p]` — each column is a direction in feature space, ordered by how much variance the data has along it.
+- `Σ` is `[n × p]` diagonal — `Σᵢᵢ` is the **singular value** (the standard deviation captured along the `i`-th direction).
+- `U · Σ` is `[n × n]` — each row is one sample's **scores** in the new coordinate system. The first `k` columns are the **principal component scores** — a `k`-dim summary of each sample.
+
+PCA dumps everything beyond column `k` of `U · Σ`. That is the dimensionality reduction.
+
+→ [Wikipedia: Principal component analysis](https://en.wikipedia.org/wiki/Principal_component_analysis) · [Wikipedia: Singular value decomposition](https://en.wikipedia.org/wiki/Singular_value_decomposition)
+
+## The exercise
+
+Open `day11/ex-pca/`. Implement:
+
+```rust
+fn centre_columns(m: &DMatrix<f64>) -> DMatrix<f64>;
+fn pca(m: &DMatrix<f64>, k: usize) -> DMatrix<f64>;
+```
+
+so the seven tests pass. The starter contains a small synthetic 8-sample × 3-gene dataset and a `main` that prints the centred matrix and the first 2 PCs.
+
+You may **not** change the function signatures or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-pca
+cargo test
+cargo run
+```
+
+When the bodies are right you will see:
+
+```
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — accessing rows and columns in nalgebra"}
+`DMatrix` is **column-major**, so iterating over columns is cheap. To compute per-column means:
+
+```rust
+let n_rows = m.nrows();
+let n_cols = m.ncols();
+let mut means = vec![0.0; n_cols];
+for j in 0..n_cols {
+    means[j] = m.column(j).mean();
+}
+```
+
+[`m.column(j)`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.column) returns a view; [`.mean()`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.mean) sums and divides. There is also a one-liner: [`m.row_mean()`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.row_mean) returns a 1×p row vector of column means.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — subtracting from every row"}
+Once you have the column means, you can build a "broadcasted" matrix and subtract:
+
+```rust
+let centred = DMatrix::from_fn(n_rows, n_cols, |i, j| m[(i, j)] - means[j]);
+```
+
+[`DMatrix::from_fn`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.from_fn) calls the closure for every `(i, j)` cell. Less clever but very readable.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — SVD in nalgebra"}
+```rust
+let svd = centred.svd(true, true);    // compute_u, compute_v
+let u: DMatrix<f64> = svd.u.unwrap();
+let s = svd.singular_values;          // DVector<f64>, length min(n, p)
+```
+
+The two booleans say "yes, I want the full `U`" and "yes, I want the full `V^T`". For PCA we only need `U` and the singular values, so passing `false` for `compute_v` is also fine; we keep it for symmetry.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 4 — building the PC scores"}
+PC scores = `U[:, :k] · diag(s[:k])`. In `nalgebra`:
+
+```rust
+let u_k = u.columns(0, k).into_owned();          // [n, k]
+let s_k = s.rows(0, k).into_owned();              // [k]
+let diag_k = DMatrix::from_diagonal(&s_k);        // [k, k]
+let pcs = u_k * diag_k;                           // [n, k]
+```
+
+[`m.columns(start, count)`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.columns) slices `count` columns starting at `start`; [`.into_owned()`](https://docs.rs/nalgebra/latest/nalgebra/base/struct.Matrix.html#method.into_owned) materialises the view into a new `DMatrix`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 5 — the sign ambiguity"}
+SVD is unique only up to a sign flip per component: replacing column `j` of `U` with `-U[:, j]` and column `j` of `V` with `-V[:, j]` gives a mathematically equivalent decomposition. Two different SVD implementations (and even the same one on different platforms) may flip signs.
+
+The tests therefore check **squared values** or **absolute differences** to be sign-invariant. Do not be alarmed if your PC1 looks "upside down" compared to a textbook figure.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn centre_columns(m: &DMatrix<f64>) -> DMatrix<f64> {
+    let means: Vec<f64> = (0..m.ncols()).map(|j| m.column(j).mean()).collect();
+    DMatrix::from_fn(m.nrows(), m.ncols(), |i, j| m[(i, j)] - means[j])
+}
+
+fn pca(m: &DMatrix<f64>, k: usize) -> DMatrix<f64> {
+    let centred = centre_columns(m);
+    let svd = centred.svd(true, true);
+    let u = svd.u.unwrap();
+    let s = svd.singular_values;
+    let u_k = u.columns(0, k).into_owned();
+    let s_k = s.rows(0, k).into_owned();
+    u_k * DMatrix::from_diagonal(&s_k)
+}
+```
+
+The full reference is in `day11/ex-pca-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **`nalgebra::SVD`** scales to a few thousand × a few thousand on the CPU. For real single-cell data (cells in the 100 000s) you need an *iterative* method like [randomised SVD](https://arxiv.org/abs/0909.4061) or [LOBPCG](https://en.wikipedia.org/wiki/LOBPCG) — both available in `nalgebra` or in the Burn ecosystem; both far beyond today's exercise.
+- **GPU SVD** is harder than GPU matmul — kernels exist (cuSOLVER, MAGMA) but Burn does not expose them yet. The usual production pattern is: load on GPU, compute pairwise distances on GPU, send to CPU for SVD, send back to GPU for downstream work.
+- **Day 10 connection**: try writing `centre_columns` with `ndarray::Array2` instead and compare. `ndarray` is row-major, so the natural loop order flips; everything else is the same. The conversion between the two crates is a one-liner: `DMatrix::from_row_slice(rows, cols, arr.as_slice().unwrap())`.

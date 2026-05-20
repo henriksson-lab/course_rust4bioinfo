@@ -1,0 +1,110 @@
+---
+title: "Day 11 — Exercise 3: GC content across a batch"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Given a batch of integer-encoded DNA sequences of shape `[N, L]` (A=0, C=1, G=2, T=3), return a 1-D float tensor of length `N` where entry `i` is the **GC fraction** [the proportion of bases in sequence `i` that are G or C, between 0 and 1] of that sequence.
+
+By the time `cargo test` passes you will have used [`equal_elem`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.equal_elem) (gloss: element-wise comparison against a scalar — like `x == 2` in NumPy), a boolean → float cast, and [`mean_dim`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.mean_dim).
+
+## Background
+
+You wrote a per-sequence GC counter on day 1 — a `for` loop over the bytes of one string. Today we do it for **a batch of `N` sequences at once**, with no `for` loops at all. The pattern is the daily idiom of tensor programming:
+
+1. Compute a per-element boolean tensor: `is_gc[i][j] = seqs[i][j] == G || seqs[i][j] == C`.
+2. Cast booleans to floats: `0.0` or `1.0`.
+3. Reduce along the length axis with `mean`.
+
+The PyTorch one-liner:
+
+```python
+gc = ((seqs == 1) | (seqs == 2)).float().mean(dim=1)     # [N]
+```
+
+The Burn version of the same three steps:
+
+```rust
+let is_c = seqs.clone().equal_elem(1);                   // [N, L] bool
+let is_g = seqs.equal_elem(2);                           // [N, L] bool
+let is_gc = (is_c.int() + is_g.int()).float();           // [N, L] float (0.0 or 1.0)
+let gc: Tensor<B, 1> = is_gc.mean_dim(1).squeeze_dim(1);     // [N]
+```
+
+(You can also use bitwise OR on the bool tensors directly — but mapping to int and adding is simpler to read and avoids a few API gotchas.)
+
+## The exercise
+
+Open `day11/ex-gc-content/`. Implement `gc_content<B: Backend>(seqs: Tensor<B, 2, Int>) -> Tensor<B, 1>` so the tests pass. The starter code reuses `seq_to_ints` and `build_batch` from exercise 2.
+
+You may **not** change the function signature or the tests.
+
+## How to run
+
+```bash
+cd day11/ex-gc-content
+cargo test
+cargo run
+```
+
+When the body is right you will see:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — equal_elem on an Int tensor"}
+[`equal_elem(value)`](https://docs.rs/burn/latest/burn/tensor/struct.Tensor.html#method.equal_elem) returns a *boolean* tensor of the same shape. To turn it into a 0/1 numeric tensor that you can sum or mean, chain `.int()` or `.float()`:
+
+```rust
+let is_c: Tensor<B, 2, Int>  = seqs.clone().equal_elem(1).int();
+let is_g: Tensor<B, 2, Int>  = seqs.equal_elem(2).int();
+let is_gc: Tensor<B, 2>      = (is_c + is_g).float();         // 0.0 or 1.0
+```
+
+Note: at most one of "is C" and "is G" is true for any base, so adding them never overflows past 1.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — mean over the length axis"}
+`mean_dim(1)` averages along the length axis. For `[N, L]` input it returns `[N, 1]`:
+
+```rust
+let gc_2d: Tensor<B, 2> = is_gc.mean_dim(1);            // [N, 1]
+let gc:    Tensor<B, 1> = gc_2d.squeeze_dim(1);             // [N]
+```
+
+The PyTorch equivalent is `is_gc.mean(dim=1)` — note PyTorch drops the size-1 axis by default, Burn keeps it.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — sanity-check the numbers"}
+For sequence `"GCGCGC"` (length 6): all bases are G or C, so `gc = 1.0`. For `"AAAA"`: zero. For `"ACGT"`: one G and one C out of four, so `gc = 0.5`. The unit tests use these.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn gc_content<B: Backend>(seqs: Tensor<B, 2, Int>) -> Tensor<B, 1> {
+    let is_c = seqs.clone().equal_elem(1).int();
+    let is_g = seqs.equal_elem(2).int();
+    let is_gc = (is_c + is_g).float();
+    is_gc.mean_dim(1).squeeze_dim(1)
+}
+```
+
+The full reference is in `day11/ex-gc-content-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **k-mer counts** are the same pattern with a different reduction: build a mask per k-mer, sum along length.
+- **Per-position base frequencies** across a batch are `oh.mean_dim(0)` on the one-hot from exercise 2 — `[4, L]` of position-specific base probabilities (a PWM!).
+- **Exercise 4 (distance matrix)** moves on to multi-axis broadcasting, where the pattern is the same but spans more dimensions.

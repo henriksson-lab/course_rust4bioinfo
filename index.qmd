@@ -69,6 +69,58 @@ A pure-Rust web app: Yew frontend (compiled to WebAssembly), axum backend, share
 3. [Fetch from the backend](day6/03-fetch-from-backend.qmd)
 4. [Capstone — GC sliding window](day6/04-sequence-inspector.qmd)
 
+### Day 7 — SQL & SQLite
+
+Modelling data in relational form, querying it from the `sqlite` CLI, then reading and writing the same database from Rust.
+
+0. [Concepts — reference companion to the slides](day7/00-concepts.qmd)
+1. [Your first SQLite database](day7/01-sqlite-cli.qmd)
+2. [A second table and a join](day7/02-natural-join.qmd)
+3. [Reading a SQLite database from Rust](day7/03-read-from-rust.qmd)
+4. [Writing a SQLite database from Rust](day7/04-write-from-rust.qmd)
+5. [Joining two tables from Rust](day7/05-query-from-rust.qmd)
+
+### Day 8 — Traits
+
+The Rust mechanism for *shared interfaces* — `impl Trait for Type`, generic functions with trait bounds, and `Box<dyn Trait>` for heterogeneous collections.
+
+0. [Concepts — reference companion to the slides](day8/00-concepts.qmd)
+1. [Implement `Display` for `GenomicInterval`](day8/01-display.qmd)
+2. [A custom trait with multiple impls](day8/02-annotate.qmd)
+3. [A generic function with a trait bound](day8/03-generic-function.qmd)
+4. [A `Box<dyn>` heterogeneous collection](day8/04-trait-objects.qmd)
+
+### Day 9 — Algorithms and complexity
+
+A short day on data-structure complexity (Big-O) and how to recognise it in code — two diagnostic quizzes that drive the lecture.
+
+0. [Concepts — reference companion to the slides](day9/00-concepts.qmd)
+1. [Warm-up quiz — data-structure complexity](day9/00a-ds-complexity-quiz.qmd)
+2. [Warm-up quiz — complexity from code](day9/00b-code-complexity-quiz.qmd)
+
+### Day 10 — Working with matrices
+
+Dense and sparse matrix representations (`ndarray`, `sprs`), iterative linear-system solvers, and Markov chains via power iteration.
+
+0. [Concepts — reference companion to the slides](day10/00-concepts.qmd)
+1. [Loading and operating on a dense matrix](day10/01-dense-matrix.qmd)
+2. [Sparse representations — memory comparison](day10/02-sparse-matrix.qmd)
+3. [Implement Gauss-Seidel](day10/03-gauss-seidel.qmd)
+4. [Markov chain — power iteration vs steady state](day10/04-markov-chain.qmd)
+
+### Day 11 — GPUs and tensors with Burn
+
+GPU-aware tensors via the [Burn](https://burn.dev/) framework, with every Rust example paired against the equivalent PyTorch / NumPy. Builds up to PCA via `nalgebra`, a PWM motif scanner as `Conv1d`, and a small trainable promoter classifier.
+
+0. [Concepts — reference companion to the slides](day11/00-concepts.qmd)
+1. [Tensors on any backend](day11/01-tensors.qmd)
+2. [One-hot encoding DNA](day11/02-one-hot.qmd)
+3. [GC content across a batch](day11/03-gc-content.qmd)
+4. [Pairwise distance matrix](day11/04-distance-matrix.qmd)
+5. [PCA with `nalgebra`](day11/05-pca.qmd)
+6. [1-D convolutional motif scanner](day11/06-motif-scanner.qmd)
+7. [Train a promoter classifier](day11/07-promoter-classifier.qmd)
+
 ## Working with the exercises
 
 Each exercise pairs a short `.qmd` walkthrough with one or two real cargo projects:

@@ -1,0 +1,488 @@
+---
+title: "GPUs and tensors with Burn"
+subtitle: "Day 11, lecture 1"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: [simple, ../theme.scss]
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+- We move from CPU `ndarray::Array2` (day 10) to **GPU tensors** — same idea, different hardware
+- We use [**Burn**](https://burn.dev/) — a Rust framework that looks like PyTorch and runs on CUDA, wgpu, Metal, or the CPU
+- We connect today's material back to **day 8 traits** — `Backend` is "just" a trait, and one function works on every device
+
+::: notes
+Day 11 is the GPU day. The hook is simple: most numerical bioinformatics is a small set of operations done many times — matrix multiply, element-wise add, reductions. The CPU does them in a serial-ish way; the GPU does them in parallel by the thousand. Burn is the Rust framework that lets us write the same code for either. Today we learn the tensor vocabulary, see it next to PyTorch line by line, and build up to a small motif scanner and classifier.
+:::
+
+## Where bioinformatics meets the GPU
+
+- **Single-cell PCA / UMAP** — `[cells × genes]` matrices with `n` up to millions
+- **Pairwise sequence distances** — `[N × N]` k-mer or embedding distances
+- **PWM scanning across a genome** — 1-D convolution of one-hot DNA against motif weights
+- **Sequence neural networks** — DeepBind, Basenji, Enformer; all built from conv layers
+- **Variant-effect models, AlphaFold-style pipelines** — large transformers / attention on protein sequences
+- **Embedding search** — vector databases for similar reads / cells / proteins
+
+Every one of these reduces to a handful of tensor operations done at scale.
+
+::: notes
+The pattern across modern bioinformatics: we used to write hand-coded inner loops; we now write tensor expressions and let the GPU do the work. Once you can read "expression matrix is a `[N, G]` tensor" the rest of single-cell tooling becomes a few lines.
+:::
+
+## CPU vs GPU — different shapes of fast
+
+| | CPU | GPU |
+|---|---|---|
+| Cores | ~10 | ~10 000 arithmetic units |
+| Good at | irregular control flow, system calls | the same op applied to lots of numbers |
+| Latency per op | ~1 ns | ~µs (kernel launch overhead) |
+| Throughput | ~10² GFLOPS | ~10⁴ GFLOPS |
+| Coding style | loops, branches | whole-tensor expressions |
+
+For a 10 000 × 10 000 matrix multiply: laptop CPU ~5 s, mid-range GPU ~50 ms. The crossover is the moment your problem is large enough to amortise the kernel-launch cost.
+
+::: notes
+This is the central trade-off to teach. GPUs are not faster at *one* thing; they are faster at *a lot of the same thing*. Small problems are slower on a GPU because the launch overhead dominates. Big problems are 50-100x faster. The bioinformatics matrices in today's exercises are intentionally small (so the laptop CPU keeps up) but the code we write is exactly what scales to a real dataset.
+:::
+
+## What is a tensor
+
+A **tensor** [an N-dimensional array of numbers, with a known shape and a device it lives on] is the GPU-aware generalisation of `ndarray::Array2`.
+
+```rust
+use burn::backend::NdArray;
+use burn::tensor::Tensor;
+
+type B = NdArray;
+let device = Default::default();
+
+let x: Tensor<B, 2> = Tensor::from_floats(           // 2-D, shape [2, 3]
+    [[1.0, 2.0, 3.0],
+     [4.0, 5.0, 6.0]],
+    &device,
+);
+let y = x.clone() + x;                                // element-wise
+let s = y.sum();                                      // scalar tensor 42.0
+```
+
+```python
+# PyTorch
+import torch
+x = torch.tensor([[1., 2., 3.], [4., 5., 6.]])
+y = x + x
+s = y.sum()                                           # tensor(42.)
+```
+
+The Rust version carries the **backend** `B` and the **rank** `2` in the type system. The PyTorch version is the same idea with no static checking.
+
+::: notes
+Side-by-side from the first slide. The two pieces of code are doing the same thing; the only difference is that Rust knows at compile time how many dimensions the tensor has and which device it sits on. That makes some classes of bug — shape mismatches, mixing GPU and CPU tensors — impossible to write.
+:::
+
+## `Tensor<B, D>` — read the type
+
+```rust
+let x: Tensor<B, 2> = ...;
+//          ^  ^^
+//          |  rank D — number of dimensions (2 = matrix)
+//          backend B — which device + element type
+```
+
+- `Tensor<NdArray, 1>` — CPU vector
+- `Tensor<NdArray, 2>` — CPU matrix
+- `Tensor<Wgpu, 3>` — GPU 3-D tensor `[N, C, L]`
+- `Tensor<Autodiff<NdArray>, 2>` — CPU matrix with gradient tracking
+
+One generic type, four very different runtime objects. Generic code only sees `Tensor<B, D>`.
+
+::: notes
+The two type parameters carry everything you need to know: which device the tensor lives on, and how many axes it has. When you read Burn code in the wild, train yourself to read the type signature first — it tells you exactly what shape of data is flowing and where.
+:::
+
+## The `Backend` trait — yesterday's lesson, today's tool
+
+Burn defines a Rust trait:
+
+```rust
+pub trait Backend {
+    type Device;
+    type FloatTensorPrimitive<const D: usize>;
+    type IntTensorPrimitive<const D: usize>;
+    // ... + several dozen kernels (add, matmul, conv, ...)
+}
+```
+
+Several concrete impls ship with Burn:
+
+| Backend | What it is |
+|---|---|
+| [`NdArray`](https://docs.rs/burn-ndarray/) | CPU, pure Rust — the default for tests |
+| [`Wgpu`](https://docs.rs/burn-wgpu/) | any GPU via WebGPU — Vulkan / Metal / DX12 / browser |
+| [`Cuda`](https://docs.rs/burn-cuda/) | NVIDIA GPUs |
+| `Candle` | CPU or CUDA via Hugging Face's [candle](https://github.com/huggingface/candle) |
+| `Autodiff<B>` | wraps any other backend, adds gradient tracking |
+
+::: notes
+The trait is the connection back to day 8. Backend is a contract — *if you want to call yourself a backend you must provide these tensor types and these kernels*. The CPU implementation, the wgpu implementation and the CUDA implementation each fulfil the contract their own way. Code that consumes a `<B: Backend>` does not care which one.
+:::
+
+## Generic over the backend
+
+A function written once, runs anywhere:
+
+```rust
+use burn::tensor::{Tensor, backend::Backend};
+
+fn standardise<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 2> {
+    let mean = x.clone().mean_dim(0);
+    let std  = x.clone().var_dim(0).sqrt();
+    (x - mean) / std
+}
+```
+
+```python
+# PyTorch — also device-generic, but without compile-time checking:
+def standardise(x):
+    return (x - x.mean(dim=0)) / x.std(dim=0)
+```
+
+`standardise` works on `NdArray` (CPU), `Wgpu` (GPU), `Cuda` (GPU), `Autodiff<NdArray>` (gradients) — without one line changing. This is the day-8 trait-bound pattern applied to GPU code.
+
+::: notes
+Generic over Backend is the daily idiom. Every function you write should take `<B: Backend>` unless you have a specific reason to pin a concrete backend. Tests can run on NdArray (no driver needed). Production can swap to Wgpu or Cuda by changing one type alias. Training can wrap in Autodiff for gradients. Same function body throughout.
+:::
+
+## Shape — the most important metadata
+
+Every tensor has a **shape** [the tuple of sizes along each axis]. Most bugs are shape bugs.
+
+```rust
+let x: Tensor<B, 3> = Tensor::zeros([32, 4, 100], &device);   // [N, C, L]
+println!("{:?}", x.dims());    // [32, 4, 100]
+let y = x.swap_dims(1, 2);           // [32, 100, 4]
+let z = y.reshape([32 * 100, 4]);    // [3200, 4]
+```
+
+```python
+x = torch.zeros(32, 4, 100)
+print(x.shape)                       # torch.Size([32, 4, 100])
+y = x.transpose(1, 2)                # [32, 100, 4]
+z = y.reshape(32 * 100, 4)           # [3200, 4]
+```
+
+The naming convention in sequence ML: `[N, C, L]` = batch, channels (here, the 4 bases), length.
+
+::: notes
+Train yourself to think of every tensor as `[N, C, L]` or `[N, D]` and write the shape down before you write the code. Burn forces you to commit to the rank at compile time, which is half the battle; the other half is keeping track of which axis means what. Comments like `// [N, 4, L] one-hot DNA` go a very long way.
+:::
+
+## Broadcasting
+
+Two tensors of nearly-the-same shape can be combined; size-1 axes are stretched.
+
+```rust
+let a: Tensor<B, 2> = Tensor::ones([5, 3], &device);
+let b: Tensor<B, 2> = Tensor::ones([1, 3], &device);
+let c = a + b;                       // shape [5, 3]
+```
+
+```python
+a = torch.ones(5, 3)
+b = torch.ones(1, 3)
+c = a + b                            # shape (5, 3)
+```
+
+Rule: align from the right; each axis must either match or be 1. The size-1 axis is repeated without copying.
+
+::: notes
+Broadcasting is the trick that lets you express "subtract the mean of each column from every row" in one line. Identical to NumPy / PyTorch. The mental model is `[5, 1] op [1, 3] → [5, 3]` — Cartesian outer-product-style stretching. Once you get the hang of it you stop writing loops for these patterns.
+:::
+
+## Reductions
+
+Collapse one or more axes to a scalar or smaller tensor.
+
+```rust
+let x: Tensor<B, 2> = Tensor::from_floats(           // 2x3
+    [[1.0, 2.0, 3.0],
+     [4.0, 5.0, 6.0]], &device);
+
+let total    = x.clone().sum();           // scalar tensor 21.0
+let row_sum  = x.clone().sum_dim(1);      // shape [2]: [6, 15]
+let col_mean = x.mean_dim(0);             // shape [3]: [2.5, 3.5, 4.5]
+```
+
+```python
+total    = x.sum()
+row_sum  = x.sum(dim=1)
+col_mean = x.mean(dim=0)
+```
+
+GC content per sequence, average expression per gene, k-mer counts — every reduction in a bioinformatics pipeline is one of these.
+
+::: notes
+sum, mean, max, min, argmax — same names as PyTorch, same semantics. The `_dim(k)` suffix says "collapse axis k". You will use these constantly in today's exercises.
+:::
+
+## No for-loops — the GPU mental shift
+
+```rust
+// BAD: launches a kernel per element.
+let mut x = Tensor::<B, 1>::zeros([1_000_000], &device);
+for i in 0..1_000_000 {
+    x = x.slice_assign([i..i+1], scalar);
+}
+
+// GOOD: one allocation, one kernel.
+let x = Tensor::<B, 1>::from_floats(vec![scalar; 1_000_000], &device);
+```
+
+```python
+# Same shift in Python — for-loop bad, vectorised op good.
+x = torch.full((1_000_000,), scalar)
+```
+
+The same advice you got moving from Python `for` to NumPy: every per-element loop is one missed GPU kernel.
+
+::: notes
+The single most useful mental adjustment when learning a tensor library: replace `for i in range(n): out[i] = f(in[i])` with one whole-tensor expression. The library is doing the loop for you, in parallel, on the device. If you find yourself writing a Rust `for` over tensor entries, stop — there is almost always a vectorised operation that does it.
+:::
+
+## One-hot encoding DNA — example
+
+A batch of `N` sequences of length `L` (integer-encoded with A=0, C=1, G=2, T=3) → a one-hot `[N, 4, L]` tensor of floats.
+
+```rust
+use burn::tensor::{Int, Tensor};
+
+fn one_hot_dna<B: Backend>(seqs: Tensor<B, 2, Int>) -> Tensor<B, 3> {
+    let [n, l] = seqs.dims()();
+    seqs
+        .one_hot(4)                              // [N, L, 4]
+        .float()
+        .swap_dims(1, 2)                         // [N, 4, L]
+}
+```
+
+```python
+def one_hot_dna(seqs):                           # seqs: [N, L] int
+    return F.one_hot(seqs, num_classes=4).float().transpose(1, 2)
+```
+
+This becomes the input shape every sequence model expects.
+
+::: notes
+One-hot encoding is the bridge between strings and tensors. Once your sequences are `[N, 4, L]` floats, every downstream operation — GC content, motif scanning, conv layers — is a standard tensor op. We do this in exercise 2.
+:::
+
+## Pairwise distances — broadcasting in anger
+
+Pairwise Euclidean distance between `N` samples each of dimension `D`:
+
+```rust
+fn pairwise_l2<B: Backend>(x: Tensor<B, 2>) -> Tensor<B, 2> {
+    let a = x.clone().unsqueeze_dim::<3>(1);             // [N, 1, D]
+    let b = x.unsqueeze_dim::<3>(0);                     // [1, N, D]
+    (a - b).powf_scalar(2.0).sum_dim(2).sqrt().squeeze_dim(2)
+}
+```
+
+```python
+def pairwise_l2(x):                              # x: [N, D]
+    return torch.cdist(x, x)                     # [N, N]
+```
+
+`unsqueeze` + broadcast is `cdist` written out by hand. Exercise 4 is exactly this.
+
+::: notes
+This is the trick that wins over a nested Python loop by 100x. Adding a size-1 axis turns a 2-D thing into a virtual 3-D thing, lets broadcasting stretch it, and the subtraction-and-sum then produces all N*N pairs in one shot. The op is one kernel on the GPU. The same idea generalises to any "all pairs of X and Y" computation.
+:::
+
+## PCA — back to day 10, then forward
+
+Day 10 used `ndarray` for dense matrices but stopped before decompositions like SVD. For full linear algebra on the CPU we reach for [**`nalgebra`**](https://nalgebra.org/) — pure Rust, no LAPACK build dependency.
+
+```rust
+use nalgebra::DMatrix;
+
+let mut m = DMatrix::from_row_slice(n_samples, n_genes, &data);
+// centre each column
+for j in 0..n_genes {
+    let mean: f64 = m.column(j).mean();
+    m.column_mut(j).iter_mut().for_each(|v| *v -= mean);
+}
+let svd = m.svd(true, true);
+let pcs = svd.u.unwrap() * DMatrix::from_diagonal(&svd.singular_values);
+```
+
+```python
+from sklearn.decomposition import PCA
+pcs = PCA(n_components=k).fit_transform(expression)
+```
+
+Exercise 5 is the full PCA pipeline in `nalgebra`. We stay on the CPU here because dense SVD on the GPU needs more machinery than one day can cover.
+
+::: notes
+nalgebra is the closest Rust gets to Eigen or Armadillo — full classical linear algebra in one crate. The naming convention is column-major (R / MATLAB style), unlike ndarray's row-major. For PCA we need SVD; nalgebra has it as a one-liner.
+
+The connection to day 10: ndarray is great for the *data*; nalgebra is better for the *decompositions*. Real pipelines often use both, converting at the boundary.
+:::
+
+## 1-D convolution = PWM scanning
+
+A motif **PWM** [position weight matrix — a `[4, w]` matrix of log-odds scores, one column per position in the motif] scanned along DNA is exactly a 1-D convolution.
+
+```rust
+use burn::nn::conv::{Conv1d, Conv1dConfig};
+
+let conv: Conv1d<B> = Conv1dConfig::new(4, n_motifs, motif_width)
+    .with_bias(false)
+    .init(&device);
+let scores = conv.forward(one_hot_dna);          // [N, M, L−w+1]
+```
+
+```python
+import torch.nn as nn
+conv = nn.Conv1d(in_channels=4, out_channels=n_motifs, kernel_size=motif_width, bias=False)
+scores = conv(one_hot_dna)                       # [N, M, L−w+1]
+```
+
+The PWM goes into the conv's weight tensor. The output `[N, M, L−w+1]` is the score of every motif at every position in every sequence — in one kernel.
+
+::: notes
+This is the bridge slide. The classical bioinformatics tool — slide a PWM along DNA, score every position — is one Conv1d call. Same math, vastly faster, and now in the same framework as the deep-learning models that build on top of it. DeepBind, Basenji, Enformer all open with exactly this layer.
+:::
+
+## Autodiff — gradients for free
+
+Wrap any backend in `Autodiff` and the framework records every operation:
+
+```rust
+use burn::backend::{Autodiff, NdArray};
+type B = Autodiff<NdArray>;
+
+let x: Tensor<B, 1> = Tensor::from_floats([3.0], &device).require_grad();
+let y = x.clone().powf_scalar(2.0);              // y = x^2
+let grads = y.backward();
+let dx = x.grad(&grads).unwrap();                // 6.0
+```
+
+```python
+x = torch.tensor([3.0], requires_grad=True)
+y = x ** 2
+y.backward()
+print(x.grad)                                    # tensor([6.])
+```
+
+The same machinery that gives you `dx` here gives you the gradient of a million-parameter network at the cost of one extra forward pass.
+
+::: notes
+Autodiff is the magic ingredient that turned tensors into neural networks. The framework builds a directed acyclic graph as you do operations, then runs the chain rule backwards through it when you call `.backward()`. You never write a single derivative by hand. We use this in exercise 7 to train a classifier.
+:::
+
+## A neural network is a `Module`
+
+A `Module` is a struct of parameters plus a `forward` method.
+
+```rust
+#[derive(Module, Debug)]
+struct PromoterNet<B: Backend> {
+    conv: Conv1d<B>,
+    fc:   Linear<B>,
+}
+
+impl<B: Backend> PromoterNet<B> {
+    fn forward(&self, x: Tensor<B, 3>) -> Tensor<B, 2> {
+        let h = relu(self.conv.forward(x));          // [N, M, L−w+1]
+        let h = h.max_dim(2).squeeze_dim(2);             // [N, M] global maxpool
+        self.fc.forward(h)                           // [N, 1] logits
+    }
+}
+```
+
+```python
+class PromoterNet(nn.Module):
+    def __init__(self, ...):
+        self.conv = nn.Conv1d(4, M, w)
+        self.fc   = nn.Linear(M, 1)
+    def forward(self, x):
+        h = self.conv(x).relu()
+        h, _ = h.max(dim=2)
+        return self.fc(h)
+```
+
+Same model, expressed in two languages. Exercise 7 trains this on synthetic promoter / non-promoter DNA.
+
+::: notes
+The `derive(Module)` is the analogue of inheriting from nn.Module. It tells Burn "these fields are parameters; collect them, give them to the optimiser, save and load them as a unit". The `forward` is yours to write.
+:::
+
+## Training loop — what it looks like
+
+```rust
+let mut model: PromoterNet<B> = PromoterNet::init(&device);
+let mut optim = AdamConfig::new().init();
+
+for (x, y) in batches {
+    let logits = model.forward(x);
+    let loss = binary_cross_entropy(logits, y);
+    let grads = loss.backward();
+    let grads = GradientsParams::from_grads(grads, &model);
+    model = optim.step(LR, model, grads);
+}
+```
+
+```python
+for x, y in loader:
+    logits = model(x)
+    loss = F.binary_cross_entropy_with_logits(logits, y)
+    optim.zero_grad(); loss.backward(); optim.step()
+```
+
+The shape of the loop is exactly the same as a PyTorch loop. Burn's flavour is just more explicit about ownership — `optim.step` takes the model and returns the updated model.
+
+::: notes
+The training loop is the boring part: forward, loss, backward, step. Burn does the unusual thing of returning the updated model from optim.step rather than mutating in place — that is Rust's ownership system showing through. Functionally identical to PyTorch otherwise.
+:::
+
+## Recap
+
+- A **tensor** is the GPU-aware Array2; its type carries both backend and rank
+- **`Backend`** is a trait — write `<B: Backend>` once, run on CPU, wgpu, CUDA, or Autodiff
+- **Broadcasting + reductions** replace `for` loops, on CPU and GPU alike
+- For non-GPU linear algebra (SVD, eigenvalues), use **`nalgebra`**
+- `Module` + `Autodiff` give you the standard PyTorch shape of model + training loop
+
+::: notes
+Three things to keep. First, tensors are arrays with a device — the type tells you both. Second, Backend is the trait that lets one function body run on every device. Third, the rest of today is just doing bioinformatics with that vocabulary — one-hot, GC, distances, PCA, conv, classifier.
+:::
+
+## To the exercises
+
+Seven exercises, in order:
+
+- **[1 — Tensors on any backend](01-tensors.qmd)** — `<B: Backend>`, basic ops, run on `NdArray` and `Wgpu`
+- **[2 — One-hot encoding DNA](02-one-hot.qmd)** — int tensor → `[N, 4, L]` floats
+- **[3 — GC content across a batch](03-gc-content.qmd)** — reductions, masking
+- **[4 — Pairwise distance matrix](04-distance-matrix.qmd)** — broadcasting + `cdist` by hand
+- **[5 — PCA on expression data](05-pca.qmd)** — `nalgebra` SVD (CPU-only)
+- **[6 — 1-D conv motif scanner](06-motif-scanner.qmd)** — PWM as a Conv1d weight
+- **[7 — Promoter classifier](07-promoter-classifier.qmd)** — full Burn training loop
+
+::: notes
+Work through them in order. Exercise 1 grounds the backend trait pattern; 2-4 build sequence-tensor fluency; 5 puts the classical-linalg piece in place; 6 and 7 stitch everything into a small sequence-ML model. By the end you have written a generic GPU-ready function library and trained your first model in Rust.
+:::
