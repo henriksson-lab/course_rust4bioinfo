@@ -1,0 +1,245 @@
+---
+title: "Day 10 — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-10 slides. Day 10 introduces **matrices** — the workhorse 2-D data structure of numerical bioinformatics — together with the two storage strategies (**dense** and **sparse**) and the two solver strategies (**direct** and **iterative**) that you need to choose between every time you reach for one.
+
+You met `Vec<T>` and `HashMap` on day 9. A matrix is the next layer up: a fixed-size rectangular block of numbers that supports its own algebra (addition, multiplication, transpose, inversion). When the data fits in memory and is mostly non-zero, you store it dense. When it is mostly zero — which is true of essentially every interesting bioinformatics matrix — you switch to a sparse representation and accept a more complicated bookkeeping in exchange for 20-100× less memory.
+
+## What a matrix is, in a program
+
+A **matrix** [a rectangular array of numbers with `rows × cols` entries, supporting the algebra of matrix addition, multiplication, transpose, and inversion] is, at the program level, just a 2-D array of numbers — almost always `f64` in numerical code. You index it by `(row, col)`, you can pull out rows or columns as 1-D vectors, and the central operation is **multiplication** — either matrix-times-vector (`A·x`, the workhorse) or matrix-times-matrix (`A·B`, less common in inner loops).
+
+```rust
+use ndarray::array;
+
+let a = array![[1.0, 2.0],
+               [3.0, 4.0]];        // 2 × 2 dense matrix of f64
+let x = array![5.0, 6.0];          // length-2 vector
+let y = a.dot(&x);                 // matrix-vector product: [17.0, 39.0]
+```
+
+→ [Wikipedia: Matrix (mathematics)](https://en.wikipedia.org/wiki/Matrix_(mathematics)) · [Wikipedia: Matrix multiplication](https://en.wikipedia.org/wiki/Matrix_multiplication)
+
+## Why bioinformatics uses matrices
+
+Matrices appear the moment you put biological measurements into a table:
+
+- **Single-cell expression matrices** — rows are genes, columns are cells, entries are read counts. A modern 10x Genomics dataset is ~10 000 genes × ~100 000 cells.
+- **k-mer count tables** — rows are samples (or genomes), columns are k-mers, entries are how many times each k-mer occurs. For `k = 21` the number of columns is bounded by `4^21 ≈ 4.4 × 10¹²` in principle.
+- **Distance matrices** — `n × n` table of pairwise distances between sequences, samples, or species; symmetric, dense.
+- **Adjacency matrices** — `n × n` 0/1 table representing a graph: `A[i][j] = 1` if there is an edge from `i` to `j`. Used for phylogenetic trees, protein-interaction networks, and co-expression networks.
+- **Alignment scoring matrices** — BLOSUM62 is a `20 × 20` matrix of amino-acid substitution log-odds. Small but read very often.
+
+The shape of the matrix tells you what storage format to pick. Distance and scoring matrices are dense. Single-cell expression matrices and k-mer counts are typically 95-99% zero and demand sparse storage.
+
+## Dense storage — row-major vs column-major
+
+A dense matrix is laid out as one long contiguous run of numbers in memory. There are two conventions for how to flatten the 2-D grid into a 1-D array:
+
+- **Row-major** [rows are stored one after another in memory: `[r0c0, r0c1, r0c2, r1c0, r1c1, r1c2, ...]`] — the C convention, used by NumPy by default, by `ndarray` in its standard layout, and by C/C++.
+- **Column-major** [columns are stored one after another: `[r0c0, r1c0, r2c0, r0c1, r1c1, r2c1, ...]`] — the Fortran convention, used by R, MATLAB, Julia, and the `nalgebra` crate.
+
+```rust
+use ndarray::array;
+
+let m = array![[1.0, 2.0, 3.0],
+               [4.0, 5.0, 6.0]];     // row-major by default
+// row 0 is laid out as [1.0, 2.0, 3.0] in memory, then row 1 follows.
+```
+
+Same numbers, different memory order. The difference matters for **cache locality** [the CPU loads memory in small contiguous chunks (cache lines); iterating in the order they are stored is fast, iterating across the layout is much slower]: a tight loop that walks one row of a row-major matrix touches consecutive bytes and runs at full speed; the same loop on a column-major matrix jumps `rows × 8` bytes per step and can be an order of magnitude slower.
+
+→ [Wikipedia: Row- and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order)
+
+## Sparse storage — most biology matrices are mostly zero
+
+A 10x single-cell expression matrix is typically **95-99% zero** — most genes are not expressed in most cells. Storing it as a dense `f64` array of 10 000 genes × 100 000 cells would take `10⁹ × 8 bytes = 8 GB`. With a sparse representation the same data fits in 100-400 MB.
+
+The three sparse formats you will meet, in order of complexity:
+
+### COO — coordinate (triplet) format
+
+Stores three parallel arrays: `row_indices`, `col_indices`, `values`. Entry `k` lives at `(row_indices[k], col_indices[k]) = values[k]`. Easy to build (just push triples), easy to read from a TSV, **slow** for matrix-vector multiplication because there is no order.
+
+```text
+A =  [ 0  0  5 ]
+     [ 0  8  0 ]
+     [ 0  0  0 ]
+
+rows   = [0, 1]
+cols   = [2, 1]
+values = [5.0, 8.0]
+```
+
+### CSR — compressed sparse row
+
+Three flat arrays: `values`, `col_indices`, and a **`row_pointers`** array of length `rows + 1`. Row `i`'s non-zeros live at `values[row_pointers[i] .. row_pointers[i+1]]`. Fast row access, **fast matrix-vector multiply** — the format most numerical libraries use internally.
+
+```text
+A =  [ 0  0  5 ]
+     [ 0  8  0 ]
+     [ 0  0  0 ]
+
+values   = [5.0, 8.0]
+col_idx  = [2,   1  ]
+row_ptr  = [0,   1,   2,   2]
+```
+
+### CSC — compressed sparse column
+
+The mirror image of CSR: fast column access, slow row access. Used when you frequently pull out one column at a time — e.g., a single-cell pipeline that processes one cell (column) at a time.
+
+→ [Wikipedia: Sparse matrix](https://en.wikipedia.org/wiki/Sparse_matrix) (has good diagrams for all three formats)
+
+**Rule of thumb**: build in COO (it is easy), convert to CSR for math (it is fast), reach for CSC only when you really need single-column access.
+
+## The `ndarray` crate — dense arrays
+
+[`ndarray`](https://docs.rs/ndarray/latest/ndarray/) is the de-facto Rust crate for dense N-dimensional arrays. The two types you will use day to day are [`Array1<f64>`](https://docs.rs/ndarray/latest/ndarray/type.Array1.html) (a 1-D vector) and [`Array2<f64>`](https://docs.rs/ndarray/latest/ndarray/type.Array2.html) (a 2-D matrix).
+
+```rust
+use ndarray::{Array1, Array2, array};
+
+let a: Array2<f64> = Array2::zeros((3, 3));        // 3x3 of zeros
+let b: Array2<f64> = Array2::eye(3);               // 3x3 identity
+let x: Array1<f64> = array![1.0, 2.0, 3.0];        // length-3 vector
+
+let row0 = b.row(0);                               // a 1-D view of row 0
+let col1 = b.column(1);                            // a 1-D view of column 1
+let y = b.dot(&x);                                 // matrix-vector product
+```
+
+Slicing, broadcasting, element-wise arithmetic all work much like NumPy. See the [`ndarray` for NumPy users guide](https://docs.rs/ndarray/latest/ndarray/doc/ndarray_for_numpy_users/index.html).
+
+## The `sprs` crate — sparse matrices
+
+[`sprs`](https://docs.rs/sprs/latest/sprs/) is the standard Rust crate for sparse matrices. The main type is [`CsMat<f64>`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html), a compressed sparse matrix that can be either CSR or CSC depending on how you build it. The typical workflow is *build in COO, convert to CSR*:
+
+```rust
+use sprs::{TriMat, CsMat};
+
+let mut triplets = TriMat::new((3, 3));            // (rows, cols)
+triplets.add_triplet(0, 2, 5.0);
+triplets.add_triplet(1, 1, 8.0);
+
+let csr: CsMat<f64> = triplets.to_csr();           // CSR for fast math
+let nnz = csr.nnz();                               // count of non-zeros: 2
+```
+
+→ [`sprs::TriMat`](https://docs.rs/sprs/latest/sprs/struct.TriMatBase.html) · [`sprs::CsMat`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html)
+
+## Solving `Ax = b` — direct vs iterative
+
+A huge fraction of numerical bioinformatics reduces to solving a linear system: given a matrix `A` and a vector `b`, find the vector `x` that satisfies `A·x = b`. There are two families of solvers:
+
+- **Direct methods** — factor `A` into pieces (e.g., LU or Cholesky decomposition) and back-substitute. Exact (up to floating-point), runtime `O(n³)`, memory `O(n²)`. Fine for `n ≤ a few thousand`, infeasible beyond that.
+- **Iterative methods** — start with a guess `x⁰`, refine it until it stops changing. Examples: **Jacobi**, **Gauss-Seidel**, **conjugate gradient (CG)**. Runtime is `O(nnz × iterations)` where `nnz` is the number of non-zeros; converges in a small number of iterations when `A` is well-behaved. The right choice for large sparse systems.
+
+→ [Wikipedia: Iterative method](https://en.wikipedia.org/wiki/Iterative_method) · [Wikipedia: LU decomposition](https://en.wikipedia.org/wiki/LU_decomposition)
+
+## Gauss-Seidel in one paragraph
+
+**Gauss-Seidel** [an iterative method for solving `A·x = b` that updates each `x_i` in turn, immediately using the new value when updating later entries] is the simplest iterative solver to write by hand. Start with any guess `x` (zeros are fine). For each row `i`, solve the equation `A·x = b` for `x_i`, treating the other `x_j` as known:
+
+```text
+x_i := (b_i  -  sum_{j != i} A[i][j] * x_j)  /  A[i][i]
+```
+
+Repeat until `x` stops changing meaningfully. The crucial detail: when you compute `x_i` you use the **already-updated** values of `x_0, x_1, ..., x_{i-1}` from the current sweep. That is what distinguishes Gauss-Seidel from Jacobi (which uses only the previous sweep's values).
+
+```rust
+// One Gauss-Seidel sweep over a dense ndarray::Array2<f64>.
+for i in 0..n {
+    let mut sum = 0.0;
+    for j in 0..n {
+        if i != j { sum += a[[i, j]] * x[i]; }   // current-sweep x
+    }
+    x[i] = (b[i] - sum) / a[[i, i]];
+}
+```
+
+→ [Wikipedia: Gauss-Seidel method](https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method)
+
+## Convergence and condition number
+
+Gauss-Seidel **converges** [the successive guesses get closer and closer to the true solution, eventually stopping] reliably under two common conditions:
+
+- `A` is **symmetric positive-definite (SPD)** [equal to its own transpose, and `x^T A x > 0` for every non-zero `x`] — common when `A` arises from a least-squares or covariance problem.
+- `A` is **strictly diagonally dominant** [`|A[i][i]| > sum_{j != i} |A[i][j]|` for every row `i`] — each diagonal entry larger than the sum of the off-diagonals in its row.
+
+How *fast* it converges depends on the **condition number** [a single number summarising how "stretched" the matrix is; close to 1 means well-behaved, very large means slow or unstable] of `A`. A condition number near 1 converges in a handful of iterations; `10⁶` may need thousands; effectively infinite means the method diverges.
+
+You do not need to compute condition numbers in this course. Know the word, and know that "well-conditioned" means "the solver will be happy".
+
+→ [Wikipedia: Condition number](https://en.wikipedia.org/wiki/Condition_number)
+
+## Markov chains
+
+A **Markov chain** [a sequence of random states where the probability of the next state depends *only* on the current state] is built from two pieces:
+
+- A **probability vector** `p` of length `n` — `p[i]` is the probability of being in state `i` right now. Entries non-negative, sum to 1.
+- A **transition matrix** `P` of size `n × n` — `P[i][j]` is the probability of moving from state `i` to state `j` in one step. Each row sums to 1 (a *row-stochastic* matrix).
+
+The dynamics are one matrix-vector product per time step:
+
+```text
+p_{t+1} = P^T · p_t          // (column vector convention)
+```
+
+```rust
+use ndarray::array;
+
+let p_t = array![1.0, 0.0, 0.0];          // start in state 0
+let p_matrix = array![[0.7, 0.2, 0.1],
+                      [0.0, 0.5, 0.5],
+                      [0.3, 0.0, 0.7]];
+let p_next = p_matrix.t().dot(&p_t);      // distribution after one step
+```
+
+→ [Wikipedia: Markov chain](https://en.wikipedia.org/wiki/Markov_chain)
+
+## Power iteration vs the steady-state equation
+
+After many steps an **ergodic** [every state reachable from every other state, and the chain is not stuck in a cycle] Markov chain settles into a **stationary distribution** `π` — a probability vector that no longer changes when multiplied by `P`. There are two ways to find it:
+
+- **Power iteration** — start with any `p_0`, multiply by `P` repeatedly: `p_{t+1} = P^T · p_t`. The sequence converges to `π`. Cheap per step (`O(nnz)` for sparse `P`), and you see the intermediate distributions along the way.
+- **Direct eigenvector solve** — `π` is the left-eigenvector of `P` with eigenvalue 1: `π = π·P`. Solve the linear system `(P^T - I) π = 0` plus the constraint `sum(π) = 1` directly. Fast for small `n`; expensive for large sparse `P`.
+
+```rust
+use ndarray::Array1;
+
+// Power iteration: keep multiplying until p stops changing.
+let mut p: Array1<f64> = Array1::from_elem(n, 1.0 / n as f64);
+for _ in 0..200 {
+    p = p_matrix.t().dot(&p);
+}
+// p is now close to the stationary distribution.
+```
+
+→ [Wikipedia: Power iteration](https://en.wikipedia.org/wiki/Power_iteration) · [Wikipedia: Stationary distribution](https://en.wikipedia.org/wiki/Markov_chain#Stationary_distribution_relation_to_eigenvectors_and_simplices)
+
+## Bioinformatics examples of Markov chains
+
+Markov chains and their generalisations are everywhere in modelling biological sequences and networks:
+
+- **Codon usage models** — `64 × 64` transition matrix capturing how likely each codon is to be followed by each other in a given organism's coding sequences.
+- **Hidden Markov models (HMMs)** — Markov chains with hidden states; the basis of [HMMER](http://hmmer.org/) for profile-HMM search, [GENSCAN](https://en.wikipedia.org/wiki/GENSCAN) for *ab initio* gene finding, and tools for sequence segmentation in general.
+- **Influenza strain ranking** — PageRank-style power iteration over an antigenic transition graph to predict which strains will dominate next season.
+- **Random walks on co-expression networks** — Personalized PageRank to score gene–gene relevance; used in many network-medicine pipelines.
+
+→ [Wikipedia: Hidden Markov model](https://en.wikipedia.org/wiki/Hidden_Markov_model) · [Wikipedia: PageRank](https://en.wikipedia.org/wiki/PageRank)
+
+## Recap
+
+- A **matrix** is a 2-D array of numbers; the central operation is matrix-vector multiplication.
+- **Dense storage** wastes memory on zeros; pick **sparse** (COO / CSR / CSC) when most entries are zero.
+- Use `ndarray::Array2` for dense work and `sprs::CsMat` for sparse work.
+- Large `A·x = b` problems are solved **iteratively** — Gauss-Seidel is the simplest one to implement.
+- **Markov chains** evolve by repeated matrix-vector multiplication and converge (under mild conditions) to a stationary distribution.

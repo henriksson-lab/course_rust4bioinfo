@@ -134,6 +134,14 @@ website:
           - day9/lec1-algorithms-and-complexity.qmd
           - day9/00a-ds-complexity-quiz.qmd
           - day9/00b-code-complexity-quiz.qmd
+      - section: "Day 10 — working with matrices"
+        contents:
+          - day10/00-concepts.qmd
+          - day10/lec1-matrices-and-iterative-methods.qmd
+          - day10/01-dense-matrix.qmd
+          - day10/02-sparse-matrix.qmd
+          - day10/03-gauss-seidel.qmd
+          - day10/04-markov-chain.qmd
 
 format:
   html:
@@ -142,3 +150,4 @@ format:
     code-overflow: wrap
     highlight-style: github
     theme: cosmo
+    css: styles.css

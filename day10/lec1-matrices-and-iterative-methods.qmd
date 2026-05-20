@@ -1,0 +1,483 @@
+---
+title: "Matrices — dense, sparse, and iterative solvers"
+subtitle: "Day 10, lecture 1"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: [simple, ../theme.scss]
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+- We model biology as **matrices** [rectangular arrays of numbers that support their own algebra: addition, multiplication, transpose, inversion]
+- We store them efficiently — **dense** when they are full, **sparse** when most entries are zero
+- We solve them iteratively when they are too large for direct methods
+
+::: notes
+Day 10 is the matrix day. Most numerical bioinformatics — single-cell analysis, network analysis, sequence modelling — reduces to a small set of matrix operations done many times over. Today we get the vocabulary and the Rust tooling: ndarray for dense, sprs for sparse, and Gauss-Seidel as the simplest iterative solver. We finish with Markov chains, the most common matrix-based model in biology.
+:::
+
+## Where bioinformatics meets matrices
+
+- **Single-cell expression** — rows = genes, columns = cells, entries = read counts
+- **k-mer count tables** — rows = samples, columns = k-mers
+- **Distance matrices** — pairwise distances between sequences or species
+- **Adjacency matrices** — graphs: `A[i][j] = 1` if there is an edge from `i` to `j`
+- **Phylogenetic trees** — adjacency or covariance matrices over species
+- **Alignment scoring** — BLOSUM62 is a `20 × 20` substitution-score matrix
+- **Network analysis** — protein-interaction graphs, co-expression networks
+
+![Three common bioinformatics matrices: a single-cell expression matrix (genes × cells, mostly zero), a k-mer count table (samples × k-mers), and a small adjacency matrix for a phylogenetic graph.](images/lec1-bio-matrix-examples.svg){fig-alt="Three side-by-side schematic matrices. Left: a tall genes-by-cells matrix mostly filled with zeros, a few colored entries scattered through. Middle: a samples-by-kmers count table with small integer entries. Right: a 4x4 0/1 adjacency matrix next to the small graph it represents." width="80%"}
+
+::: notes
+Whenever you put a biological table into a program, you are reaching for a matrix. The shape and density of the matrix dictates the storage format and the algorithm. Notice how different these are: scRNA-seq matrices are huge and sparse, alignment scoring matrices are tiny and dense, distance matrices are medium and dense.
+:::
+
+## A matrix is just a 2-D array of numbers
+
+```rust
+use ndarray::array;
+
+let a = array![[1.0, 2.0, 3.0],
+               [4.0, 5.0, 6.0]];           // 2 rows, 3 columns
+let x = array![1.0, 0.0, -1.0];            // length-3 vector
+
+let y = a.dot(&x);                         // matrix-vector product
+// y = [1*1 + 2*0 + 3*(-1), 4*1 + 5*0 + 6*(-1)] = [-2.0, -2.0]
+```
+
+The central operation is **multiplication** — matrix-times-vector (`A·x`, the workhorse) or matrix-times-matrix (`A·B`, less common in inner loops).
+
+::: notes
+Strip away the bioinformatics for a moment. A matrix is a rectangular block of numbers. You index it with two numbers — row and column. The one operation you do over and over is multiplication, usually matrix-times-vector. Almost every iterative algorithm we look at today is just `A·x` in a loop.
+:::
+
+## A dense matrix is really a 1-D array
+
+Computer memory is a long flat run of bytes — there is no two-dimensional shelf. So an `Array2<f64>` of shape `(rows, cols)` is stored as **one contiguous buffer of `rows * cols` floats**, plus the two integers `rows` and `cols` to remember the shape.
+
+To read `a[i, j]` the library converts the two indices into a single offset:
+
+```text
+row-major   (ndarray, NumPy, C):       offset = i * cols + j
+column-major (nalgebra, R, Fortran):   offset = j * rows + i
+```
+
+For a 2×3 matrix `[[1, 2, 3], [4, 5, 6]]` stored row-major, the entry `a[1, 2]` lives at index `1 * 3 + 2 = 5` — the 6th element of the flat buffer (value `6`).
+
+::: notes
+This is the single most useful mental model for thinking about dense matrices. The 2-D notation is for the human; the machine sees one long run of floats. Every time you call `a[[i, j]]` the library is silently multiplying and adding to land at one offset. Once students see this, the row-major vs column-major distinction becomes obvious — there are exactly two reasonable choices for the multiplier.
+:::
+
+## Dense storage — same data, two memory orders
+
+The two conventions for flattening a 2-D grid into that 1-D run of bytes:
+
+- **Row-major** [rows laid out one after another in memory] — C, NumPy default, `ndarray`
+- **Column-major** [columns laid out one after another] — Fortran, R, MATLAB, Julia, `nalgebra`
+
+```text
+A = [ 1 2 3 ]
+    [ 4 5 6 ]
+
+row-major:    [1, 2, 3, 4, 5, 6]      offset(i, j) = i * 3 + j
+column-major: [1, 4, 2, 5, 3, 6]      offset(i, j) = j * 2 + i
+```
+
+![The same 2x3 matrix flattened two different ways: row-major reads left-to-right, top-to-bottom; column-major reads top-to-bottom, left-to-right.](images/lec1-dense-storage.svg){fig-alt="Two memory diagrams side by side. Left: row-major flattening of a 2x3 matrix, with arrows showing the order [r0c0, r0c1, r0c2, r1c0, r1c1, r1c2]. Right: column-major flattening with arrows showing the order [r0c0, r1c0, r0c1, r1c1, r0c2, r1c2]." width="85%"}
+
+::: notes
+Both layouts are correct; both contain the same numbers. The difference is invisible at the programming level — `m[[i, j]]` works the same either way — and very visible at the performance level once we look at iteration order. The reason there are two conventions is historical: Fortran (the first numerical language) chose column-major, C chose row-major, and every language since has inherited one or the other.
+:::
+
+## Why the layout matters — cache locality
+
+```rust
+// Row-major matrix: iterating row-by-row touches consecutive memory.
+for i in 0..rows {
+    for j in 0..cols {
+        sum += a[[i, j]];        // FAST: each step reads the next byte
+    }
+}
+
+// Same matrix, swap the loops: now we stride through cache.
+for j in 0..cols {
+    for i in 0..rows {
+        sum += a[[i, j]];        // SLOW: each step jumps rows*8 bytes
+    }
+}
+```
+
+The CPU loads memory in 64-byte chunks called **cache lines** [a contiguous block the CPU fetches from RAM in one go; reusing it is essentially free, fetching a new one costs ~100 cycles]. The first loop reuses each cache line; the second discards it on every iteration.
+
+The slowdown is often 5-20×. Same code, same numbers, different access pattern.
+
+::: notes
+Cache locality is the single biggest reason performance-critical numerical code thinks hard about layout. The simple rule: iterate in the order memory is laid out. Row-major matrix? Outer loop on rows, inner loop on columns. Column-major matrix? The other way around. Get it wrong and you can easily lose an order of magnitude.
+:::
+
+## In Rust — `ndarray`
+
+[`ndarray`](https://docs.rs/ndarray/latest/ndarray/) is the standard crate for dense N-dimensional arrays.
+
+```rust
+use ndarray::{Array1, Array2, array};
+
+let a: Array2<f64> = Array2::zeros((3, 3));         // 3x3 of zeros
+let b: Array2<f64> = Array2::eye(3);                // 3x3 identity
+let m = array![[1.0, 2.0, 3.0],
+               [4.0, 5.0, 6.0]];                    // literal
+let x: Array1<f64> = array![1.0, 2.0, 3.0];
+
+let row0   = m.row(0);                              // 1-D view, no copy
+let col1   = m.column(1);                           // 1-D view, no copy
+let y      = m.dot(&x);                             // matrix-vector multiply
+let mt     = m.t();                                 // transpose, no copy
+let slice  = m.slice(ndarray::s![.., 1..3]);        // all rows, cols 1..3
+```
+
+If you know NumPy, you know 90% of `ndarray`. See the [ndarray-for-NumPy-users guide](https://docs.rs/ndarray/latest/ndarray/doc/ndarray_for_numpy_users/index.html).
+
+::: notes
+Array2 is the bread-and-butter 2-D matrix type. Most things you'd reach for in NumPy have a direct ndarray equivalent: zeros, eye, dot, transpose, slicing, broadcasting, element-wise arithmetic. The big practical difference is that ndarray is strictly typed — Array2<f64> and Array2<i32> are different types.
+:::
+
+## Most biology matrices are sparse
+
+A typical 10x Genomics single-cell experiment:
+
+| Dimension | Size |
+|---|---|
+| Genes (rows) | ~ 10 000 |
+| Cells (columns) | ~ 100 000 |
+| Total entries | 10⁹ |
+| Non-zero fraction | 1-5% |
+
+As a dense `f64` matrix: `10⁹ × 8 bytes = 8 GB`. As a sparse matrix: **80-400 MB**, a 20-100× saving — and most matrix operations get faster too, because zero times anything is zero and we skip it.
+
+::: notes
+This is why sparse storage exists. The dense version of a real single-cell dataset would not even fit in RAM on a laptop. Once you accept the more complicated bookkeeping, you get back both the memory and most of the compute time. The same argument applies to k-mer count tables, protein-interaction adjacency matrices, and most real network data.
+:::
+
+## COO — the simplest sparse format
+
+Three parallel arrays: `row`, `col`, `value`. Entry `k` lives at `(row[k], col[k]) = value[k]`.
+
+```text
+A =  [ 0  0  5 ]
+     [ 0  8  0 ]
+     [ 0  0  0 ]
+
+row    = [0, 1]
+col    = [2, 1]
+value  = [5.0, 8.0]
+```
+
+![COO format: each non-zero is a (row, col, value) triplet, stored in three parallel arrays.](images/lec1-sparse-coo.svg){fig-alt="A small 3x3 matrix with two non-zero entries. Three arrows point from those entries down to three parallel arrays labelled row, col, value, each of length 2." width="60%"}
+
+**Use COO** for: loading data (e.g., from a TSV), building a matrix incrementally. **Avoid COO** for matrix-vector multiplication — there is no row or column order, so the multiply algorithm cannot stream cleanly.
+
+::: notes
+COO is the easy format. You read a sparse TSV: one row, one column, one value per line. You push triplets. Done. The cost is paid later when you try to do math with it — the multiply algorithm has to look up which entries belong to which row, and there is no fast way to do that. So we use COO as a staging format and convert to CSR for the real work.
+:::
+
+## CSR — compressed sparse row
+
+Three flat arrays: `values`, `col_indices`, **`row_pointers`** of length `rows + 1`.
+
+```text
+A =  [ 0  0  5 ]
+     [ 0  8  0 ]
+     [ 0  0  0 ]
+
+values   = [5.0, 8.0]
+col_idx  = [2,   1  ]
+row_ptr  = [0,   1,   2,   2]    // row i lives at values[row_ptr[i] .. row_ptr[i+1]]
+```
+
+![CSR format: a single flat array of values, a parallel array of column indices, and a row_pointers array giving the start index for each row.](images/lec1-sparse-csr.svg){fig-alt="A 3x3 matrix with two non-zero entries displayed above three arrays. The values and col_idx arrays each have length 2; the row_ptr array has length 4 (rows+1), with arrows indicating the start of each row's slice within values." width="70%"}
+
+Fast row access. **Fast matrix-vector multiplication** — for each row you walk a contiguous slice of `values` and `col_idx`. This is the workhorse format for numerical sparse code.
+
+::: notes
+CSR is the format you actually compute with. The trick is the row_pointers array: it tells you where each row's non-zeros start and end inside the flat values array. So matrix-vector multiplication becomes a clean loop — for row i, iterate over a small contiguous slice, multiply each value by the matching x entry, accumulate. Cache-friendly, branch-light. This is what every serious sparse library uses under the hood.
+:::
+
+## CSC — compressed sparse column
+
+The mirror image of CSR — column-oriented.
+
+```text
+A =  [ 0  0  5 ]
+     [ 0  8  0 ]
+     [ 0  0  0 ]
+
+values   = [8.0, 5.0]
+row_idx  = [1,   0  ]
+col_ptr  = [0,   0,   1,   2]    // column j lives at values[col_ptr[j] .. col_ptr[j+1]]
+```
+
+![CSC format: same idea as CSR but oriented around columns; values, row_indices, and col_pointers.](images/lec1-sparse-csc.svg){fig-alt="A 3x3 matrix with two non-zeros, displayed above three arrays for the CSC representation. The values and row_idx arrays each have length 2; the col_ptr array has length 4 (cols+1), with arrows indicating the start of each column's slice within values." width="70%"}
+
+Fast column access; slow row access. Use CSC when you frequently pull out single columns — e.g., a single-cell pipeline processing one cell (column) at a time.
+
+::: notes
+CSC is exactly the same idea as CSR with rows and columns swapped. Most libraries support both and let you convert between them in O(nnz). The choice between CSR and CSC depends on which axis you slice along most often. If in doubt, CSR — it's the more common default.
+:::
+
+## Picking a format — quick guide
+
+| Use case | Best format |
+|---|---|
+| Loading from disk, building incrementally | **COO** |
+| Matrix-vector multiplication, iterative solvers | **CSR** |
+| Slicing or extracting single columns | **CSC** |
+| Whole matrix is dense (or near-dense), small | dense `Array2` |
+
+**Typical workflow**: read a TSV into COO → convert to CSR for math.
+
+::: notes
+There is no single best sparse format. The right choice depends on what you do with the matrix once you have it. The typical pipeline is COO during ingest, CSR for computation. If your downstream work is mostly column slicing — common in single-cell — you might convert to CSC instead.
+:::
+
+## In Rust — `sprs`
+
+[`sprs`](https://docs.rs/sprs/latest/sprs/) is the standard sparse-matrix crate. The main type is [`CsMat<f64>`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html) — compressed sparse, CSR or CSC.
+
+```rust
+use sprs::{TriMat, CsMat};
+
+let mut triplets = TriMat::new((3, 3));            // (rows, cols)
+triplets.add_triplet(0, 2, 5.0);
+triplets.add_triplet(1, 1, 8.0);
+
+let csr: CsMat<f64> = triplets.to_csr();           // build COO, convert to CSR
+let nnz = csr.nnz();                               // 2 non-zeros
+
+let x = vec![1.0, 2.0, 3.0];
+let y = &csr * &x;                                 // sparse mat-vec multiply
+```
+
+Conversion COO → CSR is one method call. Matrix-vector multiply uses the standard `*` operator.
+
+::: notes
+sprs follows the standard build-in-COO-then-convert pattern. TriMat is the COO type; CsMat is the compressed (CSR or CSC) type. The crate also provides addition, multiplication, transposition, and conversions to and from dense ndarray matrices. For most day-10 work, those four operations are enough.
+:::
+
+## Matrix-vector multiplication — where does the time go
+
+For an `n × n` matrix and a length-`n` vector:
+
+| Format | Operations | Notes |
+|---|---|---|
+| Dense | `n²` multiply-adds | Cache-friendly, vectorisable |
+| Sparse (CSR) | `nnz` multiply-adds | Only non-zeros visited |
+
+For `n = 100 000` and **density 0.5%** (`nnz = 5 × 10⁷`):
+
+- Dense: `10¹⁰` operations (~10 s)
+- Sparse: `5 × 10⁷` operations (~0.05 s)
+
+That is a **~200× speedup** before counting the memory saved.
+
+::: notes
+This is the practical case for sparse formats. For real scRNA-seq matrices the density is below 5%, often below 1%, so the speedup is even larger. The constant factor is slightly worse for sparse — pointer indirection, less vectorisation — but the asymptotic win dominates the moment your density drops below a few percent.
+:::
+
+## Solving `A·x = b` — two approaches
+
+A huge chunk of numerical bioinformatics is "find `x` such that `A·x = b`":
+
+- **Direct methods** — factor `A` (LU, Cholesky), back-substitute. Exact to floating-point. **`O(n³)`** time, **`O(n²)`** memory. Fine for `n ≤ a few thousand`.
+- **Iterative methods** — Jacobi, Gauss-Seidel, conjugate gradient. Start with a guess, refine. Approximate, but **`O(nnz × iterations)`**. Scales to `n = 10⁶+`.
+
+For large sparse problems you choose iterative.
+
+::: notes
+This is the fork in the road. Direct methods give you an exact answer but build a dense O(n²) factorisation that does not fit for large sparse problems. Iterative methods give you an approximate answer but only ever multiply by the original sparse matrix, so the memory and per-step cost stay tiny. Modern numerical libraries default to iterative for anything more than a few thousand rows.
+:::
+
+## Gauss-Seidel — the idea
+
+Start with a guess `x` (zeros are fine). Sweep through the rows. For each row `i`, solve the equation `A·x = b` for `x_i`, treating the other `x_j` as known. Update `x_i` in place. Repeat until `x` stops changing.
+
+```text
+A = [ 4 -1  0 ]      b = [ 2 ]
+    [-1  4 -1 ]          [ 6 ]
+    [ 0 -1  4 ]          [ 2 ]
+
+start: x = [0, 0, 0]
+sweep 1: x_0 = (2 - (-1)*0 - 0*0) / 4 = 0.5
+         x_1 = (6 - (-1)*0.5 - (-1)*0) / 4 = 1.625
+         x_2 = (2 - 0*0.5 - (-1)*1.625) / 4 = 0.906
+sweep 2: ...
+```
+
+Each sweep is cheap; the magic is that we already use the **newer** `x_0, x_1` when computing `x_2`.
+
+::: notes
+The simplest iterative solver to write by hand. The trick that distinguishes Gauss-Seidel from its even simpler cousin Jacobi is that Gauss-Seidel uses already-updated values within the current sweep. Jacobi instead works from a full snapshot of the previous sweep and only writes the new x at the end. Gauss-Seidel converges roughly twice as fast as Jacobi for the same cost per sweep, which is why it is usually preferred.
+:::
+
+## Gauss-Seidel — the update rule
+
+For each row `i`:
+
+$$x_i^{k+1} = \frac{1}{A_{ii}} \left( b_i - \sum_{j \ne i} A_{ij}\, x_j \right)$$
+
+The crucial detail: the sum uses **the latest available value** of each `x_j` — newly updated `x_0, \ldots, x_{i-1}` from the current sweep, and old `x_{i+1}, \ldots, x_{n-1}` from the previous one.
+
+```rust
+// One Gauss-Seidel sweep over a dense ndarray::Array2<f64>.
+for i in 0..n {
+    let mut sum = 0.0;
+    for j in 0..n {
+        if i != j { sum += a[[i, j]] * x[j]; }     // x[j] is current value
+    }
+    x[i] = (b[i] - sum) / a[[i, i]];               // write in place
+}
+```
+
+The in-place update is what makes it Gauss-Seidel rather than Jacobi — exercise 3 walks through both.
+
+::: notes
+The equation is just `A·x = b` rearranged to isolate x_i. Everything on the right-hand side is treated as known. Because we write x[i] in place, subsequent iterations of the loop automatically see the new values. If we instead kept the new values in a separate vector and copied over at the end of the sweep, we'd have Jacobi.
+:::
+
+## When does Gauss-Seidel converge?
+
+Two common sufficient conditions:
+
+- **Symmetric positive-definite (SPD)** [`A` equals its transpose, and `xᵀ·A·x > 0` for every non-zero `x`] — common when `A` comes from a least-squares or covariance problem.
+- **Strictly diagonally dominant** [`|A_{ii}| > sum_{j != i} |A_{ij}|` for every row] — each diagonal entry larger than the sum of the off-diagonals in its row.
+
+For matrices outside these classes Gauss-Seidel **may diverge** — the successive `x` vectors blow up instead of homing in.
+
+In practice: most matrices that arise from physical or biological modelling problems are SPD or close to it, and Gauss-Seidel just works.
+
+::: notes
+This is the small print. Gauss-Seidel is not a universal solver — feed it a wild matrix and you can get garbage. The two convergence guarantees above cover most of the matrices you meet in well-posed problems. Outside those classes you might switch to a more robust method like conjugate gradient or use a preconditioner. We do not go that deep this week; the takeaway is to recognise the keywords SPD and diagonally dominant when you read papers.
+:::
+
+## Convergence picture
+
+![Successive iterates of Gauss-Seidel narrowing on the true solution; the rate depends on the condition number of A.](images/lec1-gauss-seidel-converge.svg){fig-alt="A 2-D plot showing several successive estimates of x converging toward a true solution marked with a star. The first few iterates are far away; each subsequent iterate is closer; an arrow chain connects them in order. A side label notes that the convergence rate depends on the condition number." width="70%"}
+
+Each iteration moves the current `x` closer to the true solution. The rate of convergence depends on the **condition number** [a single number summarising how "stretched" the matrix is; close to 1 is great, very large is slow or unstable] of `A`. Well-conditioned: handful of iterations. Ill-conditioned: thousands, or never.
+
+::: notes
+The condition number is to linear algebra what Big-O is to algorithms — a one-number summary that tells you how a method will behave at scale. You will not compute condition numbers by hand in this course, but the word is worth knowing. When a paper says "well-conditioned linear system", that is a promise that iterative methods will converge quickly.
+:::
+
+## Markov chains — biology examples
+
+- **Viral strain succession** — model which influenza strain follows which
+- **Codon-usage models** — `64 × 64` matrix of codon-to-codon transitions
+- **Hidden Markov models (HMMs)** — gene finders ([GENSCAN](https://en.wikipedia.org/wiki/GENSCAN)), profile-HMM search ([HMMER](http://hmmer.org/))
+- **Random walks on networks** — Personalized PageRank over protein-interaction graphs
+- **Sequence segmentation** — promoter / coding / UTR labelling
+
+Whenever you have "what comes next depends only on what is now", a Markov chain is the standard model.
+
+::: notes
+Markov chains are everywhere in sequence analysis and network biology. The "memoryless" assumption — only the current state matters — is a strong one, but in practice it captures enough structure to be useful, and the math is tractable. HMMs in particular have been a workhorse of computational biology since the 1990s.
+:::
+
+## A Markov chain in one picture
+
+![A 3-state Markov chain shown as a directed graph with weighted edges, the equivalent 3x3 transition matrix P, and the matrix-vector multiplication P^T times p_t producing p_{t+1}.](images/lec1-markov-state-diagram.svg){fig-alt="Left: a directed graph with three nodes labelled A, B, C and directed arrows between them annotated with transition probabilities summing to 1 out of each node. Middle: the corresponding 3x3 row-stochastic transition matrix P with rows summing to 1. Right: the equation p_{t+1} = P^T p_t, with a small numerical example showing one step of evolution." width="85%"}
+
+Three pieces: **states** (the nodes), **transition probabilities** (the edge weights — each row of `P` sums to 1), and a **current distribution** `p_t` that evolves one step at a time.
+
+::: notes
+This is the picture to keep in mind. The graph and the matrix encode the same information. The matrix lets you do the math; the graph lets you reason about reachability and cycles. The dynamics are one matrix-vector product per step — that is it.
+:::
+
+## Multiplying P against itself — power iteration
+
+Start with any distribution `p_0`. Multiply by `Pᵀ` over and over. The sequence converges to the **stationary distribution** `π`:
+
+```rust
+use ndarray::Array1;
+
+let mut p: Array1<f64> = Array1::from_elem(n, 1.0 / n as f64);    // uniform start
+for _ in 0..200 {
+    p = p_matrix.t().dot(&p);                                     // one step
+}
+// p is now close to the stationary distribution π.
+```
+
+Convergence is guaranteed when the chain is **ergodic** [every state reachable from every other, and the chain is not stuck in a cycle].
+
+::: notes
+Power iteration is the simplest possible algorithm. Pick any starting distribution, multiply by the transition matrix repeatedly, stop when it stops changing. For sparse P each step is O(nnz), and convergence usually happens within a few dozen to a few hundred iterations. This is how PageRank computes its ranking on graphs of billions of pages — it is just power iteration on a very sparse transition matrix.
+:::
+
+## The steady-state equation
+
+Alternatively, solve directly for the eigenvector with eigenvalue 1:
+
+$$\pi = \pi \cdot P \qquad \Longleftrightarrow \qquad (P^T - I)\,\pi = 0,\ \ \sum_i \pi_i = 1$$
+
+```rust
+// Sketch: solve (P^T - I) pi = 0 with the normalisation constraint sum(pi) = 1.
+// Direct dense linear solve; works well for small n.
+let pt_minus_i = p_matrix.t().to_owned() - Array2::<f64>::eye(n);
+// ...feed pt_minus_i and the normalisation row into a dense solver...
+```
+
+For **small dense** `P` this is fast and exact. For **large sparse** `P` power iteration is more practical — the steady-state solve would densify the factorisation.
+
+::: notes
+The steady-state equation is just "find the distribution that doesn't change when we apply P". That is by definition the left eigenvector of P associated with eigenvalue 1, which always exists for a valid transition matrix. For small problems a direct solve is fast and gives an exact answer; for huge sparse P, factorising would blow up the memory and we fall back on power iteration.
+:::
+
+## When to use which
+
+| | Power iteration | Direct eigenvector |
+|---|---|---|
+| Works for | any sparse `P` | small dense `P` |
+| Cost | `O(nnz × iters)` | `O(n³)` |
+| Output | full trajectory `p_0, p_1, ..., π` | just `π` |
+| Convergence | needs ergodicity | always (when valid) |
+| Typical use | network analysis, PageRank | small biological models |
+
+Power iteration is the default for anything large or sparse.
+
+::: notes
+The split mirrors the direct-vs-iterative split for A·x = b. Direct is exact and fast for small n; iterative is the only thing that scales. Note one bonus of power iteration: you get the intermediate distributions, which can be biologically interesting in their own right (e.g., the distribution at time t in a viral-spread model).
+:::
+
+## Recap
+
+- Pick the **sparse** representation for sparse data — single-cell, networks, k-mer tables. Use **COO** to build, **CSR** for math.
+- **Iterative solvers** (Gauss-Seidel and friends) scale where direct factorisation cannot — `O(nnz × iters)` instead of `O(n³)`.
+- **Markov chains** converge to a stationary distribution under mild conditions; **power iteration** is the simplest way to find it.
+
+::: notes
+Three takeaways. First, match the storage to the data — dense for dense, sparse for sparse, with CSR as the default for serious sparse math. Second, accept approximate-but-cheap iterative solvers when the matrix is too big for a direct factorisation. Third, the same iterative pattern — repeated matrix-vector multiplication — is what powers Markov chain analysis, and through it PageRank, HMMER, gene finders, and a long list of bioinformatics tools.
+:::
+
+## To the exercises
+
+Four exercises, in order:
+
+- **[Exercise 1 — Loading and operating on a dense matrix](01-dense-matrix.qmd)** — `ndarray::Array2`, slicing, mat-vec multiply
+- **[Exercise 2 — Sparse representations](02-sparse-matrix.qmd)** — `sprs::CsMat`, triplet → CSR, memory comparison
+- **[Exercise 3 — Implement Gauss-Seidel](03-gauss-seidel.qmd)** — your own iterative solver
+- **[Exercise 4 — Markov chain](04-markov-chain.qmd)** — power iteration vs steady state
+
+::: notes
+Work through them in order. Exercise 1 and 2 set up the two storage formats; 3 builds a real iterative solver on top of the dense format; 4 puts it all together with Markov chains. By the end you will have written and tested your own sparse matrix code, your own iterative linear solver, and your own power-iteration loop.
+:::

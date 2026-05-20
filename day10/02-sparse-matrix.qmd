@@ -1,0 +1,145 @@
+---
+title: "Day 10 — Exercise: Sparse matrix basics"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Load a sparse matrix from a triplet list (a `Vec<(row, col, value)>`), build a [`sprs::CsMat<f64>`](https://docs.rs/sprs/) (gloss: `sprs`'s compressed-sparse-matrix type, the Rust analogue of `scipy.sparse.csr_matrix`), compute its **density** (fraction of non-zero entries), and verify a few entry values.
+
+By the time `cargo test` passes you will have built a sparse matrix with [`TriMat`](https://docs.rs/sprs/latest/sprs/struct.TriMat.html), converted it to CSR, queried [`.nnz()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.nnz), [`.rows()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.rows), [`.cols()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.cols), and [`.get(...)`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.get), and seen how to construct a `CsMat` from the easiest-to-write input format.
+
+## Background
+
+A **sparse matrix** is a matrix where most entries are zero, stored without listing the zeros. In bioinformatics this is the rule rather than the exception:
+
+- A single-cell RNA-seq count matrix is typically 30 000 cells × 30 000 genes with 95–99% zeros. As dense `f64` that is 7 GB; as a sparse matrix it fits comfortably in a couple of hundred MB.
+- A gene–gene interaction graph is a 20 000 × 20 000 adjacency matrix with maybe 10 000 000 non-zero entries — 2.5% density.
+- A k-mer count matrix from a metagenomic sample can have billions of rows; only millions are non-zero.
+
+There are three common storage formats:
+
+- **COO** (coordinate format) — three parallel arrays `(rows, cols, values)`. Easy to build incrementally, cheap to add an entry, but slow for matrix arithmetic. In `sprs` this is [`TriMat`](https://docs.rs/sprs/latest/sprs/struct.TriMat.html).
+- **CSR** (compressed sparse row) — three arrays: a flat `values` array, a column index per value, and a row-pointer array of length `rows + 1` that says where each row starts in the other two. Fast row-major iteration; ideal for `A · v`. In `sprs` this is [`CsMat`](https://docs.rs/sprs/) with row-major storage.
+- **CSC** (compressed sparse column) — the column-major dual of CSR. Fast for `A^T · v` and for slicing out columns.
+
+The standard recipe is: **build in COO, convert to CSR once, do all your arithmetic on the CSR.** That is what this exercise does.
+
+Two terms you will see in the code:
+
+- **nnz** (gloss: number of non-zero entries — pronounced "n-n-z" or "non-zeros") is the length of the `values` array. It is the single most important number for predicting how long a sparse computation will take.
+- **density** is `nnz / (rows * cols)` — the fraction of the matrix that is actually stored. Below ~10% sparse storage usually wins on both memory and speed; above ~30% dense storage wins.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day10/ex-sparse-matrix
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A function `sample_triplets()` that returns a `Vec<(row, col, value)>` for a fixed 5 × 5 test matrix with 6 non-zero entries
+- Two functions with `// TODO` bodies: `build_sparse` and `density`
+- A `main` that prints shape, nnz, and density
+- A `#[cfg(test)] mod tests` block with five unit tests
+
+Your job: replace the two `TODO` bodies so that all five tests pass.
+
+You may **not** change the function signatures, the tests, `sample_triplets`, or `main`. You may add helper functions.
+
+## How to run
+
+From inside `day10/ex-sparse-matrix/`:
+
+```bash
+cargo build           # compile (first build will fetch sprs — takes a minute)
+cargo test            # run the tests — these should be failing at first
+cargo run             # print shape, nnz, and density
+```
+
+When all five tests pass, `cargo test` will print:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — Building a TriMat"}
+[`TriMat`](https://docs.rs/sprs/latest/sprs/struct.TriMat.html) is `sprs`'s COO builder. Construct it with the shape, then push triplets one at a time:
+
+```rust
+use sprs::TriMat;
+
+let mut tri = TriMat::new((rows, cols));
+tri.add_triplet(row, col, value);
+tri.add_triplet(row, col, value);
+// ...
+```
+
+Pattern-match the triplet tuple in your loop so you don't have to write `t.0`, `t.1`, `t.2`:
+
+```rust
+for &(r, c, v) in triplets {
+    tri.add_triplet(r, c, v);
+}
+```
+
+The `&` in the pattern is the same trick as in day 1: it gives you `(usize, usize, f64)` instead of `&(usize, usize, f64)`, so the fields are owned values that you can pass straight to `add_triplet`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — COO to CSR conversion"}
+Once the triplets are loaded, convert to CSR with [`.to_csr()`](https://docs.rs/sprs/latest/sprs/struct.TriMatBase.html#method.to_csr):
+
+```rust
+let m: CsMat<f64> = tri.to_csr();
+```
+
+This reorganises the data into the three CSR arrays and returns a `CsMat<f64>`. If two triplets share the same `(row, col)`, `to_csr` will sum them — useful for incremental counting, occasionally surprising.
+
+(There is also [`.to_csc()`](https://docs.rs/sprs/latest/sprs/struct.TriMatBase.html#method.to_csc) if you want column-major instead. Same triplets, different layout.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Density and the empty-matrix edge case"}
+[`nnz()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.nnz), [`rows()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.rows), and [`cols()`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html#method.cols) all return [`usize`](https://doc.rust-lang.org/std/primitive.usize.html), so cast to `f64` before dividing or you will get integer division (the same bug as day 1):
+
+```rust
+m.nnz() as f64 / (m.rows() * m.cols()) as f64
+```
+
+The `empty_matrix_density_zero` test builds a 5 × 5 matrix with **no** triplets — `nnz` is 0, the denominator is 25, the result is 0.0. That case happens to fall out for free. The reason there's a check for a zero denominator in the solution is defensive: a 0 × 0 matrix would otherwise produce `NaN`.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn build_sparse(triplets: &[(usize, usize, f64)], shape: (usize, usize)) -> CsMat<f64> {
+    let mut tri = TriMat::new(shape);
+    for &(r, c, v) in triplets {
+        tri.add_triplet(r, c, v);
+    }
+    tri.to_csr()
+}
+
+fn density(m: &CsMat<f64>) -> f64 {
+    let cells = (m.rows() * m.cols()) as f64;
+    if cells == 0.0 { 0.0 } else { m.nnz() as f64 / cells }
+}
+```
+
+The full reference implementation lives in `day10/ex-sparse-matrix-solution/src/main.rs`. Try not to peek before your own version passes all five tests.
+:::
+
+## Where this leads
+
+- **Real biology matrices.** Loading a single-cell `.mtx` file (Matrix Market format) into a `CsMat` is essentially the same workflow — read triplets from the file, push them into a `TriMat`, convert to CSR.
+- **Sparse matrix-vector multiply.** `CsMat` has its own [`.mul_vec`](https://docs.rs/sprs/) that runs in O(nnz) instead of O(rows × cols). That is the whole point of CSR.
+- **Iterative solvers.** Gauss-Seidel (exercise 3) on a sparse matrix is the standard way to solve `Ax = b` when `A` is too large to factor — you never touch the zeros.

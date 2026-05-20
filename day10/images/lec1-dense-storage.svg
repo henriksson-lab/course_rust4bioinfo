@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, -apple-system, sans-serif">
+  <title>Dense storage: row-major vs column-major</title>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#666"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Dense storage — same data, two memory orders</text>
+
+  <!-- ============== The matrix ============== -->
+  <g transform="translate(330,60)" font-family="ui-monospace, monospace" font-size="14" text-anchor="middle">
+    <!-- 3x4 matrix, cell 60 x 32 -->
+    <!-- row 0 -->
+    <rect x="0"   y="0"  width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="30"  y="20" fill="#0d47a1">a00</text>
+    <rect x="60"  y="0"  width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="90"  y="20" fill="#0d47a1">a01</text>
+    <rect x="120" y="0"  width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="150" y="20" fill="#0d47a1">a02</text>
+    <rect x="180" y="0"  width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="210" y="20" fill="#0d47a1">a03</text>
+    <!-- row 1 -->
+    <rect x="0"   y="32" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="30"  y="52" fill="#0d47a1">a10</text>
+    <rect x="60"  y="32" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="90"  y="52" fill="#0d47a1">a11</text>
+    <rect x="120" y="32" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="150" y="52" fill="#0d47a1">a12</text>
+    <rect x="180" y="32" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="210" y="52" fill="#0d47a1">a13</text>
+    <!-- row 2 -->
+    <rect x="0"   y="64" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="30"  y="84" fill="#0d47a1">a20</text>
+    <rect x="60"  y="64" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="90"  y="84" fill="#0d47a1">a21</text>
+    <rect x="120" y="64" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="150" y="84" fill="#0d47a1">a22</text>
+    <rect x="180" y="64" width="60" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="210" y="84" fill="#0d47a1">a23</text>
+
+    <text x="120" y="-12" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#555">3 x 4 matrix A</text>
+  </g>
+
+  <!-- ============== Row-major strip ============== -->
+  <g transform="translate(50,210)">
+    <text x="0" y="0" font-size="15" font-weight="600" fill="#1976d2">Row-major  (C, NumPy default, ndarray)</text>
+    <text x="0" y="18" font-size="13" fill="#555">consecutive memory cell after a00 is a01; iterating a row is cache-friendly</text>
+
+    <g font-family="ui-monospace, monospace" font-size="13" text-anchor="middle">
+      <!-- 12 cells of width 65 -->
+      <rect x="0"   y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="32"  y="55" fill="#0d47a1">a00</text>
+      <rect x="65"  y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="97"  y="55" fill="#0d47a1">a01</text>
+      <rect x="130" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="162" y="55" fill="#0d47a1">a02</text>
+      <rect x="195" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="227" y="55" fill="#0d47a1">a03</text>
+      <rect x="260" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="292" y="55" fill="#0d47a1">a10</text>
+      <rect x="325" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="357" y="55" fill="#0d47a1">a11</text>
+      <rect x="390" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="422" y="55" fill="#0d47a1">a12</text>
+      <rect x="455" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="487" y="55" fill="#0d47a1">a13</text>
+      <rect x="520" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="552" y="55" fill="#0d47a1">a20</text>
+      <rect x="585" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="617" y="55" fill="#0d47a1">a21</text>
+      <rect x="650" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="682" y="55" fill="#0d47a1">a22</text>
+      <rect x="715" y="35" width="65" height="32" fill="#e3f2fd" stroke="#1976d2"/><text x="747" y="55" fill="#0d47a1">a23</text>
+    </g>
+
+    <!-- indices below -->
+    <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+      <text x="32"  y="80">0</text>
+      <text x="97"  y="80">1</text>
+      <text x="162" y="80">2</text>
+      <text x="227" y="80">3</text>
+      <text x="292" y="80">4</text>
+      <text x="357" y="80">5</text>
+      <text x="422" y="80">6</text>
+      <text x="487" y="80">7</text>
+      <text x="552" y="80">8</text>
+      <text x="617" y="80">9</text>
+      <text x="682" y="80">10</text>
+      <text x="747" y="80">11</text>
+    </g>
+
+    <!-- bracket above showing rows -->
+    <g stroke="#1976d2" fill="none" stroke-width="1.5">
+      <path d="M0,30 L0,25 L260,25 L260,30"/>
+      <path d="M260,30 L260,25 L520,25 L520,30"/>
+      <path d="M520,30 L520,25 L780,25 L780,30"/>
+    </g>
+    <g font-size="11" fill="#1976d2" text-anchor="middle">
+      <text x="130" y="20">row 0</text>
+      <text x="390" y="20">row 1</text>
+      <text x="650" y="20">row 2</text>
+    </g>
+  </g>
+
+  <!-- ============== Column-major strip ============== -->
+  <g transform="translate(50,330)">
+    <text x="0" y="0" font-size="15" font-weight="600" fill="#d97706">Column-major  (Fortran, R, nalgebra default)</text>
+    <text x="0" y="18" font-size="13" fill="#555">consecutive memory cell after a00 is a10; iterating a column is cache-friendly</text>
+
+    <g font-family="ui-monospace, monospace" font-size="13" text-anchor="middle">
+      <rect x="0"   y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="32"  y="55" fill="#7a3d00">a00</text>
+      <rect x="65"  y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="97"  y="55" fill="#7a3d00">a10</text>
+      <rect x="130" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="162" y="55" fill="#7a3d00">a20</text>
+      <rect x="195" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="227" y="55" fill="#7a3d00">a01</text>
+      <rect x="260" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="292" y="55" fill="#7a3d00">a11</text>
+      <rect x="325" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="357" y="55" fill="#7a3d00">a21</text>
+      <rect x="390" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="422" y="55" fill="#7a3d00">a02</text>
+      <rect x="455" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="487" y="55" fill="#7a3d00">a12</text>
+      <rect x="520" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="552" y="55" fill="#7a3d00">a22</text>
+      <rect x="585" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="617" y="55" fill="#7a3d00">a03</text>
+      <rect x="650" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="682" y="55" fill="#7a3d00">a13</text>
+      <rect x="715" y="35" width="65" height="32" fill="#fff3cd" stroke="#d97706"/><text x="747" y="55" fill="#7a3d00">a23</text>
+    </g>
+
+    <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+      <text x="32"  y="80">0</text>
+      <text x="97"  y="80">1</text>
+      <text x="162" y="80">2</text>
+      <text x="227" y="80">3</text>
+      <text x="292" y="80">4</text>
+      <text x="357" y="80">5</text>
+      <text x="422" y="80">6</text>
+      <text x="487" y="80">7</text>
+      <text x="552" y="80">8</text>
+      <text x="617" y="80">9</text>
+      <text x="682" y="80">10</text>
+      <text x="747" y="80">11</text>
+    </g>
+
+    <g stroke="#d97706" fill="none" stroke-width="1.5">
+      <path d="M0,30 L0,25 L195,25 L195,30"/>
+      <path d="M195,30 L195,25 L390,25 L390,30"/>
+      <path d="M390,30 L390,25 L585,25 L585,30"/>
+      <path d="M585,30 L585,25 L780,25 L780,30"/>
+    </g>
+    <g font-size="11" fill="#d97706" text-anchor="middle">
+      <text x="97"  y="20">col 0</text>
+      <text x="292" y="20">col 1</text>
+      <text x="487" y="20">col 2</text>
+      <text x="682" y="20">col 3</text>
+    </g>
+  </g>
+
+  <!-- Bottom annotation -->
+  <text x="450" y="475" text-anchor="middle" font-size="13" fill="#555">
+    Iterating rows is cache-friendly on row-major; iterating columns is cache-friendly on column-major.
+  </text>
+</svg>

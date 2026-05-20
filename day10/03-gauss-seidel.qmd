@@ -1,0 +1,124 @@
+---
+title: "Day 10 — Exercise: Gauss-Seidel"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement one sweep of the [Gauss-Seidel method](https://en.wikipedia.org/wiki/Gauss%E2%80%93Seidel_method) — an iterative algorithm for solving a linear system `A x = b`. The driver code, the convergence loop, and the test matrix are all written for you; your job is the inner update.
+
+By the time `cargo test` passes you will have written a small numerical kernel that touches every entry of a matrix in a fixed pattern, mutated an [`ndarray::Array1`](https://docs.rs/ndarray/latest/ndarray/type.Array1.html) in place, and watched an iterative method converge.
+
+## Background
+
+For very small systems (3×3, 4×4) you would just solve `A x = b` directly with Gaussian elimination. But for the large, sparse systems that appear in graph problems, PDE discretisations, and some statistical models, the matrix is too big to factor — and you do not need an exact answer anyway. Iterative methods like [Jacobi](https://en.wikipedia.org/wiki/Jacobi_method), Gauss-Seidel, and conjugate gradient start with a guess and improve it one sweep at a time, stopping when the answer is "good enough".
+
+The update equation for Gauss-Seidel, one row at a time, is:
+
+$$ x_i \leftarrow \frac{1}{A_{ii}} \left( b_i - \sum_{j \neq i} A_{ij} x_j \right) $$
+
+The crucial detail: when you update `x[i]`, you use the **current** values of every other `x[j]` — including the ones you just overwrote earlier in this same sweep. That is what distinguishes Gauss-Seidel from Jacobi, which keeps a separate copy of the old `x` and updates everything from that. Gauss-Seidel uses each new value as soon as it is available, which usually makes it converge in roughly half as many sweeps.
+
+### When does this converge?
+
+Gauss-Seidel is guaranteed to converge if the matrix is either:
+
+- **strictly diagonally dominant** — every diagonal entry is larger in absolute value than the sum of the rest of its row, or
+- **symmetric positive-definite (SPD)** — gloss: a matrix that is symmetric and whose eigenvalues are all positive; the math equivalent of "well-behaved", e.g., covariance matrices and Laplacians of connected graphs.
+
+The test matrix in this exercise satisfies both conditions, so you do not need to worry about divergence.
+
+### How do we check convergence?
+
+After each sweep, we compare the new `x` to the previous one and look at the largest absolute change of any entry. When that maximum change is below a tolerance (`1e-8` here), we declare success. The convergence loop is written for you in `solve`; you only have to write the per-sweep `gauss_seidel_step`.
+
+## The exercise
+
+```bash
+cd day10/ex-gauss-seidel
+```
+
+Open `src/main.rs`. You will see:
+
+- `gauss_seidel_step(a, b, x)` with a `// TODO` body — this is the only thing you need to write
+- `solve(a, b, tol, max_iter)` which calls your `gauss_seidel_step` in a loop until convergence
+- A `main` that builds a 3×3 SPD system with known solution `x = [1, 1, 1]` and runs the solver
+- A `#[cfg(test)] mod tests` block with four tests
+
+Your job: replace the `TODO` so all four tests pass. Do not modify the tests, `solve`, or the function signature of `gauss_seidel_step`.
+
+## How to run
+
+```bash
+cargo build
+cargo test
+cargo run
+```
+
+When all four tests pass, `cargo test` prints `test result: ok. 4 passed`, and `cargo run` should print something like:
+
+```
+converged in 11 iterations: x = [1, 1, 1]
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — iterating over rows"}
+The matrix `a` is an [`Array2<f64>`](https://docs.rs/ndarray/latest/ndarray/type.Array2.html). You can ask it for its shape with [`a.nrows()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.nrows) and [`a.ncols()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.ncols), but for this exercise the matrix is square so `b.len()` is the dimension you want:
+
+```rust
+let n = b.len();
+for i in 0..n {
+    // update x[i] using the current x
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — the inner sum"}
+You want the sum of `a[[i, j]] * x[j]` over all `j != i`. One concise way is with [`Iterator::filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter) and [`Iterator::sum`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.sum):
+
+```rust
+let s: f64 = (0..n).filter(|&j| j != i).map(|j| a[[i, j]] * x[j]).sum();
+```
+
+Indexing `ndarray` matrices uses double brackets: `a[[i, j]]`, not `a[i][j]`. See the [`Array2` index docs](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#impl-Index%3CD%3E-for-ArrayBase%3CS,+D%3E).
+
+Writing the loop with an `if j != i` guard inside is also fine — slightly more verbose, identical behaviour.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — the update itself"}
+Once you have the sum, the update is just:
+
+```rust
+x[i] = (b[i] - s) / a[[i, i]];
+```
+
+Because `x` is a `&mut Array1<f64>`, assigning to `x[i]` mutates it in place — the change is visible to the next iteration of the `for i` loop, which is exactly the Gauss-Seidel behaviour we want. (If we wanted Jacobi instead, we would compute all new values into a fresh array and only swap at the end of the sweep.)
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn gauss_seidel_step(a: &Array2<f64>, b: &Array1<f64>, x: &mut Array1<f64>) {
+    let n = b.len();
+    for i in 0..n {
+        let s: f64 = (0..n).filter(|&j| j != i).map(|j| a[[i, j]] * x[j]).sum();
+        x[i] = (b[i] - s) / a[[i, i]];
+    }
+}
+```
+
+Full reference implementation in `day10/ex-gauss-seidel-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **Sparse matrices.** On real problems `A` is sparse — most entries are zero — and you would store it as [`sprs::CsMat`](https://docs.rs/sprs/latest/sprs/struct.CsMatBase.html) (CSR). The Gauss-Seidel update then iterates only over the non-zero entries of each row, which is what makes the whole approach affordable.
+- **Better iterative solvers.** Gauss-Seidel is the simplest member of a family. [Successive over-relaxation (SOR)](https://en.wikipedia.org/wiki/Successive_over-relaxation) adds a relaxation parameter on top; [conjugate gradient](https://en.wikipedia.org/wiki/Conjugate_gradient_method) is much faster for SPD systems and is what production code actually uses.
+- **Markov chains.** The very next exercise also boils down to "multiply a matrix by a vector in a loop" — same machinery, different interpretation.

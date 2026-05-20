@@ -1,0 +1,136 @@
+---
+title: "Day 10 — Exercise: Dense matrix basics"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Load a small 3 × 4 matrix of `f64` from hardcoded data and compute three things on it:
+
+1. the **trace** (sum of diagonal entries),
+2. the **transpose**, and
+3. the **matrix-vector product** `A · v` for a given vector `v`.
+
+You will do this with [`ndarray::Array2`](https://docs.rs/ndarray/) (gloss: numpy-like 2-D array on the heap, the most widely-used dense numerical array type in Rust).
+
+By the time `cargo test` passes you will have used `ndarray`'s indexing (`a[[i, j]]`), its `.t()` transpose view, its `.dot(...)` matrix multiplication, and seen how an `Array2<f64>` is constructed from the `array!` macro.
+
+## Background
+
+A matrix is a 2-D array of numbers. In Rust we will use the [`ndarray`](https://docs.rs/ndarray/) crate, whose [`Array2<T>`](https://docs.rs/ndarray/) (gloss: a 2-D owned, heap-allocated array of `T`) plays the role that `numpy.ndarray` plays in Python.
+
+The three operations in this exercise are the workhorses of numerical linear algebra:
+
+- **Trace** $\text{tr}(A) = \sum_i A_{ii}$ — used in matrix calculus, in characterising eigenvalue sums, and as a sanity check.
+- **Transpose** $A^T$ where $(A^T)_{ij} = A_{ji}$ — flips rows and columns; used everywhere from least-squares to covariance matrices.
+- **Matrix-vector multiply** $(Av)_i = \sum_j A_{ij} v_j$ — the single most-used operation in scientific computing. It is one step of an iterative solver (day 10 ex 3), one step of a Markov chain (ex 4), and the inner kernel of almost every ML model.
+
+For a 3 × 4 matrix, the trace sums the entries $A_{00}, A_{11}, A_{22}$ — three of them, not four, because the matrix is not square. The convention we use: trace runs to `min(rows, cols)`.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day10/ex-dense-matrix
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A function `sample_matrix() -> Array2<f64>` that returns the fixed 3 × 4 test matrix
+- Three functions with `// TODO` bodies: `trace`, `transpose`, `matvec`
+- A `main` that prints all three results
+- A `#[cfg(test)] mod tests` block with five unit tests that pin down the expected behaviour
+
+Your job: replace the three `TODO` bodies so that all five tests pass.
+
+You may **not** change the function signatures, the tests, `sample_matrix`, or `main`. You may add helper functions.
+
+## How to run
+
+From inside `day10/ex-dense-matrix/`:
+
+```bash
+cargo build           # compile (the first build will fetch ndarray — takes a minute)
+cargo test            # run the tests — these should be failing at first
+cargo run             # print the matrix, trace, transpose and A·v
+```
+
+When all five tests pass, `cargo test` will print:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — How do I index into an Array2?"}
+[`Array2`](https://docs.rs/ndarray/) is indexed with a two-element array, not with two separate indices:
+
+```rust
+let x: f64 = a[[i, j]];   // not a[i][j], not a[i, j]
+```
+
+[`.nrows()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.nrows) and [`.ncols()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.ncols) give you the shape:
+
+```rust
+let m = a.nrows();   // 3 for sample_matrix
+let n = a.ncols();   // 4 for sample_matrix
+```
+
+For `trace`, iterate `0..min(m, n)` and sum `a[[i, i]]`. [`usize::min`](https://doc.rust-lang.org/std/primitive.usize.html#method.min) does what you expect.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — Transpose: views vs owned arrays"}
+[`a.t()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.t) returns a **view** ([`ArrayView2`](https://docs.rs/ndarray/latest/ndarray/type.ArrayView2.html)) into the same memory as `a`, with rows and columns swapped — no data is copied. The view has a different type from `Array2<f64>`, so the test that checks `.shape()` will still pass on a view, but the function signature in this exercise asks for an owned `Array2<f64>`.
+
+To get an owned copy, call [`.to_owned()`](https://doc.rust-lang.org/std/borrow/trait.ToOwned.html#tymethod.to_owned) on the view:
+
+```rust
+a.t().to_owned()
+```
+
+(In real code you usually keep the view to avoid the allocation; we ask for owned here so the function's return type is concrete.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Matrix-vector multiply"}
+`ndarray` overloads [`.dot(...)`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.dot) for both matrix-vector and matrix-matrix products. For an `Array2<f64>` `a` and an [`Array1<f64>`](https://docs.rs/ndarray/latest/ndarray/type.Array1.html) `v`:
+
+```rust
+let result: Array1<f64> = a.dot(v);   // length = a.nrows()
+```
+
+The shape rule is the standard one: `a` is M × N, `v` is length N, the result is length M. If you pass a vector of the wrong length, `.dot` panics — that is exactly the behaviour the tests expect.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn trace(a: &Array2<f64>) -> f64 {
+    let n = a.nrows().min(a.ncols());
+    (0..n).map(|i| a[[i, i]]).sum()
+}
+
+fn transpose(a: &Array2<f64>) -> Array2<f64> {
+    a.t().to_owned()
+}
+
+fn matvec(a: &Array2<f64>, v: &Array1<f64>) -> Array1<f64> {
+    a.dot(v)
+}
+```
+
+The full reference implementation lives in `day10/ex-dense-matrix-solution/src/main.rs`. Try not to peek before your own version passes all five tests.
+:::
+
+## Where this leads
+
+- **Sparse matrices.** A 3 × 4 dense matrix is fine, but a 30 000 × 30 000 single-cell count matrix where 95% of entries are zero is not — storing it densely would cost 7 GB of `f64`. Exercise 2 builds the same kind of object as a [`sprs::CsMat`](https://docs.rs/sprs/) and shows where the savings come from.
+- **Iterative solvers.** `matvec` is the kernel of every iterative linear-system solver. Exercise 3 (Gauss-Seidel) calls it in a loop until the residual is small.
+- **Markov chains.** Exercise 4 multiplies a transition matrix by a state vector repeatedly until the state stops changing — that is power iteration, and the limit is an eigenvector.

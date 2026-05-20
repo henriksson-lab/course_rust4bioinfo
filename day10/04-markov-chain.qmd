@@ -1,0 +1,124 @@
+---
+title: "Day 10 — Exercise: Markov chain power iteration"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Take a 4×4 [transition matrix](https://en.wikipedia.org/wiki/Stochastic_matrix) for a tiny weather model and multiply it against a probability vector — once, fifty times, and "until it stops changing". You will see [power iteration](https://en.wikipedia.org/wiki/Power_iteration) converge to a [stationary distribution](https://en.wikipedia.org/wiki/Markov_chain#Stationary_distribution_relation_to_eigenvectors_and_simplices) right in front of you.
+
+By the time `cargo test` passes you will have used [`Array2::dot`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.dot) for matrix-vector multiplication, used [`.t()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.t) to get the transpose of a matrix, and reasoned about a convergence loop that does not need any error metric beyond "how much did things change this round".
+
+## Background
+
+A [Markov chain](https://en.wikipedia.org/wiki/Markov_chain) is the simplest possible model of "a system that randomly hops between a finite set of states". You describe it with a **transition matrix** `P` where `P[i][j]` is the probability of moving from state `i` to state `j` in one time step. Because the rows enumerate "every possible next state given the current state", each row must sum to 1.0 — such a matrix is called **row-stochastic** (gloss: every row sums to 1.0; entries are probabilities).
+
+If you also track a probability distribution `p_t` over the states at time `t` (a row vector of length `n` that sums to 1), then one step of the chain is just a matrix multiplication:
+
+$$ p_{t+1} = p_t \cdot P $$
+
+For "most" Markov chains — formally, [ergodic](https://en.wikipedia.org/wiki/Markov_chain#Ergodicity) ones, which roughly means "you can eventually get from any state to any other state and there are no fixed periodic cycles" — repeatedly applying `P` makes the distribution forget its starting point and settle into a unique **stationary distribution** `π`, the one vector that satisfies `π = π · P`. This is also the left-eigenvector of `P` with eigenvalue 1.
+
+The simplest way to find `π` numerically is **power iteration**: start with any distribution and apply `P` over and over. After enough steps the result is `π` to whatever precision you like. The same idea is the spiritual ancestor of [PageRank](https://en.wikipedia.org/wiki/PageRank) — yes, the original Google algorithm is power iteration on a (very large) transition matrix.
+
+### Why we use the transpose
+
+`ndarray`'s [`.dot()`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.dot) treats a 1-D array as a column vector. The math we want, `p · P`, treats `p` as a row vector. The two are related by transposition:
+
+$$ p \cdot P = (P^{T} \cdot p^{T})^{T} $$
+
+so the cleanest way to write "row-vector times matrix" in `ndarray` is `transition.t().dot(&p)`. The result is a 1-D `Array1<f64>` that we can keep treating as a row vector for the next step.
+
+## The exercise
+
+```bash
+cd day10/ex-markov-chain
+```
+
+Open `src/main.rs`. You will see:
+
+- `weather_matrix()` — a fixed 4×4 row-stochastic matrix over states `{sunny, cloudy, rain, storm}`
+- `step(p, P)` with a `TODO` — one application of the chain
+- `power_iterate(p_0, P, n)` with a `TODO` — apply `step` `n` times
+- `steady_state(P, tol, max_iter)` — already written, calls your `step` until convergence
+- A `main` that prints the first few distributions and the converged steady state
+- Four tests in `#[cfg(test)] mod tests`
+
+Your job: fill in `step` and `power_iterate` so all four tests pass. Do not modify the tests, `steady_state`, or the function signatures (except as noted in the hint on `power_iterate` — you may change its first parameter from `p_0` to `mut p` if you want to mutate in place).
+
+## How to run
+
+```bash
+cargo build
+cargo test
+cargo run
+```
+
+When all four tests pass, `cargo run` should print the first five distributions starting from "sunny" and then the steady state — something close to `[0.35, 0.27, 0.24, 0.13]` after a few dozen iterations.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — one step"}
+You want `p_{t+1} = p_t · P` where `p` is a row vector. Because [`Array2::dot`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.dot) treats a 1-D array as a column vector, the cleanest implementation is:
+
+```rust
+transition.t().dot(p)
+```
+
+[`Array2::t`](https://docs.rs/ndarray/latest/ndarray/struct.ArrayBase.html#method.t) returns a transposed view (no copy), and `.dot(p)` then does the matrix-vector product. The result is an [`Array1<f64>`](https://docs.rs/ndarray/latest/ndarray/type.Array1.html) of the same length as `p`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — power iteration"}
+"Apply `step` `n` times" is a `for` loop that overwrites the distribution each time. The cleanest version takes ownership of `p` and mutates it:
+
+```rust
+fn power_iterate(mut p: Array1<f64>, transition: &Array2<f64>, n: usize) -> Array1<f64> {
+    for _ in 0..n {
+        p = step(&p, transition);
+    }
+    p
+}
+```
+
+Changing `p_0` to `mut p` in the parameter list is fine — it does not change the function signature from the caller's point of view, only the local binding inside the function. (The starter version takes ownership and returns `p_0` unchanged as a placeholder, so the build succeeds before you have done anything.)
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — sanity-check your step"}
+After `let p1 = step(&p0, &p);`, the entries of `p1` must still sum to 1.0 (up to floating-point noise). If they don't, you have probably written `transition.dot(p)` without the transpose — that computes `P · p` (treating `p` as a column vector), which is not the same thing.
+
+A useful debug print:
+
+```rust
+println!("sum = {}", p1.iter().sum::<f64>());
+```
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn step(p: &Array1<f64>, transition: &Array2<f64>) -> Array1<f64> {
+    transition.t().dot(p)
+}
+
+fn power_iterate(mut p: Array1<f64>, transition: &Array2<f64>, n: usize) -> Array1<f64> {
+    for _ in 0..n {
+        p = step(&p, transition);
+    }
+    p
+}
+```
+
+Full reference implementation in `day10/ex-markov-chain-solution/src/main.rs`.
+:::
+
+## Where this leads
+
+- **PageRank.** Replace the 4×4 weather matrix with a billion-by-billion sparse matrix whose rows encode "where does each web page link to", add a small uniform "teleport" term so the chain stays ergodic, and you have the original Google ranking algorithm — same power iteration, just bigger.
+- **Hidden Markov Models.** On real bioinformatics problems the chain itself is hidden and you observe noisy emissions from each state. The forward / backward / Viterbi algorithms are still matrix-vector products in a loop; we touch HMMs again later in the course.
+- **Eigenvectors.** Power iteration finds the *dominant* eigenvector — the one with the largest absolute eigenvalue. For a row-stochastic matrix the dominant left eigenvector has eigenvalue 1 and is exactly the stationary distribution. The same algorithm with [deflation](https://en.wikipedia.org/wiki/Power_iteration#Deflation) finds subsequent eigenvectors and is the basis of how libraries compute a few leading eigenvalues of huge sparse matrices.

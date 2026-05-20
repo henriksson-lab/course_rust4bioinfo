@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, -apple-system, sans-serif">
+  <title>Markov chain — three views</title>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrSelf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+    <marker id="arrPanel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600" fill="#111">A Markov chain — three views</text>
+
+  <!-- ============== Panel 1: State diagram ============== -->
+  <g transform="translate(20,60)">
+    <text x="135" y="14" text-anchor="middle" font-size="15" font-weight="600" fill="#1976d2">state diagram</text>
+
+    <!-- Three nodes: A at (70,110), B at (200,110), C at (135,260) -->
+    <!-- Edges:
+         A -> A: 0.5  (self-loop top)
+         A -> B: 0.5
+         B -> A: 0.2
+         B -> B: 0.1  (self-loop top)
+         B -> C: 0.7
+         C -> A: 0.3
+         C -> C: 0.7  (self-loop bottom)
+    -->
+
+    <!-- A -> B (curved upper) -->
+    <path d="M88,100 Q135,75 182,100" stroke="#1976d2" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+    <text x="135" y="72" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.5</text>
+
+    <!-- B -> A (curved lower) -->
+    <path d="M182,120 Q135,145 88,120" stroke="#1976d2" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+    <text x="135" y="143" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.2</text>
+
+    <!-- B -> C -->
+    <path d="M190,128 Q175,200 148,245" stroke="#1976d2" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+    <text x="195" y="195" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.7</text>
+
+    <!-- C -> A -->
+    <path d="M120,243 Q75,195 65,128" stroke="#1976d2" stroke-width="1.8" fill="none" marker-end="url(#arr)"/>
+    <text x="68" y="195" text-anchor="middle" font-size="12" font-family="ui-monospace, monospace" fill="#0d47a1">0.3</text>
+
+    <!-- A -> A self-loop (top-left) -->
+    <path d="M55,95 C35,55 95,55 80,95" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrSelf)"/>
+    <text x="58" y="50" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.5</text>
+
+    <!-- B -> B self-loop (top-right) -->
+    <path d="M190,95 C175,55 235,55 215,95" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrSelf)"/>
+    <text x="210" y="50" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.1</text>
+
+    <!-- C -> C self-loop (bottom) -->
+    <path d="M120,275 C105,310 165,310 150,275" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrSelf)"/>
+    <text x="135" y="320" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#7a3d00">0.7</text>
+
+    <!-- Nodes drawn last so they sit on top -->
+    <circle cx="70"  cy="110" r="22" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+    <text x="70" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#0d47a1">A</text>
+
+    <circle cx="200" cy="110" r="22" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+    <text x="200" y="115" text-anchor="middle" font-size="16" font-weight="700" fill="#0d47a1">B</text>
+
+    <circle cx="135" cy="260" r="22" fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+    <text x="135" y="265" text-anchor="middle" font-size="16" font-weight="700" fill="#0d47a1">C</text>
+  </g>
+
+  <!-- Connector: panel 1 -> panel 2 -->
+  <g>
+    <line x1="290" y1="200" x2="335" y2="200" stroke="#555" stroke-width="1.6" marker-end="url(#arrPanel)"/>
+    <text x="312" y="190" text-anchor="middle" font-size="11" fill="#555" font-style="italic">same chain</text>
+  </g>
+
+  <!-- ============== Panel 2: Transition matrix ============== -->
+  <g transform="translate(345,60)">
+    <text x="135" y="14" text-anchor="middle" font-size="15" font-weight="600" fill="#2e7d32">transition matrix P</text>
+
+    <!-- Column headers above -->
+    <g font-family="ui-monospace, monospace" font-size="13" text-anchor="middle" fill="#1b5e20" font-weight="600">
+      <text x="80"  y="50">A</text>
+      <text x="140" y="50">B</text>
+      <text x="200" y="50">C</text>
+    </g>
+    <!-- Row headers left -->
+    <g font-family="ui-monospace, monospace" font-size="13" text-anchor="end" fill="#1b5e20" font-weight="600">
+      <text x="40" y="85">A</text>
+      <text x="40" y="125">B</text>
+      <text x="40" y="165">C</text>
+    </g>
+
+    <!-- 3x3 cells, 60x40 -->
+    <g font-family="ui-monospace, monospace" font-size="14" text-anchor="middle">
+      <!-- row A -->
+      <rect x="50"  y="60"  width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="80"  y="85" fill="#1b5e20">0.5</text>
+      <rect x="110" y="60"  width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="140" y="85" fill="#1b5e20">0.5</text>
+      <rect x="170" y="60"  width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="200" y="85" fill="#1b5e20">0.0</text>
+      <!-- row B -->
+      <rect x="50"  y="100" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="80"  y="125" fill="#1b5e20">0.2</text>
+      <rect x="110" y="100" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="140" y="125" fill="#1b5e20">0.1</text>
+      <rect x="170" y="100" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="200" y="125" fill="#1b5e20">0.7</text>
+      <!-- row C -->
+      <rect x="50"  y="140" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="80"  y="165" fill="#1b5e20">0.3</text>
+      <rect x="110" y="140" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="140" y="165" fill="#1b5e20">0.0</text>
+      <rect x="170" y="140" width="60" height="40" fill="#e8f5e9" stroke="#2e7d32"/><text x="200" y="165" fill="#1b5e20">0.7</text>
+    </g>
+
+    <!-- row sums on right -->
+    <g font-family="ui-monospace, monospace" font-size="12" text-anchor="start" fill="#555">
+      <text x="240" y="85">= 1.0</text>
+      <text x="240" y="125">= 1.0</text>
+      <text x="240" y="165">= 1.0</text>
+    </g>
+
+    <text x="135" y="220" text-anchor="middle" font-size="12" fill="#555" font-style="italic">each row sums to 1</text>
+    <text x="135" y="238" text-anchor="middle" font-size="11" fill="#555" font-family="ui-monospace, monospace">P[i, j] = P(next = j | current = i)</text>
+
+    <!-- pi P = pi note -->
+    <g transform="translate(0,270)">
+      <text x="135" y="0" text-anchor="middle" font-size="13" font-weight="600" fill="#0d47a1">apply P repeatedly:</text>
+      <text x="135" y="20" text-anchor="middle" font-size="13" font-family="ui-monospace, monospace" fill="#222">π_(k+1) = π_k · P</text>
+    </g>
+  </g>
+
+  <!-- Connector: panel 2 -> panel 3 -->
+  <g>
+    <line x1="615" y1="200" x2="660" y2="200" stroke="#555" stroke-width="1.6" marker-end="url(#arrPanel)"/>
+    <text x="638" y="190" text-anchor="middle" font-size="11" fill="#555" font-style="italic">converges to</text>
+  </g>
+
+  <!-- ============== Panel 3: Steady-state bar chart ============== -->
+  <g transform="translate(670,60)">
+    <text x="100" y="14" text-anchor="middle" font-size="15" font-weight="600" fill="#d97706">steady-state π</text>
+
+    <!-- Plot area: bars within (0..200, 60..300). y-axis 0..1, scale 240 pixels for height. -->
+    <!-- axes -->
+    <g stroke="#333" stroke-width="1.2" fill="none">
+      <line x1="30"  y1="300" x2="200" y2="300"/>
+      <line x1="30"  y1="60"  x2="30"  y2="300"/>
+    </g>
+    <!-- y labels -->
+    <g font-size="10" fill="#666" text-anchor="end">
+      <text x="26" y="304">0.0</text>
+      <text x="26" y="244">0.2</text>
+      <text x="26" y="184">0.4</text>
+      <text x="26" y="124">0.6</text>
+      <text x="26" y="64">0.8</text>
+    </g>
+    <!-- gridlines -->
+    <g stroke="#eee" stroke-width="1">
+      <line x1="30" y1="244" x2="200" y2="244"/>
+      <line x1="30" y1="184" x2="200" y2="184"/>
+      <line x1="30" y1="124" x2="200" y2="124"/>
+      <line x1="30" y1="64"  x2="200" y2="64"/>
+    </g>
+
+    <!-- Bars: A=0.31, B=0.18, C=0.51. Height = value * 300 (0.2 -> 60). 0.31 -> 93; 0.18 -> 54; 0.51 -> 153 -->
+    <g>
+      <!-- A -->
+      <rect x="50"  y="207" width="35" height="93"  fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+      <text x="67.5" y="200" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#0d47a1">0.31</text>
+      <text x="67.5" y="318" text-anchor="middle" font-size="13" font-weight="600" fill="#0d47a1">A</text>
+      <!-- B -->
+      <rect x="100" y="246" width="35" height="54"  fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+      <text x="117.5" y="239" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#0d47a1">0.18</text>
+      <text x="117.5" y="318" text-anchor="middle" font-size="13" font-weight="600" fill="#0d47a1">B</text>
+      <!-- C -->
+      <rect x="150" y="147" width="35" height="153" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+      <text x="167.5" y="140" text-anchor="middle" font-size="11" font-family="ui-monospace, monospace" fill="#0d47a1">0.51</text>
+      <text x="167.5" y="318" text-anchor="middle" font-size="13" font-weight="600" fill="#0d47a1">C</text>
+    </g>
+
+    <text x="100" y="345" text-anchor="middle" font-size="12" fill="#555" font-style="italic">π_A + π_B + π_C = 1</text>
+    <text x="100" y="363" text-anchor="middle" font-size="11" fill="#555" font-family="ui-monospace, monospace">solve  π P = π</text>
+  </g>
+
+  <!-- ============== Caption ============== -->
+  <text x="450" y="475" text-anchor="middle" font-size="13" fill="#333">
+    Multiply P against any starting distribution enough times; you get the steady state. Or solve πP = π directly.
+  </text>
+</svg>
