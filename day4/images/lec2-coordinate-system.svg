@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="coord-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="coord-arrow-green" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="coord-arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    plotters coordinate system — pixels in, data out
+  </text>
+
+  <!-- Outer drawing-area rectangle (the full canvas the bitmap backend owns) -->
+  <rect x="180" y="60" width="560" height="320" rx="6" ry="6"
+        fill="#fff3cd" fill-opacity="0.35"
+        stroke="#888" stroke-width="1.6" stroke-dasharray="6 4"/>
+
+  <!-- Drawing-area label -->
+  <text x="186" y="78" font-size="12" fill="#888"
+        font-family="ui-monospace, monospace">drawing area (pixels)</text>
+
+  <!-- Chart area (the actual axes box) -->
+  <rect x="260" y="110" width="420" height="220" fill="white"
+        stroke="#1976d2" stroke-width="1.6"/>
+
+  <!-- ===== y axis ticks + labels (count: 0, 5, 10, 15) ===== -->
+  <g font-size="13" fill="#444" font-family="ui-monospace, monospace">
+    <line x1="256" y1="330" x2="260" y2="330" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="250" y="334" text-anchor="end">0</text>
+    <line x1="256" y1="256" x2="260" y2="256" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="250" y="260" text-anchor="end">5</text>
+    <line x1="256" y1="183" x2="260" y2="183" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="250" y="187" text-anchor="end">10</text>
+    <line x1="256" y1="110" x2="260" y2="110" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="250" y="114" text-anchor="end">15</text>
+  </g>
+
+  <!-- y axis label rotated -->
+  <text x="215" y="220" text-anchor="middle" font-size="14" font-weight="600" fill="#222"
+        transform="rotate(-90 215 220)">
+    count
+  </text>
+
+  <!-- ===== x axis ticks + labels (0, 50, 100, 150, 200, 250) =====
+       x-axis range 0..250, chart area x: 260..680 (width 420)
+       x_px(v) = 260 + (v/250)*420 = 260 + v*1.68
+       0:260, 50:344, 100:428, 150:512, 200:596, 250:680 -->
+  <g font-size="13" fill="#444" font-family="ui-monospace, monospace">
+    <line x1="260" y1="330" x2="260" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="260" y="350" text-anchor="middle">0</text>
+    <line x1="344" y1="330" x2="344" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="344" y="350" text-anchor="middle">50</text>
+    <line x1="428" y1="330" x2="428" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="428" y="350" text-anchor="middle">100</text>
+    <line x1="512" y1="330" x2="512" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="512" y="350" text-anchor="middle">150</text>
+    <line x1="596" y1="330" x2="596" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="596" y="350" text-anchor="middle">200</text>
+    <line x1="680" y1="330" x2="680" y2="334" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="680" y="350" text-anchor="middle">250</text>
+  </g>
+
+  <!-- x axis label -->
+  <text x="470" y="375" text-anchor="middle" font-size="14" font-weight="600" fill="#222">
+    read length (bp)
+  </text>
+
+  <!-- Origin label (0,0) at bottom-left -->
+  <text x="265" y="346" font-size="11" fill="#2e7d32"
+        font-family="ui-monospace, monospace">(0, 0)</text>
+
+  <!-- Example bar at data (x = 150, count = 9) drawn inside the chart area.
+       x range: 140..160 px ≈ chart-x 512..545; height = 9 units of count -->
+  <!-- y for count=9: 330 - 9*(74/5) ≈ 330 - 133 = 197 -->
+  <rect x="512" y="197" width="33" height="133" fill="#e3f2fd"
+        stroke="#1976d2" stroke-width="1.6"/>
+
+  <!-- Dot at the top-right corner of the example bar to anchor the callout -->
+  <circle cx="545" cy="197" r="3" fill="#2e7d32"/>
+
+  <!-- Callout: data coordinates of the bar's top-right -->
+  <line x1="640" y1="160" x2="551" y2="195" stroke="#2e7d32" stroke-width="1.4"
+        marker-end="url(#coord-arrow-green)"/>
+  <text x="645" y="150" font-size="13" font-weight="700" fill="#2e7d32"
+        font-family="ui-monospace, monospace">data coords</text>
+  <text x="645" y="167" font-size="13" fill="#2e7d32"
+        font-family="ui-monospace, monospace">(150, 9)</text>
+
+  <!-- Callout to one *pixel* position on the bitmap (use the bottom-right
+       corner of the drawing-area rectangle as the example pixel) -->
+  <circle cx="740" cy="380" r="3.5" fill="#c62828"/>
+  <line x1="780" y1="415" x2="744" y2="383" stroke="#c62828" stroke-width="1.4"
+        marker-end="url(#coord-arrow-red)"/>
+  <text x="500" y="430" font-size="13" font-weight="700" fill="#c62828"
+        font-family="ui-monospace, monospace">this is a pixel position (e.g. 720, 480)</text>
+
+  <!-- Helper note under the pixel callout -->
+  <text x="500" y="448" font-size="12" fill="#888" font-style="italic">
+    plotters does pixel ↔ data conversion automatically
+  </text>
+
+  <!-- Annotation for the chart area (the data-space rectangle) -->
+  <text x="40" y="160" font-size="13" font-weight="700" fill="#1976d2"
+        font-family="ui-monospace, monospace">chart area</text>
+  <text x="40" y="178" font-size="11" fill="#666">
+    data space
+  </text>
+  <text x="40" y="194" font-size="11" fill="#666">
+    (you give x, y)
+  </text>
+  <line x1="120" y1="170" x2="258" y2="170" stroke="#888" stroke-width="1.2"
+        marker-end="url(#coord-arrow)"/>
+
+  <!-- Annotation for drawing-area (pixel space) -->
+  <text x="40" y="80" font-size="13" font-weight="700" fill="#888"
+        font-family="ui-monospace, monospace">pixel space</text>
+  <text x="40" y="98" font-size="11" fill="#666">
+    (the whole bitmap)
+  </text>
+  <line x1="120" y1="80" x2="178" y2="68" stroke="#888" stroke-width="1.2"
+        marker-end="url(#coord-arrow)"/>
+
+</svg>

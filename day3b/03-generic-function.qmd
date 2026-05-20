@@ -1,0 +1,58 @@
+---
+title: "Day 3b — Exercise: a generic function with a trait bound"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Write `fn count_matching<T: PartialEq>(items: &[T], target: &T) -> usize` — a generic function (generic = works for many types) that counts how many elements of a slice equal the target. The trait bound `T: PartialEq` (gloss: any type that supports `==`) makes `item == target` valid.
+
+## Background
+
+Without generics you would write one `count_matching_u8` for bytes, another `count_matching_string` for strings, and a third for your own enum — three near-identical bodies that drift out of sync. With a single generic function you write the body once, and the compiler reuses it for every concrete type you call it with (gloss: monomorphisation — the compiler stamps out one concrete version per type you actually use, so there is no runtime cost). The [trait bound](https://doc.rust-lang.org/book/ch10-02-traits.html#traits-as-parameters) `T: PartialEq` is what lets you say `item == target` inside the body: without it the compiler has no idea whether `==` makes sense for `T`.
+
+## The exercise
+
+Open `day3b/ex-generic-function/`, fill in the TODO body so all six tests pass. The tests call the function with three different `T` types: [`u8`](https://doc.rust-lang.org/std/primitive.u8.html), [`String`](https://doc.rust-lang.org/std/string/struct.String.html), and a custom enum.
+
+You may **not** change the function signature or the tests.
+
+## How to run
+
+```bash
+cd day3b/ex-generic-function
+cargo test
+```
+
+When the body is right you will see:
+
+```
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — one-liner"}
+[`<[T]>::iter`](https://doc.rust-lang.org/std/primitive.slice.html#method.iter) gives you an iterator of `&T`; [`Iterator::filter`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter) keeps the elements that match a predicate; [`Iterator::count`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.count) consumes the iterator and returns how many were left.
+
+```rust
+items.iter().filter(|&item| item == target).count()
+```
+
+The pattern `|&item|` destructures the `&&T` the filter closure receives into a plain `&T`, so the `==` compares `&T` against `&T`.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day3b/ex-generic-function-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
+:::
+
+## Where this leads
+
+The last exercise (`04-trait-objects.qmd`) uses [`Box<dyn Trait>`](https://doc.rust-lang.org/book/ch17-02-trait-objects.html) for heterogeneous collections — the OTHER way of using traits. Generics with bounds (this exercise) pick the concrete type at compile time; trait objects pick it at runtime and let you mix different concrete types in a single `Vec`.

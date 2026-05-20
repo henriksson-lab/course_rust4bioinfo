@@ -20,12 +20,10 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - Why "a few TSV files" stops working, and a relational database (data organised as tables that reference each other) starts
 - The minimum SQL (Structured Query Language, the standard way to ask a database questions) you will use every working day
 - What SQLite is — an embedded database (lives inside your program, not on a server)
 - Driving SQLite from Rust with the `rusqlite` crate
-:::
 
 ::: notes
 Today is the half-day shift away from sequence data into structured data — strain collections, assay measurements, sample sheets, anything you would otherwise keep in a spreadsheet. The first half of the lecture is plain SQL with no Rust at all; the second half is `rusqlite`, the thin Rust binding to the SQLite C library. By the end you should be able to read and write a small relational database from a Rust program.
@@ -362,11 +360,9 @@ Three joins covers 95% of what you need. INNER for "the matches", LEFT for "ever
 
 A relational database engine packaged as a **C library**, not a server.
 
-::: {.incremental}
 - One **`.db` file** is one entire database (the **schema** — the table definitions, columns, types, keys — plus every row of data)
 - No daemon, no port, no user accounts, no configuration
 - The most-deployed database in the world — every Android app, every iPhone, every browser, most desktop software, every airliner
-:::
 
 ::: notes
 SQLite is the unusual entry in the database world. Most relational databases — PostgreSQL, MySQL, Oracle, SQL Server — are servers: a long-lived process you connect to over a socket. SQLite skips all of that. It is a C library; you link it into your program; your program reads and writes the .db file directly. No service to install, no daemon, no port. It is genuinely the most-deployed database in existence — every smartphone has hundreds of SQLite databases on it, every web browser uses it, basically every desktop app that needs structured storage uses SQLite.
@@ -382,12 +378,10 @@ The picture says it. On the left, PostgreSQL: two processes, a TCP connection, a
 
 ## Why SQLite fits bioinformatics
 
-::: {.incremental}
 - **One file** — fits the "one analysis directory" workflow we already use
 - **Embedded** — no extra service to keep alive on a shared cluster
 - **Cross-platform** — `.db` files work unchanged on Linux, macOS, Windows
 - **Single writer** — fine when one pipeline owns the data
-:::
 
 Concretely, where a `.sqlite` file shows up in practice:
 

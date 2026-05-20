@@ -20,13 +20,11 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - Day 4 is when you stop writing every byte of every parser yourself
 - File I/O with the standard library — `File`, `BufReader`, `BufWriter`
 - Cargo's `[dependencies]` and how `crates.io` actually works
 - `noodles` for FASTA / FASTQ, `plotters` for plots, `zip` for bundles
 - Modules — splitting one crate across files
-:::
 
 ::: notes
 This lecture is the bridge from the standard-library Rust you have been writing for three days to the wider ecosystem. The standard library gives you traits like `Read` and `Write`, and types like `File` and `BufReader`. The ecosystem gives you bioinformatics-aware crates that build on those traits: `noodles` for FASTA, FASTQ, BAM, VCF; `plotters` for charts; `zip` for archives.

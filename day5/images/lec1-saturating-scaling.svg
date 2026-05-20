@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    Saturating-scaling plot. Log-log axes.
+    Plot area: x in [110, 770], y in [80, 420].
+    x: log2(cores) 0..6, 110 px per unit  (cores 1..64)
+    y: log2(speedup) 0..6, 56.67 px per unit (speedup 1..64)
+    Origin (1, 1) at (110, 420).
+  -->
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Speedup saturates - the serial fraction sets the ceiling.
+  </text>
+
+  <!-- Plot area background -->
+  <rect x="110" y="80" width="660" height="340" fill="#fafafa" stroke="none"/>
+
+  <!-- Grid lines (light) -->
+  <g stroke="#e8e8e8" stroke-width="1">
+    <!-- vertical grid at each x tick -->
+    <line x1="220" y1="80" x2="220" y2="420"/>
+    <line x1="330" y1="80" x2="330" y2="420"/>
+    <line x1="440" y1="80" x2="440" y2="420"/>
+    <line x1="550" y1="80" x2="550" y2="420"/>
+    <line x1="660" y1="80" x2="660" y2="420"/>
+    <!-- horizontal grid at each y tick -->
+    <line x1="110" y1="363.3" x2="770" y2="363.3"/>
+    <line x1="110" y1="306.7" x2="770" y2="306.7"/>
+    <line x1="110" y1="250.0" x2="770" y2="250.0"/>
+    <line x1="110" y1="193.3" x2="770" y2="193.3"/>
+    <line x1="110" y1="136.7" x2="770" y2="136.7"/>
+  </g>
+
+  <!-- Axes -->
+  <line x1="110" y1="80" x2="110" y2="420" stroke="#444" stroke-width="1.5"/>
+  <line x1="110" y1="420" x2="770" y2="420" stroke="#444" stroke-width="1.5"/>
+
+  <!-- X tick marks and labels -->
+  <g font-size="12" font-family="ui-monospace, monospace" fill="#444" text-anchor="middle">
+    <line x1="110" y1="420" x2="110" y2="425" stroke="#444"/>
+    <text x="110" y="440">1</text>
+    <line x1="220" y1="420" x2="220" y2="425" stroke="#444"/>
+    <text x="220" y="440">2</text>
+    <line x1="330" y1="420" x2="330" y2="425" stroke="#444"/>
+    <text x="330" y="440">4</text>
+    <line x1="440" y1="420" x2="440" y2="425" stroke="#444"/>
+    <text x="440" y="440">8</text>
+    <line x1="550" y1="420" x2="550" y2="425" stroke="#444"/>
+    <text x="550" y="440">16</text>
+    <line x1="660" y1="420" x2="660" y2="425" stroke="#444"/>
+    <text x="660" y="440">32</text>
+    <line x1="770" y1="420" x2="770" y2="425" stroke="#444"/>
+    <text x="770" y="440">64</text>
+  </g>
+
+  <!-- X axis title -->
+  <text x="440" y="462" text-anchor="middle" font-size="14" font-weight="600" fill="#333">
+    cores (log scale)
+  </text>
+
+  <!-- Y tick marks and labels -->
+  <g font-size="12" font-family="ui-monospace, monospace" fill="#444" text-anchor="end">
+    <line x1="105" y1="420" x2="110" y2="420" stroke="#444"/>
+    <text x="100" y="424">1x</text>
+    <line x1="105" y1="363.3" x2="110" y2="363.3" stroke="#444"/>
+    <text x="100" y="367">2x</text>
+    <line x1="105" y1="306.7" x2="110" y2="306.7" stroke="#444"/>
+    <text x="100" y="310">4x</text>
+    <line x1="105" y1="250.0" x2="110" y2="250.0" stroke="#444"/>
+    <text x="100" y="254">8x</text>
+    <line x1="105" y1="193.3" x2="110" y2="193.3" stroke="#444"/>
+    <text x="100" y="197">16x</text>
+    <line x1="105" y1="136.7" x2="110" y2="136.7" stroke="#444"/>
+    <text x="100" y="140">32x</text>
+    <line x1="105" y1="80" x2="110" y2="80" stroke="#444"/>
+    <text x="100" y="84">64x</text>
+  </g>
+
+  <!-- Y axis title (rotated) -->
+  <text x="40" y="250" font-size="14" font-weight="600" fill="#333"
+        text-anchor="middle" transform="rotate(-90 40 250)">
+    speedup factor (log scale)
+  </text>
+
+  <!-- Ideal linear line: (1,1) -> (64,64), i.e. (110, 420) -> (770, 80) -->
+  <line x1="110" y1="420" x2="770" y2="80"
+        stroke="#888" stroke-width="2" stroke-dasharray="6,4"/>
+
+  <!-- Observed curve points:
+       (1, 1.0)   -> (110, 420)
+       (2, 1.9)   -> (220, 367.6)
+       (4, 3.7)   -> (330, 313.0)
+       (8, 6.8)   -> (440, 263.3)
+       (16, 11)   -> (550, 224.0)
+       (32, 14)   -> (660, 204.3)
+       (64, 15)   -> (770, 198.6)
+  -->
+  <polyline points="110,420 220,367.6 330,313.0 440,263.3 550,224.0 660,204.3 770,198.6"
+            fill="none" stroke="#2e7d32" stroke-width="2.8"/>
+
+  <!-- Data point markers -->
+  <g fill="#2e7d32" stroke="#fff" stroke-width="1.5">
+    <circle cx="110" cy="420" r="5"/>
+    <circle cx="220" cy="367.6" r="5"/>
+    <circle cx="330" cy="313.0" r="5"/>
+    <circle cx="440" cy="263.3" r="5"/>
+    <circle cx="550" cy="224.0" r="5"/>
+    <circle cx="660" cy="204.3" r="5"/>
+    <circle cx="770" cy="198.6" r="5"/>
+  </g>
+
+  <!-- Label: ideal line (near top-right of the dashed line) -->
+  <text x="600" y="118" font-size="13" font-weight="600" fill="#666" font-style="italic">
+    ideal: linear scaling (y = x)
+  </text>
+
+  <!-- Label: observed curve (near where it flattens) -->
+  <text x="555" y="248" font-size="13" font-weight="600" fill="#2e7d32" font-style="italic">
+    observed: saturates around 15x
+  </text>
+  <text x="555" y="264" font-size="13" font-weight="600" fill="#2e7d32" font-style="italic">
+    at 32-64 cores
+  </text>
+
+  <!-- Red arrow showing the gap at x = 64 (from observed at y=198.6 up to ideal at y=80) -->
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+  </defs>
+  <line x1="790" y1="195" x2="790" y2="85"
+        stroke="#c62828" stroke-width="2.5"
+        marker-start="url(#arrow-red)" marker-end="url(#arrow-red)"/>
+
+  <!-- Gap annotation -->
+  <rect x="610" y="305" width="270" height="48" rx="6" fill="#fff3cd" stroke="#d97706"/>
+  <text x="745" y="324" text-anchor="middle" font-size="12" fill="#7a3e00">
+    the gap is what Amdahl's
+  </text>
+  <text x="745" y="342" text-anchor="middle" font-size="12" font-weight="700" fill="#7a3e00">
+    law predicts.
+  </text>
+  <!-- Connector line from box to arrow -->
+  <line x1="780" y1="305" x2="790" y2="180"
+        stroke="#d97706" stroke-width="1.2" stroke-dasharray="3,3"/>
+
+  <!-- Footer caption -->
+  <text x="450" y="484" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    Past ~16 cores, more threads buy diminishing returns: the unavoidable serial
+  </text>
+  <text x="450" y="498" text-anchor="middle" font-size="12" fill="#555" font-style="italic">
+    fraction of your program plus the cost of coordinating workers.
+  </text>
+
+</svg>

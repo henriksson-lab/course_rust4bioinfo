@@ -20,10 +20,8 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - Day 3 is where Rust starts to feel like Rust: types model the biology, the compiler keeps you honest
 - One concept per slide — *what it is*, *why it works this way*, a bioinformatics example
-:::
 
 ::: notes
 Yesterday you wrote functions over slices of bytes. Today the data gets shape. A genomic interval has a chromosome, a start, an end, and a strand — that wants to be one value, not four loose variables. A variant is either a SNP or an insertion or a deletion — that wants to be one type with three shapes, not a tagged tuple.

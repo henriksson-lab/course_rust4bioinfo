@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 420"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- ===== Title ===== -->
+  <text x="380" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#222">
+    Great apes — a real phylogeny
+  </text>
+
+  <!-- ===== Tree panel ===== -->
+  <!--
+       Time / x mapping:
+         9 MYA  -> x = 80   (root)
+         6 MYA  -> x = 220  (Human/Chimp ancestor)
+         0 MYA  -> x = 500  (today, tips)
+         (1 MYA ~= 46.67 px)
+
+       Vertical positions of the three tips:
+         Human   y = 130
+         Chimp   y = 200
+         Gorilla y = 290
+
+       Internal nodes:
+         HC ancestor (Human-Chimp): x=220, y=165
+         Root        (Hominini-Gorilla): x=80, y=228
+  -->
+
+  <!-- Edges (drawn first so nodes sit on top) -->
+  <g stroke="#2e7d32" stroke-width="2.4" fill="none" stroke-linecap="round">
+    <!-- Root  (80,228)  -> HC ancestor (220,165)  : 3 MYA of shared Hominini lineage -->
+    <line x1="80"  y1="228" x2="220" y2="165"/>
+    <!-- Root  (80,228)  -> Gorilla    (500,290)  : 9 MYA -->
+    <line x1="80"  y1="228" x2="500" y2="290"/>
+    <!-- HC    (220,165) -> Human      (500,130)  : 6 MYA -->
+    <line x1="220" y1="165" x2="500" y2="130"/>
+    <!-- HC    (220,165) -> Chimp      (500,200)  : 6 MYA -->
+    <line x1="220" y1="165" x2="500" y2="200"/>
+  </g>
+
+  <!-- Branch-length labels (italic monospace, just above each edge) -->
+  <g font-family="ui-monospace, monospace" font-size="13" font-style="italic" fill="#555">
+    <!-- Root -> HC ancestor : 3 MYA, midpoint ~ (150, 196.5) -->
+    <text x="150" y="188" text-anchor="middle">3 MYA</text>
+    <!-- Root -> Gorilla     : 9 MYA, midpoint ~ (290, 259), put label below the line -->
+    <text x="290" y="278" text-anchor="middle">9 MYA</text>
+    <!-- HC -> Human         : 6 MYA, midpoint ~ (360, 147.5) -->
+    <text x="360" y="140" text-anchor="middle">6 MYA</text>
+    <!-- HC -> Chimp         : 6 MYA, midpoint ~ (360, 182.5) -->
+    <text x="360" y="195" text-anchor="middle">6 MYA</text>
+  </g>
+
+  <!-- Internal nodes (small grey dots, unlabelled) -->
+  <g fill="#2e7d32" stroke="#1b5e20" stroke-width="1">
+    <circle cx="80"  cy="228" r="4"/>
+    <circle cx="220" cy="165" r="4"/>
+  </g>
+
+  <!-- Tips: circles + labels to the right -->
+  <g>
+    <!-- Human -->
+    <circle cx="500" cy="130" r="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="1.6"/>
+    <text x="516" y="135" font-size="16" font-weight="700" fill="#1b5e20">Human</text>
+
+    <!-- Chimp -->
+    <circle cx="500" cy="200" r="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="1.6"/>
+    <text x="516" y="205" font-size="16" font-weight="700" fill="#1b5e20">Chimp</text>
+
+    <!-- Gorilla -->
+    <circle cx="500" cy="290" r="8" fill="#2e7d32" stroke="#1b5e20" stroke-width="1.6"/>
+    <text x="516" y="295" font-size="16" font-weight="700" fill="#1b5e20">Gorilla</text>
+  </g>
+
+  <!-- ===== Time axis ===== -->
+  <!-- Thin grey line from x=80 (9 MYA) to x=500 (today), at y=335 -->
+  <g stroke="#888" stroke-width="1" fill="#888">
+    <line x1="80" y1="335" x2="500" y2="335"/>
+
+    <!-- Tick marks at 9, 6, 3, 0 MYA -->
+    <!-- 9 MYA -> x=80 -->
+    <line x1="80"  y1="332" x2="80"  y2="340"/>
+    <!-- 6 MYA -> x=220 -->
+    <line x1="220" y1="332" x2="220" y2="340"/>
+    <!-- 3 MYA -> x=360 -->
+    <line x1="360" y1="332" x2="360" y2="340"/>
+    <!-- 0 MYA -> x=500 -->
+    <line x1="500" y1="332" x2="500" y2="340"/>
+  </g>
+
+  <!-- Axis tick labels -->
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#888">
+    <text x="80"  y="355" text-anchor="middle">9 MYA</text>
+    <text x="220" y="355" text-anchor="middle">6 MYA</text>
+    <text x="360" y="355" text-anchor="middle">3 MYA</text>
+    <text x="500" y="355" text-anchor="middle">today</text>
+  </g>
+
+  <!-- "time" axis label -->
+  <text x="290" y="372" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    time (millions of years before present)
+  </text>
+
+  <!-- ===== Newick string panel (right of tree) ===== -->
+  <rect x="610" y="120" width="140" height="90" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="1"/>
+  <text x="680" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#8a5a07">
+    Newick
+  </text>
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#333">
+    <text x="620" y="162">((Human:6,</text>
+    <text x="620" y="178">&#160;&#160;Chimp:6):3,</text>
+    <text x="620" y="194">&#160;Gorilla:9);</text>
+  </g>
+
+  <!-- ===== Caption ===== -->
+  <g font-size="11" font-style="italic" fill="#555">
+    <text x="380" y="388" text-anchor="middle">
+      Approximate divergence times from molecular-clock estimates; the topology is well-supported.
+    </text>
+    <text x="380" y="402" text-anchor="middle">
+      This same shape — two leaves under one ancestor, plus a third leaf joining higher up —
+    </text>
+    <text x="380" y="416" text-anchor="middle">
+      is the abstract ((A, B), C) tree we'll work with throughout the lecture.
+    </text>
+  </g>
+
+</svg>

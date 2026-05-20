@@ -37,27 +37,28 @@ The concepts page has the same material in written form with links to the Rust B
 
 ## Why bother writing tests — a concrete regression
 
-A **regression** [a change that silently breaks behaviour that used to work] is the bug class tests are built for.
+You wrote `trim_low_quality(qual, min)` six months ago: it walks in from both ends of a quality string and returns the slice in between.
 
-- Today `gc_content(b"ACGT")` returns 0.5.
-- Next year someone "optimises" it and now N bases change the denominator → it returns 0.4.
-- A one-line `assert_eq!(gc_content(b"ACGT"), 0.5)` would have caught it the moment they pushed.
+Six months later you "improve" it: you change the boundary check from `>=` to `>` because the in-line comment said "skip bases below threshold". Subtle, looks right, every alignment still runs, every BAM file still gets produced.
+
+But every dataset you process now drops one extra base per read. Quality scores at threshold (the most common case at the read edges) are now treated as "low" instead of "kept". Six months of downstream coverage stats are off by 1-2 bp per read. Nobody notices until a reviewer asks why your coverage looks lower than the public dataset.
+
+A one-line test asserting `trim_low_quality(b"III!", min=8) == b"III"` (where `I` is Q40 and `!` is Q0) would have failed the moment you saved the file.
 
 ::: notes
-The argument for tests is not "you might write bugs", though you will. The argument is that small edits to working code silently change its behaviour, and an automated check is the only thing that catches that before the user does.
+This is a real category — off-by-one in a comparison operator. The output still looks plausible, no crash, all the downstream tools still produce valid output. You only catch it months later if someone compares against a known-good number, or if a reviewer scrutinises the numbers. A test pins the original behaviour and the change in semantics would have failed immediately.
 :::
 
 ## Why bother writing tests — code outlives its author
 
-Real bioinformatics code lives for years. The person who wrote it has moved on by the time it breaks.
+Real bioinformatics code lives for years. The PhD student who wrote it has graduated and moved on by the time it breaks.
 
-::: {.incremental}
 - Tests are the institutional memory of "what this function is supposed to do"
 - Without them, you find out from a user a year later that your published pipeline gives different numbers on the same input
-:::
+- Refactoring without tests is terrifying — every change might silently break a corner case you can't even articulate. With tests, you change the implementation freely and the tests tell you the moment behaviour shifts.
 
 ::: notes
-Six months from now, when you change a helper to make a different caller happy, your tests are what tells you whether you also broke the original use case. The **test suite** [collection of automated checks that run on every build] is the only durable record of the function's intended contract.
+Six months from now, when a new postdoc changes a helper to make a different caller happy, your tests are what tells them whether they also broke the original use case. The **test suite** [collection of automated checks that run on every build] is the only durable record of the function's intended contract.
 :::
 
 ## The anatomy of a Rust test
@@ -80,6 +81,8 @@ mod tests {
 
 - `#[test]` — discoverable by the test harness
 - `assert_eq!` — fails (with both values) if the sides differ
+
+![A test in three parts: known input → the function under test → an `assert_eq!` checking the output against the expected value. Pass / fail comes from whether the comparison holds.](images/lec1-test-anatomy-flow.svg){fig-alt="Horizontal flow diagram: a known input value box on the left labelled `b\"ACGT\"`, an arrow into a function box labelled `gc_content(...)`, an arrow into a comparison box labelled `assert_eq!(result, 0.5)`, with two outcomes branching out: green PASS arrow and red FAIL arrow. Above the diagram a title: 'A test = known input + the function + an expected answer.'" width="80%"}
 
 ::: notes
 The canonical layout: a module at the bottom of the same source file as the code under test, gated by `cfg(test)` so test code does not ship in the production binary. The `#[cfg(test)]` / `mod tests` / `use super::*;` scaffolding is the same for every file; the starter projects already wire it up.
@@ -301,7 +304,12 @@ Debug mode keeps the call. Release mode inlines aggressively.
 
 Same Rust source. Same machine. Different `--release` flag, different assembly.
 
+- Release shrinks debug to about a third of the lines and rearranges everything.
+- *Click for the release version.*
+
+::: {.fragment}
 ![Left: debug-mode assembly is long, has every variable on the stack, no inlining. Right: release-mode assembly is tight, vectorised, with the loop inlined and the result computed in registers.](images/lec1-godbolt-debug-vs-release.svg){fig-alt="Two side-by-side code panels. Left panel labelled 'debug': ~25 lines of x86-64 assembly with many movs and a call to a separate function. Right panel labelled 'release': ~6 lines of tight assembly using SIMD registers (xmm) and no function call. A small Rust snippet at the top shows the original 4-line source."}
+:::
 
 Try it yourself: paste any function into [godbolt.org](https://godbolt.org/), select `rustc`, toggle `-O` or `-C opt-level=3`, watch the right pane shrink.
 
@@ -391,7 +399,7 @@ The good news for biology: most per-record analyses are embarrassingly parallel.
 
 ## Sequential vs parallel — a timeline
 
-![N cores, ~1/N wall-clock for independent items.](images/lec1-sequential-vs-parallel-8color.svg){fig-alt="A two-panel timeline diagram. The top panel labelled Sequential (.iter()) shows a single thread T0 with eight green boxes in a row, seq 0 through seq 7, total time 8 units. The bottom panel labelled Parallel (.par_iter()) shows four thread rows T0 through T3 each with two green boxes side by side; T0 holds seq 0 then seq 4, T1 holds seq 1 then seq 5, T2 holds seq 2 then seq 6, T3 holds seq 3 then seq 7; the total time is 2 units, with a dashed arrow on T0 labelled 'T0 reused'."}
+![The boxes appear one at a time on top, then in parallel on the bottom — same total work, different wall-clock time.](images/lec1-sequential-vs-parallel-animated.svg){fig-alt="A two-panel animated timeline diagram. The top panel labelled Sequential (.iter()) shows a single thread T0 with eight green boxes appearing one after the other, seq 0 through seq 7, total time 8 units. The bottom panel labelled Parallel (.par_iter()) shows four thread rows T0 through T3 each with two green boxes appearing simultaneously; T0 holds seq 0 then seq 4, T1 holds seq 1 then seq 5, T2 holds seq 2 then seq 6, T3 holds seq 3 then seq 7; the total time is 2 units."}
 
 ::: notes
 The picture is the whole pitch. The same eight items finish in roughly a quarter of the wall-clock time when split across four threads. The threads do not idle: as soon as a thread finishes one item, rayon hands it the next one in line.
@@ -449,7 +457,7 @@ Docs: [`ThreadPoolBuilder`](https://docs.rs/rayon/latest/rayon/struct.ThreadPool
 
 **Work-stealing** [idle worker threads grab pending tasks from busy workers' queues, so the load balances itself without any central scheduler]:
 
-![Idle workers steal from busy ones — no scheduling needed.](images/lec1-work-stealing-clear.svg){fig-alt="Three worker columns. T0 in blue shows a deque with one remaining item seq 7 and a caption 'busy: 6 items done'. T1 in green shows an empty deque captioned 'idle: looks for work'. T2 in orange shows a deque of five items seq 11 through seq 15 with the bottom item seq 15 (the tail) highlighted in a darker shade and labelled 'tail'; caption 'backlog of 5 items'. A curved orange arrow runs from T1's column down and back up to seq 15 in T2's deque, with the label 'T1 steals seq 15 from T2's tail'. A footer reads: No manual scheduling. Rayon's runtime balances the load while your code says only .par_iter()."}
+![Watch the leftmost worker finish first, then steal a task from a busy neighbour.](images/lec1-work-stealing-animated.svg){fig-alt="Three animated worker columns. T0 in blue shows a deque with one remaining item seq 7 and a caption 'busy: 6 items done'. T1 in green shows an empty deque captioned 'idle: looks for work'. T2 in orange shows a deque of five items seq 11 through seq 15 with the bottom item seq 15 (the tail) highlighted in a darker shade and labelled 'tail'; caption 'backlog of 5 items'. A curved orange arrow animates from T1's column down and back up to seq 15 in T2's deque, with the label 'T1 steals seq 15 from T2's tail'. A footer reads: No manual scheduling. Rayon's runtime balances the load while your code says only .par_iter()."}
 
 ::: notes
 Work stealing is what keeps the cores busy when items take different amounts of time. Each worker pops tasks off the *head* of its own deque (fast, no contention). When a worker runs out, it picks a random victim, looks at the victim's deque, and steals from the *tail* — the opposite end. Two workers can therefore touch the same deque without colliding most of the time.
@@ -459,19 +467,26 @@ The practical consequence: if one sequence happens to take 10x as long as the ot
 This is the same algorithm used in Cilk and the JVM's ForkJoin pool. Rayon is the Rust port.
 :::
 
-## Without Send/Sync — the race condition you'd get
+## Without locking — what a race condition looks like
 
-A **race condition** [two threads touching the same memory, at least one writing, with no coordination] is the bug class Rust's `Send` and `Sync` prevent.
+Your bank account has $100. Two automatic deposits land at the same instant — one for $50, one for $30. You expect to end up with $180.
 
-```rust
-// PSEUDOCODE — Rust refuses to compile this without locks.
-let mut total = 0;
-spawn(|| { for _ in 0..1_000_000 { total += 1; } });
-spawn(|| { for _ in 0..1_000_000 { total += 1; } });
-println!("{total}");   // expected 2_000_000 — actually ~1.0M to 2.0M
+Each deposit is implemented as **read balance → add → write balance**:
+
+```text
+Thread A — deposit $50:                Thread B — deposit $30:
+    read  balance       → 100              read  balance       → 100
+    add   50            → 150              add   30            → 130
+    write balance       ← 150              write balance       ← 130
 ```
 
-`total += 1` is **three** CPU ops: read, add, write. If two threads interleave them, one write silently loses.
+If the two threads interleave like this — both reading 100 before either writes — thread B's write **overwrites** thread A's, and the account ends at $130 instead of $180. Your $50 deposit silently vanished.
+
+The bank fixes this with a **lock** (only one transaction touches the row at a time). Rust catches the same class of bug at compile time: it refuses to let two threads share mutable access to the same value unless you wrap it in a synchronising type (`Mutex`, `RwLock`, atomics, ...).
+
+::: notes
+Banks really do have this problem and really do use locks. The same shape of bug shows up anywhere two threads share state — a per-thread counter, a shared cache, a database row. The next slide shows how Rust's type system traps this class at compile time using two marker traits, `Send` and `Sync`.
+:::
 
 ## Race conditions — pictured
 
@@ -523,31 +538,29 @@ Note the small caveat: parallel `.sum::<f64>()` is non-deterministic at the last
 
 ## When parallelism helps — and when it doesn't
 
-Handing an item to a worker isn't free. **Per-task overhead** [the bookkeeping rayon does per item, typically a few microseconds] has to be smaller than the per-item work, or you slow down.
+Handing an item to a worker isn't free. If the per-item work is smaller than that overhead, you slow down.
 
-![Three bars on the same time scale: per-task overhead is roughly the same size as one GC computation on a short read, but tiny compared to one GC on a long read.](images/lec1-context-switch-vs-work.svg){fig-alt="Horizontal bar chart with three rows. Row 1 (red): 'per-task overhead (~microseconds)' at ~1-10 µs. Row 2 (orange): 'gc_content on a 1000-bp read' at ~1 µs. Row 3 (green): 'gc_content on a 10000-bp read' at ~10 µs. Annotation: if each item is faster than the overhead, parallelism makes things slower."}
+![Per-task overhead is roughly the same size as one GC computation on a short read, but tiny compared to one GC on a long read.](images/lec1-context-switch-vs-work.svg){fig-alt="Horizontal bar chart with three rows. Row 1 (red): 'per-task overhead (~microseconds)' at ~1-10 µs. Row 2 (orange): 'gc_content on a 1000-bp read' at ~1 µs. Row 3 (green): 'gc_content on a 10000-bp read' at ~10 µs. Annotation: if each item is faster than the overhead, parallelism makes things slower." width="70%"}
 
-**Rule of thumb:** <1 µs/item hurts; ~10 µs marginal; >100 µs (per-read alignment, per-record GC) is a clear win.
+**Rule of thumb:** <1 µs/item hurts; ~10 µs marginal; >100 µs is a clear win.
 
 ::: notes
-The actual numbers depend on your CPU and the rayon thread-pool warm-up state, but the order of magnitude holds.
+**Per-task overhead** is the bookkeeping rayon does per item, typically a few microseconds. The actual numbers depend on your CPU and the rayon thread-pool warm-up state, but the order of magnitude holds. Per-read alignment and per-record GC on long reads are both comfortably in the win zone.
 :::
 
 ## Three other rayon tools worth knowing
 
-```rust
-// 1. mutable parallel iteration
-scores.par_iter_mut().for_each(|s| { *s = recalculate(*s); });
+**`par_bridge`** — wraps any iterator (not just `&[T]`) so you can `par_iter` over noodles `Records`, file lines, etc.
 
-// 2. run two arbitrary closures in parallel (divide-and-conquer)
-let (left_count, right_count) = rayon::join(
-    || count_kmers(&seqs[..mid]),
-    || count_kmers(&seqs[mid..]),
-);
+![](images/lec1-rayon-par_bridge.svg){fig-alt="A non-clonable iterator (e.g. a noodles FASTQ Reader's record iterator) on the left feeding into par_bridge() which dispatches items to multiple worker threads on the right." width="70%"}
 
-// 3. parallelise an arbitrary sequential iterator
-let total: usize = my_records.par_bridge().map(|r| r.len()).sum();
-```
+**`rayon::join`** — run two closures in parallel; useful for divide-and-conquer (a recursive split-and-merge pattern).
+
+![](images/lec1-rayon-join.svg){fig-alt="A function call split into two halves running concurrently; both finish, results are combined." width="70%"}
+
+**`par_iter_mut`** — parallel iteration over `&mut [T]`. Useful when each element is updated in place — e.g., recompute quality scores across a Vec of records.
+
+![](images/lec1-rayon-par_iter_mut.svg){fig-alt="A slice &mut [T] with N elements; multiple threads each get a chunk and update elements in place; no shared writes." width="70%"}
 
 ::: notes
 `par_iter_mut` parallelises writes into a mutable slice — useful when you want to update each element in place. The borrow checker still applies: each closure gets a `&mut` to its own element, never overlapping.
@@ -559,17 +572,16 @@ let total: usize = my_records.par_bridge().map(|r| r.len()).sum();
 Docs: [`par_iter_mut`](https://docs.rs/rayon/latest/rayon/iter/trait.IntoParallelRefMutIterator.html#tymethod.par_iter_mut), [`rayon::join`](https://docs.rs/rayon/latest/rayon/fn.join.html), [`par_bridge`](https://docs.rs/rayon/latest/rayon/iter/trait.ParallelBridge.html).
 :::
 
-## What you actually get — linear vs sublinear
+## What you actually get — speedup saturates
 
-![Ideal linear (grey) vs observed sublinear (green): the gap grows with core count.](images/lec1-linear-vs-sublinear-scaling.svg){fig-alt="Bar chart with 4 groups (1, 2, 4, 8 cores). Each group has two bars side by side: 'ideal linear' (grey, heights 1, 2, 4, 8) and 'observed sublinear' (green, heights 1, 1.9, 3.7, 7.2). Dashed line above each green bar shows where linear would land."}
+Realistic parallel speedup looks like a SATURATING curve, not a linear line. The first few cores give close to linear gains; each additional core adds less than the one before; eventually you flatten out.
 
-- **Ideal linear** — textbook: N cores → N× speedup.
-- **Sublinear** [real speed-up, but less than N×] — Amdahl's law + memory-bandwidth contention.
+![Speedup as a function of core count for a real workload: starts close to the ideal y = x line, then flattens above 8 cores. The serial fraction of the program (Amdahl's law — the unavoidably sequential part) sets the ceiling.](images/lec1-saturating-scaling.svg){fig-alt="A chart with cores on the x-axis (1, 2, 4, 8, 16, 32, 64) and speedup factor on the y-axis (1, 2, 4, 8, 16, 32, 64). A dashed grey line shows the ideal y = x. A solid green curve shows observed speedup: 1.0x, 1.9x, 3.7x, 6.8x, 11x, 14x, 15x — close to ideal at low core counts, flattening as cores grow. Annotation: 'Amdahl's law sets the ceiling — the serial fraction of your program limits the maximum achievable speedup.'" width="80%"}
 
-For per-record bioinformatics, 7-8× on 8 cores is healthy. Stop tuning within 20% of ideal.
+Past 16-32 cores you're usually not buying much more speed — the bottleneck shifts to coordination overhead and the part of the program that can't be parallelised.
 
 ::: notes
-Some part of every program is unavoidably serial, so doubling cores never quite doubles speed. Threads also compete for the same path to memory, so even fully parallel work doesn't always scale linearly.
+Some part of every program is unavoidably serial, so doubling cores never quite doubles speed. Threads also compete for the same path to memory, so even fully parallel work doesn't always scale linearly. For per-record bioinformatics, 7-8x on 8 cores is healthy. Stop tuning within 20% of ideal.
 :::
 
 ## Exercise 3 — parallelise GC content

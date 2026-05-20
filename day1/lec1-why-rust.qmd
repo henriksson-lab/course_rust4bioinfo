@@ -20,12 +20,10 @@ format:
 
 ## About this lecture
 
-::: {.incremental}
 - **Why** Rust matters in modern bioinformatics
 - **Where** it lives in the toolbox already
 - **What** it costs
 - **What** this course will and will not teach
-:::
 
 ::: notes
 Welcome to day 1 of the course. This is the first of two short lectures today. Twelve lectures across the week, but most of the time you spend on the keyboard, not on me. Today I want to motivate the choice of language. If you finish the lecture not convinced Rust is interesting, the exercises will be harder.
@@ -118,13 +116,11 @@ Numbers vary by hardware, by k, by how much of your hot loop is in NumPy versus 
 
 ## Why this matters in bioinformatics
 
-::: {.incremental}
 - Reads per sample: $10^8$
 - Samples per project: $10^2$ to $10^5$
 - Genome / transcriptome / pangenome sizes are growing **faster than CPU clock speeds**
 - Cloud bill scales linearly with wall-clock
 - Iteration speed scales **inversely** with wall-clock
-:::
 
 ::: notes
 A 10× speedup is more important here than in business software because our workloads scale with biology, not with users. A 10x speedup turns an overnight job into a coffee break. That changes how you iterate. It changes which experiments you bother to run.
@@ -289,13 +285,11 @@ This is how polars works. It is how pydantic-core works. It is how tokenizers wo
 
 ## When **not** to use Rust
 
-::: {.incremental}
 - A one-off script you will throw away after this afternoon
 - Exploratory data analysis in a notebook
 - Wrapping a well-established Python or R pipeline
 - When your team does not know Rust and the performance does not matter
 - When the relevant library only exists in Python (yet)
-:::
 
 ::: notes
 I am not selling snake oil. Rust is not the right tool for everything.
@@ -305,13 +299,11 @@ If you are writing a one-off analysis script that will run once and never again,
 
 ## The cost
 
-::: {.incremental}
 - **Steeper learning curve**, especially ownership and borrowing (day 2)
 - **Slower compile times** than Python (which has none)
 - **Smaller bioinformatics ecosystem** than Python or R — but growing
 - **More verbose** than R or Python for some tasks
 - **Less interactive** than a notebook for exploration
-:::
 
 ::: notes
 The costs are real. The borrow checker takes time to internalise — you will spend day 2 fighting it, and that is normal. cargo build takes seconds where python script.py takes none. Some libraries you want will not exist; you will write them or find a workaround.
@@ -336,14 +328,12 @@ Six days. Each day has two short lectures and a stack of hands-on exercises. By 
 
 ## What we **won't** cover
 
-::: {.incremental}
 - Async runtimes (one narrow exception on day 6)
 - Writing macros (using them is fine)
 - `unsafe` code
 - Explicit lifetime annotations beyond elision
 - Designing generic trait hierarchies
 - C FFI, embedded, GPU programming
-:::
 
 ::: notes
 Deliberate omissions. Everything on this list is a real and useful part of Rust. None of them are needed to write effective bioinformatics tools. The Rust Book is there when you decide you want to go deeper, and it is excellent.
@@ -353,12 +343,10 @@ Deliberate omissions. Everything on this list is a real and useful part of Rust.
 
 By end of day 1 you will be able to:
 
-::: {.incremental}
 - Install Rust, scaffold and run a `cargo` project
 - Read and write Rust syntax for variables, control flow, functions
 - Use `match` expressions and `panic!`
 - Compute GC content, base counts, complement, Phred score, Hamming distance — five small programs, with tests
-:::
 
 ::: notes
 Five exercises today, each fifteen to thirty minutes. Tests are provided; your job is to make them pass. By the end of today you have working Rust on disk and a feel for the toolchain. Tomorrow we go deeper into ownership.

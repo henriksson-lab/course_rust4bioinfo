@@ -1,0 +1,88 @@
+---
+title: "Day 3b — Exercise: implement Display for GenomicInterval"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement the [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) trait (a standard library trait — gloss: a shared interface — that controls how a value is formatted for human-readable output) for the `GenomicInterval` struct from Day 3. After this, `format!("{}", iv)` produces `"chr1:1000-2000"`.
+
+## Background
+
+Rust splits human-facing formatting into two traits. [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) is the developer-facing one, used by `{:?}` and `dbg!`, and you almost always get it for free by writing `#[derive(Debug)]`. [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) is the user-facing one, used by `{}` in `println!` and `format!`, and you must always write it by hand — there is no `#[derive(Display)]` in the standard library. The reason is deliberate: there is no universally right way to format a value for human eyes, so the language forces you to decide.
+
+For `GenomicInterval` the convention in BED-style tools is `chrom:start-end`, e.g. `chr1:1000-2000`. That is what we will implement.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day3b/ex-display
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A `GenomicInterval` struct with `chrom: String`, `start: u64`, `end: u64`
+- A skeleton `impl fmt::Display for GenomicInterval` block with a `// TODO`
+- A `main` function that builds an interval from the command line and prints it with `{}`
+- A `#[cfg(test)] mod tests` block with four unit tests
+
+Your job: fill in the TODO inside the `impl Display for GenomicInterval` block so all four tests pass. Do not change the struct, the tests, or `main`.
+
+## How to run
+
+From inside `day3b/ex-display/`:
+
+```bash
+cd day3b/ex-display
+cargo test                       # all four tests should fail at first
+cargo run -- chr1 1000 2000      # prints: chr1:1000-2000
+```
+
+When all four tests pass, `cargo test` will print:
+
+```
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — the one-line body"}
+The body of `fmt` is a single call to the [`write!`](https://doc.rust-lang.org/std/macro.write.html) macro (gloss: a macro that writes formatted text into a formatter, the same way `println!` writes to stdout):
+
+```rust
+write!(f, "{}:{}-{}", self.chrom, self.start, self.end)
+```
+
+A few things to notice:
+
+- The function returns [`std::fmt::Result`](https://doc.rust-lang.org/std/fmt/type.Result.html), which is `Result<(), std::fmt::Error>`. `write!` returns the same type, so you can just return its value directly — no `?`, no extra `Ok(())`.
+- If you wanted to call `write!` more than once (say, to print a strand suffix on a separate line), you would use `?` after each intermediate call to propagate errors (gloss: short-circuit and return early on `Err`), and finish with `Ok(())`. With a single call, returning it is cleanest.
+- `f: &mut fmt::Formatter<'_>` is the sink that `write!` writes into. You never construct one yourself — the formatting machinery passes it in.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day3b/ex-display-solution/src/main.rs`. The whole `impl` block reduces to:
+
+```rust
+impl fmt::Display for GenomicInterval {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}-{}", self.chrom, self.start, self.end)
+    }
+}
+```
+
+Try not to peek until your own version passes all four tests.
+:::
+
+## Where this leads
+
+`Display` is a *standard library* trait — you implemented an interface someone else defined. The next exercise ([`02-annotate.qmd`](02-annotate.qmd)) goes the other direction: you define your *own* trait (`Annotate`) and implement it for several different types, so the same generic code can work on `GenomicInterval`, a gene record, and a variant call without caring which is which. That is where traits really start to pay off.

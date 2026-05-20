@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Three styling attributes &#8212; what each one changes
+  </text>
+
+  <!-- ============ ROW 1: colour ============ -->
+  <!-- Row band ~ y 60 to 195 -->
+
+  <!-- Left panel (before): RED scatter -->
+  <rect x="40" y="70" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="180" y="62" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">before</text>
+  <g fill="#c62828">
+    <circle cx="70"  cy="160" r="4"/>
+    <circle cx="98"  cy="142" r="4"/>
+    <circle cx="125" cy="155" r="4"/>
+    <circle cx="148" cy="125" r="4"/>
+    <circle cx="172" cy="135" r="4"/>
+    <circle cx="198" cy="110" r="4"/>
+    <circle cx="220" cy="120" r="4"/>
+    <circle cx="245" cy="98"  r="4"/>
+    <circle cx="270" cy="105" r="4"/>
+    <circle cx="295" cy="88"  r="4"/>
+  </g>
+
+  <!-- Middle label -->
+  <text x="450" y="125" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    colour: RED
+  </text>
+  <text x="450" y="148" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    &#8594; BLUE
+  </text>
+
+  <!-- Right panel (after): BLUE scatter, same points -->
+  <rect x="580" y="70" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="720" y="62" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">after</text>
+  <g fill="#1976d2">
+    <circle cx="610" cy="160" r="4"/>
+    <circle cx="638" cy="142" r="4"/>
+    <circle cx="665" cy="155" r="4"/>
+    <circle cx="688" cy="125" r="4"/>
+    <circle cx="712" cy="135" r="4"/>
+    <circle cx="738" cy="110" r="4"/>
+    <circle cx="760" cy="120" r="4"/>
+    <circle cx="785" cy="98"  r="4"/>
+    <circle cx="810" cy="105" r="4"/>
+    <circle cx="835" cy="88"  r="4"/>
+  </g>
+
+  <!-- ============ ROW 2: stroke width ============ -->
+  <!-- Row band ~ y 215 to 345 -->
+
+  <!-- Left panel: thin line -->
+  <rect x="40" y="220" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="180" y="212" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">before</text>
+  <polyline fill="none" stroke="#1976d2" stroke-width="1"
+            points="55,310 90,275 125,290 160,245 195,260 230,225 265,240 300,210"/>
+
+  <!-- Middle label -->
+  <text x="450" y="275" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    stroke width:
+  </text>
+  <text x="450" y="298" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    1 px &#8594; 3 px
+  </text>
+
+  <!-- Right panel: thick line -->
+  <rect x="580" y="220" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="720" y="212" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">after</text>
+  <polyline fill="none" stroke="#1976d2" stroke-width="3"
+            points="595,310 630,275 665,290 700,245 735,260 770,225 805,240 840,210"/>
+
+  <!-- ============ ROW 3: alpha ============ -->
+  <!-- Row band ~ y 365 to 495 -->
+
+  <!-- Left panel: 30 overlapping opaque points clustered to look like a blob -->
+  <rect x="40" y="370" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="180" y="362" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">before</text>
+  <g fill="#1976d2" fill-opacity="1">
+    <circle cx="170" cy="425" r="11"/>
+    <circle cx="178" cy="430" r="11"/>
+    <circle cx="165" cy="432" r="11"/>
+    <circle cx="182" cy="420" r="11"/>
+    <circle cx="174" cy="438" r="11"/>
+    <circle cx="160" cy="423" r="11"/>
+    <circle cx="186" cy="428" r="11"/>
+    <circle cx="172" cy="417" r="11"/>
+    <circle cx="168" cy="442" r="11"/>
+    <circle cx="180" cy="436" r="11"/>
+    <circle cx="155" cy="427" r="11"/>
+    <circle cx="190" cy="424" r="11"/>
+    <circle cx="175" cy="445" r="11"/>
+    <circle cx="183" cy="412" r="11"/>
+    <circle cx="158" cy="436" r="11"/>
+    <circle cx="192" cy="432" r="11"/>
+    <circle cx="167" cy="412" r="11"/>
+    <circle cx="178" cy="448" r="11"/>
+    <circle cx="150" cy="430" r="11"/>
+    <circle cx="195" cy="420" r="11"/>
+    <circle cx="163" cy="445" r="11"/>
+    <circle cx="187" cy="416" r="11"/>
+    <circle cx="172" cy="430" r="11"/>
+    <circle cx="180" cy="425" r="11"/>
+    <circle cx="170" cy="438" r="11"/>
+    <circle cx="178" cy="418" r="11"/>
+    <circle cx="165" cy="420" r="11"/>
+    <circle cx="185" cy="440" r="11"/>
+    <circle cx="174" cy="426" r="11"/>
+    <circle cx="168" cy="434" r="11"/>
+  </g>
+
+  <!-- Middle label -->
+  <text x="450" y="425" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    alpha:
+  </text>
+  <text x="450" y="448" text-anchor="middle" font-size="15" font-weight="600" fill="#222" font-family="ui-monospace, monospace">
+    1.0 &#8594; 0.4
+  </text>
+
+  <!-- Right panel: same 30 points, alpha 0.4 -->
+  <rect x="580" y="370" width="280" height="120" fill="white" stroke="#000" stroke-width="1.2"/>
+  <text x="720" y="362" text-anchor="middle" font-size="13" fill="#666" font-family="ui-monospace, monospace">after</text>
+  <g fill="#1976d2" fill-opacity="0.4">
+    <circle cx="710" cy="425" r="11"/>
+    <circle cx="718" cy="430" r="11"/>
+    <circle cx="705" cy="432" r="11"/>
+    <circle cx="722" cy="420" r="11"/>
+    <circle cx="714" cy="438" r="11"/>
+    <circle cx="700" cy="423" r="11"/>
+    <circle cx="726" cy="428" r="11"/>
+    <circle cx="712" cy="417" r="11"/>
+    <circle cx="708" cy="442" r="11"/>
+    <circle cx="720" cy="436" r="11"/>
+    <circle cx="695" cy="427" r="11"/>
+    <circle cx="730" cy="424" r="11"/>
+    <circle cx="715" cy="445" r="11"/>
+    <circle cx="723" cy="412" r="11"/>
+    <circle cx="698" cy="436" r="11"/>
+    <circle cx="732" cy="432" r="11"/>
+    <circle cx="707" cy="412" r="11"/>
+    <circle cx="718" cy="448" r="11"/>
+    <circle cx="690" cy="430" r="11"/>
+    <circle cx="735" cy="420" r="11"/>
+    <circle cx="703" cy="445" r="11"/>
+    <circle cx="727" cy="416" r="11"/>
+    <circle cx="712" cy="430" r="11"/>
+    <circle cx="720" cy="425" r="11"/>
+    <circle cx="710" cy="438" r="11"/>
+    <circle cx="718" cy="418" r="11"/>
+    <circle cx="705" cy="420" r="11"/>
+    <circle cx="725" cy="440" r="11"/>
+    <circle cx="714" cy="426" r="11"/>
+    <circle cx="708" cy="434" r="11"/>
+  </g>
+
+  <!-- Caption -->
+  <text x="450" y="520" text-anchor="middle" font-size="14" fill="#666" font-style="italic">
+    Each pair is the same data with exactly one styling attribute modified.
+  </text>
+
+</svg>

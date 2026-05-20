@@ -22,13 +22,11 @@ format:
 
 An **archive** is one file that bundles many — e.g. `.zip`, `.tar`. Compression (e.g. gzip) is a separate concern, often combined with archiving.
 
-::: {.incremental}
 - How a `.zip` file is actually laid out on disk
 - What "lossless compression" means and one tiny example you can do by hand
 - Why DNA can be stored at 2 bits per base, and why FASTA still uses 1 byte
 - Real numbers for FASTQ compression — gzip, **bgzip** (block-gzip — seekable gzip used in bioinformatics for BAM/VCF), **zstd** (Zstandard — modern compressor, often faster and smaller than gzip)
 - How to read and write `.zip` and `.gz` from Rust
-:::
 
 ::: notes
 You have all used `.zip` files. You have all double-clicked one and watched it expand into a folder of pictures. What you probably have not done is think about what is actually inside that file, why the bytes shrink when you compress, and what that means for the multi-gigabyte FASTQs you handle every day.
@@ -52,10 +50,8 @@ The reason the table goes at the end is historical and practical: it lets you gr
 
 Two principles every lossless compressor follows:
 
-::: {.incremental}
 - **Common patterns become shorter codes.** If the byte `A` shows up half the time, give it a 1-bit code instead of 8 bits.
 - **The decoder reproduces the original exactly.** Byte-for-byte. No approximation.
-:::
 
 ::: notes
 For pictures and music it is fine to lose a little detail. For DNA it is not. Every compressor in our toolbox — gzip, bgzip, zstd, the zip in your laptop — is lossless. The decoded bytes equal the input bytes.
@@ -162,11 +158,9 @@ The UCSC `.2bit` format stores the human reference at literally 2 bits per base.
 
 But FASTA stays at 1 byte per base in practice. Three reasons:
 
-::: {.incremental}
 - **Tools.** Every aligner, variant caller, and parser reads FASTA. The ecosystem assumes ASCII.
 - **Ambiguity codes.** `N`, `R`, `Y`, `S`, `W`, `K`, `M`, ... — 15 IUPAC codes, more than 2 bits can encode.
 - **"Good enough".** A FASTA.gz is roughly the same size as a 2-bit file (around 3-4x compression) with simpler tooling.
-:::
 
 ::: notes
 2-bit storage shows up where every byte matters: UCSC stores the human genome in `.2bit`, BLAST databases pack bases tightly, some short-read aligners use 2-bit indexes internally. Outside those niches, the world settles on "FASTA on disk, gzip when transferring".
@@ -192,11 +186,9 @@ Quality scores are the awkward part of FASTQ. They are nearly as long as the seq
 
 Three real costs at scale:
 
-::: {.incremental}
 - **Storage.** A sequencing core producing 50 lanes a week saves 450 GB/week by gzipping. Over a year that is 23 TB — real money.
 - **Network.** Moving 12 GB across a slow link takes hours. Moving 3 GB takes a quarter as long.
 - **IO bandwidth.** A pipeline that streams gzip on the fly often runs as fast as one that reads uncompressed files — the bottleneck is disk read, not CPU.
-:::
 
 ::: notes
 The bandwidth point is the surprising one. New students often think compression slows things down because the CPU has to do extra work. In reality, modern disks read at maybe 200 MB/s and modern decompressors can decompress gzip at 200-400 MB/s.

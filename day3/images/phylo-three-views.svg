@@ -81,12 +81,12 @@
        parens and C portion in another. To keep alignment trivial we render
        the whole string and place a coloured rectangle behind the inner part.
   -->
-  <!-- Highlight rect, sized to roughly cover "(A:0.1,B:0.2):0.3" in 22px mono -->
-  <rect x="450" y="165" width="252" height="42" fill="#fff3cd" stroke="#d97706"
+  <!-- Highlight rect, sized to roughly cover "(A:0.1,B:0.2):0.3" in 20px mono -->
+  <rect x="453" y="168" width="212" height="38" fill="#fff3cd" stroke="#d97706"
         stroke-width="1.5" rx="6"/>
 
   <!-- Newick text -->
-  <text x="445" y="195" font-size="22" font-family="ui-monospace, monospace" fill="#333">
+  <text x="445" y="195" font-size="20" font-family="ui-monospace, monospace" fill="#333">
     <tspan>(</tspan><tspan fill="#b45309" font-weight="700">(A:0.1,B:0.2):0.3</tspan><tspan>,C:0.5);</tspan>
   </text>
 
@@ -105,8 +105,8 @@
   <text x="40" y="318" font-size="15" font-weight="700" fill="#333">Panel 3 — Rust value</text>
 
   <!-- Highlight rect behind the inner Internal { ... } block -->
-  <!-- Inner block occupies lines 4..10 of the snippet (y ~ 358..476). -->
-  <rect x="80" y="358" width="700" height="118" fill="#fff3cd" stroke="#d97706"
+  <!-- Inner block occupies lines 4..10 of the snippet (y ~ 358..480). -->
+  <rect x="80" y="358" width="700" height="122" fill="#fff3cd" stroke="#d97706"
         stroke-width="1.5" rx="6"/>
 
   <!-- Rust enum literal, rendered line by line for control -->

@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- title -->
+  <text x="450" y="30" text-anchor="middle" font-size="22" font-weight="700">
+    Three cases at each cell: which neighbour wins?
+  </text>
+
+  <!-- ===== Panel layout =====
+       Each panel is 280 wide, gap 30, starting at x=15.
+       Panel 1: x=15..295
+       Panel 2: x=310..590
+       Panel 3: x=605..885
+       Panel body roughly y=55..330
+  -->
+
+  <!-- ===== Panel 1: diagonal (match or mismatch) ===== -->
+  <rect x="15" y="55" width="280" height="280" rx="8" ry="8"
+        fill="#e3f2fd" stroke="#888" stroke-width="1"/>
+
+  <!-- neighbour label at top -->
+  <text x="155" y="80" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#333">neighbour: diagonal</text>
+  <text x="155" y="100" text-anchor="middle" font-size="14" fill="#555">
+    (match or mismatch)
+  </text>
+
+  <!-- sequences -->
+  <text x="40" y="150" font-size="18" font-family="ui-monospace, monospace">
+    a:  ... A  C  G
+  </text>
+  <text x="40" y="180" font-size="18" font-family="ui-monospace, monospace">
+    b:  ... A  C  G
+  </text>
+
+  <!-- highlight last column (the T over T) -->
+  <rect x="215" y="130" width="34" height="60" rx="4" ry="4"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+  <text x="232" y="150" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">T</text>
+  <text x="232" y="180" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#2e7d32">T</text>
+
+  <!-- score badge -->
+  <rect x="55" y="215" width="200" height="32" rx="6" ry="6"
+        fill="#ffffff" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="155" y="236" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#2e7d32">+1 (match)</text>
+  <text x="155" y="266" text-anchor="middle" font-size="13" fill="#c62828">
+    or -1 if mismatch
+  </text>
+
+  <!-- annotation -->
+  <text x="155" y="298" text-anchor="middle" font-size="14" fill="#333">
+    both prefixes shrink
+  </text>
+  <text x="155" y="318" text-anchor="middle" font-size="14" font-weight="600"
+        fill="#333">
+    look diagonally up-left
+  </text>
+
+  <!-- ===== Panel 2: up (gap in b) ===== -->
+  <rect x="310" y="55" width="280" height="280" rx="8" ry="8"
+        fill="#fff3cd" stroke="#888" stroke-width="1"/>
+
+  <text x="450" y="80" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#333">neighbour: up</text>
+  <text x="450" y="100" text-anchor="middle" font-size="14" fill="#555">
+    (gap in b)
+  </text>
+
+  <!-- sequences -->
+  <text x="335" y="150" font-size="18" font-family="ui-monospace, monospace">
+    a:  ... A  C  G
+  </text>
+  <text x="335" y="180" font-size="18" font-family="ui-monospace, monospace">
+    b:  ... A  C  G
+  </text>
+
+  <!-- highlight last column (T over -) -->
+  <rect x="510" y="130" width="34" height="60" rx="4" ry="4"
+        fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="527" y="150" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+  <text x="527" y="180" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">-</text>
+
+  <!-- score badge -->
+  <rect x="350" y="215" width="200" height="32" rx="6" ry="6"
+        fill="#ffffff" stroke="#c62828" stroke-width="1.5"/>
+  <text x="450" y="236" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#c62828">-1 (gap)</text>
+
+  <text x="450" y="280" text-anchor="middle" font-size="14" fill="#333">
+    only a shrinks
+  </text>
+  <text x="450" y="300" text-anchor="middle" font-size="14" font-weight="600"
+        fill="#333">
+    look up
+  </text>
+
+  <!-- ===== Panel 3: left (gap in a) ===== -->
+  <rect x="605" y="55" width="280" height="280" rx="8" ry="8"
+        fill="#fff3cd" stroke="#888" stroke-width="1"/>
+
+  <text x="745" y="80" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#333">neighbour: left</text>
+  <text x="745" y="100" text-anchor="middle" font-size="14" fill="#555">
+    (gap in a)
+  </text>
+
+  <!-- sequences -->
+  <text x="630" y="150" font-size="18" font-family="ui-monospace, monospace">
+    a:  ... A  C  G
+  </text>
+  <text x="630" y="180" font-size="18" font-family="ui-monospace, monospace">
+    b:  ... A  C  G
+  </text>
+
+  <!-- highlight last column (- over T) -->
+  <rect x="805" y="130" width="34" height="60" rx="4" ry="4"
+        fill="#ffffff" stroke="#d97706" stroke-width="2"/>
+  <text x="822" y="150" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#c62828">-</text>
+  <text x="822" y="180" text-anchor="middle" font-size="18" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#333">T</text>
+
+  <!-- score badge -->
+  <rect x="645" y="215" width="200" height="32" rx="6" ry="6"
+        fill="#ffffff" stroke="#c62828" stroke-width="1.5"/>
+  <text x="745" y="236" text-anchor="middle" font-size="16" font-weight="700"
+        fill="#c62828">-1 (gap)</text>
+
+  <text x="745" y="280" text-anchor="middle" font-size="14" fill="#333">
+    only b shrinks
+  </text>
+  <text x="745" y="300" text-anchor="middle" font-size="14" font-weight="600"
+        fill="#333">
+    look left
+  </text>
+
+  <!-- closing line -->
+  <text x="450" y="375" text-anchor="middle" font-size="16" font-style="italic"
+        fill="#333">
+    The recurrence picks the case whose pre-computed neighbour cell
+  </text>
+  <text x="450" y="397" text-anchor="middle" font-size="16" font-style="italic"
+        fill="#333">
+    gives the highest total.
+  </text>
+
+</svg>

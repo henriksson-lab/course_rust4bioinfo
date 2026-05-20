@@ -20,10 +20,8 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - The conceptual heart of Rust: who owns a value, who can read it, who can write it
 - Today's tools: **ownership** (the rule that exactly one variable is responsible for cleaning up each value), **borrowing** (giving someone temporary access without handing ownership over) via `&T` and `&mut T`, **slices** (`&[u8]` — a borrowed view into a contiguous run of values), `Vec<T>`
-:::
 
 ::: notes
 Yesterday was syntax. Today is the thing that makes Rust *Rust* — the part that no other mainstream language does, and the part that pays for itself a hundred times over once you've absorbed it.
@@ -661,7 +659,6 @@ This is the "produce a new owned value" shape. The next exercise rewrites it as 
 
 ## Recap
 
-::: {.incremental}
 - Every value has one owner; out of scope &rArr; dropped (no GC).
 - Assignment **moves** by default; primitives are `Copy`.
 - `&T` &mdash; shared, many readers, no writers.
@@ -669,7 +666,6 @@ This is the "produce a new owned value" shape. The next exercise rewrites it as 
 - Slices `&[u8]` are fat pointers (ptr + len); zero allocation.
 - `Vec<u8>` owns its heap buffer; `clear()` keeps the allocation.
 - Lifetime elision: one-in, one-out reference signatures need no annotation.
-:::
 
 ::: notes
 Seven bullets. The whole afternoon hangs off these.

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="pb-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    par_bridge: adapt any Iterator for rayon
+  </text>
+
+  <!-- ===== Source iterator ===== -->
+  <rect x="20" y="60" width="150" height="50" rx="6" ry="6"
+        fill="#e3f2fd" stroke="#1565c0" stroke-width="1.8"/>
+  <text x="95" y="80" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">
+    source iterator
+  </text>
+  <text x="95" y="98" text-anchor="middle" font-size="13"
+        font-family="ui-monospace, monospace" fill="#0d47a1">
+    Reader.records()
+  </text>
+
+  <!-- items spilling out vertically -->
+  <g font-family="ui-monospace, monospace" font-size="12" fill="#333">
+    <rect x="50" y="125" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="141" text-anchor="middle">record 1</text>
+    <rect x="50" y="150" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="166" text-anchor="middle">record 2</text>
+    <rect x="50" y="175" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="191" text-anchor="middle">record 3</text>
+    <rect x="50" y="200" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="216" text-anchor="middle">record 4</text>
+    <rect x="50" y="225" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="241" text-anchor="middle">record 5</text>
+    <rect x="50" y="250" width="90" height="22" rx="3" ry="3"
+          fill="white" stroke="#1565c0" stroke-width="1"/>
+    <text x="95" y="266" text-anchor="middle">record 6</text>
+  </g>
+
+  <!-- arrow into par_bridge -->
+  <line x1="145" y1="190" x2="225" y2="190" stroke="#444" stroke-width="2"
+        marker-end="url(#pb-arrow)"/>
+
+  <!-- ===== par_bridge box ===== -->
+  <rect x="230" y="125" width="120" height="140" rx="6" ry="6"
+        fill="#fff3cd" stroke="#d97706" stroke-width="2"/>
+  <text x="290" y="180" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#b45309">
+    .par_bridge()
+  </text>
+  <text x="290" y="210" text-anchor="middle" font-size="11" font-style="italic" fill="#b45309">
+    adapter
+  </text>
+
+  <!-- arrows out to worker threads -->
+  <line x1="355" y1="155" x2="430" y2="115" stroke="#444" stroke-width="2"
+        marker-end="url(#pb-arrow)"/>
+  <line x1="355" y1="180" x2="430" y2="170" stroke="#444" stroke-width="2"
+        marker-end="url(#pb-arrow)"/>
+  <line x1="355" y1="205" x2="430" y2="225" stroke="#444" stroke-width="2"
+        marker-end="url(#pb-arrow)"/>
+  <line x1="355" y1="230" x2="430" y2="280" stroke="#444" stroke-width="2"
+        marker-end="url(#pb-arrow)"/>
+
+  <!-- ===== 4 worker threads ===== -->
+  <g>
+    <!-- Thread 1 -->
+    <rect x="435" y="95" width="120" height="44" rx="4" ry="4"
+          fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="495" y="113" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">
+      worker 1
+    </text>
+    <text x="495" y="130" text-anchor="middle" font-size="11"
+          font-family="ui-monospace, monospace" fill="#1b5e20">
+      record 1
+    </text>
+
+    <!-- Thread 2 -->
+    <rect x="435" y="150" width="120" height="44" rx="4" ry="4"
+          fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="495" y="168" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">
+      worker 2
+    </text>
+    <text x="495" y="185" text-anchor="middle" font-size="11"
+          font-family="ui-monospace, monospace" fill="#1b5e20">
+      record 2
+    </text>
+
+    <!-- Thread 3 -->
+    <rect x="435" y="205" width="120" height="44" rx="4" ry="4"
+          fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="495" y="223" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">
+      worker 3
+    </text>
+    <text x="495" y="240" text-anchor="middle" font-size="11"
+          font-family="ui-monospace, monospace" fill="#1b5e20">
+      record 3
+    </text>
+
+    <!-- Thread 4 -->
+    <rect x="435" y="260" width="120" height="44" rx="4" ry="4"
+          fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="495" y="278" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">
+      worker 4
+    </text>
+    <text x="495" y="295" text-anchor="middle" font-size="11"
+          font-family="ui-monospace, monospace" fill="#1b5e20">
+      record 4
+    </text>
+  </g>
+
+  <!-- annotation -->
+  <text x="350" y="332" text-anchor="middle" font-size="13" font-style="italic" fill="#444">
+    par_bridge wraps any Iterator so each item can be sent
+  </text>
+  <text x="350" y="350" text-anchor="middle" font-size="13" font-style="italic" fill="#444">
+    to a worker thread.
+  </text>
+
+</svg>

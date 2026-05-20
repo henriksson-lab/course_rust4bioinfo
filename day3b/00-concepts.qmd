@@ -1,0 +1,194 @@
+---
+title: "Day 3b — Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-3b slides. Day 3b introduces **traits** — Rust's mechanism for shared interfaces. A trait [a named bundle of methods a type can opt in to implementing] is the rough equivalent of a Python *protocol*, a Java *interface*, or a Haskell *type class*, but checked at compile time. Traits are how the standard library says "anything you can print", "anything you can clone", "anything you can iterate over", without naming the concrete types up front.
+
+You have actually been using traits since day 1 — every `#[derive(Debug, Clone)]` is a trait implementation written by the compiler. Day 3b makes the mechanism explicit and gives you the tools to define and consume your own.
+
+## What a trait is
+
+A trait names a set of methods a type can implement. The trait itself defines *what* the methods look like; each `impl` block fills in *how* a particular type provides them.
+
+```rust
+trait Score {
+    fn score(&self) -> i32;
+}
+```
+
+A type that implements `Score` promises one thing: there is a method `score(&self) -> i32` on it. Code that knows nothing about the concrete type but does know it implements `Score` can still call `.score()` on it.
+
+→ [Book: Traits — Defining Shared Behaviour](https://doc.rust-lang.org/book/ch10-02-traits.html)
+
+## Defining a trait
+
+```rust
+trait Annotate {
+    /// A short, human-friendly tag for this value.
+    fn label(&self) -> String;
+}
+```
+
+A trait is introduced with the `trait` keyword followed by a name and a block of method *signatures* (no bodies — those come later in the `impl`). Method signatures use `&self`, `&mut self`, or `self` exactly like methods in a plain `impl` block.
+
+## Implementing a trait for a type
+
+```rust
+struct Strand;
+
+impl Annotate for Strand {
+    fn label(&self) -> String {
+        "DNA strand".to_string()
+    }
+}
+```
+
+`impl <Trait> for <Type>` is the syntax — note the `for`. The body must define every method the trait requires; the compiler refuses to compile an `impl` that is missing one.
+
+You can implement a trait for as many types as you like, as long as either the trait or the type lives in your crate (the *orphan rule* — see the [Rust Reference on coherence](https://doc.rust-lang.org/reference/items/implementations.html#trait-implementation-coherence) for the precise statement).
+
+## The `#[derive(...)]` slate was traits all along
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+struct GenomicInterval { start: u64, end: u64 }
+```
+
+Every name inside `derive(...)` is a trait. The macro writes a field-by-field `impl <Trait> for GenomicInterval { ... }` for each one, so you do not have to type it by hand.
+
+This is why `println!("{:?}", iv)` works only after you add `#[derive(Debug)]` — without the impl there is no `Debug` method to call.
+
+## Standard-library traits you have already met
+
+| Trait | What it enables | Derivable? |
+|---|---|---|
+| [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) | `{:?}` formatting | yes |
+| [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) | `{}` formatting | **no** — write the impl yourself |
+| [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) | `.clone()` deep copy | yes |
+| [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html) | assignment copies instead of moves | yes (every field must be `Copy` too) |
+| [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html), [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) | `==`, `!=` | yes |
+| [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html) | use as a `HashMap` key | yes |
+| [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) | `T::default()` constructor | yes |
+
+`Display` is the odd one out — it is *not* derivable, because there is no obvious "field-by-field" way to format a type for human eyes. You implement it by hand:
+
+```rust
+use std::fmt;
+
+struct GenomicInterval { chrom: String, start: u64, end: u64 }
+
+impl fmt::Display for GenomicInterval {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}-{}", self.chrom, self.start, self.end)
+    }
+}
+```
+
+Once the impl exists, `format!("{}", iv)` returns `"chr1:1000-2000"` and `println!("{}", iv)` prints it.
+
+→ [`std::fmt` overview](https://doc.rust-lang.org/std/fmt/)
+
+## Trait bounds in generic functions
+
+A *generic function* [one written with a placeholder type, monomorphised by the compiler at each call site] often wants to constrain the placeholder. A *trait bound* is the constraint:
+
+```rust
+use std::fmt::Display;
+
+fn print_all<T: Display>(xs: &[T]) {
+    for x in xs {
+        println!("{}", x);
+    }
+}
+```
+
+Read `<T: Display>` as "for any type `T` that implements `Display`". Inside the body you can use any method the bound guarantees — here, anything `Display` provides (so `{}` formatting works on `x`). The compiler refuses if you try to use a method the bound does not cover.
+
+Multiple bounds combine with `+`:
+
+```rust
+fn dump<T: Display + Clone>(x: T) {
+    let copy = x.clone();
+    println!("{}", copy);
+}
+```
+
+→ [Book: Traits as Parameters](https://doc.rust-lang.org/book/ch10-02-traits.html#traits-as-parameters)
+
+## The `where` clause
+
+When the bounds list gets long, move it after the signature with `where`:
+
+```rust
+fn merge<T, U>(a: T, b: U) -> String
+where
+    T: Display + Clone,
+    U: Display,
+{
+    format!("{} + {}", a.clone(), b)
+}
+```
+
+Functionally identical to writing the bounds inline; visually much easier to read once you have more than one or two.
+
+## Default methods inside a trait
+
+A trait method *may* come with a body — a default that implementing types can override or accept as-is:
+
+```rust
+trait Annotate {
+    fn short(&self) -> String;
+
+    /// Default: prefix the short form with "annotation: ".
+    fn long(&self) -> String {
+        format!("annotation: {}", self.short())
+    }
+}
+```
+
+Any `impl Annotate for X` that supplies only `short` gets `long` for free. An impl can still override `long` if it wants a richer version.
+
+This is how the standard library exposes a small set of *required* methods plus a long tail of *convenience* methods — see [`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html), which requires only `next` but provides `map`, `filter`, `sum`, `collect`, and dozens of others as default methods.
+
+## `Box<dyn Trait>` — trait objects
+
+A *trait object* is a pointer to "some value implementing `Trait`, I don't care which". The most common form is `Box<dyn Trait>` — a heap-allocated owning pointer:
+
+```rust
+trait Reader { fn read_record(&mut self) -> Option<String>; }
+
+let readers: Vec<Box<dyn Reader>> = vec![
+    Box::new(FastaReader::new(...)),
+    Box::new(BamReader::new(...)),
+];
+```
+
+Now `readers` is a single vector that holds different concrete types — `FastaReader` and `BamReader` — as long as both implement `Reader`. Without trait objects you would need a separate vector per concrete type. Lecture 2 covers the full mechanism; for now, file the syntax under "the way you store mixed types behind one interface".
+
+→ [Book: Using Trait Objects](https://doc.rust-lang.org/book/ch17-02-trait-objects.html)
+
+## Static vs dynamic dispatch
+
+When you call `x.score()` and `x` has a concrete known type, the compiler emits a direct call to *that type's* `score` method — *static dispatch*. Generic functions with trait bounds (`fn f<T: Score>(x: T)`) compile down to one specialised copy per `T` you actually use, with all calls statically dispatched. Fast; sometimes bloats the binary.
+
+When you call `x.score()` and `x` is a `Box<dyn Score>`, the compiler does not know the concrete type. It emits an indirect call through a *vtable* [a small lookup table of function pointers, one per trait method, attached to each trait object] — *dynamic dispatch*. One copy of the code; a small per-call overhead; lets one variable point to many types at runtime. Lecture 2 has the diagram and the worked `noodles` example.
+
+## Traits as the foundation of the standard library
+
+Rust's standard library is built almost entirely on traits. A short tour:
+
+- [`std::io::Read`](https://doc.rust-lang.org/std/io/trait.Read.html) / [`std::io::Write`](https://doc.rust-lang.org/std/io/trait.Write.html) — anything that produces or accepts a stream of bytes. Files, sockets, in-memory buffers, gzipped streams all implement these.
+- [`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html) — what every `for` loop walks. `Vec`, `HashMap`, `BufRead::lines`, `seq.windows(k)` all implement it.
+- [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html) — "this can become an iterator". This is what makes `for x in vec` work.
+- [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html) — `v[i]` syntax. `Vec`, `HashMap`, slices, strings all implement it.
+- [`From`](https://doc.rust-lang.org/std/convert/trait.From.html) / [`Into`](https://doc.rust-lang.org/std/convert/trait.Into.html) — infallible type conversions. `String::from("hi")`, `let s: String = "hi".into()`.
+
+The `noodles` family of bioinformatics crates leans hard on `std::io::Read`: any of its readers (`bam::Reader`, `vcf::Reader`, `fasta::Reader`) is *generic over* a `Read` source. That is why on day 4 you can drop in a `File`, a `BufReader<File>`, or a `flate2::GzDecoder<File>` interchangeably — every one of them implements `Read`, and the type system arranges the rest.
+
+→ [Book: Generic Types, Traits, and Lifetimes](https://doc.rust-lang.org/book/ch10-00-generics.html)

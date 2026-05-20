@@ -56,6 +56,14 @@ There are many other possible alignments; the question we want to answer is whic
 
 Follow the English: at each step, align the last two characters, drop one from `a`, or drop one from `b`. Take the best of the three.
 
+**The key insight:** an alignment of `a` against `b` reads from left to right and ends somewhere. The very last column of any alignment falls into exactly one of three cases:
+
+1. **Match or mismatch** — the last character of `a` is aligned with the last character of `b`. Both prefixes [the parts of each sequence up to that point] shrink by 1.
+2. **Gap in `b`** — the last character of `a` is aligned with `-` (a gap). Only `a`'s prefix shrinks.
+3. **Gap in `a`** — `b`'s last character is aligned with `-`. Only `b`'s prefix shrinks.
+
+So the optimal score for the full alignment is the maximum of three smaller-prefix problems plus the appropriate score for that last column. That is what the function below computes — recursively.
+
 ```rust
 fn align_naive(a: &[u8], b: &[u8]) -> i32 {
     if a.is_empty() || b.is_empty() {
@@ -70,6 +78,8 @@ fn align_naive(a: &[u8], b: &[u8]) -> i32 {
 ```
 
 Each call makes three more calls. The same little subproblem is recomputed over and over — that's the explosion.
+
+The function is correct because it covers exactly those three cases; what makes it **slow** is that the same sub-prefix gets computed over and over.
 
 ::: notes
 This is the algorithm you'd write off the top of your head before knowing dynamic programming exists — and it's exactly what an exam paper would ask you to write. The structure is correct, the code is short, and the result it would compute (if it ever finished) is the true optimal alignment score.
@@ -144,6 +154,8 @@ We'll revisit this list at the end of the lecture once the alignment example is 
 
 ![Fill once in dependency order; each subproblem solved exactly once.](images/dp-cell-recurrence.svg){width="70%" fig-alt="A 2x2 grid showing four cells [i-1][j-1], [i-1][j], [i][j-1] in grey as predecessors, with the cell [i][j] highlighted in orange as the target. Three arrows from the predecessors converge on the target."}
 
+![The three cases the rule chooses among: align the last two characters (match or mismatch), align a's last with a gap, or align b's last with a gap.](images/lec3-three-cases.svg){fig-alt="Three small alignment diagrams shown side by side. Each shows the last column of an alignment: case 1 is the last character of a stacked over the last character of b with a match-or-mismatch score; case 2 shows the last character of a stacked over a gap dash; case 3 shows a gap dash stacked over the last character of b. Each case is labelled with which DP neighbour cell it corresponds to (diagonal, up, left)." width="80%"}
+
 Three options for filling cell `[i][j]`:
 
 - **diagonal**: `score[i-1][j-1] + s(a[i], b[j])` — match/mismatch
@@ -158,6 +170,22 @@ Each cell is filled from its three already-computed neighbours; the rule is the 
 The function `s(a, b)` is the scoring function — typically +1 for a match, -1 for a mismatch, or in practice a substitution matrix like BLOSUM-62 for proteins. The gap penalty is some negative number that discourages introducing gaps.
 
 There's a base case: the first row and first column are filled by "gap, gap, gap..." — aligning a non-empty prefix to an empty one. Once those are set, every other cell is the max of three already-filled neighbours.
+:::
+
+## Filling the edges first
+
+Before we apply the rule to the interior cells, we have to fill **row 0 and column 0** by hand. They represent aligning a prefix of `a` against the empty string (or vice versa), and the only way to do that is with gaps.
+
+For column 0 (aligning `a[..i]` against empty `b`): `i` gaps in `b`, total score `i * gap`.
+
+For row 0 (aligning empty `a` against `b[..j]`): `j` gaps in `a`, total score `j * gap`.
+
+![Row 0 and column 0 of the DP matrix filled with cumulative gap penalties (0, −1, −2, −3, …). These are the base cases that the recursive rule on the next slide will reference.](images/lec3-edge-filling.svg){fig-alt="A 5×5 grid representing the DP matrix. Row 0 (top) and column 0 (left) are highlighted in yellow with the values 0, -1, -2, -3, -4 along each. Annotation arrows on row 0 and column 0 indicate the cumulative gap penalty pattern. The interior cells are blank."}
+
+Once the edges are filled, the recurrence rule on the next slide fills every interior cell from its three already-computed neighbours.
+
+::: notes
+This is the bridge that the previous slide-deck version skipped. Students staring at the filled matrix on the next slide wonder where the `-1, -2, -3` along the edges came from. Now they know.
 :::
 
 ## The filled matrix
@@ -225,11 +253,9 @@ For the exercise we ask for the score; the traceback is offered as a stretch goa
 
 The same skeleton — "define one subproblem per table cell, fill the table once" — powers:
 
-::: {.incremental}
 - **Edit distance** — how many single-character edits separate two strings (spell-checking, fuzzy matching)
 - **RNA secondary structure prediction** — fold an RNA sequence to minimum free energy
 - **Viterbi decoding for HMMs** — most likely hidden-state sequence; used in basecalling and gene finding
-:::
 
 Once you've seen DP, you'll recognise it everywhere.
 

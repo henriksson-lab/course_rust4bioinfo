@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="sine-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    A line plot is N dots connected in order
+  </text>
+
+  <!-- Chart background:
+       data x in [0, 2π]  → px [140, 760]
+       data y in [-1, 1]  → px [410, 90]   (y=0 → 250) -->
+  <rect x="140" y="90" width="620" height="320" fill="white"
+        stroke="#1976d2" stroke-width="1.6"/>
+
+  <!-- y=0 horizontal axis line -->
+  <line x1="140" y1="250" x2="760" y2="250" stroke="#bbb" stroke-width="1"/>
+
+  <!-- ===== y axis ticks: -1, 0, 1 ===== -->
+  <g font-size="13" fill="#444" font-family="ui-monospace, monospace">
+    <line x1="136" y1="410" x2="140" y2="410" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="130" y="414" text-anchor="end">-1</text>
+    <line x1="136" y1="250" x2="140" y2="250" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="130" y="254" text-anchor="end">0</text>
+    <line x1="136" y1="90"  x2="140" y2="90"  stroke="#1976d2" stroke-width="1.4"/>
+    <text x="130" y="94"  text-anchor="end">1</text>
+  </g>
+
+  <!-- y axis label -->
+  <text x="95" y="250" text-anchor="middle" font-size="14" font-weight="600" fill="#222"
+        transform="rotate(-90 95 250)">
+    y
+  </text>
+
+  <!-- ===== x axis ticks: 0, π/2, π, 3π/2, 2π =====
+       positions: 140, 295, 450, 605, 760 -->
+  <g font-size="13" fill="#444" font-family="ui-monospace, monospace">
+    <line x1="140" y1="410" x2="140" y2="414" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="140" y="430" text-anchor="middle">0</text>
+    <line x1="295" y1="410" x2="295" y2="414" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="295" y="430" text-anchor="middle">π/2</text>
+    <line x1="450" y1="410" x2="450" y2="414" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="450" y="430" text-anchor="middle">π</text>
+    <line x1="605" y1="410" x2="605" y2="414" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="605" y="430" text-anchor="middle">3π/2</text>
+    <line x1="760" y1="410" x2="760" y2="414" stroke="#1976d2" stroke-width="1.4"/>
+    <text x="760" y="430" text-anchor="middle">2π</text>
+  </g>
+
+  <!-- x axis label -->
+  <text x="450" y="455" text-anchor="middle" font-size="14" font-weight="600" fill="#222">
+    x
+  </text>
+
+  <!-- ===== Connected line segments through the 24 sample points ===== -->
+  <polyline fill="none" stroke="#1976d2" stroke-width="2"
+            points="140.0,250.0 167.0,206.8 193.9,166.9 220.9,133.1 247.8,107.9 274.8,93.3 301.7,90.4 328.7,99.2 355.7,119.3 382.6,149.0 409.6,186.3 436.5,228.2 463.5,271.8 490.4,313.7 517.4,351.0 544.3,380.7 571.3,400.8 598.3,409.6 625.2,406.7 652.2,392.1 679.1,366.9 706.1,333.1 733.0,293.2 760.0,250.0"/>
+
+  <!-- ===== 24 sample dots ===== -->
+  <g fill="#1976d2" stroke="#0d47a1" stroke-width="0.6">
+    <circle cx="140.0" cy="250.0" r="3.2"/>
+    <circle cx="167.0" cy="206.8" r="3.2"/>
+    <circle cx="193.9" cy="166.9" r="3.2"/>
+    <circle cx="220.9" cy="133.1" r="3.2"/>
+    <circle cx="247.8" cy="107.9" r="3.2"/>
+    <circle cx="274.8" cy="93.3"  r="3.2"/>
+    <circle cx="301.7" cy="90.4"  r="3.2"/>
+    <circle cx="328.7" cy="99.2"  r="3.2"/>
+    <circle cx="355.7" cy="119.3" r="3.2"/>
+    <circle cx="382.6" cy="149.0" r="3.2"/>
+    <circle cx="409.6" cy="186.3" r="3.2"/>
+    <circle cx="436.5" cy="228.2" r="3.2"/>
+    <circle cx="463.5" cy="271.8" r="3.2"/>
+    <circle cx="490.4" cy="313.7" r="3.2"/>
+    <circle cx="517.4" cy="351.0" r="3.2"/>
+    <circle cx="544.3" cy="380.7" r="3.2"/>
+    <circle cx="571.3" cy="400.8" r="3.2"/>
+    <circle cx="598.3" cy="409.6" r="3.2"/>
+    <circle cx="625.2" cy="406.7" r="3.2"/>
+    <circle cx="652.2" cy="392.1" r="3.2"/>
+    <circle cx="679.1" cy="366.9" r="3.2"/>
+    <circle cx="706.1" cy="333.1" r="3.2"/>
+    <circle cx="733.0" cy="293.2" r="3.2"/>
+    <circle cx="760.0" cy="250.0" r="3.2"/>
+  </g>
+
+  <!-- Annotation arrow pointing at the peak-area dots, with the
+       (x, sin(x)) → LineSeries note -->
+  <line x1="430" y1="65" x2="305" y2="88" stroke="#888" stroke-width="1.3"
+        marker-end="url(#sine-arrow)"/>
+  <text x="435" y="62" font-size="13" font-weight="700" fill="#444"
+        font-family="ui-monospace, monospace">each (x, sin(x)) tuple</text>
+  <text x="435" y="79" font-size="13" fill="#444"
+        font-family="ui-monospace, monospace">→ one point in LineSeries</text>
+
+  <!-- Caption inside the chart area (placed near the bottom-left where the
+       curve doesn't run, around y=210..245 between the rising arc and the
+       y=0 line). Use the top-left interior region so it stays clear. -->
+  <text x="155" y="115" font-size="13" fill="#2e7d32" font-style="italic">
+    24 points, 23 line segments — denser sampling looks smoother.
+  </text>
+
+</svg>

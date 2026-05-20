@@ -20,13 +20,11 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - One picture per analysis — emitted by the analysis itself
 - `plotters` as a Rust answer to matplotlib and ggplot2
 - The mental model: drawing area, chart context, series
 - Histograms, scatter plots, line plots, multiple series
 - Where `plotters` is great, and where it is not
-:::
 
 ::: notes
 This is the plotting half of day 4. The first lecture was about getting bytes off disk and into structured records. This lecture is about turning those records into a figure that ends up in a paper, a slide, or a report.
@@ -36,13 +34,11 @@ You probably already know how to make a histogram in matplotlib or ggplot2. Toda
 
 ## Why plot from Rust?
 
-::: {.incremental}
 - The same binary that does the analysis emits the figure
 - No "now open a notebook and `plt.hist`" step
 - One language, one dependency manifest, one `cargo run`
 - Output is SVG or PNG with deterministic, reproducible bytes
 - Plays nicely with HPC: no display server, no interactive backend
-:::
 
 ::: notes
 The usual bioinformatics pipeline ends in a CSV or a TSV, which you then load into Python or R to plot. Two languages, two environments, two sources of bugs.
@@ -165,6 +161,8 @@ root.present()?;                                           // 4. flush to disk
 
 Four steps: **backend &rarr; drawing area &rarr; chart &rarr; present**. The series come next.
 
+![Every plotters chart is a rectangle in pixel space; once you call `build_cartesian_2d`, it becomes a rectangle in your data coordinates. Everything you draw afterwards is in those data units.](images/lec2-coordinate-system.svg){fig-alt="A chart rectangle showing the drawing area boundary, the x-axis along the bottom with ticks 0, 50, 100, 150, 200, 250, and the y-axis along the left with ticks 0, 5, 10, 15, the origin at bottom-left labelled (0, 0), axis labels 'read length (bp)' and 'count', and an annotation pointing at the interior labelled 'data coordinates — pass (x, y) tuples to draw_series, plotters places them in pixels for you'." width="80%"}
+
 ::: notes
 The skeleton of every `plotters` program. Pick a backend (SVG or PNG), wrap it as a drawing area, paint it white, build a chart with axes, present.
 
@@ -185,6 +183,8 @@ chart.draw_series(counts.iter().enumerate().map(           // for each (bin, cou
 ```
 
 The closure `|(b, &c)| Rectangle::new(...)` turns each `(bin_index, count)` pair into one bar. `draw_series` consumes the resulting iterator and renders every bar.
+
+![Each `Rectangle::new` takes two corner points in data coordinates: bottom-left at `(bin_x_start, 0)` and top-right at `(bin_x_end, count)`. plotters does the pixel arithmetic.](images/lec2-bar-anatomy.svg){fig-alt="A single histogram bar shown enlarged. Two corner points labelled: bottom-left at coordinates (bin_x_start, 0), top-right at (bin_x_end, count). Arrows from each corner to the corresponding part of the Rectangle::new(...) call. Annotation: each bar is one Rectangle; the closure maps bin (b, c) to those two corners." width="80%"}
 
 ::: notes
 This is the only `plotters`-specific bit of the histogram. Everything around it is just setup.
@@ -246,6 +246,8 @@ root.present()?;
 
 [`LineSeries::new`](https://docs.rs/plotters/latest/plotters/series/struct.LineSeries.html) takes an iterator of `(x, y)` and a style. Equivalent to `plt.plot(x, y)` or `geom_line()`.
 
+![A line plot is just N points connected in order. Compute the (x, y) tuples in Rust, hand them to `LineSeries`; plotters draws the segments between them.](images/lec2-line-sine.svg){fig-alt="A sine wave from x=0 to x=2π drawn as 24 connected line segments. Each of the 24 sample points marked with a small dot, the line connecting them shown above. Annotation: 'each line segment connects two consecutive (x, y) tuples — more points = smoother curve'." width="80%"}
+
 ::: notes
 For a connected line, `LineSeries` does what `Circle::new` did for the scatter: it takes the data and turns it into one drawable element. Compared to the scatter version, the only line that really differs is the call to `draw_series`.
 
@@ -277,6 +279,8 @@ chart.configure_series_labels()
     .draw()?;                                              // render the legend box
 ```
 
+![The same chart with two series overlaid — debug-mode and release-mode timings as a function of input size — and a legend in the upper-left distinguishing them.](images/lec2-multiple-series-output.svg){fig-alt="A line chart with two series: debug-mode timings as a red line rising steeply, release-mode timings as a green line rising gently. X-axis: input size. Y-axis: wall-clock seconds. Legend in upper-left labels each line." width="80%"}
+
 ::: notes
 Two `draw_series` calls, one per series, plus a `.label(...)` and `.legend(...)` on each to define what shows up in the legend. The `configure_series_labels` call at the end actually draws the legend box on the chart.
 
@@ -301,6 +305,10 @@ let png = BitMapBackend::new("out.png", (800, 600)).into_drawing_area();
 ```
 
 PNG requires a small amount of platform setup — `cairo` on Linux, otherwise the pure-Rust rasteriser. SVG works everywhere with no extras.
+
+![Same chart, two formats: the SVG stays sharp at any zoom (vector); the low-resolution PNG pixelates when enlarged (raster, fixed grid of pixels).](images/lec2-svg-vs-png.svg){fig-alt="Side-by-side comparison: a small chart rendered as SVG on the left, sharp at any size; the same chart rendered as a 100-pixel-wide PNG on the right and then enlarged 4×, showing visible pixel blocks. Annotation: 'vector = math, scalable; raster = grid of pixels, fixed resolution'." width="80%"}
+
+*One practical reason to prefer SVG for figures you'll iterate on: you can open the file in [Inkscape](https://inkscape.org/) (a free vector-graphics editor) and tweak labels, colours, or layout by hand without re-running your pipeline. Final-figure polish — moving a legend, adding a callout arrow — is far faster in Inkscape than in plotters code.*
 
 ::: notes
 The choice of backend is one line; everything downstream is identical because both implement the same `DrawingBackend` trait. This is the same trait-based dispatch you saw with `Read` and `Write` in lecture 1.
@@ -328,6 +336,8 @@ let teal = RGBColor(31, 119, 180);
 Circle::new((x, y), 4, teal.filled());
 ```
 
+![Three minimal-pair examples: same chart, one thing changed in each. Top: colour swap (red → blue). Middle: stroke width (1 px → 3 px). Bottom: alpha (1.0 → 0.4 — translucent so overlapping points are visible).](images/lec2-styling-cases.svg){fig-alt="Three small charts stacked vertically. Each pair shows 'before' on the left and 'after' on the right. Top pair: same scatter, points red on left and blue on right. Middle pair: same line, thin on left and thick on right. Bottom pair: same overlapping scatter, opaque on left (occluding) and semi-transparent on right (overlap visible). Each pair labelled with the one styling attribute that changed." width="90%"}
+
 ::: notes
 `RED`, `BLUE`, `GREEN`, `BLACK`, `WHITE` are constants exported by the prelude. Each one is a `RGBColor` value with helper methods.
 
@@ -338,56 +348,32 @@ Circle::new((x, y), 4, teal.filled());
 For custom colours, construct an `RGBColor(r, g, b)` directly. The values are `u8`, 0-255. You can also use `HSLColor` if you prefer hue-saturation-lightness.
 :::
 
-## The "split a canvas" trick
+## Multi-panel charts — one image, four conditions
+
+Say you want to compare GC content across four sequencing samples — one chart per sample, side by side. You don't want four separate files; you want one image you can drop in a paper or report.
+
+`split_evenly` divides the drawing area into a grid; each cell is itself a drawing area you can build a chart on:
 
 ```rust
-let root = SVGBackend::new("grid.svg", (1200, 900)).into_drawing_area();
+let root = SVGBackend::new("samples.svg", (1200, 900)).into_drawing_area();
 root.fill(&WHITE)?;
+let areas = root.split_evenly((2, 2));  // 2 rows × 2 cols
 
-let cells = root.split_evenly((2, 2));            // 2 rows by 2 columns
-// cells is a Vec<DrawingArea> with four entries
-
-for (i, cell) in cells.iter().enumerate() {
-    let mut chart = ChartBuilder::on(cell)
-        .caption(format!("panel {}", i), ("sans-serif", 18))
-        .build_cartesian_2d(0.0..1.0, 0.0..1.0)?;
-    chart.configure_mesh().draw()?;
-    // draw something different in each cell ...
+for (area, sample) in areas.iter().zip(samples.iter()) {
+    let mut chart = ChartBuilder::on(area)
+        .caption(&sample.name, ("sans-serif", 18))
+        .margin(5)
+        .x_label_area_size(30)
+        .y_label_area_size(40)
+        .build_cartesian_2d(0.0..1.0, 0..50)?;
+    chart.draw_series(...)?;  // GC histogram for this sample
 }
-
-root.present()?;
 ```
 
-Also: [`split_horizontally`](https://docs.rs/plotters/latest/plotters/drawing/struct.DrawingArea.html#method.split_horizontally), [`split_vertically`](https://docs.rs/plotters/latest/plotters/drawing/struct.DrawingArea.html#method.split_vertically) for one cut.
+Four charts, one SVG, three lines of layout code. Same trick: `split_horizontally(50)` for a 50:50 left/right split, `split_vertically(...)` for top/bottom.
 
 ::: notes
-Multi-panel plots in `plotters` come from splitting the drawing area. `split_evenly((rows, cols))` returns a `Vec<DrawingArea>` you can iterate; each cell is itself a fully-fledged drawing area you can build a chart on.
-
-This is the equivalent of matplotlib's `subplots(2, 2)` or `patchwork` in R. The mental model is the same: one canvas, divided into regions, one chart per region.
-
-`split_horizontally(n)` and `split_vertically(n)` make a single cut at pixel `n`. They are convenient for "main plot plus margin plot" layouts where you do not want an even split.
-:::
-
-## When plotters falls short
-
-Be honest about what `plotters` does not give you:
-
-::: {.incremental}
-- **No interactivity** — no zoom, no pan, no hover. Static SVG / PNG only.
-- **No statistical transforms** — no `geom_smooth` / `sns.regplot`, no `stat_summary`, no kernel density / `sns.kdeplot`.
-- **No grammar of graphics** — no `aes(fill = species)` / `hue=` in seaborn, no auto-legend from a category column.
-- **No tidy data input** — you wrangle the data yourself before drawing; no DataFrame in / plot out.
-- **Limited types** — no boxplot / `plt.boxplot`, no violin / `sns.violinplot`, no heatmap / `sns.heatmap` as a first-class series.
-:::
-
-When you need those: keep the heavy compute in Rust, write a CSV, plot it in ggplot2 or seaborn.
-
-::: notes
-The honest version. `plotters` is great at "I have numbers, give me an SVG bar chart". It is not great at "fit a smoother through these points and colour by group". For the latter you want ggplot's layered grammar, full stop.
-
-There is no shame in the hybrid pipeline. Use Rust for the things Rust is good at — fast inner loops, streaming over big files, parallel reductions — and write the result to a CSV. Then `read_csv` in R or pandas and plot in your favourite grammar. The CSV is the universal interchange format.
-
-What `plotters` removes is the *required* trip to Python or R. For routine outputs — a QC histogram in every report, a coverage line in every BAM summary — that is enough.
+The pattern is identical whether you want a 2×2 grid, a long row of barcoded samples, or a main panel with a small inset. Drawing areas nest: a sub-area is itself an area you can split further.
 :::
 
 ## A scatter for the exercise
@@ -413,6 +399,8 @@ chart.draw_series(points.iter().map(|&(x, y)|
     Circle::new((x, y), 2, BLUE.mix(0.3).filled())))?;
 root.present()?;
 ```
+
+![Output of the scatter exercise on a sample of read lengths: each point is one read at (position, length), with the y-axis showing the length distribution at a glance.](images/lec2-scatter-output.svg){fig-alt="A scatter plot with x-axis labelled 'read index (0..1000)' from 0 to 1000 and y-axis labelled 'read length (bp)' from 0 to 300. Points scattered mostly around 150 bp with a tail of shorter reads. Title: 'Read lengths — 1000 reads'." width="80%"}
 
 ::: notes
 A preview of what an "extension" of exercise 4 would look like. Instead of a histogram of lengths, a scatter of quality versus length, one circle per read.

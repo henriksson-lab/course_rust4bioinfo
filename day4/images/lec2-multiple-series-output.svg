@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Two series on one chart &#8212; debug vs release
+  </text>
+
+  <!-- Chart area: x from 110 to 820, y from 70 to 380 -->
+  <rect x="110" y="70" width="710" height="310" fill="white"
+        stroke="#000" stroke-width="1.4"/>
+
+  <!-- Horizontal gridlines (y at 0, 10, 20, 30, 40, 50) -->
+  <g stroke="#e0e0e0" stroke-width="1">
+    <line x1="110" y1="318" x2="820" y2="318"/>
+    <line x1="110" y1="256" x2="820" y2="256"/>
+    <line x1="110" y1="194" x2="820" y2="194"/>
+    <line x1="110" y1="132" x2="820" y2="132"/>
+    <line x1="110" y1="70"  x2="820" y2="70"/>
+  </g>
+
+  <!-- Vertical gridlines at x = 0, 25k, 50k, 75k, 100k -->
+  <g stroke="#e0e0e0" stroke-width="1">
+    <line x1="287.5" y1="70" x2="287.5" y2="380"/>
+    <line x1="465"   y1="70" x2="465"   y2="380"/>
+    <line x1="642.5" y1="70" x2="642.5" y2="380"/>
+    <line x1="820"   y1="70" x2="820"   y2="380"/>
+  </g>
+
+  <!-- y axis ticks + labels -->
+  <g font-size="13" fill="#222" font-family="ui-monospace, monospace">
+    <line x1="106" y1="380" x2="110" y2="380" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="384" text-anchor="end">0</text>
+    <line x1="106" y1="318" x2="110" y2="318" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="322" text-anchor="end">10</text>
+    <line x1="106" y1="256" x2="110" y2="256" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="260" text-anchor="end">20</text>
+    <line x1="106" y1="194" x2="110" y2="194" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="198" text-anchor="end">30</text>
+    <line x1="106" y1="132" x2="110" y2="132" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="136" text-anchor="end">40</text>
+    <line x1="106" y1="70"  x2="110" y2="70" stroke="#000" stroke-width="1.2"/>
+    <text x="100" y="74" text-anchor="end">50</text>
+  </g>
+
+  <!-- x axis ticks + labels -->
+  <g font-size="13" fill="#222" font-family="ui-monospace, monospace">
+    <line x1="110"   y1="380" x2="110"   y2="384" stroke="#000" stroke-width="1.2"/>
+    <text x="110"   y="400" text-anchor="middle">0</text>
+    <line x1="287.5" y1="380" x2="287.5" y2="384" stroke="#000" stroke-width="1.2"/>
+    <text x="287.5" y="400" text-anchor="middle">25k</text>
+    <line x1="465"   y1="380" x2="465"   y2="384" stroke="#000" stroke-width="1.2"/>
+    <text x="465"   y="400" text-anchor="middle">50k</text>
+    <line x1="642.5" y1="380" x2="642.5" y2="384" stroke="#000" stroke-width="1.2"/>
+    <text x="642.5" y="400" text-anchor="middle">75k</text>
+    <line x1="820"   y1="380" x2="820"   y2="384" stroke="#000" stroke-width="1.2"/>
+    <text x="820"   y="400" text-anchor="middle">100k</text>
+  </g>
+
+  <!-- axis labels -->
+  <text x="465" y="425" text-anchor="middle" font-size="15" font-weight="600" fill="#222">
+    input size (sequences)
+  </text>
+  <text x="40" y="225" text-anchor="middle" font-size="15" font-weight="600" fill="#222"
+        transform="rotate(-90 40 225)">
+    wall-clock (seconds)
+  </text>
+
+  <!-- DEBUG line (red): 0s at 0 -> 45s at 100k.
+       y = 380 - (sec * 6.2), nearly linear with a slight curve up. -->
+  <polyline fill="none" stroke="#c62828" stroke-width="2.4"
+            points="110,380 199,343 287.5,303 376,256 465,206 553,159 642.5,118 731,91 820,101"/>
+
+  <!-- RELEASE line (green): 0s at 0 -> 1.5s at 100k.
+       1.5s -> y = 380 - 9.3 = 370.7, so nearly flat just above x-axis -->
+  <polyline fill="none" stroke="#2e7d32" stroke-width="2.4"
+            points="110,380 199,379 287.5,378 376,376.5 465,375 553,373.5 642.5,372.5 731,371.5 820,371"/>
+
+  <!-- Legend (upper-left) -->
+  <rect x="135" y="90" width="170" height="68" fill="white" stroke="#888" stroke-width="1"/>
+  <line x1="148" y1="115" x2="180" y2="115" stroke="#c62828" stroke-width="2.6"/>
+  <text x="190" y="119" font-size="14" fill="#222" font-family="ui-monospace, monospace">debug</text>
+  <line x1="148" y1="142" x2="180" y2="142" stroke="#2e7d32" stroke-width="2.6"/>
+  <text x="190" y="146" font-size="14" fill="#222" font-family="ui-monospace, monospace">release</text>
+
+  <!-- Caption -->
+  <text x="450" y="460" text-anchor="middle" font-size="14" fill="#666" font-style="italic">
+    The same data, two computations; the legend says which line is which.
+  </text>
+
+</svg>

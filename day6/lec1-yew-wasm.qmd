@@ -41,10 +41,8 @@ The three words appear in the next few slides; pin them down now so nobody has t
 
 ## What today is about
 
-::: {.incremental}
 - A web app written **entirely in Rust** — frontend, backend, shared types
 - Frontend compiled to **WebAssembly**, runs in the browser
-:::
 
 ::: notes
 This lecture introduces the pieces of the pure-Rust web stack we use today. The same Rust we have been writing all week now runs in a browser tab. The companion concepts page covers the same material in writing with links to the upstream docs — keep it open.
@@ -52,13 +50,11 @@ This lecture introduces the pieces of the pure-Rust web stack we use today. The 
 
 ## The shape of the day
 
-::: {.incremental}
 - One workspace with three crates: `shared`, `frontend`, `backend`
 - `frontend` builds to `.wasm`, served by **trunk** [a build tool and dev server for Rust web frontends — like webpack for Yew, with hot reload (auto-rebuild + browser refresh on save) built in]
 - `backend` builds native, serves `/api/samples`
 - Both crates depend on `shared` — same Rust types on the wire
 - After class you are clicking a button, fetching a sequence, plotting GC content over a sliding window
-:::
 
 ![Today: foundations (HTML, HTTP, JSON, ports) → axum backend → Yew frontend compiled to WASM → integrated app.](images/lec1-shape-of-day.svg){fig-alt="A horizontal flow with four stages — Foundations (HTML, HTTP, JSON, ports), Backend (axum), Frontend (Yew, WASM), Integration (browser fetches from backend) — labelled with which exercise covers each."}
 
@@ -770,7 +766,6 @@ The dev proxy is a workflow shortcut. In production the frontend is usually serv
 
 ## Putting it together — one click
 
-::: {.incremental}
 1. User clicks a sample button
 2. `on_pick` runs, calls `spawn_local`
 3. `gloo_net::Request::get("/api/samples/lambda").send().await`
@@ -779,7 +774,6 @@ The dev proxy is a workflow shortcut. In production the frontend is usually serv
 6. Body arrives in the browser, `resp.json().await` — serde decodes (**same struct**)
 7. Frontend writes the sequence into `typed` state — Yew rerenders
 8. Stats and the SVG plot update for free
-:::
 
 ::: notes
 This is the data flow of exercise 4 read in slow motion. Every step is a piece you have seen on a slide. The single most important thing to notice is step 5 and step 6: the JSON the server emits is decoded into the exact same struct the client expects, because both crates depend on the same shared definition.

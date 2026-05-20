@@ -41,38 +41,38 @@
   </text>
 
   <!-- function box -->
-  <rect x="245" y="108" width="185" height="124" rx="4" ry="4"
+  <rect x="275" y="108" width="155" height="124" rx="4" ry="4"
         fill="white" stroke="#1565c0" stroke-width="1.2"/>
-  <text x="338" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">
+  <text x="352" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="#0d47a1">
     gc_content
   </text>
-  <text x="255" y="152" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+  <text x="282" y="152" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     let gc = seq.iter()
   </text>
-  <text x="255" y="170" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+  <text x="282" y="170" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     &#160;&#160;.filter(|&amp;&amp;b|
   </text>
-  <text x="255" y="188" font-size="12" font-family="ui-monospace, monospace" fill="#333">
-    &#160;&#160;&#160;&#160;b==b'G' || b==b'C')
+  <text x="282" y="188" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    &#160;&#160;&#160;&#160;b==b'G'||b==b'C')
   </text>
-  <text x="255" y="206" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+  <text x="282" y="206" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     &#160;&#160;.count();
   </text>
-  <text x="255" y="224" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+  <text x="282" y="224" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     return gc as f64 / n;
   </text>
 
   <!-- call arrow (green) caller -> function -->
-  <line x1="222" y1="148" x2="243" y2="148" stroke="#2e7d32" stroke-width="2"
+  <line x1="222" y1="148" x2="273" y2="148" stroke="#2e7d32" stroke-width="2"
         marker-end="url(#fi-arrow-green)"/>
-  <text x="232" y="142" text-anchor="middle" font-size="11" font-weight="700" fill="#2e7d32">
+  <text x="247" y="142" text-anchor="middle" font-size="10" font-weight="700" fill="#2e7d32">
     call
   </text>
 
   <!-- return arrow (orange) function -> caller -->
-  <line x1="243" y1="172" x2="222" y2="172" stroke="#d97706" stroke-width="2"
+  <line x1="273" y1="172" x2="222" y2="172" stroke="#d97706" stroke-width="2"
         marker-end="url(#fi-arrow-orange)"/>
-  <text x="232" y="188" text-anchor="middle" font-size="11" font-weight="700" fill="#d97706">
+  <text x="247" y="188" text-anchor="middle" font-size="10" font-weight="700" fill="#d97706">
     return
   </text>
 

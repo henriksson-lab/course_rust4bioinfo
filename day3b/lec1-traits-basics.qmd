@@ -1,0 +1,425 @@
+---
+title: "Traits — the interface"
+subtitle: "Day 3b, lecture 1"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: [simple, ../theme.scss]
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+- Traits are Rust's mechanism for **shared interfaces** — a named bundle of methods a type can opt in to implementing
+- You have been using traits since day 1 without naming them: every `#[derive(Debug, Clone)]` is a trait implementation written by the compiler
+- This lecture makes the mechanism explicit, then shows what *you* can do with it
+
+::: notes
+A trait is the rough Rust equivalent of a Python protocol or a Java interface — but checked at compile time. We have been brushing past traits all week. The standard library uses them everywhere. Today we name them, define our own, and write functions that work over any type that promises a particular interface.
+
+The hook: every `derive` on day 3 was a trait impl that the compiler wrote for you. Today you learn to write them yourself, and to write code that consumes them.
+:::
+
+## A trait you've already used — `#[derive(Debug)]`
+
+```rust
+#[derive(Debug)]
+struct GenomicInterval { chrom: String, start: u64, end: u64 }
+
+let iv = GenomicInterval { chrom: "chr1".into(), start: 100, end: 200 };
+println!("{:?}", iv);    // GenomicInterval { chrom: "chr1", start: 100, end: 200 }
+```
+
+What `derive(Debug)` *actually* does:
+
+```rust
+impl std::fmt::Debug for GenomicInterval {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // ...field-by-field formatting that the macro writes for you...
+    }
+}
+```
+
+The `{:?}` formatter only works because the type implements the [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) trait. `derive` is a macro that writes the obvious implementation for you.
+
+::: notes
+This is the bridge to today's material. Every derive name is a trait. The compiler expands the derive into a hand-written impl, identical to one you could type yourself. The reason `{:?}` did not work on types you had not derived `Debug` for was that there was no implementation to dispatch to.
+
+Naming this connection is half the point of today's lecture. Once you see it, you can read the standard library.
+:::
+
+## A trait is a contract a type can sign
+
+A **trait** [a named bundle of methods a type can opt in to implementing — like a Java interface or a Python protocol, but checked at compile time] is declared with the `trait` keyword:
+
+```rust
+trait Score {
+    fn score(&self) -> i32;
+}
+```
+
+In English: *"if a type wants to call itself a `Score`, it must provide a method `score(&self) -> i32`."*
+
+The trait does not say anything about *how* `score` is computed. Each type that implements `Score` answers that question on its own terms.
+
+::: notes
+The trait itself is just a contract. It lists method signatures with no bodies. Types fill the bodies in. The compiler then knows: any value of a type implementing `Score` supports `.score()`.
+
+This is the same idea as a Java interface or a C# interface — declare the shape, defer the bodies to the implementing classes. The key Rust difference: types opt in by writing a separate `impl` block, not by declaring "implements Score" at the type definition.
+:::
+
+## Implementing your own trait
+
+```rust
+trait Score {
+    fn score(&self) -> i32;
+}
+
+enum Strand { Plus, Minus }
+
+impl Score for Strand {
+    fn score(&self) -> i32 {
+        match self {
+            Strand::Plus  =>  1,
+            Strand::Minus => -1,
+        }
+    }
+}
+
+let s = Strand::Plus;
+println!("{}", s.score());     // 1
+```
+
+`impl <Trait> for <Type>` — note the `for`. Body must define every method the trait requires.
+
+::: notes
+The syntax to remember: `impl SomeTrait for SomeType`. The body provides the method bodies the trait declared.
+
+The biology hook: alignment scores, quality summaries, phylogenetic branch supports — any value that has a meaningful numeric summary is a candidate. A `match`-score-from-an-alignment, a Phred quality average, a posterior probability — all become `impl Score for ...`.
+
+In exercise 2 you will define your own `Annotate` trait and implement it for several biological types.
+:::
+
+## A trait as a contract — picture
+
+```
+                       ┌── impl Display for GenomicInterval
+                       │
+        trait Display ─┼── impl Display for Strand
+                       │
+                       └── impl Display for f64   (already in std)
+```
+
+One trait, three concrete types signing the same contract. Code that knows only "this implements `Display`" can use any of them — without knowing which.
+
+::: notes
+This picture is the mental model for the whole lecture. One trait at the centre; many concrete types attached, each via its own impl block. A function that asks for "anything that implements Display" can then take any of them, and treat them uniformly.
+
+The standard library already supplies `impl Display for f64`, `impl Display for i32`, `impl Display for String`, and so on. When you add `impl Display for GenomicInterval`, your type joins the same club, and from that moment can be used wherever the standard library asks for a Display.
+:::
+
+## The traits that `derive` gives you for free
+
+| Trait | What it gives you |
+|---|---|
+| [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) | `{:?}` formatting for diagnostics |
+| [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) | explicit `.clone()` deep copy |
+| [`Copy`](https://doc.rust-lang.org/std/marker/trait.Copy.html) | assignment copies instead of moves (every field must be `Copy`) |
+| [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html), [`Eq`](https://doc.rust-lang.org/std/cmp/trait.Eq.html) | `==` and `!=` |
+| [`Hash`](https://doc.rust-lang.org/std/hash/trait.Hash.html) | use as a `HashMap` / `HashSet` key |
+| [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) | `T::default()` zero-argument constructor |
+
+Every one of these is a real trait you could implement by hand. `derive` writes the obvious field-by-field impl on your behalf.
+
+::: notes
+Day 3 introduced these as a slate. Today they get a second reading: each one is a trait, and the derive macro writes the implementation. Knowing this lets you read the standard library — when you see `where T: Eq + Hash`, you know exactly what the trait names refer to.
+
+Display is conspicuously absent from this list because there is no obvious "field-by-field" Display — what should `GenomicInterval { chrom: "chr1", start: 100, end: 200 }` print as? `chr1:100-200`? `chr1\t100\t200`? Only you know. That is why Display is not derivable.
+:::
+
+## `Display` — the human-readable face
+
+Implementing [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) gives a type a meaningful `{}` formatter.
+
+```rust
+use std::fmt;
+
+struct GenomicInterval { chrom: String, start: u64, end: u64 }
+
+impl fmt::Display for GenomicInterval {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}:{}-{}", self.chrom, self.start, self.end)
+    }
+}
+
+let iv = GenomicInterval { chrom: "chr1".into(), start: 100, end: 200 };
+println!("{}", iv);              // chr1:100-200
+let s: String = format!("{}", iv);
+```
+
+You write `fmt`; the standard library wires it up to `println!`, `format!`, `write!`, `to_string()`, and every other `{}` site. **Exercise 1** is exactly this.
+
+::: notes
+Display is the trait whose method signature is the most intimidating part of the whole lecture: `fn fmt(&self, f: &mut Formatter<'_>) -> Result`. The pattern is fixed; copy it. Inside, `write!(f, "...", ...)` is `println!` for a Formatter.
+
+`<'_>` is an anonymous lifetime — the part of the language we deliberately do not teach this week. Ignore it; it does not need a value, the compiler fills it in.
+
+Once you implement Display, any code that says `format!("{}", iv)` will produce your chosen string. And there is a free bonus: implementing Display automatically implements `ToString`, so `iv.to_string()` works too.
+:::
+
+## `Display` vs `Debug` — when to use which
+
+|  | `Display` (`{}`) | `Debug` (`{:?}`) |
+|---|---|---|
+| Audience | end users, logs, prose | the programmer, diagnostics |
+| Derivable? | **no** — write by hand | yes (`#[derive(Debug)]`) |
+| Style | concise, domain-specific | verbose, complete, mechanical |
+| Example | `chr1:100-200` | `GenomicInterval { chrom: "chr1", start: 100, end: 200 }` |
+
+Rule of thumb: every type should derive `Debug`. Implement `Display` only when there is a single obviously-right human-readable form.
+
+::: notes
+The split is intentional. Debug is for you, the developer, when something goes wrong and you want to print every field. Display is for the user, who wants the meaningful one-line summary.
+
+Many types only have Debug. That is fine — `eprintln!("{:?}", call)` in error paths is the standard pattern. Reach for Display when the type has a natural canonical form: a genomic interval as `chr1:100-200`, a Phred quality as `Q30`, a strand as `+`.
+:::
+
+## Traits `Vec` already implements
+
+You have been calling these methods all week without thinking of them as trait methods.
+
+| Trait | Method it enables | Code you've written |
+|---|---|---|
+| [`IntoIterator`](https://doc.rust-lang.org/std/iter/trait.IntoIterator.html) | `for x in vec { ... }` | every iteration loop |
+| [`Index`](https://doc.rust-lang.org/std/ops/trait.Index.html) | `vec[i]` | every random access |
+| [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) | `vec.clone()` | deep copies |
+| [`Debug`](https://doc.rust-lang.org/std/fmt/trait.Debug.html) | `println!("{:?}", vec)` | diagnostics |
+| [`Default`](https://doc.rust-lang.org/std/default/trait.Default.html) | `Vec::default()` | empty constructor |
+| [`PartialEq`](https://doc.rust-lang.org/std/cmp/trait.PartialEq.html) | `vec_a == vec_b` | equality |
+
+`Vec`'s "syntax" is not built into the language — it is trait impls in the standard library. Any of your own types can opt in to the same syntax by implementing the same traits.
+
+::: notes
+This is where the penny tends to drop. The `for` loop is not a Vec feature — it is an IntoIterator feature; `Vec` happens to implement IntoIterator. The square brackets are not a Vec feature — they are an Index feature; `Vec` happens to implement Index. `HashMap` also implements Index, which is why `map[&key]` works.
+
+Your own types can do all of this too. Implement IntoIterator on your tree type and you get `for node in tree`. Implement Index on your codon table and you get `table[b"ATG"]`. The standard syntax is open to your types.
+:::
+
+## Generic functions with trait bounds
+
+A **generic function** [a function written with a placeholder type, specialised by the compiler at each call site] often wants to constrain the placeholder. A **trait bound** [a "this placeholder must implement that trait" requirement] is the constraint:
+
+```rust
+use std::fmt::Display;
+
+fn print_all<T: Display>(items: &[T]) {
+    for x in items {
+        println!("{}", x);                  // {} works because T: Display
+    }
+}
+
+print_all(&[1, 2, 3]);                      // i32 implements Display
+print_all(&["a", "b", "c"]);                // &str implements Display
+```
+
+Read `<T: Display>` as "for any type `T` that implements `Display`". Inside the body you can use any method the bound guarantees — here, `{}` formatting.
+
+::: notes
+This is the production form of "code that works over many types". Without traits you would need one function per concrete type. With trait bounds you write one function and the compiler generates a specialised copy for each `T` you actually pass — what is called monomorphisation. Zero runtime cost.
+
+The bound is enforced at the call site. If you try to call `print_all(&[my_custom_type])` and `MyCustomType` does not implement Display, the compiler refuses — with a message naming exactly which trait is missing.
+
+In bioinformatics: `summarize<T: Score>(items: &[T])` sums scores over any collection of `Score`-able things — alignment hits, quality-trimmed reads, phylogenetic clades. One function, many input types.
+:::
+
+## A worked biological example — `summarize` over `Score`
+
+```rust
+trait Score {
+    fn score(&self) -> i32;
+}
+
+fn summarize<T: Score>(items: &[T]) -> i32 {
+    items.iter().map(|x| x.score()).sum()
+}
+
+impl Score for Strand        { /* ... */ }
+impl Score for AlignmentHit  { /* ... */ }
+impl Score for PhyloClade    { /* ... */ }
+
+let total = summarize(&strands);            // works
+let total = summarize(&alignment_hits);     // works
+let total = summarize(&clades);             // works
+```
+
+One function definition. Three implementations of the trait. Each call site is a separate, fully type-checked, fully optimised specialisation.
+
+::: notes
+This is the payoff. The summarize function does not know — and does not need to know — what kind of thing it is summing. It only needs the contract: each item has a score. The contract is the trait.
+
+Each `summarize(&strands)`, `summarize(&alignment_hits)`, `summarize(&clades)` is compiled to its own specialised loop. There is no virtual dispatch, no overhead — the compiled code is identical to what you would write by hand for each input type.
+
+This is what generics with trait bounds buy you: write once, run over any type that signs the contract.
+:::
+
+## Generics — phylogenetic trees with different tip content
+
+A real biological generic. Recall the day-3 phylo tree, now generic over what each leaf carries:
+
+```rust
+enum Node<T> {
+    Leaf     { data: T, branch_length: f64 },
+    Internal { branch_length: f64, children: Vec<Node<T>> },
+}
+
+fn count_tips<T>(node: &Node<T>) -> usize {
+    match node {
+        Node::Leaf { .. } => 1,
+        Node::Internal { children, .. } => children.iter().map(count_tips).sum(),
+    }
+}
+```
+
+`count_tips` does not look at `T` at all — so it works for **any** `T`. `Node<SpeciesName>`, `Node<Sample>`, `Node<GeneSymbol>` — same function.
+
+::: notes
+The recursive shape — leaf or internal — does not depend on what is stored at the tips. The compiler lets you express that with a generic parameter `T`. Same enum, same recursion, three different tip kinds.
+
+`count_tips` is generic but uses no methods of T. So it has no trait bound — any type works. The compiler still monomorphises: one machine-code copy of count_tips per concrete T you use.
+
+Generics without bounds are common when the function is structural — it walks a shape without inspecting the payload. As soon as the function needs to *do* something with the payload, we add a bound.
+:::
+
+## The same shape with a trait bound
+
+What if we want a function that **prints** the tree?
+
+```rust
+use std::fmt::Display;
+
+fn print_tree<T: Display>(node: &Node<T>, depth: usize) {
+    let indent = "  ".repeat(depth);
+    match node {
+        Node::Leaf { data, .. } => println!("{}- {}", indent, data),
+        Node::Internal { children, .. } => {
+            for child in children { print_tree(child, depth + 1); }
+        }
+    }
+}
+```
+
+`<T: Display>` is the trait bound — `T` must support `{}`. So:
+
+- `print_tree(&node_of_string)` — works (`String: Display`)
+- `print_tree(&node_of_my_custom_type)` — refused unless `MyCustomType` implements `Display`
+
+::: notes
+Now the function does inspect the payload — it formats it for printing. So `T` cannot be just any type; it must be one that supports `{}` formatting. That is the trait bound.
+
+The compiler enforces the bound at the call site. Pass a tree whose payload type implements Display, and the function compiles. Pass one whose payload type does not, and the error message names the missing trait. The fix is one of: derive or implement Display for your payload type, or change the function to do something that does not require Display.
+
+This is the daily mechanic of working with traits: a function asks for a capability; you either supply it on your type or change the function.
+:::
+
+## Default methods in a trait
+
+A trait method may come with a body — a default that implementing types can override or accept as-is:
+
+```rust
+trait Annotate {
+    /// Required: a short human label.
+    fn short(&self) -> String;
+
+    /// Default: prefix the short label with "annotation: ".
+    fn long(&self) -> String {
+        format!("annotation: {}", self.short())
+    }
+}
+
+impl Annotate for Strand {
+    fn short(&self) -> String { match self { Plus => "+", Minus => "-" }.into() }
+    // `long` automatically inherited.
+}
+```
+
+[`Iterator`](https://doc.rust-lang.org/std/iter/trait.Iterator.html) is the canonical example — it requires only `next`, and provides `map`, `filter`, `sum`, `collect`, and dozens more as default methods.
+
+::: notes
+Default methods are the trait-author's gift to implementers: write the required core, get the conveniences for free. Override only when you can do better.
+
+This is exactly how Iterator works. To implement Iterator for your own type, you write `fn next(&mut self) -> Option<Self::Item>` — one method. In return, you get `map`, `filter`, `enumerate`, `take`, `skip`, `chain`, `zip`, `sum`, `count`, `collect`, and many more, all dispatching through your single `next` implementation.
+
+This same trick is how `Read` and `Write` work: implement `read` or `write`, get `read_to_string`, `write_all`, `bytes`, `lines`, and friends for free.
+:::
+
+## The `where` clause — when bounds get long
+
+Inline bounds get crowded fast. The `where` clause moves them after the signature:
+
+```rust
+fn merge<T, U>(a: T, b: U) -> String
+where
+    T: Display + Clone,
+    U: Score,
+{
+    let copy = a.clone();
+    format!("{} (score {})", copy, b.score())
+}
+```
+
+Functionally identical to writing `fn merge<T: Display + Clone, U: Score>(...)`; visually much easier once there is more than one bound or more than one type parameter.
+
+::: notes
+Use inline bounds for one or two simple cases. Switch to `where` when the signature would otherwise wrap to a second line, or when the bounds list grows beyond a couple of items. The standard library uses where clauses everywhere — it is the more general form.
+
+The `+` is "and" — `T: Display + Clone` means "T implements both Display and Clone". Bounds on different type parameters go on separate `where` lines.
+:::
+
+## What we'll see this afternoon
+
+Lecture 2 picks up where this one stops.
+
+- **Trait objects** — `Box<dyn Trait>`, storing different concrete types behind one interface
+- **Static vs dynamic dispatch** — the compile-time vs runtime trade-off
+- **Worked example** — `noodles` readers, where a `Box<dyn Read>` lets you read BAM, gzipped FASTQ, or stdin behind one variable
+
+::: notes
+This lecture covered the static side of traits: define a contract, implement it on types, write generic functions with bounds. Everything compiles to direct method calls — no runtime overhead.
+
+The afternoon covers the dynamic side: one variable that holds different concrete types over its lifetime, with the method call resolved at runtime through a vtable. That is what makes `noodles` readers, format dispatch, and plugin-style architectures possible.
+:::
+
+## Recap
+
+- A **trait** is a named bundle of methods a type can opt in to implementing — the Rust equivalent of an interface
+- The **standard library is built on traits** — `Debug`, `Clone`, `Display`, `Iterator`, `Read`, `Write`, `Index`, `IntoIterator`; every `derive` you have written was a trait impl
+- **Trait bounds** in generic functions (`<T: Display>`) let you write one function that works over many concrete types, with zero runtime cost
+
+::: notes
+Three takeaways. First, the concept: traits are interfaces, opted into per type via `impl Trait for Type` blocks. Second, the ubiquity: the standard library is traits all the way down, and you have been using them since day 1 without noticing. Third, the payoff: generic functions with trait bounds give you reuse without runtime overhead.
+
+In the afternoon we add the missing piece: how to put different concrete types behind one variable.
+:::
+
+## To the exercises
+
+Four exercises, in order:
+
+- **[Exercise 1 — Display for a struct](01-display.qmd)** — implement `Display` for `GenomicInterval`
+- **[Exercise 2 — A custom trait with multiple impls](02-annotate.qmd)** — define `Annotate`, implement it for several biological types
+- **[Exercise 3 — A generic function with a trait bound](03-generic-function.qmd)** — `fn summarize<T: Score>(items: &[T])`
+- **[Exercise 4 — Heterogeneous collection with `Box<dyn>`](04-trait-objects.qmd)** — preview of the afternoon
+
+::: notes
+Work through them in order. The first two are pure trait definition and implementation; the third introduces trait bounds in generic functions; the fourth previews this afternoon's trait-object material. By the end you will have written your own traits, your own impls, and your first generic functions with trait bounds.
+:::

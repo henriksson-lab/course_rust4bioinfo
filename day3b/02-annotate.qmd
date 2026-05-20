@@ -1,0 +1,87 @@
+---
+title: "Day 3b — Exercise: a custom trait with multiple impls"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Define your own [trait](https://doc.rust-lang.org/book/ch10-02-traits.html) (Rust's name for an interface — a named bundle of methods a type can implement) called `Annotate` with a single method `fn description(&self) -> String`. Implement it for three different biological types: `GenomicInterval`, an [enum](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html) (a type with a fixed set of variants) `Strand`, and a sequence [newtype](https://doc.rust-lang.org/book/ch20-04-advanced-types.html#using-the-newtype-pattern-for-type-safety-and-abstraction) (a struct wrapping a single field) `Sequence`.
+
+## Background
+
+A [`trait`](https://doc.rust-lang.org/book/ch10-02-traits.html) declares a set of method signatures; an [`impl Trait for Type`](https://doc.rust-lang.org/book/ch10-02-traits.html#implementing-a-trait-on-a-type) block defines those methods for a specific type. Once you have one trait with several implementations, **the same calling code can use any of them interchangeably**: `x.description()` compiles for any `x` whose type implements `Annotate`, and on day 3b's next exercise we will write a single function that is generic (works for many types) over exactly that bound. This is the basic mechanism Rust uses in place of class inheritance — instead of "type B is-a type A", we say "types A and B both implement trait T", and the language guarantees at compile time that every method on T is provided.
+
+The syntax looks like:
+
+```rust
+trait Annotate {
+    fn description(&self) -> String;
+}
+
+impl Annotate for GenomicInterval {
+    fn description(&self) -> String { /* ... */ }
+}
+```
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day3b/ex-annotate
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- The `Annotate` trait definition
+- Three types: a `struct` `GenomicInterval`, an `enum` `Strand`, and a `struct` `Sequence`
+- Three `impl Annotate for ...` blocks, each with a `// TODO` body that currently returns an empty string
+- A `main` that builds one of each and prints their descriptions
+- A `#[cfg(test)] mod tests` block with seven unit tests that pin down what each `description` should return
+
+Your job: fill in the three `description` method bodies so that all seven tests pass. The expected output strings are spelled out in the tests; read them first.
+
+You may **not** change the trait, the type definitions, or the tests. You may add helper functions if you want.
+
+## How to run
+
+From inside `day3b/ex-annotate/`:
+
+```bash
+cargo build           # compile
+cargo test            # run the tests — these should be failing at first
+cargo run             # print a sample description of each of the three types
+```
+
+When all seven tests pass, `cargo test` will print:
+
+```
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and `cargo run` should print three lines, one per type.
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — one-liner bodies"}
+Each `description` can be a single expression:
+
+- `GenomicInterval`: a [`format!`](https://doc.rust-lang.org/std/macro.format.html) call using `self.chrom`, `self.start`, `self.end`, and the length `self.end - self.start`.
+- `Strand`: a [`match self`](https://doc.rust-lang.org/book/ch06-02-match.html) with one arm per variant, each returning a string literal converted with [`.to_string()`](https://doc.rust-lang.org/std/string/trait.ToString.html#tymethod.to_string).
+- `Sequence`: an `if self.bases.is_empty()` returning `"(empty sequence)"`; otherwise count GC bytes with [`.iter().filter(...).count()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.filter), compute an integer percentage, decode the bytes with [`std::str::from_utf8`](https://doc.rust-lang.org/std/str/fn.from_utf8.html), and `format!` the result.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day3b/ex-annotate-solution/src/main.rs`. Try not to peek at it until you have your own version passing all seven tests — the point of the exercise is the practice, not the final code.
+:::
+
+## Where this leads
+
+The next exercise, [`03-generic-function.qmd`](03-generic-function.qmd), writes a single function that is [generic](https://doc.rust-lang.org/book/ch10-01-syntax.html) over any type implementing `Annotate` — so you can pass it a `GenomicInterval`, a `Strand`, or a `Sequence` and it works for all three with no extra code. That is the payoff for defining a trait in the first place.

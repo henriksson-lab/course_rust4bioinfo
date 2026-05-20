@@ -45,7 +45,7 @@
   <line x1="155" y1="125" x2="200" y2="165"
         stroke="#444" stroke-width="2.2" marker-end="url(#ah)"/>
   <!-- up -->
-  <line x1="215" y1="148" x2="215" y2="168"
+  <line x1="215" y1="125" x2="215" y2="158"
         stroke="#444" stroke-width="2.2" marker-end="url(#ah)"/>
   <!-- left -->
   <line x1="158" y1="180" x2="183" y2="180"

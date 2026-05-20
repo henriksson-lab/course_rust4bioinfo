@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!--
+    Work-stealing animation.
+    4 worker columns. Each task fades out as it gets processed.
+    Worker 3 (the lightest stack) empties first, then "steals"
+    a task from Worker 0, then later steals from Worker 1.
+
+    Timing (seconds):
+      0.0  - all initial tasks visible
+      1.0  - W0[top] gone, W2[top] gone, W3[top] gone
+      1.2  - W1[top] gone
+      1.6  - W3[bottom] gone -> W3 empty
+      1.8  - W0 next gone, W2 next gone
+      2.0  - W1 next gone; STEAL arrow W3 <- W0 appears
+      2.5  - stolen task appears at top of W3,
+             bottom-most task on W0 disappears
+      2.6  - W2 next gone
+      2.8  - W1 next gone
+      3.4  - W0 next gone, W2 next gone -> W2 empty
+      3.5  - stolen task on W3 finishes
+      3.6  - W1 next gone
+      4.0  - STEAL arrow W3 <- W1 appears
+      4.2  - W0 next gone -> W0 empty
+      4.4  - W1 next gone
+      5.0  - bottom caption emphasised (always visible too)
+  -->
+
+  <!-- Title -->
+  <text x="450" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Work stealing - idle workers grab tasks from busy ones.
+  </text>
+
+  <!-- ===== Worker columns ===== -->
+  <!--
+    Column x-centres:
+      Worker 0: x=140
+      Worker 1: x=320
+      Worker 2: x=500
+      Worker 3: x=680
+    Tasks are 80 wide x 26 tall, stacked from y=420 upward (newest on top).
+  -->
+
+  <!-- Worker labels and base lines -->
+  <g font-family="ui-monospace, monospace" font-size="14" font-weight="700" fill="#333"
+     text-anchor="middle">
+    <text x="140" y="468">Worker 0</text>
+    <text x="320" y="468">Worker 1</text>
+    <text x="500" y="468">Worker 2</text>
+    <text x="680" y="468">Worker 3</text>
+  </g>
+  <!-- Floor line under each stack -->
+  <g stroke="#888" stroke-width="1.5">
+    <line x1="100" y1="445" x2="180" y2="445"/>
+    <line x1="280" y1="445" x2="360" y2="445"/>
+    <line x1="460" y1="445" x2="540" y2="445"/>
+    <line x1="640" y1="445" x2="720" y2="445"/>
+  </g>
+
+  <!-- Column descriptions (small) -->
+  <g font-size="12" fill="#666" text-anchor="middle">
+    <text x="140" y="486">5 tasks</text>
+    <text x="320" y="486">5 tasks</text>
+    <text x="500" y="486">4 tasks</text>
+    <text x="680" y="486">2 tasks</text>
+  </g>
+
+  <!-- ===== Worker 0: 5 tasks =====
+       Indices bottom-to-top: 0,1,2,3,4 (top = idx 4)
+       Disappear order: top first (idx 4 -> 0). Times: 1.0, 1.8, 2.6, 3.4, 4.2 -->
+  <!-- idx 0 (bottom) - disappears at 4.2s (and again re-used as stolen-source at 2.5s? no: the "bottom-most" stolen one disappears at 2.5s, so idx 0 disappears at 2.5s) -->
+  <!-- Simpler scheme: bottom-most (idx 0) gets stolen at 2.5s; remaining top-down processing covers idx 4,3,2,1 at 1.0,1.8,2.6,3.4 (4 events). W0 then has 0 tasks at 3.4s.
+       But the spec says "5th task" at 4.2s. We'll keep the simple top-down sequence at 1.0,1.8,2.6,3.4,4.2 AND have the stolen one come off the bottom at 2.5s — meaning W0 only has 4 real disappearances locally. We'll resolve by treating idx 0 as the stolen one (gone at 2.5s) and processing idx 4,3,2,1 at 1.0,1.8,2.6,3.4. Then W0 is empty at 3.4s.
+       (We drop the 4.2 mark; matches spec intent that W0 empties shortly after stealing.) -->
+
+  <!-- idx 0 = bottom-most, stolen away at 2.5s -->
+  <g opacity="1">
+    <rect x="100" y="420" width="80" height="22" rx="3" fill="#90caf9" stroke="#1565c0" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.5s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 1 -->
+  <g opacity="1">
+    <rect x="100" y="395" width="80" height="22" rx="3" fill="#c8e6c9" stroke="#66bb6a" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="3.4s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 2 -->
+  <g opacity="1">
+    <rect x="100" y="370" width="80" height="22" rx="3" fill="#fff59d" stroke="#c8a64b" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.6s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 3 -->
+  <g opacity="1">
+    <rect x="100" y="345" width="80" height="22" rx="3" fill="#ffcc80" stroke="#d97706" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.8s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 4 (top) -->
+  <g opacity="1">
+    <rect x="100" y="320" width="80" height="22" rx="3" fill="#ef9a9a" stroke="#c62828" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- ===== Worker 1: 5 tasks =====
+       Disappear times top-down: 1.2, 2.0, 2.8, 3.6, 4.4
+       At 4.0s W3 steals from W1: bottom-most (idx 0) disappears at 4.2s (stolen). -->
+
+  <!-- idx 0 (bottom) - stolen at 4.2s -->
+  <g opacity="1">
+    <rect x="280" y="420" width="80" height="22" rx="3" fill="#ce93d8" stroke="#7b1fa2" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="4.2s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 1 -->
+  <g opacity="1">
+    <rect x="280" y="395" width="80" height="22" rx="3" fill="#b2ebf2" stroke="#0097a7" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="3.6s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 2 -->
+  <g opacity="1">
+    <rect x="280" y="370" width="80" height="22" rx="3" fill="#81c784" stroke="#2e7d32" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.8s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 3 -->
+  <g opacity="1">
+    <rect x="280" y="345" width="80" height="22" rx="3" fill="#fff59d" stroke="#c8a64b" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.0s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 4 (top) -->
+  <g opacity="1">
+    <rect x="280" y="320" width="80" height="22" rx="3" fill="#ffcc80" stroke="#d97706" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.2s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- ===== Worker 2: 4 tasks =====
+       Disappear times top-down: 1.0, 1.8, 2.6, 3.4 -->
+  <!-- idx 0 (bottom) -->
+  <g opacity="1">
+    <rect x="460" y="420" width="80" height="22" rx="3" fill="#b2ebf2" stroke="#0097a7" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="3.4s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 1 -->
+  <g opacity="1">
+    <rect x="460" y="395" width="80" height="22" rx="3" fill="#c8e6c9" stroke="#66bb6a" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="2.6s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 2 -->
+  <g opacity="1">
+    <rect x="460" y="370" width="80" height="22" rx="3" fill="#fff59d" stroke="#c8a64b" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.8s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 3 (top) -->
+  <g opacity="1">
+    <rect x="460" y="345" width="80" height="22" rx="3" fill="#ef9a9a" stroke="#c62828" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- ===== Worker 3: 2 tasks =====
+       Disappear times top-down: 1.0, 1.6 -> empty at 1.6s -->
+  <!-- idx 0 (bottom) -->
+  <g opacity="1">
+    <rect x="640" y="420" width="80" height="22" rx="3" fill="#c8e6c9" stroke="#66bb6a" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.6s" dur="0.3s" fill="freeze"/>
+  </g>
+  <!-- idx 1 (top) -->
+  <g opacity="1">
+    <rect x="640" y="395" width="80" height="22" rx="3" fill="#90caf9" stroke="#1565c0" stroke-width="1.2"/>
+    <animate attributeName="opacity" from="1" to="0" begin="1.0s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- ===== STEAL #1: W3 takes from W0 (arrow appears at 2.0s) ===== -->
+  <!-- Arrow from W0 area (x=190) up over and down to W3 area (x=640). Curve. -->
+  <defs>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arrow-orange" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <g opacity="0">
+    <path d="M 180 270 Q 410 200 640 270"
+          stroke="#c62828" stroke-width="2.5" fill="none"
+          marker-end="url(#arrow-red)" stroke-dasharray="5 3"/>
+    <text x="410" y="195" text-anchor="middle" font-size="13" font-weight="700" fill="#c62828">
+      steal!
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="2.0s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- The stolen task appears at top of W3 at 2.5s, then disappears at 3.5s -->
+  <g opacity="0">
+    <rect x="640" y="395" width="80" height="22" rx="3" fill="#90caf9" stroke="#1565c0" stroke-width="1.5"/>
+    <text x="680" y="411" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#0d47a1">stolen</text>
+    <animate attributeName="opacity" from="0" to="1" begin="2.5s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0" begin="3.5s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- ===== STEAL #2: W3 takes from W1 (arrow appears at 4.0s) ===== -->
+  <g opacity="0">
+    <path d="M 360 290 Q 500 235 640 290"
+          stroke="#d97706" stroke-width="2.5" fill="none"
+          marker-end="url(#arrow-orange)" stroke-dasharray="5 3"/>
+    <text x="500" y="230" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">
+      steal!
+    </text>
+    <animate attributeName="opacity" from="0" to="1" begin="4.0s" dur="0.4s" fill="freeze"/>
+  </g>
+
+  <!-- Stolen task #2 lands on W3 at 4.2s -->
+  <g opacity="0">
+    <rect x="640" y="395" width="80" height="22" rx="3" fill="#ce93d8" stroke="#7b1fa2" stroke-width="1.5"/>
+    <text x="680" y="411" text-anchor="middle" font-size="11" font-weight="700"
+          font-family="ui-monospace, monospace" fill="#4a148c">stolen</text>
+    <animate attributeName="opacity" from="0" to="1" begin="4.2s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="1" to="0" begin="5.2s" dur="0.3s" fill="freeze"/>
+  </g>
+
+  <!-- Bottom caption (always visible) -->
+  <rect x="60" y="55" width="780" height="30" rx="6" fill="#fff8e1" stroke="#d97706"/>
+  <text x="450" y="75" text-anchor="middle" font-size="13" font-weight="600" fill="#7a3e00">
+    No central scheduler - workers cooperate by stealing. The runtime keeps all cores busy.
+  </text>
+
+</svg>

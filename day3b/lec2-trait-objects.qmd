@@ -1,0 +1,465 @@
+---
+title: "Traits — Box<dyn> and dynamic dispatch"
+subtitle: "Day 3b, lecture 2"
+author: "Rust for bioinformaticians"
+format:
+  revealjs:
+    theme: [simple, ../theme.scss]
+    slide-number: c/t
+    width: 1280
+    height: 720
+    transition: slide
+    transition-speed: fast
+    highlight-style: github
+    code-overflow: wrap
+    code-line-numbers: false
+    incremental: false
+    chalkboard: false
+    menu: true
+---
+
+## What this lecture is
+
+This morning we wrote things like `fn print_all<T: Display>(items: &[T])` — every item in the slice had to be the same type `T`. That works for a `Vec<FastaRecord>` or a `Vec<f64>`, but not for a list that mixes a FASTA record with a FASTQ record with a BED interval.
+
+- The problem: a **heterogeneous** (gloss: containing different types) collection
+- The Rust fix: `Box<dyn Trait>` — a uniform handle to "any value implementing this trait"
+- The cost: a small **dynamic dispatch** (gloss: looking up which function to call at runtime, instead of at compile time) overhead per call
+- When to reach for it, and when generics are still better
+
+::: notes
+Lecture 1 covered the bread-and-butter case: trait bounds on generic functions. That covers most code you will ever write. This lecture covers the one remaining piece: how to put *different concrete types* into the same collection, or behind the same variable, when they all implement the same trait. Both lectures together cover the whole everyday surface of traits.
+:::
+
+## The problem — a heterogeneous collection
+
+Suppose you have three concrete record types, all biological records but storing different fields:
+
+```rust
+struct FastaRecord { name: String, seq: String }
+struct FastqRecord { name: String, seq: String, qual: String }
+struct BedRecord   { chrom: String, start: u64, end: u64 }
+```
+
+You want **one** `Vec` that holds a mix of them, so you can loop over the list and ask each item the same two questions: what is your name, and how long are you?
+
+```rust
+// We wish we could write this:
+let records = vec![fa, fq, bed];   // three different types — won't compile
+for r in &records { println!("{} ({}bp)", r.name(), r.length()); }
+```
+
+::: notes
+This is the canonical motivating example for trait objects. Three distinct concrete types, but a uniform question we want to ask each one. You can imagine many real shapes for this: a list of plotting layers, a list of file-format readers, a list of filters in a pipeline. The pattern is the same.
+:::
+
+## Why this morning's generic function won't help
+
+The function from lecture 1:
+
+```rust
+fn print_all<T: BioRecord>(items: &[T]) {
+    for item in items {
+        println!("{} ({}bp)", item.name(), item.length());
+    }
+}
+```
+
+For each call site, the compiler picks **one** concrete `T`. You can call `print_all(&fastas)` or `print_all(&fastqs)` — but the slice you pass in must be homogeneous. There is no `T` that is "FASTA or FASTQ, depending on the element".
+
+::: notes
+The point of this slide is to close the door on the generic approach before opening the trait-object door. Students who came out of lecture 1 confident in `<T: Trait>` will instinctively reach for it here, and it does not work. Once they see why, the trait-object machinery feels like the obvious fix rather than a magic trick.
+:::
+
+## A common trait — the shared interface
+
+First, define what "asking each item the same two questions" means as a trait:
+
+```rust
+trait BioRecord {
+    fn name(&self) -> &str;
+    fn length(&self) -> usize;
+}
+
+impl BioRecord for FastaRecord {
+    fn name(&self) -> &str { &self.name }
+    fn length(&self) -> usize { self.seq.len() }
+}
+
+impl BioRecord for FastqRecord {
+    fn name(&self) -> &str { &self.name }
+    fn length(&self) -> usize { self.seq.len() }
+}
+```
+
+Two distinct structs, one shared interface. (We could add `BedRecord` the same way.)
+
+::: notes
+This is exactly the shape from lecture 1: a trait declares the methods, each struct provides its own implementation. Nothing new yet. The trait `BioRecord` is the abstraction we will use to unify the three types in the next slides.
+:::
+
+## Why `Vec<dyn BioRecord>` doesn't work directly
+
+Naive attempt:
+
+```rust
+let records: Vec<dyn BioRecord> = vec![fa, fq];
+// error[E0277]: the size for values of type `dyn BioRecord` cannot
+//               be known at compilation time
+```
+
+`Vec<T>` lays its elements out contiguously in memory and needs to know how big each element is. But `dyn BioRecord` means "any type that implements `BioRecord`" — and a `FastaRecord` (two `String`s) has a different size from a `FastqRecord` (three `String`s).
+
+The compiler refuses: a **dynamically sized type** (gloss: a type whose size is not known until runtime) cannot be stored directly.
+
+::: notes
+The error wording in modern Rust is "doesn't have a size known at compile time" — exactly the same family of error as the recursive-enum error from day 3. The reason is the same: `Vec` needs a fixed per-element size to do its index arithmetic. Fix is also the same family: put a pointer in front of it.
+:::
+
+## Enter `Box<dyn Trait>` — same size, any type behind
+
+A `Box<T>` is always the same size on the **stack** (gloss: the small, fast region of memory each function call uses for its locals) — 8 bytes on a 64-bit machine — regardless of what `T` is. The actual value lives on the **heap** (gloss: the larger memory region the program allocates from at runtime).
+
+So `Box<dyn BioRecord>` is a fixed-size handle to a heap-allocated value of *some* type implementing `BioRecord`. And `Vec<Box<dyn BioRecord>>` is therefore uniform — every element is the same size handle.
+
+```rust
+let records: Vec<Box<dyn BioRecord>> = vec![
+    Box::new(FastaRecord { /* ... */ }),
+    Box::new(FastqRecord { /* ... */ }),
+];
+```
+
+::: notes
+This is the central trick of the lecture. The same pattern that fixed recursive enums on day 3 — put a pointer in front of something whose size you don't know up front — fixes heterogeneous collections here. `Box::new(value)` moves the value onto the heap and returns the handle.
+:::
+
+## What `Box::new` is doing
+
+```rust
+let fa = FastaRecord { name: "r1".into(), seq: "ACGT".into() };
+let boxed: Box<dyn BioRecord> = Box::new(fa);
+```
+
+Three things happen in that one line:
+
+- `fa` is **moved** (gloss: ownership transferred — the original binding can no longer be used) onto the heap
+- `Box::new` returns a `Box<FastaRecord>` — a typed handle to the heap value
+- The assignment **coerces** (gloss: an automatic, type-preserving conversion the compiler inserts) `Box<FastaRecord>` into `Box<dyn BioRecord>`, attaching the vtable pointer
+
+The concrete type `FastaRecord` is "forgotten" at the type level — but the runtime still knows, via the vtable.
+
+::: notes
+This is the slide that demystifies the assignment. The student might wonder how a `Box<FastaRecord>` turns into a `Box<dyn BioRecord>`; the answer is "unsized coercion", and that is what the compiler inserts automatically when the target type is a trait object. The vtable pointer is filled in at that moment, by the compiler, using its compile-time knowledge of `FastaRecord`'s impl of `BioRecord`.
+:::
+
+## Iterating — the magic works
+
+Once the collection is built, iterating is ordinary:
+
+```rust
+for record in &records {
+    println!("{} ({}bp)", record.name(), record.length());
+}
+```
+
+Output:
+
+```
+read_001 (120bp)
+read_002 (150bp)
+```
+
+Each `record.name()` call dispatches to the right implementation — `FastaRecord::name` for the first element, `FastqRecord::name` for the second — chosen at runtime based on what is actually behind the box.
+
+::: notes
+This is the payoff. The loop body is written once, has no idea what concrete type is behind each box, and Just Works. The compiler does not know which `name` is being called at the call site; it emits code that asks the value itself at runtime. That "asking at runtime" is dynamic dispatch.
+:::
+
+## A second example — counting total bases
+
+Heterogeneous collection plus a one-line aggregation:
+
+```rust
+let total: usize = records.iter().map(|r| r.length()).sum();
+println!("{} records, {} bases total", records.len(), total);
+```
+
+`records.iter()` yields `&Box<dyn BioRecord>`. Calling `.length()` on each one is a dynamic call — but to the consumer it reads like calling a method on a plain value.
+
+::: notes
+This is the iterator-style version of the previous loop, included so students see that the standard iterator combinators work over a trait-object collection just as well as over a homogeneous one. The pattern `.iter().map(...).sum()` should already be familiar from day 3.
+:::
+
+## Static vs dynamic dispatch — two ways to call a trait method
+
+::: {.columns}
+::: {.column width="50%"}
+**Static dispatch** — generics
+
+```rust
+fn print_one<T: BioRecord>(x: &T) {
+    println!("{}", x.name());
+}
+```
+
+- Compiler **monomorphises** (gloss: emits one specialised copy of the function per concrete `T` actually used)
+- Direct call, no extra indirection
+- Faster per call; larger binary
+:::
+
+::: {.column width="50%"}
+**Dynamic dispatch** — trait objects
+
+```rust
+fn print_one(x: &dyn BioRecord) {
+    println!("{}", x.name());
+}
+```
+
+- One copy of the code, takes any `&dyn BioRecord`
+- Method call goes through a **vtable** lookup (next slide)
+- Slightly slower per call; smaller binary
+:::
+:::
+
+::: notes
+The contrast is the whole story. Generics are resolved at compile time — the compiler stamps out a copy of your function for every concrete type that ever calls it. Trait objects are resolved at runtime — one copy of your function, but each call costs an indirect jump. Either is fine; this slide is to make the choice conscious, not to scare people away from one or the other.
+:::
+
+## How big is the per-call cost, really?
+
+For most bioinformatics code: **not measurable**.
+
+- A static call compiles to a direct `call` instruction
+- A dynamic call compiles to a load (vtable pointer) plus an indirect `call`
+- The CPU's branch predictor handles the indirect call efficiently when the same type appears repeatedly
+- The compiler cannot **inline** (gloss: paste the called function's body into the caller, eliminating the call entirely) through a `dyn` call — this is usually the bigger lost optimisation
+
+Rule: trait objects are fine outside the innermost loop of a hot function. Inside that loop, prefer generics.
+
+::: notes
+The number people quote is "a few CPU cycles per dynamic call", but the more honest answer is that the inlining loss is what matters in practice. Static dispatch lets the optimiser see through the call and unify it with surrounding code; dynamic dispatch hides what is on the other side. For a one-off `Vec<Box<dyn BioRecord>>` iterated once per file, the cost is invisible.
+:::
+
+## A vtable in one paragraph
+
+Every `dyn Trait` value is internally **two pointers**: one to the data on the heap, and one to a **vtable** (gloss: a small read-only table of function pointers, one entry per method of the trait, plus a destructor).
+
+```
+Box<dyn BioRecord>  =  ( data ptr, vtable ptr )
+                              |        |
+                              v        v
+                          heap value   [ name(), length(), drop() ]
+```
+
+When you call `record.length()`, the generated code reads the vtable pointer, jumps to the `length` slot, and calls it.
+
+::: notes
+Students do not need to memorise vtable layout, but the mental picture pays off when they later see error messages about "not object-safe" or read about "fat pointers". A `dyn` pointer is twice the size of a normal pointer because it carries both the data address and the address of the per-type method table.
+:::
+
+## Enums — a third option you already know
+
+For a **closed** set of types (you know them all at compile time), an enum is often simpler than `Box<dyn>`:
+
+```rust
+enum Record {
+    Fasta(FastaRecord),
+    Fastq(FastqRecord),
+}
+
+impl Record {
+    fn length(&self) -> usize {
+        match self {
+            Record::Fasta(r) => r.seq.len(),
+            Record::Fastq(r) => r.seq.len(),
+        }
+    }
+}
+```
+
+A `Vec<Record>` is homogeneous (every element is one `Record`), no heap allocation per element, no vtable lookup.
+
+::: notes
+This is the third design choice, and worth naming explicitly so students don't think the only options are "generic" and "Box<dyn>". Enums win when the set of variants is fixed and small. Trait objects win when the set is open or large or unknown until runtime. The noodles crate uses enums heavily for things like record types, and trait objects for things like readers.
+:::
+
+## When to use `Box<dyn>` vs generics — rule of thumb
+
+- **Generics (`<T: Trait>`)** when:
+  - The set of types is known at compile time
+  - You want maximum speed in a hot loop
+  - You only ever use one concrete type per call site
+- **`Box<dyn Trait>`** when:
+  - You need a heterogeneous collection
+  - You need to choose between concrete types at runtime
+  - You are designing a plugin system or a config-driven pipeline
+- Don't overthink it — both patterns are common, and you can refactor between them
+
+::: notes
+Most everyday code uses generics with trait bounds. `Box<dyn>` shows up in specific situations where the type really cannot be pinned down until the program runs — typically when user input or a config file decides which implementation to use. If you find yourself reaching for `Box<dyn>` for the third time in one file, fine; if you reach for it once and feel uneasy, also fine.
+:::
+
+## A real example — noodles readers
+
+`noodles_fasta::Reader<R>` is **generic** over its underlying source `R: BufRead`. Most code picks one concrete `R` and that is the end of the story — the compiler monomorphises and you pay nothing.
+
+But sometimes you want **one** variable that can hold "any kind of byte source" — a plain file, stdin, or a gz-decompressor — without committing to one at compile time. The format depends on what the user passes on the command line.
+
+That is the case where `Box<dyn BufRead>` earns its keep: a single type that can stand in for any of those sources.
+
+::: notes
+Most of day 4 is generic code over `BufRead`. This slide just plants the idea that there is a real situation in real bioinformatics tools where you reach for a trait object. The next slide is the concrete code.
+:::
+
+## Compressed or uncompressed FASTA — pick at runtime
+
+```rust
+use std::ffi::OsStr;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+use flate2::read::GzDecoder;
+
+fn open_fasta(path: &Path) -> std::io::Result<Box<dyn BufRead>> {
+    let file = File::open(path)?;
+    let reader: Box<dyn BufRead> = if path.extension() == Some(OsStr::new("gz")) {
+        Box::new(BufReader::new(GzDecoder::new(file)))
+    } else {
+        Box::new(BufReader::new(file))
+    };
+    Ok(reader)
+}
+```
+
+The two branches return *different concrete types* — `BufReader<GzDecoder<File>>` vs `BufReader<File>`. Both implement `BufRead`. `Box<dyn BufRead>` is what lets one function return either.
+
+::: notes
+This is the textbook use case. Without `Box<dyn>`, the two arms of the `if` would have to have the same type, and they don't. With `Box<dyn>`, each arm boxes its concrete reader into the trait object and the function signature is happy. The caller doesn't care which arm fired — they just have a `BufRead` to read from.
+:::
+
+## Returning a trait object — `Box<dyn Trait>` as a return type
+
+The `open_fasta` pattern generalises. Any function that needs to return "one of several concrete types, all implementing `Trait`" must return `Box<dyn Trait>`:
+
+```rust
+fn pick_filter(kind: &str) -> Box<dyn Filter> {
+    match kind {
+        "lowercase" => Box::new(LowercaseFilter),
+        "ambig"     => Box::new(AmbigFilter),
+        _           => Box::new(NoopFilter),
+    }
+}
+```
+
+You cannot write `-> impl Filter` here — `impl Trait` in return position means "one specific hidden type", but the three branches are *different* types.
+
+::: notes
+This is a subtle but important distinction. `impl Trait` is sometimes presented as "the easy alternative to trait objects" and it is — but only when there is genuinely one type. The moment you need to return different types from different branches, you must use `Box<dyn Trait>`. This will come up later in the course when students start writing small CLI tools that pick behaviour from arguments.
+:::
+
+## Object safety — the gotcha
+
+Not every trait can be turned into a `dyn`. A trait that uses tricks like "method returns `Self`" or "method has its own generic parameters" is **not dyn compatible** (older docs call this "not object safe").
+
+```rust
+trait Clone { fn clone(&self) -> Self; }   // returns Self — not dyn compatible
+```
+
+Error you may see:
+
+```
+error[E0038]: the trait `Foo` cannot be made into an object
+```
+
+Fixes: use generics instead, or split the trait into a dyn-compatible part and a generic part.
+
+::: notes
+The full object-safety rules are a corner of the language and not worth memorising on day 3. What matters is that when students see this error, they recognise it ("oh, this trait can't be used as `dyn`"), and know the two ways out: either drop the trait object and use a generic, or refactor the trait. We will not hit this in the exercise — `BioRecord` is dyn-compatible by construction.
+:::
+
+## `Box<dyn Error>` — the catch-all error type
+
+A pattern you will see all over Rust code, including day 4:
+
+```rust
+fn run() -> Result<(), Box<dyn std::error::Error>> {
+    let data = std::fs::read_to_string("input.fa")?;   // io::Error
+    let n: usize = data.trim().parse()?;               // ParseIntError
+    println!("{}", n);
+    Ok(())
+}
+```
+
+Each `?` returns a different concrete error type. `Box<dyn Error>` unifies them: every standard error type implements `Error`, so the `?` operator boxes them automatically.
+
+::: notes
+This is the single most common trait object students will read in real Rust code. It is the lazy-but-correct way to handle errors in a small program or example: any error becomes "some kind of error" via the trait object, and the caller (often `main`) prints it. Day 5 will show the `anyhow` crate, which is a fancier ergonomic wrapper around essentially the same idea.
+:::
+
+## `&dyn Trait` vs `Box<dyn Trait>` vs `Rc<dyn Trait>`
+
+| Form | Ownership | Lives where | Typical use |
+|---|---|---|---|
+| `&dyn Trait` | Borrowed | Borrowed from caller | Function parameter, short-lived view |
+| `Box<dyn Trait>` | Owned | Heap | Heterogeneous collection, returned from function |
+| `Rc<dyn Trait>` | Shared (reference-counted) | Heap | Multiple owners (not used in this course) |
+
+All three are 2-pointer "fat pointers" — data pointer plus vtable pointer.
+
+::: notes
+Same trait-object machinery underneath, three different ownership flavours wrapping it. `&dyn` is the cheapest and what you should reach for first when a function just wants to call methods on something without owning it. `Box<dyn>` is what you need when something must live somewhere — in a Vec, returned from a function, stored in a struct. `Rc<dyn>` exists for shared ownership and is out of scope here.
+:::
+
+## Bringing it home — what's idiomatic in bioinformatics Rust
+
+- **Most code**: generic functions with trait bounds (static dispatch)
+- **`Box<dyn>` shows up in**:
+  - "Open this file regardless of compression" — file readers behind a `Box<dyn BufRead>`
+  - Plugin systems where the user picks an algorithm at runtime
+  - Error types: `Box<dyn std::error::Error>` is the catch-all error in many tools
+  - Config-driven pipelines: a `Vec<Box<dyn Step>>` of processing stages
+- **Rarely**: trait-object-heavy designs in performance-critical inner loops
+
+::: notes
+The vast majority of bioinformatics Rust code uses generics. Trait objects are a specific tool for specific situations — mostly when something genuinely cannot be decided at compile time. The error-type idiom `Box<dyn Error>` is the most common form of trait object students will encounter when reading day 4 code.
+:::
+
+## Mental checklist before reaching for `Box<dyn>`
+
+Ask yourself, in order:
+
+1. Can I just use a generic function with a trait bound? **(usually yes)**
+2. Is there a fixed, small set of types? Could an enum work?
+3. Do I really need different concrete types in one collection or behind one variable?
+4. If yes — is the trait dyn-compatible?
+5. Do I need ownership (`Box`) or is borrowing (`&dyn`) enough?
+
+Most everyday Rust code answers "yes" to question 1 and stops there.
+
+::: notes
+This is the design checklist. Walking down it in order keeps people from reaching for the heaviest tool first. Question 1 covers the lecture-1 case. Question 2 catches the cases where a fixed-arity enum is cleaner. Question 3 is the real "do I need a trait object" question. Questions 4 and 5 are tactical once the answer to 3 is yes.
+:::
+
+## Recap
+
+- `dyn Trait` lets you forget the concrete type and program against the trait
+- `Box<dyn Trait>` makes the size uniform — required for `Vec`, struct fields, return types
+- Dynamic dispatch costs one indirect jump per call — negligible outside inner loops
+- Use generics by default; reach for `Box<dyn>` when types must be decided at runtime
+
+::: notes
+Four bullets to take away. The first three are mechanical facts about how the language works. The fourth is the design rule of thumb that decides which pattern to use.
+:::
+
+## To the last exercise
+
+Open [`04-trait-objects.qmd`](04-trait-objects.qmd):
+
+- Build a `Vec<Box<dyn BioRecord>>` containing both `FastaRecord` and `FastqRecord` values
+- Write one loop that prints the name and length of each, using only the trait methods
+- Confirm with `cargo test` that dynamic dispatch picks the right impl for each element
+
+::: notes
+The exercise locks in the two things we covered: defining the trait and the impls, then putting different concrete types into one collection via `Box<dyn Trait>`. After this you will have written every pattern this course needs you to know about traits.
+:::

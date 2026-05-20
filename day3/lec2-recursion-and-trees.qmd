@@ -22,11 +22,9 @@ format:
 
 Recursive data and recursive code. We'll use a phylogenetic tree as the example throughout — first the data type, then the functions that walk it.
 
-::: {.incremental}
 - A tree is a type that contains itself: a node holds its children, which are nodes
 - Rust needs one extra ingredient — a small trick to give the compiler a fixed size — to make that type compile
 - Once we have the type, the functions almost write themselves
-:::
 
 ::: notes
 Up to now every type we've defined has had a fixed, finite size known at compile time. A struct's size is the sum of its field sizes. An enum's size is its tag plus its largest variant. The compiler computes the layout once and uses it everywhere.
@@ -36,9 +34,21 @@ A tree breaks this: a node can have child nodes, which can have child nodes, wit
 The biological motivation is phylogenies. A phylogenetic tree relates species, gene families, viral strains — anything that descends from a common ancestor. Computing on phylogenies is one of the core things bioinformatics does.
 :::
 
+## A real lineage tree — great apes
+
+Before any code, here is the kind of object we are going to model — a real, small phylogeny:
+
+![A great-apes phylogeny: Human and Chimpanzee share an ancestor ~6 million years ago; Gorilla joins higher up at ~9 MYA. Branch lengths are proportional to time.](images/lec2-primate-tree.svg){fig-alt="A rooted phylogenetic tree drawn left-to-right. Root at left. Two branches leave the root: one descends to a Human-Chimp ancestor at 6 MYA, which splits to Human and Chimp tips at the present; the other branch is 9 MYA long and ends at the Gorilla tip. Branch lengths labelled in millions of years; a time axis at the bottom shows 9 MYA, 6 MYA, 3 MYA, today. A Newick string `((Human:6, Chimp:6):3, Gorilla:9);` shown in a callout."}
+
+The shape is what we want to capture in Rust: **two tips share a recent common ancestor; a third tip joins higher up**. Throughout the lecture we'll use the same shape with abstract names `(A, B, C)` so the code stays compact — but the structure is the same as Human / Chimp / Gorilla above.
+
+::: notes
+Anchor the lecture in something the audience already knows. The picture says "phylogeny" without me having to define it. Note the time axis — branch lengths are real durations, not stylised. The two internal nodes are inferred ancestors we never sequenced; the three tips are living species. The whole rest of the lecture is "how do we write code that walks this shape".
+:::
+
 ## Phylogenetic trees — what we want to model
 
-A phylogeny is a branching diagram of evolutionary relationships. **Internal nodes** are inferred common ancestors; **tips** (leaves) are present-day samples.
+A phylogeny (a branching diagram of evolutionary relationships) is built from **internal nodes** (inferred common ancestors) and **tips** / leaves (present-day samples).
 
 At each node we record a **name** (at tips) and a **branch length** — the evolutionary distance to the parent.
 
@@ -111,6 +121,57 @@ The Vec<Node> gives us two things at once. First, the indirection that makes the
 Notice that the root has a `branch_length` field. In a strict reading of phylogenetics the root has no parent and therefore no branch length, but Newick stores one anyway (often zero or missing); we keep the field for symmetry and let it be zero at the root.
 :::
 
+## Building a tree by hand
+
+The cleanest way to test a tree function: hard-code a small tree in `main` and call your function on it.
+
+```rust
+fn main() {
+    // The tree ((A:0.1, B:0.2):0.3, C:0.5);
+    let tree = Node::Internal {
+        branch_length: 0.0,
+        children: vec![
+            Node::Internal {
+                branch_length: 0.3,
+                children: vec![
+                    Node::Leaf { name: "A".to_string(), branch_length: 0.1 },
+                    Node::Leaf { name: "B".to_string(), branch_length: 0.2 },
+                ],
+            },
+            Node::Leaf { name: "C".to_string(), branch_length: 0.5 },
+        ],
+    };
+
+    println!("{} tips", count_tips(&tree));
+}
+```
+
+The repetition is on purpose: when you can read the *structure* of the literal, you can read any recursive enum.
+
+::: notes
+For real work you'd parse a Newick file. For learning the data structure, write it by hand once — the muscle memory of nesting `Internal { children: vec![ Internal { ... }, Leaf { ... } ] }` is the muscle memory of every recursive type.
+:::
+
+## A two-tip warm-up — the simplest tree
+
+Before counting tips of the 3-tip tree, here's the absolute minimum:
+
+```rust
+let tiny = Node::Internal {
+    branch_length: 0.0,
+    children: vec![
+        Node::Leaf { name: "A".to_string(), branch_length: 0.5 },
+        Node::Leaf { name: "B".to_string(), branch_length: 0.7 },
+    ],
+};
+```
+
+Two leaves under one ancestor. If `count_tips(&tiny)` returns 2, your function works on the base cases (leaves) and on a one-deep recursive case. The 3-tip tree on the next slide adds a second level.
+
+::: notes
+A debugging trick: when a recursive function gives the wrong answer, hand it a 2-leaf tree first. If that's wrong, the bug is in the leaf or one-deep case, not the recursion.
+:::
+
 ## Recursive functions — match the type
 
 To count the tips of a tree:
@@ -165,6 +226,28 @@ This uses iterators: `map(count_tips)` produces an iterator of usize values, and
 Either version is fine to write; they produce the same machine code. The iterator form is what you'll see in idiomatic Rust because it composes well with `.filter()`, `.take_while()`, and so on.
 :::
 
+## Counting tips — step by step
+
+Count accumulates bottom-up — leaves return 1, each internal node sums its children.
+
+![Step 1: the example tree with no annotations.](images/lec2-count-tips-step1.svg){fig-alt="The example tree shown with no annotations." width="65%"}
+
+::: {.fragment}
+![Step 2: each leaf returns 1.](images/lec2-count-tips-step2.svg){fig-alt="The same tree with each leaf labelled with the return value 1." width="65%"}
+:::
+
+::: {.fragment}
+![Step 3: internal node (A,B) sums its children — 1 + 1 = 2.](images/lec2-count-tips-step3.svg){fig-alt="Internal node now labelled with 2." width="65%"}
+:::
+
+::: {.fragment}
+![Step 4: root sums its children — 2 + 1 = 3.](images/lec2-count-tips-step4.svg){fig-alt="Root labelled 3 — final answer." width="65%"}
+:::
+
+::: notes
+The fragments [reveal.js term for slide-show steps that appear on successive clicks] step through the same call stack a debugger would show, but drawn on the tree. Each leaf hits the base case and returns 1; each internal node waits for all its recursive calls to return, then sums.
+:::
+
 ## Another walk: deepest leaf
 
 > The depth of a tree is the longest path from the root to any leaf.
@@ -190,6 +273,73 @@ The pattern generalises. To compute almost anything about a tree, write one arm 
 `unwrap_or(0)` handles the edge case of an internal node with no children — `.max()` on an empty iterator returns None. In practice phylogenetic internal nodes have at least two children, but the type doesn't enforce that, so we cover the case.
 
 If you wanted total branch length instead of depth, you'd add `*branch_length + ...` in the internal arm. If you wanted the name of the deepest leaf, you'd return a `(usize, String)` pair and combine with `max_by_key`. Same skeleton, different combiner.
+:::
+
+## Max depth — step by step
+
+Same bottom-up flow as tip-counting, but the combiner is `max` over branch-lengths instead of `sum`.
+
+::: {.fragment}
+![Step 1: the tree without depth annotations.](images/lec2-max-depth-step1.svg){fig-alt="The example tree with no depth annotations." width="65%"}
+:::
+
+::: {.fragment}
+![Step 2: each leaf returns its own branch length (0.1, 0.2, 0.5).](images/lec2-max-depth-step2.svg){fig-alt="Each leaf labelled with its branch length." width="65%"}
+:::
+
+::: {.fragment}
+![Step 3: internal (A,B) returns 0.3 + max(0.1, 0.2) = 0.5.](images/lec2-max-depth-step3.svg){fig-alt="Internal node labelled 0.5." width="65%"}
+:::
+
+::: {.fragment}
+![Step 4: root returns 0.0 + max(0.5, 0.5) = 0.5. Final depth = 0.5.](images/lec2-max-depth-step4.svg){fig-alt="Root labelled 0.5 — final answer." width="65%"}
+:::
+
+::: notes
+This version of `max_depth` measures *evolutionary distance* (sum of branch lengths) rather than the integer hop-count we coded one slide back. Same recursive skeleton; the only differences are that leaves now return their own branch length (not zero) and the combiner adds the node's own branch length to the max of the children. Same shape, different arithmetic.
+:::
+
+## Collecting all tip names
+
+Same recursion shape, different *return type* — instead of a number, a list of strings:
+
+```rust
+fn collect_tip_names(node: &Node) -> Vec<String> {
+    match node {
+        Node::Leaf { name, .. } => vec![name.clone()],
+        Node::Internal { children, .. } => {
+            children.iter()
+                .flat_map(|child| collect_tip_names(child))
+                .collect()
+        }
+    }
+}
+```
+
+For `((A:0.1, B:0.2):0.3, C:0.5);` this returns `["A", "B", "C"]`.
+
+`flat_map` (a built-in iterator method that maps and flattens in one step) collects each child's Vec of names and chains them together — the recursive pattern is identical to `count_tips`, but the return type changed.
+
+::: notes
+Two recipes — one returns `usize`, one returns `Vec<String>`. The *recursion structure* is identical: handle the leaf base case, recurse on each child, combine the results. Once you've written one, you've written them all.
+:::
+
+## More walks of the same shape
+
+Once you have the recursion pattern, biology walks pour out:
+
+| Function | Returns | Combine |
+|---|---|---|
+| `total_branch_length(node)` | `f64` | sum of own + all children's |
+| `count_internal_nodes(node)` | `usize` | 1 + sum of children's (Leaf returns 0) |
+| `find_tip(node, name)` | `Option<...>` | first matching leaf, else recurse |
+| `tips_at_depth(node, d)` | `Vec<String>` | tips whose root-distance equals `d` |
+| `prune_by_name(node, names)` | `Option<Node>` | drop subtrees whose only tips are in `names` |
+
+All the same shape: match Leaf vs Internal, base case + recursive case, combine the children's answers. The combinator changes (`+`, `max`, `concat`, `first match`, etc.) but the skeleton is identical.
+
+::: notes
+Every one of these is 5-10 lines once you've internalised the pattern. None require a new concept beyond what we've shown — they reuse `match`, recursion, iterator combinators on `children.iter()`. Try one as a warmup at home.
 :::
 
 ## Recursion has a depth cost

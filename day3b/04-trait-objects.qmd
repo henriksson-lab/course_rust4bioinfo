@@ -1,0 +1,109 @@
+---
+title: "Day 3b — Exercise: a Box<dyn> heterogeneous collection"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Build a `Vec<Box<dyn BioRecord>>` (a vector whose elements can each be a different concrete type, all sharing the `BioRecord` trait) holding mixed FASTA, FASTQ, and BED records, then iterate over it and print a summary line per record.
+
+## Background
+
+The natural-looking type `Vec<dyn BioRecord>` does **not** compile. A [`Vec<T>`](https://doc.rust-lang.org/std/vec/struct.Vec.html) stores its elements contiguously in memory, so the compiler needs to know `sizeof(T)` at compile time. A [trait object](https://doc.rust-lang.org/book/ch17-02-trait-objects.html) `dyn BioRecord` (gloss: a value whose concrete type is only known at run time, accessed through the trait) is **unsized** — a `FastqRecord` is bigger than a `BedRecord`, so `dyn BioRecord` has no fixed size.
+
+The fix is to put each record behind a [`Box`](https://doc.rust-lang.org/std/boxed/struct.Box.html) — a heap allocation with a fixed-size pointer (gloss: a single machine word) on the stack. Now every element of the vector is the same size: one `Box`. The actual records live on the heap, possibly of wildly different sizes.
+
+When you call `r.name()` on a `Box<dyn BioRecord>`, Rust performs **dynamic dispatch** (gloss: the runtime looks up the right method via a small per-type table called a *vtable*, instead of baking the call into the binary at compile time). It is slightly slower than a direct call, but the cost is usually negligible compared to whatever the method itself does.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day3b/ex-trait-objects
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A trait `BioRecord` with two methods: `name(&self) -> &str` and `length(&self) -> usize`
+- Three structs — `FastaRecord`, `FastqRecord`, `BedRecord` — each with an `impl BioRecord` block whose method bodies are `// TODO`
+- A `summarize` function that takes a `&[Box<dyn BioRecord>]` and returns one summary line per record (this one is **provided** — do not modify it)
+- A `main` that builds a heterogeneous `Vec<Box<dyn BioRecord>>` and prints the summary
+- A `#[cfg(test)] mod tests` block with six unit tests
+
+Your job: fill in the six TODOs (two per struct) so all tests pass. Each one is a single-line method body.
+
+You may **not** change the trait, the struct definitions, the tests, `main`, or `summarize`.
+
+## How to run
+
+From inside `day3b/ex-trait-objects/`:
+
+```bash
+cargo build           # compile
+cargo test            # run the tests — these should be failing at first
+cargo run             # see the demo output
+```
+
+When all six tests pass, `cargo test` will print:
+
+```
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+```
+
+and `cargo run` should print:
+
+```
+chr1 (12 bp)
+read42 (8 bp)
+chr1 (100 bp)
+```
+
+## Hint
+
+::: {.callout-tip collapse="true" title="Hint — bodies for the six TODOs"}
+Each method is a one-liner. For `FastaRecord` and `FastqRecord`:
+
+```rust
+fn name(&self) -> &str {
+    &self.name
+}
+
+fn length(&self) -> usize {
+    self.sequence.len()
+}
+```
+
+The `&self.name` reborrows the [`String`](https://doc.rust-lang.org/std/string/struct.String.html) field as a [`&str`](https://doc.rust-lang.org/std/primitive.str.html) (string slice) — Rust's [deref coercion](https://doc.rust-lang.org/book/ch15-02-deref.html#implicit-deref-coercions-with-functions-and-methods) does the `String` → `&str` conversion for you. `self.sequence.len()` calls [`String::len`](https://doc.rust-lang.org/std/string/struct.String.html#method.len), which returns a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html).
+
+For `BedRecord`:
+
+```rust
+fn name(&self) -> &str {
+    &self.chrom
+}
+
+fn length(&self) -> usize {
+    (self.end - self.start) as usize
+}
+```
+
+Note the [`as` cast](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions): `start` and `end` are `u64`, but the trait says `length` returns `usize`, so we convert.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+The full reference implementation lives in `day3b/ex-trait-objects-solution/src/main.rs`. Try not to peek until your own version passes all six tests.
+:::
+
+## Where this leads
+
+- **Day 4 uses [`noodles`](https://crates.io/crates/noodles) heavily**, and `noodles` uses traits everywhere — for readers, writers, records, indices. You will use them without thinking about them again; this exercise is the last time you have to wire one up by hand.
+- **`Box<dyn Error>` is the most common `Box<dyn>` you will see in real Rust.** It is the standard return-type trick for "this function can fail in several different ways and I do not want to enumerate them yet": `fn foo() -> Result<T, Box<dyn std::error::Error>>`. The Day 4 lecture introduces it alongside the [`?` operator](https://doc.rust-lang.org/book/ch09-02-recoverable-errors-with-result.html#a-shortcut-for-propagating-errors-the--operator).
+- **Generic alternatives.** When all elements of a collection have the **same** concrete type, prefer a generic `Vec<T>` over `Vec<Box<dyn Trait>>` — it is faster (no vtable lookup) and lets the compiler inline more aggressively. Reach for `Box<dyn Trait>` when the elements really are heterogeneous, as in this exercise.

@@ -20,10 +20,8 @@ format:
 
 ## What this lecture is
 
-::: {.incremental}
 - A guided tour of the Rust syntax used in today's hands-on exercises
 - Each slide: one concept — *what it is*, *why it works this way*, a DNA example
-:::
 
 ::: notes
 This lecture introduces the Rust syntax you need to do today's hands-on work. I will go through one concept per slide. For each: a definition, a brief reason why Rust does it that way, and a small DNA-themed example.

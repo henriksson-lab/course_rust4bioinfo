@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <!-- Title -->
+  <text x="450" y="32" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Vector vs raster &#8212; same image, two formats
+  </text>
+
+  <!-- =================== LEFT PANEL: SVG vector =================== -->
+  <rect x="40" y="70" width="380" height="340" fill="#fafafa"
+        stroke="#000" stroke-width="1.4"/>
+  <text x="230" y="98" text-anchor="middle" font-size="16" font-weight="700" fill="#1976d2">
+    SVG (vector)
+  </text>
+
+  <!-- Smooth letter A: two diagonals + crossbar -->
+  <g stroke="#1976d2" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="120" y1="280" x2="170" y2="140"/>
+    <line x1="170" y1="140" x2="220" y2="280"/>
+    <line x1="138" y1="230" x2="202" y2="230"/>
+  </g>
+
+  <!-- Smooth mini line plot -->
+  <g>
+    <rect x="250" y="150" width="150" height="140" fill="white" stroke="#888" stroke-width="1"/>
+    <polyline fill="none" stroke="#2e7d32" stroke-width="2.4" stroke-linejoin="round"
+              points="260,275 280,250 300,260 320,215 340,225 360,180 380,195 395,160"/>
+    <!-- Smooth circle markers -->
+    <g fill="#2e7d32">
+      <circle cx="260" cy="275" r="3"/>
+      <circle cx="280" cy="250" r="3"/>
+      <circle cx="300" cy="260" r="3"/>
+      <circle cx="320" cy="215" r="3"/>
+      <circle cx="340" cy="225" r="3"/>
+      <circle cx="360" cy="180" r="3"/>
+      <circle cx="380" cy="195" r="3"/>
+      <circle cx="395" cy="160" r="3"/>
+    </g>
+  </g>
+
+  <!-- =================== RIGHT PANEL: PNG raster =================== -->
+  <rect x="480" y="70" width="380" height="340" fill="#fafafa"
+        stroke="#000" stroke-width="1.4"/>
+  <text x="670" y="98" text-anchor="middle" font-size="16" font-weight="700" fill="#c62828">
+    PNG (raster, ~100 px, enlarged 4&#215;)
+  </text>
+
+  <!-- Pixelated letter "A" built as 5x5 pixel blocks
+       Grid origin x=540, y=140. Pixel size 14.
+       A shape pattern (rows x cols):
+       . . . X X X . . . .
+       . . X X X X X . . .
+       . . X X . X X . . .
+       . X X . . . X X . .
+       . X X . . . X X . .
+       X X X X X X X X X .
+       X X . . . . . X X .
+       X X . . . . . X X .
+       X . . . . . . . X .
+       X . . . . . . . X .
+  -->
+  <g fill="#1976d2">
+    <!-- row 0 y=140 -->
+    <rect x="582" y="140" width="14" height="14"/>
+    <rect x="596" y="140" width="14" height="14"/>
+    <rect x="610" y="140" width="14" height="14"/>
+    <!-- row 1 y=154 -->
+    <rect x="568" y="154" width="14" height="14"/>
+    <rect x="582" y="154" width="14" height="14"/>
+    <rect x="596" y="154" width="14" height="14"/>
+    <rect x="610" y="154" width="14" height="14"/>
+    <rect x="624" y="154" width="14" height="14"/>
+    <!-- row 2 y=168 -->
+    <rect x="568" y="168" width="14" height="14"/>
+    <rect x="582" y="168" width="14" height="14"/>
+    <rect x="610" y="168" width="14" height="14"/>
+    <rect x="624" y="168" width="14" height="14"/>
+    <!-- row 3 y=182 -->
+    <rect x="554" y="182" width="14" height="14"/>
+    <rect x="568" y="182" width="14" height="14"/>
+    <rect x="624" y="182" width="14" height="14"/>
+    <rect x="638" y="182" width="14" height="14"/>
+    <!-- row 4 y=196 -->
+    <rect x="554" y="196" width="14" height="14"/>
+    <rect x="568" y="196" width="14" height="14"/>
+    <rect x="624" y="196" width="14" height="14"/>
+    <rect x="638" y="196" width="14" height="14"/>
+    <!-- row 5 y=210 (crossbar) -->
+    <rect x="540" y="210" width="14" height="14"/>
+    <rect x="554" y="210" width="14" height="14"/>
+    <rect x="568" y="210" width="14" height="14"/>
+    <rect x="582" y="210" width="14" height="14"/>
+    <rect x="596" y="210" width="14" height="14"/>
+    <rect x="610" y="210" width="14" height="14"/>
+    <rect x="624" y="210" width="14" height="14"/>
+    <rect x="638" y="210" width="14" height="14"/>
+    <rect x="652" y="210" width="14" height="14"/>
+    <!-- row 6 y=224 -->
+    <rect x="540" y="224" width="14" height="14"/>
+    <rect x="554" y="224" width="14" height="14"/>
+    <rect x="638" y="224" width="14" height="14"/>
+    <rect x="652" y="224" width="14" height="14"/>
+    <!-- row 7 y=238 -->
+    <rect x="540" y="238" width="14" height="14"/>
+    <rect x="554" y="238" width="14" height="14"/>
+    <rect x="638" y="238" width="14" height="14"/>
+    <rect x="652" y="238" width="14" height="14"/>
+    <!-- row 8 y=252 -->
+    <rect x="540" y="252" width="14" height="14"/>
+    <rect x="652" y="252" width="14" height="14"/>
+    <!-- row 9 y=266 -->
+    <rect x="540" y="266" width="14" height="14"/>
+    <rect x="652" y="266" width="14" height="14"/>
+  </g>
+
+  <!-- Pixelated mini line plot panel -->
+  <g>
+    <rect x="690" y="150" width="150" height="140" fill="white" stroke="#888" stroke-width="1"/>
+
+    <!-- Background pixel grid faintly visible -->
+    <g stroke="#eee" stroke-width="1">
+      <line x1="710" y1="150" x2="710" y2="290"/>
+      <line x1="730" y1="150" x2="730" y2="290"/>
+      <line x1="750" y1="150" x2="750" y2="290"/>
+      <line x1="770" y1="150" x2="770" y2="290"/>
+      <line x1="790" y1="150" x2="790" y2="290"/>
+      <line x1="810" y1="150" x2="810" y2="290"/>
+      <line x1="830" y1="150" x2="830" y2="290"/>
+      <line x1="690" y1="170" x2="840" y2="170"/>
+      <line x1="690" y1="190" x2="840" y2="190"/>
+      <line x1="690" y1="210" x2="840" y2="210"/>
+      <line x1="690" y1="230" x2="840" y2="230"/>
+      <line x1="690" y1="250" x2="840" y2="250"/>
+      <line x1="690" y1="270" x2="840" y2="270"/>
+    </g>
+
+    <!-- Step-shaped "line" made of pixel blocks (20 px each).
+         Path: down-right rising trend from lower-left to upper-right -->
+    <g fill="#2e7d32">
+      <rect x="690" y="270" width="20" height="20"/>
+      <rect x="710" y="250" width="20" height="20"/>
+      <rect x="730" y="250" width="20" height="20"/>
+      <rect x="750" y="230" width="20" height="20"/>
+      <rect x="770" y="210" width="20" height="20"/>
+      <rect x="790" y="210" width="20" height="20"/>
+      <rect x="810" y="190" width="20" height="20"/>
+      <rect x="820" y="170" width="20" height="20"/>
+    </g>
+  </g>
+
+  <!-- =================== Labels under each panel =================== -->
+  <g font-family="ui-monospace, monospace">
+    <text x="230" y="438" text-anchor="middle" font-size="13" fill="#222">
+      file: ~2 KB
+    </text>
+    <text x="230" y="458" text-anchor="middle" font-size="13" fill="#222">
+      sharp at any zoom
+    </text>
+    <text x="230" y="478" text-anchor="middle" font-size="13" fill="#222">
+      edit in Inkscape
+    </text>
+
+    <text x="670" y="438" text-anchor="middle" font-size="13" fill="#222">
+      file: ~8 KB at 100 px
+    </text>
+    <text x="670" y="458" text-anchor="middle" font-size="13" fill="#222">
+      pixelates when enlarged
+    </text>
+    <text x="670" y="478" text-anchor="middle" font-size="13" fill="#222">
+      fixed grid
+    </text>
+  </g>
+
+  <!-- Caption -->
+  <text x="450" y="508" text-anchor="middle" font-size="14" fill="#666" font-style="italic">
+    For figures you might tweak after the fact, SVG wins. PNG is fine when the final size is known up front.
+  </text>
+
+</svg>
