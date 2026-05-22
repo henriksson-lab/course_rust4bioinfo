@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 600" font-family="system-ui, -apple-system, sans-serif">
+  <title>Hamming distance via XOR, fold, popcount</title>
+
+  <defs>
+    <marker id="arrHam" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+    <marker id="arrRed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#c62828"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="550" y="26" text-anchor="middle" font-size="20" font-weight="600" fill="#111">Hamming distance &#8212; XOR, fold, popcount</text>
+
+  <!--
+    Layout: 8 bit cells, width 60, x = 300 .. 780. Columns L->R = bits 7,6,5,4,3,2,1,0.
+    Base positions (2 bits each, low-to-high):
+      base 0 = bits 1,0 (cols 6,7) center x=720
+      base 1 = bits 3,2 (cols 4,5) center x=600
+      base 2 = bits 5,4 (cols 2,3) center x=480  <- 1-bit mismatch
+      base 3 = bits 7,6 (cols 0,1) center x=360  <- 2-bit mismatch
+
+    s1 = ACGT  packed = 11 10 01 00  bits L->R: 1 1 1 0 0 1 0 0
+    s2 = ACAA  packed = 00 00 01 00  bits L->R: 0 0 0 0 0 1 0 0
+  -->
+
+  <!-- =================== STAGE 1: INPUT =================== -->
+  <text x="50" y="58" font-size="15" font-weight="600" fill="#1976d2">Input</text>
+
+  <!-- bit-position labels above -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+    <text x="330" y="74">bit 7</text>
+    <text x="390" y="74">bit 6</text>
+    <text x="450" y="74">bit 5</text>
+    <text x="510" y="74">bit 4</text>
+    <text x="570" y="74">bit 3</text>
+    <text x="630" y="74">bit 2</text>
+    <text x="690" y="74">bit 1</text>
+    <text x="750" y="74">bit 0</text>
+  </g>
+
+  <!-- Base-name boxes (above the bit cells) -->
+  <!-- base 3 (T) over cols 0,1 (cells x=300..420); 2-bit mismatch -->
+  <rect x="305" y="82" width="110" height="22" rx="4" ry="4" fill="#fde0e0" stroke="#c62828" stroke-width="1"/>
+  <text x="360" y="98" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#c62828">base 3 = T</text>
+  <!-- base 2 (G) over cols 2,3 (cells x=420..540); 1-bit mismatch -->
+  <rect x="425" y="82" width="110" height="22" rx="4" ry="4" fill="#fde0e0" stroke="#c62828" stroke-width="1"/>
+  <text x="480" y="98" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#c62828">base 2 = G</text>
+  <!-- base 1 (C) over cols 4,5 (cells x=540..660); match -->
+  <rect x="545" y="82" width="110" height="22" rx="4" ry="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="600" y="98" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#2e7d32">base 1 = C</text>
+  <!-- base 0 (A) over cols 6,7 (cells x=660..780); match -->
+  <rect x="665" y="82" width="110" height="22" rx="4" ry="4" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1"/>
+  <text x="720" y="98" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#2e7d32">base 0 = A</text>
+
+  <!-- Row: s1 = ACGT -->
+  <text x="50" y="132" font-family="ui-monospace, monospace" font-size="14" fill="#111">s1 = ACGT</text>
+  <g stroke="#888" stroke-width="1">
+    <!-- mismatch cols (0,1,2,3): faint red bg; match cols (4,5,6,7): white -->
+    <rect x="300" y="112" width="60" height="32" fill="#fde0e0"/>
+    <rect x="360" y="112" width="60" height="32" fill="#fde0e0"/>
+    <rect x="420" y="112" width="60" height="32" fill="#fde0e0"/>
+    <rect x="480" y="112" width="60" height="32" fill="#fde0e0"/>
+    <rect x="540" y="112" width="60" height="32" fill="#ffffff"/>
+    <rect x="600" y="112" width="60" height="32" fill="#ffffff"/>
+    <rect x="660" y="112" width="60" height="32" fill="#ffffff"/>
+    <rect x="720" y="112" width="60" height="32" fill="#ffffff"/>
+  </g>
+  <!-- s1 bits: 1 1 1 0 0 1 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="330" y="134">1</text>
+    <text x="390" y="134">1</text>
+    <text x="450" y="134">1</text>
+    <text x="510" y="134">0</text>
+    <text x="570" y="134">0</text>
+    <text x="630" y="134">1</text>
+    <text x="690" y="134">0</text>
+    <text x="750" y="134">0</text>
+  </g>
+
+  <!-- Row: s2 = ACAA -->
+  <text x="50" y="170" font-family="ui-monospace, monospace" font-size="14" fill="#111">s2 = ACAA</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="150" width="60" height="32" fill="#fde0e0"/>
+    <rect x="360" y="150" width="60" height="32" fill="#fde0e0"/>
+    <rect x="420" y="150" width="60" height="32" fill="#fde0e0"/>
+    <rect x="480" y="150" width="60" height="32" fill="#fde0e0"/>
+    <rect x="540" y="150" width="60" height="32" fill="#ffffff"/>
+    <rect x="600" y="150" width="60" height="32" fill="#ffffff"/>
+    <rect x="660" y="150" width="60" height="32" fill="#ffffff"/>
+    <rect x="720" y="150" width="60" height="32" fill="#ffffff"/>
+  </g>
+  <!-- s2 bits: 0 0 0 0 0 1 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="330" y="172">0</text>
+    <text x="390" y="172">0</text>
+    <text x="450" y="172">0</text>
+    <text x="510" y="172">0</text>
+    <text x="570" y="172">0</text>
+    <text x="630" y="172">1</text>
+    <text x="690" y="172">0</text>
+    <text x="750" y="172">0</text>
+  </g>
+
+  <!-- Hex labels on the right -->
+  <text x="800" y="132" font-family="ui-monospace, monospace" font-size="13" fill="#555">= 0xE4</text>
+  <text x="800" y="170" font-family="ui-monospace, monospace" font-size="13" fill="#555">= 0x04</text>
+
+  <!-- =================== STAGE 2: XOR =================== -->
+  <text x="50" y="218" font-size="15" font-weight="600" fill="#1976d2">Step 1: XOR finds the differing bits</text>
+
+  <text x="50" y="252" font-family="ui-monospace, monospace" font-size="14" fill="#111">diff = s1 ^ s2</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="232" width="60" height="32" fill="#fde0e0" stroke="#c62828" stroke-width="1.5"/>
+    <rect x="360" y="232" width="60" height="32" fill="#fde0e0" stroke="#c62828" stroke-width="1.5"/>
+    <rect x="420" y="232" width="60" height="32" fill="#fde0e0" stroke="#c62828" stroke-width="1.5"/>
+    <rect x="480" y="232" width="60" height="32" fill="#ffffff"/>
+    <rect x="540" y="232" width="60" height="32" fill="#ffffff"/>
+    <rect x="600" y="232" width="60" height="32" fill="#ffffff"/>
+    <rect x="660" y="232" width="60" height="32" fill="#ffffff"/>
+    <rect x="720" y="232" width="60" height="32" fill="#ffffff"/>
+  </g>
+  <!-- diff bits: 1 1 1 0 0 0 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+    <text x="330" y="254" fill="#c62828">1</text>
+    <text x="390" y="254" fill="#c62828">1</text>
+    <text x="450" y="254" fill="#c62828">1</text>
+    <text x="510" y="254" fill="#888">0</text>
+    <text x="570" y="254" fill="#888">0</text>
+    <text x="630" y="254" fill="#888">0</text>
+    <text x="690" y="254" fill="#888">0</text>
+    <text x="750" y="254" fill="#888">0</text>
+  </g>
+
+  <!-- Annotation: bit 5 single-flip (column at x=450) -->
+  <line x1="450" y1="290" x2="450" y2="266" stroke="#c62828" stroke-width="1.5" marker-end="url(#arrRed)"/>
+  <text x="450" y="306" text-anchor="middle" font-size="12" fill="#c62828">base 2: G vs A flips only 1 bit (10 ^ 00 = 10)</text>
+
+  <!-- Annotation: bits 7,6 pair (columns at x=330, x=390) -->
+  <line x1="360" y1="290" x2="360" y2="266" stroke="#c62828" stroke-width="1.5" marker-end="url(#arrRed)"/>
+  <text x="360" y="324" text-anchor="middle" font-size="12" fill="#c62828">base 3: T vs A flips both bits (11 ^ 00 = 11)</text>
+
+  <!-- Badge: popcount(diff) = 3 warning -->
+  <rect x="820" y="232" width="260" height="56" rx="6" ry="6" fill="#fff3cd" stroke="#d97706" stroke-width="1.2"/>
+  <text x="950" y="252" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#7a4f00">popcount(diff) = 3</text>
+  <text x="950" y="270" text-anchor="middle" font-size="11" fill="#7a4f00">but only 2 bases differ &#8212; raw</text>
+  <text x="950" y="284" text-anchor="middle" font-size="11" fill="#7a4f00">popcount over-counts mismatches.</text>
+
+  <!-- =================== STAGE 3: FOLD =================== -->
+  <text x="50" y="350" font-size="15" font-weight="600" fill="#1976d2">Step 2: fold each pair with (diff | (diff &gt;&gt; 1)) &amp; 0x55</text>
+
+  <!-- Row A: diff -->
+  <text x="50" y="382" font-family="ui-monospace, monospace" font-size="13" fill="#111">diff</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="360" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="420" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="480" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="540" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="600" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="660" y="366" width="60" height="26" fill="#ffffff"/>
+    <rect x="720" y="366" width="60" height="26" fill="#ffffff"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="15" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="330" y="385">1</text>
+    <text x="390" y="385">1</text>
+    <text x="450" y="385">1</text>
+    <text x="510" y="385">0</text>
+    <text x="570" y="385">0</text>
+    <text x="630" y="385">0</text>
+    <text x="690" y="385">0</text>
+    <text x="750" y="385">0</text>
+  </g>
+
+  <!-- Row B: diff >> 1 -->
+  <text x="50" y="414" font-family="ui-monospace, monospace" font-size="13" fill="#111">diff &gt;&gt; 1</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="360" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="420" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="480" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="540" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="600" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="660" y="398" width="60" height="26" fill="#ffffff"/>
+    <rect x="720" y="398" width="60" height="26" fill="#ffffff"/>
+  </g>
+  <!-- bits: 0 1 1 1 0 0 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="15" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="330" y="417">0</text>
+    <text x="390" y="417">1</text>
+    <text x="450" y="417">1</text>
+    <text x="510" y="417">1</text>
+    <text x="570" y="417">0</text>
+    <text x="630" y="417">0</text>
+    <text x="690" y="417">0</text>
+    <text x="750" y="417">0</text>
+  </g>
+
+  <!-- Row C: diff | (diff >> 1) -->
+  <text x="50" y="446" font-family="ui-monospace, monospace" font-size="13" fill="#111">diff | (diff &gt;&gt; 1)</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="360" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="420" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="480" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="540" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="600" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="660" y="430" width="60" height="26" fill="#ffffff"/>
+    <rect x="720" y="430" width="60" height="26" fill="#ffffff"/>
+  </g>
+  <!-- bits: 1 1 1 1 0 0 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="15" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="330" y="449">1</text>
+    <text x="390" y="449">1</text>
+    <text x="450" y="449">1</text>
+    <text x="510" y="449">1</text>
+    <text x="570" y="449">0</text>
+    <text x="630" y="449">0</text>
+    <text x="690" y="449">0</text>
+    <text x="750" y="449">0</text>
+  </g>
+
+  <!-- Row D: & 0x55 -->
+  <text x="50" y="478" font-family="ui-monospace, monospace" font-size="13" fill="#111">&amp; 0x55</text>
+  <!-- show mask bits (the &0x55 pattern in low byte is 0 1 0 1 0 1 0 1 written MSB->LSB) -->
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="462" width="60" height="26" fill="#f1f3f5"/>
+    <rect x="360" y="462" width="60" height="26" fill="#e3f2fd"/>
+    <rect x="420" y="462" width="60" height="26" fill="#f1f3f5"/>
+    <rect x="480" y="462" width="60" height="26" fill="#e3f2fd"/>
+    <rect x="540" y="462" width="60" height="26" fill="#f1f3f5"/>
+    <rect x="600" y="462" width="60" height="26" fill="#e3f2fd"/>
+    <rect x="660" y="462" width="60" height="26" fill="#f1f3f5"/>
+    <rect x="720" y="462" width="60" height="26" fill="#e3f2fd"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="15" font-weight="600" text-anchor="middle" fill="#555">
+    <text x="330" y="481">0</text>
+    <text x="390" y="481">1</text>
+    <text x="450" y="481">0</text>
+    <text x="510" y="481">1</text>
+    <text x="570" y="481">0</text>
+    <text x="630" y="481">1</text>
+    <text x="690" y="481">0</text>
+    <text x="750" y="481">1</text>
+  </g>
+
+  <!-- Row E: folded = result -->
+  <text x="50" y="510" font-family="ui-monospace, monospace" font-size="13" font-weight="600" fill="#2e7d32">folded</text>
+  <g stroke="#888" stroke-width="1">
+    <rect x="300" y="494" width="60" height="26" fill="#ffffff"/>
+    <rect x="360" y="494" width="60" height="26" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <rect x="420" y="494" width="60" height="26" fill="#ffffff"/>
+    <rect x="480" y="494" width="60" height="26" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <rect x="540" y="494" width="60" height="26" fill="#ffffff"/>
+    <rect x="600" y="494" width="60" height="26" fill="#ffffff"/>
+    <rect x="660" y="494" width="60" height="26" fill="#ffffff"/>
+    <rect x="720" y="494" width="60" height="26" fill="#ffffff"/>
+  </g>
+  <!-- bits: 0 1 0 1 0 0 0 0 -->
+  <g font-family="ui-monospace, monospace" font-size="15" font-weight="600" text-anchor="middle">
+    <text x="330" y="513" fill="#888">0</text>
+    <text x="390" y="513" fill="#2e7d32">1</text>
+    <text x="450" y="513" fill="#888">0</text>
+    <text x="510" y="513" fill="#2e7d32">1</text>
+    <text x="570" y="513" fill="#888">0</text>
+    <text x="630" y="513" fill="#888">0</text>
+    <text x="690" y="513" fill="#888">0</text>
+    <text x="750" y="513" fill="#888">0</text>
+  </g>
+
+  <!-- Side annotation for the fold block -->
+  <rect x="820" y="366" width="260" height="118" rx="6" ry="6" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.2"/>
+  <text x="950" y="386" text-anchor="middle" font-size="12" font-weight="600" fill="#0d47a1">Why the fold works</text>
+  <text x="830" y="406" font-size="11" fill="#0d47a1">OR-shift moves each pair's high bit</text>
+  <text x="830" y="421" font-size="11" fill="#0d47a1">into the low position, so the low bit</text>
+  <text x="830" y="436" font-size="11" fill="#0d47a1">becomes 1 if EITHER bit was set.</text>
+  <text x="830" y="456" font-size="11" fill="#0d47a1">The 0x55 mask then strips the</text>
+  <text x="830" y="471" font-size="11" fill="#0d47a1">high-position bits &#8212; one bit per base.</text>
+
+  <!-- =================== STAGE 4: POPCOUNT =================== -->
+  <text x="50" y="548" font-size="15" font-weight="600" fill="#1976d2">Step 3: popcount the folded bits</text>
+
+  <!-- arrows pointing to the two 1-bits in folded row -->
+  <line x1="390" y1="540" x2="390" y2="524" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arrGreen)"/>
+  <line x1="510" y1="540" x2="510" y2="524" stroke="#2e7d32" stroke-width="1.5" marker-end="url(#arrGreen)"/>
+
+  <!-- Final answer badge -->
+  <rect x="600" y="546" width="320" height="36" rx="8" ry="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="760" y="570" text-anchor="middle" font-family="ui-monospace, monospace" font-size="16" font-weight="600" fill="#1b5e20">Hamming distance = 2</text>
+
+  <!-- Bottom caption -->
+  <text x="550" y="594" text-anchor="middle" font-size="11" fill="#555">Same routine works for any length up to 32 bases &#8212; 0x5555&#8230;5555 extends to fill a u64.</text>
+</svg>

@@ -1,0 +1,201 @@
+---
+title: "Quiz — bits, bases, and 2-bit DNA"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz to drill the bit-level primitives from lecture 1 and the 2-bit DNA tricks from lecture 2. Guess before you click — the answers explain *why*, not just *what*.
+
+12 questions, mixing multiple-choice and short-answer. Some hints:
+
+- Binary literals in Rust use the `0b` prefix; hex uses `0x`.
+- `u8`, `u32`, `u64` mean unsigned integers of 8, 32, 64 bits. They wrap on overflow in release mode and panic in debug.
+- The canonical 2-bit DNA encoding used throughout: `A = 00`, `C = 01`, `G = 10`, `T = 11`.
+- When packing a multi-base sequence, base `i` lives at bit positions `2*i` and `2*i + 1` (little-base-first).
+
+---
+
+## 1. Decimal to binary
+
+What is `42` in binary?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Find the largest power of 2 that is `≤ 42` and subtract; repeat. The powers of 2 are 1, 2, 4, 8, 16, 32, 64.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0b101010`** (= `32 + 8 + 2`). Six bits are enough; the leading `1` marks the $2^5 = 32$ place. In Rust: `assert_eq!(0b101010_u8, 42);`.
+:::
+
+---
+
+## 2. Binary to decimal
+
+What decimal number is `0b1011_0100`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Each bit position, from the right, is worth `1, 2, 4, 8, 16, 32, 64, 128`. Sum the powers where there is a `1`.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`180`** (= `128 + 32 + 16 + 4`). The underscore is just a visual separator — Rust ignores it. You can verify with [`u8::from_str_radix`](https://doc.rust-lang.org/std/primitive.u8.html#method.from_str_radix): `u8::from_str_radix("10110100", 2).unwrap() == 180`.
+:::
+
+---
+
+## 3. Decimal to hex
+
+What is `255` in hexadecimal?
+
+::: {.callout-tip collapse="true" title="Hint"}
+255 is the largest value an unsigned 8-bit integer can hold. Hex groups bits into nibbles of 4.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0xFF`** — two hex digits, each representing a 4-bit nibble of all-1s. `0xFF` is the all-ones byte, a `u8` of binary `11111111`. You will see this constant in nearly every bit-twiddling routine, often as a mask.
+:::
+
+---
+
+## 4. Bitwise AND
+
+What is the result of `0b1100 & 0b1010`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+[`&`](https://doc.rust-lang.org/std/ops/trait.BitAnd.html) sets each output bit only if **both** input bits at that position are 1. Walk the bits position by position.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0b1000`** (= 8). Bit-by-bit: `1&1=1`, `1&0=0`, `0&1=0`, `0&0=0`. AND is the standard way to **mask** — keeping only the bits you care about and zeroing the rest.
+:::
+
+---
+
+## 5. Bitwise XOR
+
+What is the result of `0b1100 ^ 0b1010`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+[`^`](https://doc.rust-lang.org/std/ops/trait.BitXor.html) sets each output bit when the input bits **differ**. The result has a `1` exactly where the inputs disagree.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0b0110`** (= 6). Bit-by-bit: `1^1=0`, `1^0=1`, `0^1=1`, `0^0=0`. XOR is the bit-level "differs" indicator — which is why XOR + [`count_ones`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_ones) gives Hamming distance.
+:::
+
+---
+
+## 6. Left shift
+
+What is `5 << 3`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Shifting left by `k` multiplies by $2^k$. Or, in bits: write `5` in binary, then append `k` zeros on the right.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`40`** (= `5 * 8`). `5` is `0b101`; shifted left 3 it becomes `0b101000` = 40. The [`<<`](https://doc.rust-lang.org/std/ops/trait.Shl.html) operator is how we position a 2-bit base into the right slot when packing DNA — base `i` goes at `<< (2 * i)`.
+:::
+
+---
+
+## 7. Popcount
+
+What does `(0b1011_0011_u8).count_ones()` return?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Just count the `1` bits in `1011_0011`. [`count_ones`](https://doc.rust-lang.org/std/primitive.u8.html#method.count_ones) returns the number of set bits, regardless of position.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`5`** — bits set are at positions 0, 1, 4, 5, 7. On modern x86 CPUs `count_ones` compiles to the single instruction `popcnt`, which executes in one cycle regardless of the value. It is the bit-level workhorse of Hamming distance, Bloom filters, and many compression algorithms.
+:::
+
+---
+
+## 8. 2-bit DNA encoding
+
+Using the canonical encoding `A=00, C=01, G=10, T=11`, what `u8` value packs the sequence `ACGT` (with base 0 in the lowest bits)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Place each base at bit position `2 * i`: A at bits 0-1, C at bits 2-3, G at bits 4-5, T at bits 6-7. Then OR everything together.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0b11_10_01_00`** (= `0xE4` = 228). Reading right-to-left to match increasing base index: A=`00` at bits 0-1, C=`01` at bits 2-3, G=`10` at bits 4-5, T=`11` at bits 6-7. The whole 4-base sequence fits in one byte. (The opposite, big-base-first convention would give `0b00_01_10_11` = `0x1B` = 27 — same data, different layout.)
+:::
+
+---
+
+## 9. Hamming distance via XOR + popcount
+
+Two 4-base sequences are packed as `a = 0b11_10_01_00` (= `ACGT`) and `b = 0b11_00_01_00` (= `ACAT`). What is their Hamming distance, computed as `(a ^ b).count_ones() / 2`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+XOR them first — the result has 1s exactly where bits differ. Then count the 1 bits and divide by 2 (each differing base contributes up to 2 bits).
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`1`** — the sequences differ at one position (base 1 is G in `a` and A in `b`). XOR: `0b00_10_00_00`, which has `count_ones() = 1`. Dividing by 2 gives `0` — but only because the differing base pair here is G(`10`) vs A(`00`), where exactly one bit differs. This is the **edge case** mentioned in lecture: the naive `/2` underestimates when only one of the two bits in a pair flips. For an exact answer, first collapse each 2-bit pair to a single "differs" bit (OR the two bits of each pair together), then popcount that. Exercise 3 walks through the careful version. The correct distance is **1**.
+:::
+
+---
+
+## 10. Complement via XOR
+
+If `packed = 0b11_10_01_00` (= `ACGT`), what does `packed ^ 0xFF` give, and what sequence does it represent?
+
+::: {.callout-tip collapse="true" title="Hint"}
+XOR with all-1s flips every bit. In the 2-bit code, flipping both bits of a base maps `A(00) ↔ T(11)` and `C(01) ↔ G(10)` — the Watson-Crick complement.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`0b00_01_10_11 = 0x1B`**, which represents the sequence `TGCA` (= the complement of `ACGT`, base-by-base). One XOR complements the entire 4-base sequence. The same trick scales up: `packed ^ 0xFFFF_FFFF_FFFF_FFFF` complements a 32-mer in a single CPU instruction.
+:::
+
+---
+
+## 11. Why is 6.7M-entry whitelist matching tractable? (short answer)
+
+10x Genomics ships a whitelist of about 6.7 million valid 16-bp cell barcodes. Why is per-read lookup (exact + 1-error correction) fast enough to keep up with hundreds of millions of reads per sequencing run?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two ingredients: (1) the size of the whitelist after packing, and (2) the number of hash-set lookups needed per read.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+Each 16-bp barcode packs into a single `u32` (16 bases × 2 bits = 32 bits), so the whole whitelist fits in **about 27 MB** — easily held in RAM as a `HashSet<u32>`. Exact lookup is **one hash-table probe** (`O(1)` average). For 1-error correction, we generate the 48 Hamming-1 neighbors of the query (16 positions × 3 alternative bases) and test each — **48 hash probes per read**, a few microseconds. The combination of a tiny packed key (`u32` instead of `String`) and the small neighbor set (48, not the full $4^{16}$ space) is what makes the whole pipeline real-time.
+:::
+
+---
+
+## 12. Why reverse 2-bit packed DNA in pairs, not bit-by-bit? (short answer)
+
+Why does reversing a packed 2-bit DNA sequence require reversing the **2-bit pairs**, not the individual bits?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What does each pair of bits represent? What happens to a single base if you flip its two bits independently?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+Each base is encoded as a **single 2-bit pair**, not as two independent bits. Bit-by-bit reversal would split each base across the sequence: the high and low bits of one base would end up at different positions, scrambling the encoding. Pair-wise reversal (swap base 0 with base 31, base 1 with base 30, …) keeps each base intact while putting it at its mirrored position — which is the actual definition of sequence reversal. In Rust this is implemented as `u64::swap_bytes` (reverses byte order = reverses 4-base chunks) followed by an **in-byte pair swap** that reverses the 4 bases within each byte using a couple of masks and shifts. Reversing every individual bit would also flip every base to its complement — useful for the complement step, but not the reverse step.
+:::
+
+---
+
+## Where this leads
+
+The pattern to internalise:
+
+- **Hex, binary, and decimal are three views of the same integer** — choose the one that makes the structure clear.
+- **`&` masks, `|` sets, `^` flips/differs, `<<` and `>>` reposition** — four operations cover most bit twiddling.
+- **`count_ones` is one CPU cycle** — XOR + popcount is the canonical Hamming distance idiom.
+- **2-bit DNA + bitwise ops is the foundation of modern fast sequence analysis** — k-mer counting, alignment seeding, barcode matching, Bloom filters all start here.
+
+Up next: the exercises put each of these into a working Rust program.

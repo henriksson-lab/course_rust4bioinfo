@@ -1,0 +1,158 @@
+---
+title: "Exercise: Numbers and bits"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A warm-up that gets the three number bases (decimal [base 10], binary [base 2], hex [base 16]) and the standard **bitwise operators** [AND, OR, XOR, shift, NOT — operations that act on every bit of an integer independently] into your fingers. You will write five tiny functions:
+
+1. `show_three_bases(x: u8) -> String` that returns a formatted string like `"13 = 0b00001101 = 0x0d"`.
+2. `bit_count(x: u32) -> u32` using [`u32::count_ones`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_ones) (gloss: hardware **popcount** [count of 1-bits], a single CPU instruction on every modern x86/ARM chip).
+3. `three_ops(a: u8, b: u8) -> (u8, u8, u8)` returning the bitwise AND, OR, and XOR of two bytes.
+4. `set_bit(x: u8, i: u8) -> u8` and `clear_bit(x: u8, i: u8) -> u8` for any bit position 0..8.
+
+By the time `cargo test` passes you will have used [`format!`](https://doc.rust-lang.org/std/macro.format.html) with the `{:b}` and `{:x}` format specifiers, the bitwise operators [`&`](https://doc.rust-lang.org/std/ops/trait.BitAnd.html), [`|`](https://doc.rust-lang.org/std/ops/trait.BitOr.html), [`^`](https://doc.rust-lang.org/std/ops/trait.BitXor.html), [`!`](https://doc.rust-lang.org/std/ops/trait.Not.html), and [`<<`](https://doc.rust-lang.org/std/ops/trait.Shl.html), and the standard-library popcount [`u32::count_ones`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_ones).
+
+## Background
+
+A `u8` is **8 bits** of memory — a single byte, the smallest addressable unit on every modern CPU. Those 8 bits can represent any integer from 0 to 255. The same 8 bits can be *displayed* three ways:
+
+- **Decimal** (base 10): the way humans read numbers — `13`.
+- **Binary** (base 2): the way the machine stores them — `0b00001101`.
+- **Hex** (base 16): a compact shorthand programmers use because each hex digit corresponds exactly to 4 binary digits (a **nibble** [half a byte]) — `0x0d`.
+
+All three are the *same number*. Rust's [`format!`](https://doc.rust-lang.org/std/macro.format.html) macro can print any integer in any of these bases with the `{:b}` and `{:x}` format specifiers, and the leading-zero padding `{:08b}` says "binary, at least 8 digits, padded with 0 on the left".
+
+The five **bitwise operators** treat their operands as bags of independent bits:
+
+| op | name | meaning |
+|:---|:---|:---|
+| `a & b` | AND | bit set where *both* a and b have it set |
+| `a \| b` | OR | bit set where *either* has it set |
+| `a ^ b` | XOR | bit set where exactly *one* has it set (mismatch) |
+| `!a` | NOT | flip every bit |
+| `a << n` | left shift | move all bits left by n positions (zero-fill on the right) |
+
+These five operators plus **popcount** [counting the 1-bits in an integer] are the entire vocabulary of bit-twiddling. In exercise 3 you will use them to compute Hamming distance [number of positions at which two equal-length strings differ] on packed DNA in a handful of CPU instructions; in `ex-barcode-whitelist` you will use them to match single-cell barcodes against a whitelist with one mismatch tolerated.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day13/ex-numbers-and-bits
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- Five functions with `// TODO` bodies: `show_three_bases`, `bit_count`, `three_ops`, `set_bit`, `clear_bit`
+- A `main` that prints a small demo of all five
+- A `#[cfg(test)] mod tests` block with six unit tests that pin down the expected behaviour
+
+Your job: replace the five `TODO` bodies so that all six tests pass.
+
+You may **not** change the function signatures, the tests, or `main`. You may add helper functions.
+
+## How to run
+
+From inside `day13/ex-numbers-and-bits/`:
+
+```bash
+cargo build           # compile (no dependencies, so this is instant)
+cargo test            # run the tests - these should be failing at first
+cargo run             # print the demo
+```
+
+When all six tests pass, `cargo test` will print:
+
+```
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 - How do I format binary and hex?"}
+Rust's [`format!`](https://doc.rust-lang.org/std/macro.format.html) macro takes the same format specifiers as `println!`. The two you need are `{:b}` (binary) and `{:x}` (hex, lowercase). Add a width and a `0` prefix to pad with leading zeros:
+
+```rust
+let n: u8 = 13;
+format!("{:08b}", n);  // "00001101"  - 8 digits, zero-padded
+format!("{:02x}", n);  // "0d"        - 2 digits, zero-padded
+```
+
+You can reuse the same value across multiple `{...}` placeholders, so the full one-liner is:
+
+```rust
+format!("{} = 0b{:08b} = 0x{:02x}", x, x, x)
+```
+
+The `0b` and `0x` prefixes in the output are **literal text**, not part of the format spec — Rust prints them verbatim because you wrote them between the braces.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 - popcount in one call"}
+[`u32::count_ones`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_ones) returns the number of 1-bits in a `u32`. It compiles to a single `popcnt` instruction on x86-64 and a single `cnt` instruction on AArch64. There is also [`u32::count_zeros`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_zeros) (you do not need it here), and an equivalent method on every other integer type ([`u64::count_ones`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones), [`u8::count_ones`](https://doc.rust-lang.org/std/primitive.u8.html#method.count_ones), and so on).
+
+```rust
+fn bit_count(x: u32) -> u32 {
+    x.count_ones()
+}
+```
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 - Setting and clearing a single bit"}
+To **set** bit `i` (force it to 1) without touching the other bits, OR with a mask that has just that bit set:
+
+```rust
+let mask = 1u8 << i;   // e.g. i=3 -> 0b0000_1000
+let new  = x | mask;
+```
+
+To **clear** bit `i` (force it to 0) without touching the other bits, AND with the *complement* of that mask (every bit set *except* bit `i`):
+
+```rust
+let mask = 1u8 << i;
+let new  = x & !mask;  // ! flips every bit
+```
+
+This pattern — "build a 1-bit mask, then OR to set or AND-NOT to clear" — is the foundation of every bitset, every bitfield, and every flag register in systems programming.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn show_three_bases(x: u8) -> String {
+    format!("{} = 0b{:08b} = 0x{:02x}", x, x, x)
+}
+
+fn bit_count(x: u32) -> u32 {
+    x.count_ones()
+}
+
+fn three_ops(a: u8, b: u8) -> (u8, u8, u8) {
+    (a & b, a | b, a ^ b)
+}
+
+fn set_bit(x: u8, i: u8) -> u8 {
+    x | (1 << i)
+}
+
+fn clear_bit(x: u8, i: u8) -> u8 {
+    x & !(1 << i)
+}
+```
+
+The full reference implementation lives in `day13/ex-numbers-and-bits-solution/src/main.rs`. Try not to peek before your own version passes all six tests.
+:::
+
+## Where this leads
+
+- **2-bit DNA packing.** Exercise 2 uses left-shift and OR to fit a 32-base DNA sequence into a single `u64`. The base at index `i` lives in bits `(2*i)..(2*i+2)` — exactly the shift-and-mask pattern from `set_bit` here, but with 2-bit slots instead of 1-bit slots.
+- **Hamming distance in two instructions.** Exercise 3 combines XOR (one instruction, finds the mismatched bits) with [`u64::count_ones`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones) (one instruction, counts the mismatched bits) to compute Hamming distance on two 32-base sequences faster than any byte-by-byte loop could.
+- **Barcode whitelists.** The same XOR + popcount trick underlies fast single-cell barcode matching in [Cell Ranger](https://www.10xgenomics.com/support/software/cell-ranger), [STARsolo](https://github.com/alexdobin/STAR), and [salmon alevin](https://salmon.readthedocs.io/). You will build a tiny version of that in `ex-barcode-whitelist`.

@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 420" font-family="system-ui, -apple-system, sans-serif">
+  <title>Extracting one base — shift then mask</title>
+
+  <defs>
+    <marker id="arrEx" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="30" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Extracting one base — shift then mask</text>
+
+  <!--
+    Same bit-cell geometry as figure 7: 16 cells of width 50, start x=150, height 28 per row.
+    Bit positions L->R: 15..0. Centers same as figure 7: 175,225,275,325,375,425,475,525,575,625,675,725,775,825,875,925.
+    We'll show three "byte rows" stacked at y=80, y=180, y=280.
+  -->
+
+  <!-- Row 1: original packed value, with bits 5,4 (= G = 10) highlighted orange -->
+  <text x="50" y="100" font-family="ui-monospace, monospace" font-size="13" fill="#111">packed</text>
+  <text x="50" y="116" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#555">ACGTACGT</text>
+
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+    <text x="175" y="75">15</text>
+    <text x="225" y="75">14</text>
+    <text x="275" y="75">13</text>
+    <text x="325" y="75">12</text>
+    <text x="375" y="75">11</text>
+    <text x="425" y="75">10</text>
+    <text x="475" y="75">9</text>
+    <text x="525" y="75">8</text>
+    <text x="575" y="75">7</text>
+    <text x="625" y="75">6</text>
+    <text x="675" y="75">5</text>
+    <text x="725" y="75">4</text>
+    <text x="775" y="75">3</text>
+    <text x="825" y="75">2</text>
+    <text x="875" y="75">1</text>
+    <text x="925" y="75">0</text>
+  </g>
+
+  <!-- 16 cells row 1 — original bits 1110_0100_1110_0100; highlight bits 5,4 (G = 1,0) -->
+  <g stroke-width="1" stroke="#888">
+    <rect x="150" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="200" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="250" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="300" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="350" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="400" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="450" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="500" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="550" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="600" y="82" width="50" height="36" fill="#ffffff"/>
+    <!-- bits 5,4 highlighted -->
+    <rect x="650" y="82" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <rect x="700" y="82" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <rect x="750" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="800" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="850" y="82" width="50" height="36" fill="#ffffff"/>
+    <rect x="900" y="82" width="50" height="36" fill="#ffffff"/>
+  </g>
+  <!-- bit values: 1110_0100_1110_0100 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="175" y="107">1</text>
+    <text x="225" y="107">1</text>
+    <text x="275" y="107">1</text>
+    <text x="325" y="107">0</text>
+    <text x="375" y="107">0</text>
+    <text x="425" y="107">1</text>
+    <text x="475" y="107">0</text>
+    <text x="525" y="107">0</text>
+    <text x="575" y="107">1</text>
+    <text x="625" y="107">1</text>
+    <text x="675" y="107" fill="#7a3d00">1</text>
+    <text x="725" y="107" fill="#7a3d00">0</text>
+    <text x="775" y="107">0</text>
+    <text x="825" y="107">1</text>
+    <text x="875" y="107">0</text>
+    <text x="925" y="107">0</text>
+  </g>
+
+  <!-- Formula -->
+  <text x="550" y="148" text-anchor="middle" font-family="ui-monospace, monospace" font-size="15" fill="#1976d2" font-weight="600">
+    base_at(i=2) = (packed &gt;&gt; (2·i)) &amp; 0b11   →   (packed &gt;&gt; 4) &amp; 0b11
+  </text>
+
+  <!-- Row 2: after >>4 — bits shift right by 4 -->
+  <text x="50" y="184" font-family="ui-monospace, monospace" font-size="13" fill="#111">packed &gt;&gt; 4</text>
+
+  <!-- After >>4, bit values L->R: 0000 1110 0100 1110 -->
+  <!-- highlight new positions of the pair: original bits 5,4 are now at bits 1,0 -->
+  <g stroke-width="1" stroke="#888">
+    <rect x="150" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="200" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="250" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="300" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="350" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="400" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="450" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="500" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="550" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="600" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="650" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="700" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="750" y="172" width="50" height="36" fill="#ffffff"/>
+    <rect x="800" y="172" width="50" height="36" fill="#ffffff"/>
+    <!-- highlight bits 1, 0 -->
+    <rect x="850" y="172" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <rect x="900" y="172" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  </g>
+  <!-- bits: 0000 1110 0100 1110 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="175" y="197" fill="#888">0</text>
+    <text x="225" y="197" fill="#888">0</text>
+    <text x="275" y="197" fill="#888">0</text>
+    <text x="325" y="197" fill="#888">0</text>
+    <text x="375" y="197">1</text>
+    <text x="425" y="197">1</text>
+    <text x="475" y="197">1</text>
+    <text x="525" y="197">0</text>
+    <text x="575" y="197">0</text>
+    <text x="625" y="197">1</text>
+    <text x="675" y="197">0</text>
+    <text x="725" y="197">0</text>
+    <text x="775" y="197">1</text>
+    <text x="825" y="197">1</text>
+    <text x="875" y="197" fill="#7a3d00">1</text>
+    <text x="925" y="197" fill="#7a3d00">0</text>
+  </g>
+  <!-- shift arrow off the right (bits fell off) -->
+  <g>
+    <line x1="950" y1="190" x2="985" y2="190" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <text x="985" y="186" font-family="ui-monospace, monospace" font-size="10" fill="#c62828">drop</text>
+  </g>
+
+  <!-- Row 3: after & 0b11 — mask. Show all bits zeroed except 1,0 -->
+  <text x="50" y="284" font-family="ui-monospace, monospace" font-size="13" fill="#111">&amp; 0b11</text>
+
+  <g stroke-width="1" stroke="#888">
+    <rect x="150" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="200" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="250" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="300" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="350" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="400" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="450" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="500" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="550" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="600" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="650" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="700" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="750" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="800" y="272" width="50" height="36" fill="#ffffff"/>
+    <rect x="850" y="272" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <rect x="900" y="272" width="50" height="36" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+    <text x="175" y="297" fill="#888">0</text>
+    <text x="225" y="297" fill="#888">0</text>
+    <text x="275" y="297" fill="#888">0</text>
+    <text x="325" y="297" fill="#888">0</text>
+    <text x="375" y="297" fill="#888">0</text>
+    <text x="425" y="297" fill="#888">0</text>
+    <text x="475" y="297" fill="#888">0</text>
+    <text x="525" y="297" fill="#888">0</text>
+    <text x="575" y="297" fill="#888">0</text>
+    <text x="625" y="297" fill="#888">0</text>
+    <text x="675" y="297" fill="#888">0</text>
+    <text x="725" y="297" fill="#888">0</text>
+    <text x="775" y="297" fill="#888">0</text>
+    <text x="825" y="297" fill="#888">0</text>
+    <text x="875" y="297" fill="#7a3d00">1</text>
+    <text x="925" y="297" fill="#7a3d00">0</text>
+  </g>
+
+  <!-- Result -->
+  <g transform="translate(350,338)">
+    <rect x="0" y="0" width="400" height="58" rx="8" ry="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="200" y="26" text-anchor="middle" font-family="ui-monospace, monospace" font-size="16" font-weight="600" fill="#1b5e20">
+      result = 0b10 = 2 = G
+    </text>
+    <text x="200" y="46" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#1b5e20">
+      packed[2] decoded back to nucleotide
+    </text>
+  </g>
+</svg>

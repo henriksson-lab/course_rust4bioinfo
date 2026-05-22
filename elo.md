@@ -111,6 +111,14 @@ A student who finishes the course can:
 - Implement PWM scanning as `Conv1d`; train a tiny classifier with Burn's autodiff.
 - **Bio examples:** One-hot DNA; GC content as a tensor reduction; pairwise distance matrix; PCA on expression data; promoter classifier.
 
+### Day 12 — GPU compute kernels with wgpu
+
+- Read and write WGSL compute shaders ([Quiz: wgpu compute kernels](day12/00a-quiz.qmd)).
+- Walk through the 6-step wgpu pipeline (adapter → device → buffers → pipeline → bind group → dispatch).
+- Use storage and uniform buffers; bound-check inside shaders; size workgroup dispatches.
+- Use atomics for counters; workgroup shared memory for fast reductions; 2-D dispatch for matrices.
+- Re-implement Day 1 / 5 (GC content), Day 2 (reverse complement), and Day 11 (pairwise distances) as raw GPU kernels and compare.
+
 ## Explicit non-outcomes
 
 To keep the course honest and the cognitive load survivable, the following are **not** expected outcomes:

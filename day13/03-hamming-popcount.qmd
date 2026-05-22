@@ -1,0 +1,162 @@
+---
+title: "Exercise: Hamming distance via XOR + popcount"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute **Hamming distance** [number of positions at which two equal-length strings differ] on packed 2-bit DNA using a handful of bitwise operations and a single hardware **popcount** [count of 1-bits in an integer; one CPU instruction on every modern x86/ARM chip] — and convince yourself by test that the answer matches a naive byte-by-byte loop on the unpacked strings.
+
+You will write one function:
+
+- `hamming_packed(a: u64, b: u64) -> u32` that returns the Hamming distance between two packed sequences of the same length.
+
+The naive baseline `hamming_naive(a: &[u8], b: &[u8]) -> u32` and the `pack` function from exercise 2 are already provided so you can focus on the kernel.
+
+By the time `cargo test` passes you will have used the XOR operator [`^`](https://doc.rust-lang.org/std/ops/trait.BitXor.html), the right-shift [`>>`](https://doc.rust-lang.org/std/ops/trait.Shr.html), the bitwise OR [`|`](https://doc.rust-lang.org/std/ops/trait.BitOr.html), a hex mask, and the hardware popcount [`u64::count_ones`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones).
+
+## Background
+
+Hamming distance counts the positions at which two equal-length strings differ. For DNA strings, that means counting the bases that disagree:
+
+```text
+ACGTACGT
+ACGTACGA   <- last base differs
+^^^^^^^x
+                Hamming distance = 1
+```
+
+The obvious implementation is a loop that compares one byte at a time and counts mismatches — `O(n)` work with one comparison per base. That is what `hamming_naive` does:
+
+```rust
+a.iter().zip(b.iter()).filter(|(x, y)| x != y).count() as u32
+```
+
+For two **packed** sequences (exercise 2), there is a much faster way. Recall each base occupies exactly 2 bits in the `u64`. XOR [`^`](https://doc.rust-lang.org/std/ops/trait.BitXor.html) has the property that `x ^ x == 0` and `x ^ y != 0` whenever `x != y`. So XORing two packed sequences gives us a `u64` whose 2-bit slots are exactly `00` at every matching position and *non-zero* at every mismatching position.
+
+### Why naive popcount/2 does not work
+
+You might be tempted to write `(a ^ b).count_ones() / 2` — XOR the two sequences, count the 1-bits, divide by 2 because each base is 2 bits wide. **This is wrong.** Look at the encoding A=00, C=01, G=10, T=11 and tabulate `popcount(a ^ b)` for every distinct base pair:
+
+| pair | a (bits) | b (bits) | a ^ b | popcount |
+|:---|:---|:---|:---|---:|
+| A vs C | 00 | 01 | 01 | **1** |
+| A vs G | 00 | 10 | 10 | **1** |
+| A vs T | 00 | 11 | 11 | **2** |
+| C vs G | 01 | 10 | 11 | **2** |
+| C vs T | 01 | 11 | 10 | **1** |
+| G vs T | 10 | 11 | 01 | **1** |
+
+A mismatched base contributes **either 1 or 2 differing bits** depending on which two bases happen to disagree. Dividing the total by 2 gets the right answer on average but is wrong on most specific inputs — e.g. `AAAAAAAA` vs `AAAAAAAC` differ in 1 base, contribute 1 XOR bit, and `1 / 2 == 0`.
+
+### The correct kernel: fold each slot to one bit
+
+The fix is to **fold each 2-bit slot down to a single "any-mismatch" bit** before counting. For a 2-bit slot `xy`, the slot is non-zero iff `x | y` is 1. So if we OR the slot with itself shifted right by 1 and keep only the low bit of each slot, we get a clean one-bit-per-base mismatch indicator:
+
+```rust
+let m = a ^ b;                                       // 2-bit slots: 00 = match, otherwise mismatch
+let folded = (m | (m >> 1)) & 0x5555_5555_5555_5555; // one bit per slot, set iff mismatch
+let dist = folded.count_ones();                      // hardware popcount
+```
+
+The hex constant `0x5555_5555_5555_5555` is `0101...0101` in binary — a mask that picks the **low bit of every 2-bit slot**. (Equivalently: `0x5` is `0101` in binary, and we repeat it 16 times to fill a `u64`.)
+
+That whole kernel is **four bitwise ops + one popcount**, independent of sequence length up to 32. The naive loop is `O(n)` byte comparisons; the packed kernel is `O(1)` instructions. For a 32-mer this is about a 30x speedup, and the gap widens as you batch many comparisons.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day13/ex-hamming-popcount
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A `pack` function (re-implemented locally so the exercise stands alone)
+- A `hamming_naive(a: &[u8], b: &[u8]) -> u32` function (already complete)
+- A `hamming_packed(a: u64, b: u64) -> u32` function with a `// TODO` body
+- A `main` that compares the two implementations
+- A `#[cfg(test)] mod tests` block with five unit tests, including one that calls both `hamming_naive` and `hamming_packed` and asserts they agree on several inputs
+
+Your job: replace the one `TODO` body so that all five tests pass.
+
+You may **not** change the function signatures, the tests, `main`, or the provided helpers. You may add helper functions.
+
+## How to run
+
+From inside `day13/ex-hamming-popcount/`:
+
+```bash
+cargo build           # compile (no dependencies)
+cargo test            # run the tests - these should be failing at first
+cargo run             # compare naive vs packed on a 12-base pair
+```
+
+When all five tests pass, `cargo test` will print:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 - Try the naive /2 first and watch it fail"}
+Write the obvious kernel:
+
+```rust
+(a ^ b).count_ones() / 2
+```
+
+Run `cargo test`. You will see `tests::random_seeds` fail on the pair `(AAAAAAAA, AAAAAAAC)`. Stare at the table in the Background section until you see why: `A vs C` differs in only 1 XOR bit, so the division truncates to 0.
+
+This is a useful failure to feel — it is the same gotcha a real production tool would have to deal with, and you want to remember it for whenever you reach for "popcount divided by something".
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 - Fold each 2-bit slot to one bit"}
+The correct kernel folds each 2-bit XOR slot down to a single "any-mismatch" bit, then counts:
+
+```rust
+let m = a ^ b;
+((m | (m >> 1)) & 0x5555_5555_5555_5555).count_ones()
+```
+
+Step by step:
+
+- `m = a ^ b` — XOR gives a `u64` whose 2-bit slots are 00 at matches, non-zero at mismatches.
+- `m | (m >> 1)` — OR each slot with itself shifted right; now the **low bit** of each slot is 1 iff the slot was non-zero.
+- `& 0x5555_5555_5555_5555` — mask off everything except the low bit of each slot.
+- [`.count_ones()`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones) — hardware popcount.
+
+The hex literal `0x5555_5555_5555_5555` is `0101...0101` in binary. Reading it as 4-bit nibbles, every nibble is `0101`, i.e. the low bit of each pair is set.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 - Why this is fast"}
+The whole kernel is **four bitwise ops + one popcount**, and on x86-64 [`u64::count_ones`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones) compiles to a single `popcnt` instruction. So a 32-base Hamming distance costs about 5 instructions, total, regardless of sequence length. The naive byte-by-byte loop costs ~32 comparisons plus 32 branches plus 32 increments — well over 100 instructions.
+
+This is why every fast read aligner ([BWA](https://bio-bwa.sourceforge.net/), [minimap2](https://github.com/lh3/minimap2)), every k-mer counter ([jellyfish](https://github.com/gmarcais/Jellyfish), [KMC](https://github.com/refresh-bio/KMC)), and every single-cell barcode matcher uses packed 2-bit DNA and a popcount-based mismatch kernel in its hot loop.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn hamming_packed(a: u64, b: u64) -> u32 {
+    let m = a ^ b;
+    ((m | (m >> 1)) & 0x5555_5555_5555_5555).count_ones()
+}
+```
+
+The full reference implementation lives in `day13/ex-hamming-popcount-solution/src/main.rs`. Try not to peek before your own version passes all five tests.
+:::
+
+## Where this leads
+
+- **Barcode whitelist matching.** Single-cell tools ([Cell Ranger](https://www.10xgenomics.com/support/software/cell-ranger), [STARsolo](https://github.com/alexdobin/STAR), [salmon alevin](https://salmon.readthedocs.io/)) match every observed barcode against a whitelist of ~1 million known barcodes, allowing one mismatch. The inner loop is exactly this XOR + fold + popcount kernel on packed `u64` barcodes. The sibling exercise `ex-barcode-whitelist` builds a tiny version of this.
+- **Reverse complement.** The same `u64` representation lets you compute the **reverse complement** [reverse the sequence and swap A<->T, C<->G] of a 32-mer with a constant number of XORs and bit-swaps — no allocation, no per-base loop. See `ex-revcomp-2bit`.
+- **Seed-and-extend aligners.** [BWA](https://bio-bwa.sourceforge.net/) and [minimap2](https://github.com/lh3/minimap2) hash short packed seeds, look them up in an index, and verify candidate alignments with packed-Hamming or a small banded edit-distance. The inner kernel of every short-read aligner you have ever run is a close cousin of the lines you just wrote.

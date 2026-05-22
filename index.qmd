@@ -130,6 +130,19 @@ GPU-aware tensors via the [Burn](https://burn.dev/) framework, with every Rust e
 7. [1-D convolutional motif scanner](day11/06-motif-scanner.qmd)
 8. [Train a promoter classifier](day11/07-promoter-classifier.qmd)
 
+### Day 12 — GPU compute kernels with wgpu
+
+The "how" beneath day 11's "what" — write [WebGPU Shading Language](https://www.w3.org/TR/WGSL/) compute shaders by hand and dispatch them with [`wgpu`](https://docs.rs/wgpu/). Several exercises revisit earlier problems (GC content, reverse complement, pairwise distances) as raw GPU kernels.
+
+0. [Concepts — reference companion to the slides](day12/00-concepts.qmd)
+1. [Quiz: wgpu compute kernels](day12/00a-quiz.qmd)
+2. [Vector add — your first kernel](day12/01-vector-add.qmd)
+3. [SAXPY — uniforms for scalars](day12/02-saxpy.qmd)
+4. [GC content on the GPU (revisit Day 1 / Day 5)](day12/03-gc-content.qmd)
+5. [Reverse complement on the GPU (revisit Day 2)](day12/04-revcomp.qmd)
+6. [Parallel reduction (sum)](day12/05-reduction.qmd)
+7. [Pairwise distance matrix (revisit Day 11 ex 4)](day12/06-pairwise-distance.qmd)
+
 ## Working with the exercises
 
 Each exercise pairs a short `.qmd` walkthrough with one or two real cargo projects:

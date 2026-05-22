@@ -1,0 +1,133 @@
+---
+title: "Exercise: pairwise distance matrix — 2-D dispatch"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute the **`N × N` pairwise Euclidean distance matrix** of `N` `D`-dimensional points on the GPU, the same problem as [day 11 exercise 4](../day11/04-distance-matrix.qmd) — but written as a hand-rolled WGSL kernel rather than a Burn one-liner. The dispatch is 2-D: one thread per output cell.
+
+By the time `cargo test` passes you will have used 2-D workgroups (`@workgroup_size(8, 8)`), 2-D dispatch (`dispatch_workgroups(...)`), per-thread reads of two rows of the input, and seen how a `for` loop over the inner `D` dimension fits naturally in a compute shader.
+
+## Background — the math
+
+For `n` samples in `d` dimensions:
+
+$$
+D_{i,j} \;=\; \sqrt{\sum_{k=0}^{d-1} (x_{i,k} - x_{j,k})^2}
+$$
+
+Naive sequential cost: `O(n² · d)` floating-point ops. For `n = 1024`, `d = 128`: ~1.3 × 10⁸ ops.
+
+On the GPU each output cell `(i, j)` is one thread doing a `d`-element dot product. With `n × n` threads running in parallel, the throughput is `~D` ops per cycle per thread, well-suited to a GPU.
+
+## The shader
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       x:    array<f32>;     // [N, D] flat row-major
+@group(0) @binding(1) var<uniform>             info: Info;
+@group(0) @binding(2) var<storage, read_write> out:  array<f32>;     // [N, N] flat row-major
+
+struct Info { n: u32, d: u32, _pad: vec2<u32> }
+
+@compute @workgroup_size(8, 8)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    let j = gid.y;
+    if (i >= info.n || j >= info.n) { return; }
+    let n = info.n;
+    let d = info.d;
+    var sum: f32 = 0.0;
+    for (var k: u32 = 0u; k < d; k = k + 1u) {
+        let a = x[i * d + k];
+        let b = x[j * d + k];
+        let diff = a - b;
+        sum = sum + diff * diff;
+    }
+    out[i * n + j] = sqrt(sum);
+}
+```
+
+Things to notice:
+
+- **2-D workgroup** — `@workgroup_size(8, 8)` means 64 threads per workgroup, arranged 8×8.
+- **2-D dispatch** — host calls `dispatch_workgroups((n + 7)/8, (n + 7)/8, 1)`.
+- **Two bounds checks** — both `i` and `j` against `n`.
+- **Inner `for` loop over `d`** — each thread does one full dot product. The `d` dimension is sequential within each thread.
+
+The matrix is symmetric (`D[i,j] == D[j,i]`), so you compute every cell *twice*. For real production work you'd compute only the upper triangle and copy to the lower; for clarity we just compute everything.
+
+## The exercise
+
+Open `day12/ex-pairwise-distance/`. The shader is provided. Your job:
+
+1. Compute the correct dispatch counts (2-D ceiling division).
+2. Size the output buffer (`n * n * 4 bytes`).
+3. Read back the flat `Vec<f32>` and reshape it into `[N, N]` for comparison against a CPU reference.
+
+Tests check the diagonal is zero, symmetry, and a handful of classic distances (3-4-5 triangle, square root of 8, etc.).
+
+## How to run
+
+```bash
+cd day12/ex-pairwise-distance
+cargo test
+cargo run --release        # 1024 × 128 random points; CPU vs GPU timing
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — 2-D dispatch math"}
+With `@workgroup_size(8, 8)` and an `N × N` output:
+
+```rust
+let wg_x = (n as u32).div_ceil(8);
+let wg_y = (n as u32).div_ceil(8);
+encoder.dispatch_workgroups(wg_x, wg_y, 1);
+```
+
+Bounds-check **both** axes inside the shader (the `i >= n || j >= n` check above).
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — output buffer sizing"}
+```rust
+let out_bytes = (n * n) as u64 * std::mem::size_of::<f32>() as u64;
+let out_buf = device.create_buffer(&wgpu::BufferDescriptor {
+    label: Some("dist"),
+    size: out_bytes.max(4),
+    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+    mapped_at_creation: false,
+});
+```
+
+After read-back, the staging buffer's bytes cast straight to `&[f32]` via `bytemuck::cast_slice`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — reshape for comparison"}
+The kernel writes row-major: row `i`'s `n` values live at offsets `[i*n .. (i+1)*n]`. To compare against a 2-D reference:
+
+```rust
+let flat: Vec<f32> = ...;            // from the GPU
+fn at(d: &[f32], n: usize, i: usize, j: usize) -> f32 {
+    d[i * n + j]
+}
+assert!((at(&flat, n, 0, 1) - 5.0).abs() < 1e-4);
+```
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day12/ex-pairwise-distance-solution/src/main.rs`. The dispatch is 2-D as in hint 1; output buffer sizing follows hint 2; tests compare the row-major output against a hand-coded CPU reference.
+:::
+
+## Where this leads
+
+- **Compare to the Burn version on day 11 exercise 4.** Burn lets you write the same thing in one line via broadcasting (`x.unsqueeze(1) - x.unsqueeze(0)` etc.). The WGSL version is ~5× longer but gives you full control over memory layout and the chance to fuse extra work into the same kernel (e.g., dropping the `sqrt`, working in squared distances, exploiting symmetry).
+- **Tile the matrix multiply** for production-grade speed: each workgroup loads a small `(8, D)` tile of `x` into shared memory and computes the `8 × 8` block of distances, sharing reads. Modern matmul kernels (cublas, cutlass, Burn's CubeCL) all use this technique. Worth knowing exists; not in the scope of this exercise.
+- **You now have the building blocks** — element-wise (ex 1, 2, 4), reductions (ex 5, 6 — the inner dot product), atomics (ex 3), 2-D dispatch (ex 6). With these four patterns you can write a wide variety of bioinformatics GPU kernels — motif scanners, k-mer counters, alignment scorers, embedding searches.

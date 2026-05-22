@@ -1,0 +1,179 @@
+---
+title: "Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-12 slides. Day 12 takes the GPU out of the high-level tensor framework (Burn, day 11) and puts you face-to-face with its actual programming model: **compute shaders written in WGSL, dispatched by hand via the [`wgpu`](https://docs.rs/wgpu/) Rust crate**.
+
+You met the *result* of GPU work on day 11 (a Burn function generic over `<B: Backend>` runs on CPU or GPU without changing). Today you see the *machinery* — how a Rust function tells a GPU to run code on a buffer of bytes and read the answer back.
+
+## Why bother with raw wgpu when Burn exists?
+
+Two reasons:
+
+1. **Granularity.** Burn gives you tensor operations. If your problem is naturally a tensor op (matrix multiply, conv, reduction), Burn is perfect. If your problem is "for each byte of this 4 GB DNA buffer, do X, and count Y", a hand-written shader is the natural fit — and avoids dragging in Burn's whole abstraction layer.
+2. **Understanding.** Knowing what Burn is doing under the hood — kernels, workgroups, buffer transfers — turns "the GPU is faster" from a black box into a thing you can reason about, optimise, and debug.
+
+In production, most bioinformatics GPU code uses a high-level framework (PyTorch, Burn, JAX). But the high-level framework eventually translates to *exactly the same pipeline* you build by hand today.
+
+## WebGPU and wgpu
+
+**WebGPU** [*a cross-vendor GPU API published by the W3C; works in browsers and natively; the modern replacement for OpenGL/WebGL for compute*] is the standard we are programming against. It exposes a single uniform model on top of Vulkan, Metal, and DirectX 12 — the three vendor APIs that own modern GPU programming.
+
+**[`wgpu`](https://docs.rs/wgpu/)** is the pure-Rust implementation of WebGPU. The same `wgpu` Rust code runs:
+
+- on Linux + an NVIDIA / AMD / Intel discrete GPU (via Vulkan)
+- on a Mac (via Metal)
+- on Windows + a discrete GPU (via DX12 or Vulkan)
+- in a browser (compiled to WebAssembly + WebGPU)
+- on a CPU fallback (slow but works)
+
+→ [WebGPU specification](https://www.w3.org/TR/webgpu/) · [`wgpu` book](https://github.com/sotrh/learn-wgpu)
+
+## The 6-step compute pipeline
+
+Every wgpu compute program — vector add, GC count, motif scanner, transformer attention — has the same six steps. Memorise the shape:
+
+1. **Get an `Adapter`** [*a handle to a physical GPU; you ask wgpu for one matching your power/backend preferences*].
+2. **Open a `Device` + `Queue`** [*the logical interface to the adapter; `Device` creates resources, `Queue` runs commands*].
+3. **Create `Buffer`s** [*GPU-side memory allocations; you decide which are inputs, outputs, or scratch*].
+4. **Compile a shader and build a `ComputePipeline`** [*the compiled WGSL shader, ready to dispatch*].
+5. **Bind buffers to the pipeline via a `BindGroup`** [*tells the shader which buffer each `@binding` refers to*].
+6. **Encode and submit a `Dispatch`** [*tells the GPU "run this pipeline with this many workgroups"*], then read the output buffer back.
+
+The first time you write all six steps it looks like a wall of code. By the third exercise you'll skim past the boilerplate to read the shader, which is where the actual work lives.
+
+## WGSL — the shader language
+
+**WGSL** [*WebGPU Shading Language — a small, Rust-ish C-like language for shaders; type-safe, no pointers, deterministic*] is what the GPU actually executes. Here is the smallest useful compute shader:
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       a: array<f32>;
+@group(0) @binding(1) var<storage, read>       b: array<f32>;
+@group(0) @binding(2) var<storage, read_write> c: array<f32>;
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    if (i >= arrayLength(&c)) { return; }
+    c[i] = a[i] + b[i];
+}
+```
+
+Things to notice:
+
+- `@group(0) @binding(N)` says "this resource is bound by the host at slot N of bind group 0". The Rust side has to match.
+- `var<storage, read>` declares a read-only **storage buffer** (gloss: a large GPU buffer of values).
+- `@compute @workgroup_size(64)` marks the entry point and says "each workgroup is 64 threads".
+- `@builtin(global_invocation_id)` gives every thread a unique 3-D index. For 1-D work you use `gid.x`.
+- The bounds check `if (i >= arrayLength(&c)) { return; }` is necessary because you typically dispatch more threads than you have elements (workgroup count is rounded up).
+
+→ [WGSL specification](https://www.w3.org/TR/WGSL/)
+
+## Workgroups, threads, and dispatch — the indexing model
+
+A **workgroup** [*a group of GPU threads that run together on one SM/compute unit; they can share memory and synchronise*] is the unit of GPU dispatch. You tell the GPU "run this shader, in workgroups of (X, Y, Z), and dispatch (Nx, Ny, Nz) workgroups". The total number of threads is `Nx*X * Ny*Y * Nz*Z`.
+
+For 1-D work over `n` elements with `workgroup_size = 64`:
+
+```rust
+let workgroups = (n + 63) / 64;       // ceiling division
+encoder.dispatch_workgroups(workgroups, 1, 1);
+```
+
+Inside the shader, each thread reads its `global_invocation_id.x` to know which element it handles. The bounds check (`if i >= n`) is what handles the "rounded up" extras.
+
+For 2-D work (e.g. an `[N, N]` distance matrix) you set `@workgroup_size(8, 8)` and dispatch a 2-D grid; each thread uses `gid.x` and `gid.y` as `(row, col)`.
+
+→ [Wikipedia: SIMT execution](https://en.wikipedia.org/wiki/Single_instruction,_multiple_threads)
+
+## Buffer types
+
+| Buffer kind | Rust `BufferUsages` | WGSL declaration | Use for |
+|---|---|---|---|
+| Storage (read-only input) | `STORAGE \| COPY_DST` | `var<storage, read>` | inputs uploaded once, read by many threads |
+| Storage (read-write output) | `STORAGE \| COPY_SRC` | `var<storage, read_write>` | outputs written by threads, copied back to host |
+| Uniform | `UNIFORM \| COPY_DST` | `var<uniform>` | small constants (≤ ~64 KB), broadcast to every thread |
+| Staging | `MAP_READ \| COPY_DST` | (host-only) | host-visible staging buffer for reading results back |
+
+The standard "copy results back to host" pattern is:
+
+1. Shader writes to an on-GPU **storage** buffer.
+2. After dispatch, encode a `copy_buffer_to_buffer` from the storage buffer into a **staging** buffer.
+3. `map_async` the staging buffer; `device.poll(Wait)` to drive the map to completion.
+4. Read the mapped bytes into a `Vec<u8>` (or transmute into `Vec<f32>`, `Vec<u32>`, etc.).
+
+The staging hop is mandatory on most backends — GPU-only buffers cannot be mapped directly into host memory.
+
+## Atomics
+
+For counters (e.g. "how many bases are G or C") you need an **atomic** [*a value that multiple threads can read and update without races, via hardware atomic instructions*]. In WGSL:
+
+```wgsl
+@group(0) @binding(1) var<storage, read_write> count: atomic<u32>;
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    if (i >= arrayLength(&seq)) { return; }
+    let b = seq[i];
+    if (b == 0x47u || b == 0x43u) {            // 'G' or 'C'
+        atomicAdd(&count, 1u);
+    }
+}
+```
+
+Atomics are slower than non-atomic writes (every increment is serialised at the atomic unit). For large counts a *parallel reduction* (exercise 5) is much faster — but atomics are the right tool for sparse counters and histograms.
+
+## Workgroup shared memory
+
+A workgroup can declare a small chunk of **workgroup-shared memory** [*fast on-chip memory shared between all threads in a workgroup; ~tens of kilobytes, used to communicate within the group*]:
+
+```wgsl
+var<workgroup> partial: array<f32, 64>;
+```
+
+This is the basis of efficient parallel reductions: each workgroup loads its slice of the input into shared memory, then performs a tree-shaped reduction within the group, then writes one partial result to global memory. The host then either reduces those partials on the CPU (cheap if there are few workgroups) or runs a second shader pass.
+
+We use shared memory in exercise 5 (parallel reduction).
+
+## Host ↔ device transfers — the cost model
+
+Same lesson as day 11: PCIe is the bottleneck. Two practical rules:
+
+- **Build buffers on the device once; keep them there**, even if you do many kernels in sequence.
+- **Read back only the *result*, not the working data.** A 4 GB input you'll never look at again should not be copied back.
+
+For bioinformatics, the most common shape is:
+
+1. Upload sequence buffer (~hundreds of MB) once.
+2. Run many kernels against it (motif scans, counts, transforms).
+3. Read back only the small result (motif positions, counts).
+
+## Comparison to CUDA, OpenCL, SYCL
+
+| | wgpu / WebGPU | CUDA | OpenCL | SYCL |
+|---|---|---|---|---|
+| Vendor | cross | NVIDIA only | cross | cross |
+| Language | WGSL | CUDA C++ | OpenCL C | C++ |
+| Maturity | new (~2023) | mature (~2007) | mature (~2009) | newer (~2014) |
+| Driver story | ships in browser & Vulkan/Metal/DX | NVIDIA driver only | varies | varies |
+| Bioinformatics use | growing | dominant | shrinking | small |
+
+For maximum performance on NVIDIA hardware in a controlled environment, CUDA still wins. For "I want this to run on every developer machine including my colleague's MacBook", wgpu wins. Burn (day 11) abstracts over both.
+
+→ [Wikipedia: GPGPU](https://en.wikipedia.org/wiki/General-purpose_computing_on_graphics_processing_units)
+
+## Recap
+
+- **wgpu** is the Rust implementation of the **WebGPU** standard — write once, run on Vulkan / Metal / DX12 / browser.
+- Every compute program has the same 6 steps: adapter → device → buffers → pipeline → bind group → dispatch.
+- Shaders are written in **WGSL** — small, type-safe, Rust-ish.
+- Threads are organised into **workgroups**; you dispatch enough workgroups to cover your data and bounds-check inside the shader.
+- **Atomics** for counters; **workgroup shared memory** for fast reductions; **storage** vs **uniform** buffers for inputs.
+- Day 11's Burn does all of this under the hood — today you see it directly.

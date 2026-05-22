@@ -1,0 +1,141 @@
+---
+title: "Exercise: Reverse-complement on 2-bit DNA"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Implement reverse-complement [the biological operation: reverse the sequence, then swap A with T and C with G] on a **packed 2-bit** DNA sequence stored in a `u64`. You will write two small functions:
+
+1. `reverse_pairs(x: u64, len: usize) -> u64` — reverse the order of the 2-bit pairs (not individual bits).
+2. `revcomp(x: u64, len: usize) -> u64` — complement, then reverse the pairs.
+
+By the end you will have done the two-step recipe at the heart of every fast aligner's reverse-complement routine: a single XOR for the complement, plus a pair-reversal for the reverse.
+
+## Background
+
+DNA is double-stranded. The two strands run antiparallel and pair A↔T, C↔G. The **reverse-complement** of a read is what the *other* strand looks like, read 5′→3′. Aligners need it because a read can map equally well to either strand — they index one strand and check both query orientations.
+
+On unpacked bytes the operation is obvious: walk the sequence backwards, swap each base. On a **2-bit packed** [each base stored as 2 bits inside one integer, four bases per byte] `u64` it becomes two pure bit operations:
+
+- **Complement.** Under the mapping `A=00, C=01, G=10, T=11`, the complement of every base is its bitwise NOT: `~A = ~00 = 11 = T`, `~C = ~01 = 10 = G`, `~G = ~10 = 01 = C`, `~T = ~11 = 00 = A`. So one XOR with `0b11_11_..._11` complements every base at once. We only flip the low `2*len` bits, so a [mask](https://en.wikipedia.org/wiki/Mask_(computing)) [an integer used to select certain bits via AND/OR/XOR] confines the XOR to the bases that exist.
+- **Reverse.** We have to reverse the *2-bit pairs*, not the individual bits — flipping individual bits would scramble each base into something nonsensical (e.g. `A=00` would become `00` still, but `C=01` would become `10=G`).
+
+For `len = 32` the mask is the whole `u64` (`u64::MAX`); the `1 << 64` shift would overflow, so the code special-cases it. Production implementations skip the loop entirely and use [`u64::swap_bytes`](https://doc.rust-lang.org/std/primitive.u64.html#method.swap_bytes) plus a couple of mask-and-shift tricks to reverse all 32 pairs in ~4 instructions; the loop here is the readable version of the same idea.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day13/ex-revcomp-2bit
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- Helper functions `pack` and `unpack` (same as exercise 2) so this exercise stands alone
+- Two functions with `// TODO` bodies: `reverse_pairs` and `revcomp`
+- A `main` that prints `ACGTACGT` and its reverse-complement
+- A `#[cfg(test)] mod tests` block with five unit tests
+
+Your job: replace the two `TODO` bodies so that all five tests pass.
+
+You may **not** change the function signatures, the tests, `pack`, `unpack`, or `main`.
+
+## How to run
+
+From inside `day13/ex-revcomp-2bit/`:
+
+```bash
+cargo build           # compile
+cargo test            # run the tests — these should be failing at first
+cargo run             # print ACGTACGT and its reverse-complement
+```
+
+When all five tests pass, `cargo test` will print:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — Reversing 2-bit pairs"}
+The trick is to extract each pair with a shift and an AND, then place it at the mirrored position with another shift:
+
+```rust
+let pair = (x >> (2 * i)) & 0b11;     // pull out the pair at index i
+result |= pair << (2 * (len - 1 - i)); // put it at index (len-1-i)
+```
+
+[`>>`](https://doc.rust-lang.org/std/ops/trait.Shr.html) is right shift, [`<<`](https://doc.rust-lang.org/std/ops/trait.Shl.html) is left shift, [`&`](https://doc.rust-lang.org/std/ops/trait.BitAnd.html) is bitwise AND, [`|=`](https://doc.rust-lang.org/std/ops/trait.BitOrAssign.html) is "OR this into the accumulator". Loop `i` from 0 to `len` and you are done.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — Why XOR with all-1s gives the complement"}
+Under our mapping the complement of every base is just the two-bit NOT:
+
+```
+A = 00 -> NOT -> 11 = T
+C = 01 -> NOT -> 10 = G
+G = 10 -> NOT -> 01 = C
+T = 11 -> NOT -> 00 = A
+```
+
+[XOR](https://en.wikipedia.org/wiki/Exclusive_or) [a bitwise operation that returns 1 only where the two inputs differ] with `1` flips a bit. XOR with `0b11` flips both bits of one base. XOR with `0b1111...11` of length `2 * len` flips every base in the packed sequence at once. Bits *above* `2 * len` should stay zero, which is why we mask:
+
+```rust
+let mask = if len == 32 { u64::MAX } else { (1u64 << (2 * len)) - 1 };
+let comp = x ^ mask;
+```
+
+The `len == 32` special-case is there because `1u64 << 64` is undefined behaviour in C and a panic in Rust debug builds; for the full-width case we just use [`u64::MAX`](https://doc.rust-lang.org/std/primitive.u64.html#associatedconstant.MAX) directly.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Putting it together"}
+`revcomp` is two lines and a call: complement, then pair-reverse. You do not need any extra state.
+
+If a test fails on `ACGT`, print intermediate values:
+
+```rust
+println!("x    = {:0width$b}", x,    width = 2*len);
+println!("comp = {:0width$b}", comp, width = 2*len);
+println!("rc   = {:0width$b}", rc,   width = 2*len);
+```
+
+The [`{:0Nb}`](https://doc.rust-lang.org/std/fmt/) format prints the integer in binary, padded with zeros to width N, so you can see the pairs line up.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn reverse_pairs(x: u64, len: usize) -> u64 {
+    let mut result = 0u64;
+    for i in 0..len {
+        let pair = (x >> (2 * i)) & 0b11;
+        result |= pair << (2 * (len - 1 - i));
+    }
+    result
+}
+
+fn revcomp(x: u64, len: usize) -> u64 {
+    let mask = if len == 32 { u64::MAX } else { (1u64 << (2 * len)) - 1 };
+    let comp = x ^ mask;
+    reverse_pairs(comp, len)
+}
+```
+
+The full reference implementation lives in `day13/ex-revcomp-2bit-solution/src/main.rs`. Try not to peek before your own version passes all five tests.
+:::
+
+## Where this leads
+
+- **Barcode whitelist matching.** Exercise 5 takes packed barcodes and finds the closest whitelist entry by Hamming distance — exactly the kind of operation that becomes cheap when both the query and the targets live in `u32`s.
+- **Canonical k-mers.** K-mer counters like [jellyfish](https://github.com/gmarcais/Jellyfish) and [KMC](https://github.com/refresh-bio/KMC) store the lexicographically smaller of `(kmer, revcomp(kmer))` so both strands collapse to one entry. That uses exactly the `revcomp` you just wrote, called once per k-mer.
+- **Strand-aware seeding.** Fast aligners ([BWA](https://bio-bwa.sourceforge.net/), [minimap2](https://github.com/lh3/minimap2)) hash *both* orientations of each read into their seed index. Computing the reverse-complement in a handful of cycles per read instead of one allocation plus a loop matters when you have 10⁹ reads.
+- **Faster reversals.** The loop version here is O(len). The textbook bit-twiddling version uses [`u64::swap_bytes`](https://doc.rust-lang.org/std/primitive.u64.html#method.swap_bytes) followed by two mask-and-shift swaps and runs in constant time regardless of length. See [Bit Twiddling Hacks](https://graphics.stanford.edu/~seander/bithacks.html#ReverseParallel) for the parallel reversal pattern.

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 360" font-family="system-ui, -apple-system, sans-serif">
+  <title>One byte, eight booleans — the SAM/BAM read flag</title>
+
+  <defs>
+    <marker id="arrFlags" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="30" text-anchor="middle" font-size="20" font-weight="600" fill="#111">One byte, eight booleans — the SAM/BAM read flag</text>
+
+  <!--
+    8 cells. Cell width 90, height 50. Total = 720. Start x = 190.
+    Bit positions are left-to-right: 7,6,5,4,3,2,1,0.
+    Labels above (with bit-position number), bit value inside, flag name below.
+  -->
+
+  <!-- bit positions label above each cell -->
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#888" text-anchor="middle">
+    <text x="235" y="78">bit 7</text>
+    <text x="325" y="78">bit 6</text>
+    <text x="415" y="78">bit 5</text>
+    <text x="505" y="78">bit 4</text>
+    <text x="595" y="78">bit 3</text>
+    <text x="685" y="78">bit 2</text>
+    <text x="775" y="78">bit 1</text>
+    <text x="865" y="78">bit 0</text>
+  </g>
+
+  <!-- The 8 cells; set bits 0, 1, 4 (blue), others light grey -->
+  <g stroke-width="1.2">
+    <!-- bit 7 (x=190): 0 -->
+    <rect x="190" y="88" width="90" height="50" fill="#f5f5f5" stroke="#888"/>
+    <!-- bit 6 (x=280): 0 -->
+    <rect x="280" y="88" width="90" height="50" fill="#f5f5f5" stroke="#888"/>
+    <!-- bit 5 (x=370): 0 -->
+    <rect x="370" y="88" width="90" height="50" fill="#f5f5f5" stroke="#888"/>
+    <!-- bit 4 (x=460): 1 -->
+    <rect x="460" y="88" width="90" height="50" fill="#bbdefb" stroke="#1976d2"/>
+    <!-- bit 3 (x=550): 0 -->
+    <rect x="550" y="88" width="90" height="50" fill="#f5f5f5" stroke="#888"/>
+    <!-- bit 2 (x=640): 0 -->
+    <rect x="640" y="88" width="90" height="50" fill="#f5f5f5" stroke="#888"/>
+    <!-- bit 1 (x=730): 1 -->
+    <rect x="730" y="88" width="90" height="50" fill="#bbdefb" stroke="#1976d2"/>
+    <!-- bit 0 (x=820): 1 -->
+    <rect x="820" y="88" width="90" height="50" fill="#bbdefb" stroke="#1976d2"/>
+  </g>
+
+  <!-- Bit values centred in cells -->
+  <g font-family="ui-monospace, monospace" font-size="24" font-weight="600" text-anchor="middle">
+    <text x="235" y="122" fill="#888">0</text>
+    <text x="325" y="122" fill="#888">0</text>
+    <text x="415" y="122" fill="#888">0</text>
+    <text x="505" y="122" fill="#0d47a1">1</text>
+    <text x="595" y="122" fill="#888">0</text>
+    <text x="685" y="122" fill="#888">0</text>
+    <text x="775" y="122" fill="#0d47a1">1</text>
+    <text x="865" y="122" fill="#0d47a1">1</text>
+  </g>
+
+  <!-- Flag names below each cell -->
+  <g font-family="ui-monospace, monospace" font-size="11" fill="#111" text-anchor="middle">
+    <text x="235" y="156">second_in_pair</text>
+    <text x="325" y="156">first_in_pair</text>
+    <text x="415" y="156">mate_reverse</text>
+    <text x="505" y="156" fill="#0d47a1" font-weight="600">reverse</text>
+    <text x="595" y="156">mate_unmapped</text>
+    <text x="685" y="156">unmapped</text>
+    <text x="775" y="156" fill="#0d47a1" font-weight="600">proper</text>
+    <text x="865" y="156" fill="#0d47a1" font-weight="600">paired</text>
+  </g>
+
+  <!-- Flag-value summary -->
+  <text x="550" y="200" text-anchor="middle" font-family="ui-monospace, monospace" font-size="16" fill="#111">flags = 0b00010011 = 0x13 = 19</text>
+
+  <!-- Side annotation: test bit 4 -->
+  <g transform="translate(170,232)">
+    <rect x="0" y="0" width="760" height="74" rx="8" ry="8" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <text x="380" y="26" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#7a3d00">
+      Test bit 4 (reverse strand):
+    </text>
+    <text x="380" y="50" text-anchor="middle" font-family="ui-monospace, monospace" font-size="14" fill="#7a3d00">
+      flags &amp; 0b00010000 != 0   →   true
+    </text>
+    <text x="380" y="68" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#7a3d00">
+      Mask isolates one bit; AND with non-zero result means the flag is set.
+    </text>
+  </g>
+
+  <!-- Arrow from bit 4 cell down to the annotation -->
+  <line x1="505" y1="160" x2="505" y2="226" stroke="#d97706" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrFlags)"/>
+
+  <text x="550" y="338" text-anchor="middle" font-size="13" fill="#555">Eight on/off flags share a single byte instead of eight separate booleans.</text>
+</svg>

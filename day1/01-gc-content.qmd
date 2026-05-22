@@ -132,4 +132,5 @@ The pieces of the topic we deliberately leave for later, so you know they are co
 
 - **Handling `N` bases and other non-standard letters.** Real sequences contain `N`. We will define a proper `Nucleotide` enum on day 3 and decide there how `N` should affect aggregate statistics.
 - **Iterator style.** The same function written as `seq.iter().filter(...).count()` is more idiomatic and equally efficient. We will rewrite it that way on day 3, alongside `map`, `fold`, and friends.
+- **Parallel and GPU revisits.** [Day 5 exercise 3](../day5/03-parallel-gc.qmd) rewrites this with `rayon::par_iter` for multicore CPUs; [day 12 exercise 3](../day12/03-gc-content.qmd) rewrites it again as a `wgpu` compute shader for the GPU. Three implementations, same problem.
 - **Reading sequences from FASTA files** (including gzip-compressed ones, and without loading the whole genome into RAM). We will do this with `noodles-fasta` on day 4.

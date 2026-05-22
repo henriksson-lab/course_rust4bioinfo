@@ -1,0 +1,125 @@
+---
+title: "Exercise: GC content on the GPU"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Count the number of G and C bases in a `Vec<u8>` of ASCII DNA on the GPU, using a single **atomic counter**. Same problem as [day 1 exercise 1](../day1/01-gc-content.qmd) (single read) and [day 5 exercise 3](../day5/03-parallel-gc.qmd) (parallel CPU with `rayon`) — now on the GPU.
+
+By the time `cargo test` passes you will have used WGSL `atomic<u32>` and `atomicAdd`, packed `u8`s into `u32` storage buffers (WGSL has no `u8`), and re-felt the joy of comparing the same problem solved three different ways.
+
+## Background
+
+WGSL **does not have a `u8` type** — the smallest scalar is `u32`. The standard pattern: pack four ASCII bytes into one `u32` on the host, then unpack inside the shader:
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       seq:   array<u32>;   // packed bytes
+@group(0) @binding(1) var<uniform>             info:  Info;         // length in bytes
+@group(0) @binding(2) var<storage, read_write> count: atomic<u32>;
+
+struct Info { n_bytes: u32, _pad: vec3<u32> }
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let byte_index = gid.x;
+    if (byte_index >= info.n_bytes) { return; }
+    let word = seq[byte_index / 4u];
+    let shift = (byte_index & 3u) * 8u;
+    let b = (word >> shift) & 0xffu;
+    if (b == 0x47u || b == 0x43u) {              // 'G' = 0x47, 'C' = 0x43
+        atomicAdd(&count, 1u);
+    }
+}
+```
+
+Things to notice:
+
+- One thread per byte; the thread reads the right byte by unpacking the right `u32`.
+- The "is G or C" check is two equality tests OR'd via the `||` short-circuit.
+- `atomicAdd` makes the increment race-free; without it concurrent threads would lose updates.
+
+## Why atomics — and why they are slow
+
+Every thread that finds a G or C does `atomicAdd(&count, 1u)`. The atomic unit on the GPU serialises those updates. For DNA that is ~50% GC, half the threads contend on one counter — this *works* but doesn't scale.
+
+For a fast GC counter on truly huge data, the right pattern is a **parallel reduction** (exercise 5): each workgroup computes its own per-block count in shared memory, writes one number out, and the host (or a second pass) sums those. We use the atomic version here because the code is short and the problem is small enough that contention isn't dominant.
+
+## The exercise
+
+Open `day12/ex-gc-content/`. The wgpu plumbing and the shader are provided. Your job:
+
+1. Pack the input `&[u8]` into a `Vec<u32>` so the shader can index into it.
+2. Bind it to the storage buffer; bind the length to the uniform; dispatch.
+
+Both helpers are short. The reference CPU implementation (a single Rust `for` loop) is included so the tests can assert agreement on several random DNA strings.
+
+You may **not** change the shader.
+
+## How to run
+
+```bash
+cd day12/ex-gc-content
+cargo test
+cargo run --release          # prints CPU vs GPU count for a 1 MB random DNA buffer
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — packing bytes into u32"}
+WGSL has no `u8`; the smallest storage element is `u32`. To upload a `&[u8]` you bundle four bytes per `u32`, little-endian:
+
+```rust
+fn pack_bytes(bytes: &[u8]) -> Vec<u32> {
+    let n_words = bytes.len().div_ceil(4);
+    let mut out = vec![0u32; n_words];
+    for (i, b) in bytes.iter().enumerate() {
+        out[i / 4] |= (*b as u32) << ((i % 4) * 8);
+    }
+    out
+}
+```
+
+Match this on the shader side: `seq[byte_index / 4u]` then `>> ((byte_index & 3u) * 8u)` then mask with `0xffu`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — dispatch by byte count, not word count"}
+Dispatch enough workgroups to cover one thread per *byte*, not per `u32` word:
+
+```rust
+let workgroups = (n_bytes as u32).div_ceil(64);
+encoder.dispatch_workgroups(workgroups, 1, 1);
+```
+
+The shader's bounds check uses `info.n_bytes`, the original byte length.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — initialising the atomic counter"}
+The output `count` buffer is read-write storage but starts at 0:
+
+```rust
+let count_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    label: Some("count"),
+    contents: bytemuck::bytes_of(&0u32),
+    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC | wgpu::BufferUsages::COPY_DST,
+});
+```
+
+After dispatch you copy it into a 4-byte staging buffer and read one `u32`.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day12/ex-gc-content-solution/src/main.rs`. The packing helper is as in hint 1; dispatch uses the byte count from hint 2; the count buffer is initialised to `0u32` as in hint 3.
+:::
+
+## Where this leads
+
+- **Compare your three implementations:** the day-1 Rust `for` loop, the day-5 `rayon::par_iter` version, and today's WGSL kernel. On a 1 MB sequence the CPU loop is the fastest of the three because the GPU's transfer overhead dominates. Try with a 100 MB sequence on real hardware: the GPU pulls ahead, but only after the data is already on the device.
+- **Exercise 5 (reduction)** shows the *fast* GPU way to compute a count like this — workgroup-tree reduction instead of a single atomic, with ~100× the contention-free throughput.

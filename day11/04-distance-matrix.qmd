@@ -156,3 +156,4 @@ The full reference is in `day11/ex-distance-matrix-solution/src/main.rs`.
 - **k-mer-based sample distances**: compute k-mer count vectors first (one row per sample), then call `pairwise_l2` — gives a phylogeny-friendly distance matrix.
 - **Why GPUs matter here**: for `N = 10 000` samples in `D = 1000` dimensions you compute `10⁸` differences and `10⁸` squares. CPU: ~5 s. GPU: ~50 ms.
 - **The same broadcast pattern** scales to attention (`[N, N]` from `[N, D]` queries and keys) — modern sequence models like Enformer compute exactly this kind of `[N, N]` matrix at every layer.
+- **Day 12 exercise 6** redoes this kernel by hand in WGSL — same problem, with the broadcast trick unrolled into an explicit `for k in 0..D` inside a 2-D dispatched compute shader. Compare the two implementations: Burn is shorter; the hand-rolled WGSL gives you full control over memory layout and the chance to exploit symmetry.

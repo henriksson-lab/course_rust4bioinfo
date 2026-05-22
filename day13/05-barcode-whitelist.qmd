@@ -1,0 +1,151 @@
+---
+title: "Exercise: Single-cell barcode whitelist matching"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Given a small whitelist [a known list of legal cell barcodes shipped with the kit] of 16-bp DNA barcodes and a list of *observed* barcodes from a (toy) single-cell run, find the closest whitelist entry for each observed barcode.
+
+"Closest" means **minimum Hamming distance** [the number of positions at which two equal-length strings differ]. If the minimum distance is greater than 2, report "no match".
+
+You will write two functions:
+
+1. `hamming16(a: u32, b: u32) -> u32` — Hamming distance on two packed 16-bp barcodes, using the XOR + popcount [count of 1-bits, hardware instruction on every modern CPU] trick from exercise 3.
+2. `closest(query: u32, whitelist: &[u32], max_d: u32) -> Option<(usize, u32)>` — linear scan over the whitelist returning the best `(index, distance)` if any whitelist entry is within `max_d`.
+
+## Background
+
+Droplet-based single-cell methods ([10x Chromium](https://www.10xgenomics.com/instruments/chromium-x-series), [Drop-seq](https://mccarrolllab.org/dropseq/), [inDrops](https://1cell-bio.com/indrops/)) tag every transcript from one cell with a short DNA **cell barcode** [a sequence prepended to each read that identifies which droplet/cell the read came from] so reads from millions of cells can be sequenced in one pool and then sorted by software. The barcode-to-cell mapping is reconstructed by matching every read's barcode against a **whitelist** — the set of barcodes the kit could possibly have produced. For 10x v3 chemistry the whitelist is the famous "[3M-february-2018.txt](https://kb.10xgenomics.com/hc/en-us/articles/115004506263)" with about 6.7 million entries.
+
+Because sequencing makes mistakes (≈0.1–1 % per base), an exact match is not enough — about 1 read in 6 has at least one barcode error and would be discarded. So aligners do **error-tolerant** matching: accept the closest whitelist entry within Hamming distance 1 (and sometimes 2).
+
+For one barcode against one whitelist entry, the kernel [the innermost cheapest operation in a hot loop] is the same two-instruction trick from exercise 3: XOR and popcount. The packed representation puts a 16-bp barcode into a `u32`, so the whole whitelist is just `Vec<u32>` — 27 MB for 6.7 million entries.
+
+In this exercise the whitelist has 4 entries, so a linear scan is plenty fast. Production code (e.g. [STARsolo](https://github.com/alexdobin/STAR), [salmon alevin](https://salmon.readthedocs.io/), [Cell Ranger](https://www.10xgenomics.com/support/software/cell-ranger)) precomputes a lookup table of every Hamming-1 neighbour of every whitelist entry so a query is just a hash lookup — but the inner Hamming kernel is what you are about to write.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day13/ex-barcode-whitelist
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- A `pack16` helper that packs a 16-bp string into a `u32` (similar to exercise 2 but for a fixed 16-bp length)
+- Two functions with `// TODO` bodies: `hamming16` and `closest`
+- A `main` that prints how three sample reads match against a 4-entry whitelist
+- A `#[cfg(test)] mod tests` block with five unit tests
+
+Your job: replace the two `TODO` bodies so that all five tests pass.
+
+You may **not** change the function signatures, the tests, `pack16`, or `main`. You may add helper functions.
+
+## How to run
+
+From inside `day13/ex-barcode-whitelist/`:
+
+```bash
+cargo build           # compile
+cargo test            # run the tests — these should be failing at first
+cargo run             # print how the three sample reads match
+```
+
+When all five tests pass, `cargo test` will print:
+
+```
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — Hamming distance on packed barcodes"}
+This is the same SWAR [SIMD-within-a-register: doing N small operations in parallel inside one wide integer] trick as exercise 3, scaled down to `u32`. XOR makes the 2-bit slot at each mismatched base non-zero. Under the encoding A=00, C=01, G=10, T=11 a mismatched pair can differ in 1 *or* 2 bits (e.g. T=11 vs G=10 differ in only 1 bit), so you cannot just popcount and divide.
+
+Instead, fold each 2-bit slot down to a single "any-mismatch" bit by ORing its two halves together, mask to one bit per slot, then [`count_ones`](https://doc.rust-lang.org/std/primitive.u32.html#method.count_ones):
+
+```rust
+let m = a ^ b;
+((m | (m >> 1)) & 0x5555_5555).count_ones()
+```
+
+The constant `0x5555_5555` is `0101_0101_0101_0101_0101_0101_0101_0101` in binary — one selector bit per 2-bp slot. Three instructions on x86-64: `xor`, `or`+`shr`+`and` (fused), `popcnt`.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — Tracking the best match"}
+The classic minimum-tracking loop pattern:
+
+```rust
+let mut best: Option<(usize, u32)> = None;
+for (i, &w) in whitelist.iter().enumerate() {
+    let d = hamming16(query, w);
+    match best {
+        None => best = Some((i, d)),
+        Some((_, b)) if d < b => best = Some((i, d)),
+        _ => {}
+    }
+}
+```
+
+[`Option<(usize, u32)>`](https://doc.rust-lang.org/std/option/) starts empty; the first iteration always replaces it; subsequent iterations only replace when strictly better, so ties keep the *earlier* index.
+
+After the loop, check whether the best distance is within `max_d`:
+
+```rust
+match best {
+    Some((i, d)) if d <= max_d => Some((i, d)),
+    _ => None,
+}
+```
+
+You could also use [`Iterator::min_by_key`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.min_by_key) plus [`enumerate`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.enumerate); both are correct.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — Why max_d, why 2?"}
+A whitelist with N entries on 16-bp barcodes covers `N + N*48` total queries that round-trip to a unique whitelist entry under Hamming-1 (each barcode has 48 = 16 positions × 3 alternative bases at distance 1). Allowing distance 2 explodes this to roughly `N * 1000`, with many collisions — two different whitelist entries can be Hamming-2 neighbours of the same query, and the query then has no unique parent. Real pipelines therefore default to **distance 1** and only use distance 2 as an opt-in fallback for low-quality positions.
+
+Here we use `max_d = 2` in the demo so the "no match" branch is hit by the deliberately garbage `NNN...` read (which packs to all-A, distance 12 from the nearest whitelist entry).
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn hamming16(a: u32, b: u32) -> u32 {
+    let m = a ^ b;
+    ((m | (m >> 1)) & 0x5555_5555).count_ones()
+}
+
+fn closest(query: u32, whitelist: &[u32], max_d: u32) -> Option<(usize, u32)> {
+    let mut best: Option<(usize, u32)> = None;
+    for (i, &w) in whitelist.iter().enumerate() {
+        let d = hamming16(query, w);
+        match best {
+            None => best = Some((i, d)),
+            Some((_, b)) if d < b => best = Some((i, d)),
+            _ => {}
+        }
+    }
+    match best {
+        Some((i, d)) if d <= max_d => Some((i, d)),
+        _ => None,
+    }
+}
+```
+
+The full reference implementation lives in `day13/ex-barcode-whitelist-solution/src/main.rs`. Try not to peek before your own version passes all five tests.
+:::
+
+## Where this leads
+
+- **Scaling to 6.7 M entries.** A linear scan of 6.7 M `u32`s per read is ~6.7 M cycles ≈ 2 ms per read; with 10⁹ reads in a run that is 23 days of CPU. The standard fix is to precompute every Hamming-1 neighbour of every whitelist entry into a [`HashMap<u32, u32>`](https://doc.rust-lang.org/std/collections/struct.HashMap.html); a query is then one hash lookup. See the [`umi-tools` whitelist](https://github.com/CGATOxford/UMI-tools) and the [`alevin-fry` permit-list](https://github.com/COMBINE-lab/alevin-fry) docs.
+- **UMI [unique molecular identifier — short random tag distinguishing different transcripts from the same cell] collapsing.** Same kernel applied at a different layer: for one cell, group reads with Hamming-distance-1 UMIs together to undo PCR duplication.
+- **Trie/automaton approaches.** Tools like [STARsolo](https://github.com/alexdobin/STAR) use a [trie](https://en.wikipedia.org/wiki/Trie) [a tree where each level encodes one position of the string, used for fast prefix lookup] for sub-millisecond whitelist matching when the precomputed table would be too large.
+- **Quality-weighted matching.** Real callers do not treat every position equally — a mismatch at a Q10 [Phred quality 10, i.e. 10 % error rate] base is much less surprising than at Q40. Replace `count_ones` with a per-position quality-weighted sum and you have a likelihood-based matcher; see the [Cell Ranger barcode correction algorithm](https://kb.10xgenomics.com/hc/en-us/articles/115003822406).

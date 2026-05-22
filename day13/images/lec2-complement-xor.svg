@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 360" font-family="system-ui, -apple-system, sans-serif">
+  <title>Complement = XOR with all-ones</title>
+
+  <text x="550" y="30" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Complement = XOR with all-ones</text>
+
+  <!--
+    Three rows of 16 bits, geometry matching figures 7/8.
+    Cell width 50, start x=150. y positions: 70, 130, 220.
+  -->
+
+  <!-- Bit-position labels -->
+  <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+    <text x="175" y="62">15</text>
+    <text x="225" y="62">14</text>
+    <text x="275" y="62">13</text>
+    <text x="325" y="62">12</text>
+    <text x="375" y="62">11</text>
+    <text x="425" y="62">10</text>
+    <text x="475" y="62">9</text>
+    <text x="525" y="62">8</text>
+    <text x="575" y="62">7</text>
+    <text x="625" y="62">6</text>
+    <text x="675" y="62">5</text>
+    <text x="725" y="62">4</text>
+    <text x="775" y="62">3</text>
+    <text x="825" y="62">2</text>
+    <text x="875" y="62">1</text>
+    <text x="925" y="62">0</text>
+  </g>
+
+  <!-- Row 1: packed ACGTACGT = 1110_0100_1110_0100 -->
+  <text x="50" y="92" font-family="ui-monospace, monospace" font-size="13" fill="#111">ACGTACGT</text>
+  <g stroke-width="1" stroke="#888">
+    <rect x="150" y="70" width="50" height="36" fill="#fde0e0"/>
+    <rect x="200" y="70" width="50" height="36" fill="#fde0e0"/>
+    <rect x="250" y="70" width="50" height="36" fill="#fff3cd"/>
+    <rect x="300" y="70" width="50" height="36" fill="#fff3cd"/>
+    <rect x="350" y="70" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="400" y="70" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="450" y="70" width="50" height="36" fill="#e8f5e9"/>
+    <rect x="500" y="70" width="50" height="36" fill="#e8f5e9"/>
+    <rect x="550" y="70" width="50" height="36" fill="#fde0e0"/>
+    <rect x="600" y="70" width="50" height="36" fill="#fde0e0"/>
+    <rect x="650" y="70" width="50" height="36" fill="#fff3cd"/>
+    <rect x="700" y="70" width="50" height="36" fill="#fff3cd"/>
+    <rect x="750" y="70" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="800" y="70" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="850" y="70" width="50" height="36" fill="#e8f5e9"/>
+    <rect x="900" y="70" width="50" height="36" fill="#e8f5e9"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="175" y="95">1</text>
+    <text x="225" y="95">1</text>
+    <text x="275" y="95">1</text>
+    <text x="325" y="95">0</text>
+    <text x="375" y="95">0</text>
+    <text x="425" y="95">1</text>
+    <text x="475" y="95">0</text>
+    <text x="525" y="95">0</text>
+    <text x="575" y="95">1</text>
+    <text x="625" y="95">1</text>
+    <text x="675" y="95">1</text>
+    <text x="725" y="95">0</text>
+    <text x="775" y="95">0</text>
+    <text x="825" y="95">1</text>
+    <text x="875" y="95">0</text>
+    <text x="925" y="95">0</text>
+  </g>
+
+  <!-- Row 2: XOR with all-1s -->
+  <text x="50" y="152" font-family="ui-monospace, monospace" font-size="18" font-weight="600" fill="#1976d2">XOR</text>
+  <text x="106" y="152" font-family="ui-monospace, monospace" font-size="13" fill="#111">all-1s</text>
+  <g stroke-width="1" stroke="#888">
+    <rect x="150" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="200" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="250" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="300" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="350" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="400" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="450" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="500" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="550" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="600" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="650" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="700" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="750" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="800" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="850" y="130" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="900" y="130" width="50" height="36" fill="#e3f2fd"/>
+  </g>
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#0d47a1">
+    <text x="175" y="155">1</text>
+    <text x="225" y="155">1</text>
+    <text x="275" y="155">1</text>
+    <text x="325" y="155">1</text>
+    <text x="375" y="155">1</text>
+    <text x="425" y="155">1</text>
+    <text x="475" y="155">1</text>
+    <text x="525" y="155">1</text>
+    <text x="575" y="155">1</text>
+    <text x="625" y="155">1</text>
+    <text x="675" y="155">1</text>
+    <text x="725" y="155">1</text>
+    <text x="775" y="155">1</text>
+    <text x="825" y="155">1</text>
+    <text x="875" y="155">1</text>
+    <text x="925" y="155">1</text>
+  </g>
+
+  <!-- Horizontal rule -->
+  <line x1="150" y1="184" x2="950" y2="184" stroke="#333" stroke-width="1.5"/>
+
+  <!-- Row 3: result = 0001_1011_0001_1011 -->
+  <text x="50" y="242" font-family="ui-monospace, monospace" font-size="13" fill="#111">TGCATGCA</text>
+  <g stroke-width="1" stroke="#888">
+    <!-- bits 15,14 = 0,0 -> A green -->
+    <rect x="150" y="220" width="50" height="36" fill="#e8f5e9"/>
+    <rect x="200" y="220" width="50" height="36" fill="#e8f5e9"/>
+    <!-- bits 13,12 = 0,1 -> C blue -->
+    <rect x="250" y="220" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="300" y="220" width="50" height="36" fill="#e3f2fd"/>
+    <!-- bits 11,10 = 1,0 -> G orange -->
+    <rect x="350" y="220" width="50" height="36" fill="#fff3cd"/>
+    <rect x="400" y="220" width="50" height="36" fill="#fff3cd"/>
+    <!-- bits 9,8 = 1,1 -> T red -->
+    <rect x="450" y="220" width="50" height="36" fill="#fde0e0"/>
+    <rect x="500" y="220" width="50" height="36" fill="#fde0e0"/>
+    <!-- bits 7,6 = 0,0 -> A green -->
+    <rect x="550" y="220" width="50" height="36" fill="#e8f5e9"/>
+    <rect x="600" y="220" width="50" height="36" fill="#e8f5e9"/>
+    <!-- bits 5,4 = 0,1 -> C blue -->
+    <rect x="650" y="220" width="50" height="36" fill="#e3f2fd"/>
+    <rect x="700" y="220" width="50" height="36" fill="#e3f2fd"/>
+    <!-- bits 3,2 = 1,0 -> G orange -->
+    <rect x="750" y="220" width="50" height="36" fill="#fff3cd"/>
+    <rect x="800" y="220" width="50" height="36" fill="#fff3cd"/>
+    <!-- bits 1,0 = 1,1 -> T red -->
+    <rect x="850" y="220" width="50" height="36" fill="#fde0e0"/>
+    <rect x="900" y="220" width="50" height="36" fill="#fde0e0"/>
+  </g>
+  <!-- Result bits: 0001_1011_0001_1011 -->
+  <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle" fill="#111">
+    <text x="175" y="245">0</text>
+    <text x="225" y="245">0</text>
+    <text x="275" y="245">0</text>
+    <text x="325" y="245">1</text>
+    <text x="375" y="245">1</text>
+    <text x="425" y="245">0</text>
+    <text x="475" y="245">1</text>
+    <text x="525" y="245">1</text>
+    <text x="575" y="245">0</text>
+    <text x="625" y="245">0</text>
+    <text x="675" y="245">0</text>
+    <text x="725" y="245">1</text>
+    <text x="775" y="245">1</text>
+    <text x="825" y="245">0</text>
+    <text x="875" y="245">1</text>
+    <text x="925" y="245">1</text>
+  </g>
+
+  <!-- Decoded base labels under each pair -->
+  <g font-family="ui-monospace, monospace" font-size="14" font-weight="600" text-anchor="middle">
+    <text x="200" y="275" fill="#1b5e20">A</text>
+    <text x="300" y="275" fill="#0d47a1">C</text>
+    <text x="400" y="275" fill="#7a3d00">G</text>
+    <text x="500" y="275" fill="#c62828">T</text>
+    <text x="600" y="275" fill="#1b5e20">A</text>
+    <text x="700" y="275" fill="#0d47a1">C</text>
+    <text x="800" y="275" fill="#7a3d00">G</text>
+    <text x="900" y="275" fill="#c62828">T</text>
+  </g>
+  <!-- order note: bases listed base7..base0 left-to-right since bit 15 is leftmost. -->
+  <text x="50" y="275" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#888">decoded (base 7 → base 0):</text>
+
+  <!-- Caption -->
+  <text x="550" y="318" text-anchor="middle" font-size="14" fill="#2e7d32" font-weight="600">One CPU operation, regardless of sequence length.</text>
+  <text x="550" y="344" text-anchor="middle" font-size="12" fill="#555">For reverse-complement: XOR, then reverse the 2-bit pairs.</text>
+</svg>

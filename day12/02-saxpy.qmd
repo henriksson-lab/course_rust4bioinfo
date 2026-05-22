@@ -1,0 +1,117 @@
+---
+title: "Exercise: SAXPY — uniforms for scalars"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute `c[i] = a * x[i] + y[i]` on the GPU — the classic **SAXPY** [*single-precision A·X plus Y; the canonical BLAS level-1 benchmark since the 1970s*] kernel. The scalar `a` is the same for every thread — perfect use case for a **uniform buffer**.
+
+By the time `cargo test` passes you will have used `wgpu::BufferUsages::UNIFORM`, the WGSL `var<uniform>` declaration, and seen how a small constant is broadcast to every thread.
+
+## Background
+
+The shader adds one new binding — a uniform buffer holding the scalar — but the structure is otherwise identical to exercise 1:
+
+```wgsl
+struct Scalar {
+    a: f32,
+}
+
+@group(0) @binding(0) var<uniform>             params: Scalar;
+@group(0) @binding(1) var<storage, read>       x:      array<f32>;
+@group(0) @binding(2) var<storage, read>       y:      array<f32>;
+@group(0) @binding(3) var<storage, read_write> c:      array<f32>;
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    if (i >= arrayLength(&c)) { return; }
+    c[i] = params.a * x[i] + y[i];
+}
+```
+
+Two things to notice:
+
+- **Uniform buffers wrap the scalar in a `struct`** — WGSL uniforms must be structs (a quirk of the alignment rules; you can't have a bare `f32` at top-level uniform binding).
+- **Same access pattern from every thread** — every thread reads `params.a`. The driver broadcasts the value efficiently; reading a uniform is essentially free compared to a storage read.
+
+## Why a uniform rather than a storage buffer for `a`?
+
+You *could* put `a` in a storage buffer. Two reasons not to:
+
+1. **Speed.** Uniform buffers are kept in a fast on-chip constant cache; storage buffers go through general memory.
+2. **Convention.** Anyone reading your code expects "one number, same for every thread" to be a uniform. Reading a storage buffer for a scalar is a code smell.
+
+The size limit on uniform buffers is small (typically 64 KB) — for anything bigger, you have to use a storage buffer anyway.
+
+## The exercise
+
+Open `day12/ex-saxpy/`. The wgpu boilerplate and shader are fully written. Your job:
+
+1. Construct the uniform buffer holding `a` (one `f32`, padded to the alignment WGSL expects).
+2. Add the binding for the uniform buffer in the `BindGroup`.
+
+Both TODOs are short. Tests check `c[i] = 2.5 * x[i] + y[i]` on a small batch and on a longer one.
+
+You may **not** change `src/shader.wgsl` or the test code.
+
+## How to run
+
+```bash
+cd day12/ex-saxpy
+cargo test
+cargo run --release
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — the uniform struct in Rust"}
+The shader declares `struct Scalar { a: f32 }`. WGSL requires uniform-struct fields to be 16-byte aligned at the struct boundary, but a single `f32` at offset 0 is fine — you just need to upload enough bytes that the buffer size is at least the struct's `min_binding_size`.
+
+The simplest, portable approach: upload 16 bytes (one `f32` plus 12 bytes of padding):
+
+```rust
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Scalar { a: f32, _pad: [f32; 3] }
+
+let scalar = Scalar { a: 2.5, _pad: [0.0; 3] };
+let scalar_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+    label: Some("scalar"),
+    contents: bytemuck::bytes_of(&scalar),
+    usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+});
+```
+
+For tiny single-scalar uniforms, the padding cost is invisible.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — bind group entry for the uniform"}
+The bind-group entry uses `binding: 0`, the same `BufferBinding` API as storage buffers, but with a uniform-typed buffer:
+
+```rust
+wgpu::BindGroupEntry {
+    binding: 0,
+    resource: scalar_buf.as_entire_binding(),
+}
+```
+
+The shader's `@binding(0)` and the entry's `binding: 0` must match. The other entries (`x`, `y`, `c`) get bindings 1, 2, 3.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day12/ex-saxpy-solution/src/main.rs`. The uniform buffer is created as in hint 1; the bind-group entry list is `[scalar at 0, x at 1, y at 2, c at 3]`.
+:::
+
+## Where this leads
+
+- **Exercise 5 (reduction)** uses a uniform to pass `n` (the input length) into the shader — same pattern, integer instead of float.
+- **In Burn**, the equivalent of SAXPY is `a * x + y` — one line. Burn's matmul, conv, attention kernels all pass per-layer constants via uniforms exactly like this.

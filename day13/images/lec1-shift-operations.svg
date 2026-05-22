@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 380" font-family="system-ui, -apple-system, sans-serif">
+  <title>Shifts — multiply / divide by powers of 2</title>
+
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="30" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Shifts — multiply / divide by powers of 2</text>
+
+  <!--
+    Each panel is 500 wide.
+    8 cells, each 40 wide x 36 tall. Total cells width = 320. Start x = 90 (relative to panel).
+    Bit position labels above cells (right-to-left 7..0).
+  -->
+
+  <!-- ========== LEFT PANEL: left shift ========== -->
+  <g transform="translate(20,60)">
+    <text x="250" y="0" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#1976d2">x &lt;&lt; 2</text>
+
+    <!-- Top byte: x = 0b00010110 -->
+    <!-- Bit positions left-to-right: 7,6,5,4,3,2,1,0 -->
+    <!-- bits:                       0 0 0 1 0 1 1 0   -->
+    <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+      <text x="110" y="22">7</text>
+      <text x="150" y="22">6</text>
+      <text x="190" y="22">5</text>
+      <text x="230" y="22">4</text>
+      <text x="270" y="22">3</text>
+      <text x="310" y="22">2</text>
+      <text x="350" y="22">1</text>
+      <text x="390" y="22">0</text>
+    </g>
+    <g stroke="#888" stroke-width="1">
+      <rect x="90"  y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="130" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="170" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="210" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="250" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="290" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="330" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="370" y="30" width="40" height="36" fill="#f5f5f5"/>
+    </g>
+    <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+      <text x="110" y="55" fill="#888">0</text>
+      <text x="150" y="55" fill="#888">0</text>
+      <text x="190" y="55" fill="#888">0</text>
+      <text x="230" y="55" fill="#0d47a1">1</text>
+      <text x="270" y="55" fill="#888">0</text>
+      <text x="310" y="55" fill="#0d47a1">1</text>
+      <text x="350" y="55" fill="#0d47a1">1</text>
+      <text x="390" y="55" fill="#888">0</text>
+    </g>
+
+    <text x="250" y="88" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#111">x = 0b00010110 = 22</text>
+
+    <!-- Shift arrow showing left direction by k=2 -->
+    <g>
+      <line x1="290" y1="115" x2="170" y2="115" stroke="#1976d2" stroke-width="2.5" marker-end="url(#arr)"/>
+      <text x="230" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#1976d2" font-weight="600">shift left by k = 2</text>
+    </g>
+
+    <!-- Bottom byte: result of x << 2 = 0b01011000 -->
+    <!-- bits: 0 1 0 1 1 0 0 0 -->
+    <g stroke="#888" stroke-width="1">
+      <rect x="90"  y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="130" y="160" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="170" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="210" y="160" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="250" y="160" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="290" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <!-- new zeros (filled in) -->
+      <rect x="330" y="160" width="40" height="36" fill="#fff3cd" stroke="#d97706"/>
+      <rect x="370" y="160" width="40" height="36" fill="#fff3cd" stroke="#d97706"/>
+    </g>
+    <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+      <text x="110" y="185" fill="#888">0</text>
+      <text x="150" y="185" fill="#0d47a1">1</text>
+      <text x="190" y="185" fill="#888">0</text>
+      <text x="230" y="185" fill="#0d47a1">1</text>
+      <text x="270" y="185" fill="#0d47a1">1</text>
+      <text x="310" y="185" fill="#888">0</text>
+      <text x="350" y="185" fill="#7a3d00">0</text>
+      <text x="390" y="185" fill="#7a3d00">0</text>
+    </g>
+
+    <!-- Bits falling off the left -->
+    <g>
+      <line x1="90" y1="178" x2="60" y2="178" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="60" y="173" font-family="ui-monospace, monospace" font-size="10" fill="#c62828" text-anchor="end">drop</text>
+    </g>
+
+    <text x="250" y="225" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#111">x &lt;&lt; 2 = 0b01011000 = 88</text>
+    <text x="250" y="258" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#2e7d32" font-weight="600">multiplied by 4 (= 2²)</text>
+  </g>
+
+  <!-- ========== RIGHT PANEL: right shift ========== -->
+  <g transform="translate(580,60)">
+    <text x="250" y="0" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#1976d2">x &gt;&gt; 2</text>
+
+    <!-- Top byte: x = 0b00010110 -->
+    <g font-family="ui-monospace, monospace" font-size="10" fill="#888" text-anchor="middle">
+      <text x="110" y="22">7</text>
+      <text x="150" y="22">6</text>
+      <text x="190" y="22">5</text>
+      <text x="230" y="22">4</text>
+      <text x="270" y="22">3</text>
+      <text x="310" y="22">2</text>
+      <text x="350" y="22">1</text>
+      <text x="390" y="22">0</text>
+    </g>
+    <g stroke="#888" stroke-width="1">
+      <rect x="90"  y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="130" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="170" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="210" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="250" y="30" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="290" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="330" y="30" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="370" y="30" width="40" height="36" fill="#f5f5f5"/>
+    </g>
+    <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+      <text x="110" y="55" fill="#888">0</text>
+      <text x="150" y="55" fill="#888">0</text>
+      <text x="190" y="55" fill="#888">0</text>
+      <text x="230" y="55" fill="#0d47a1">1</text>
+      <text x="270" y="55" fill="#888">0</text>
+      <text x="310" y="55" fill="#0d47a1">1</text>
+      <text x="350" y="55" fill="#0d47a1">1</text>
+      <text x="390" y="55" fill="#888">0</text>
+    </g>
+
+    <text x="250" y="88" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#111">x = 0b00010110 = 22</text>
+
+    <!-- Shift arrow showing right direction by k=2 -->
+    <g>
+      <line x1="210" y1="115" x2="330" y2="115" stroke="#1976d2" stroke-width="2.5" marker-end="url(#arr)"/>
+      <text x="270" y="138" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#1976d2" font-weight="600">shift right by k = 2</text>
+    </g>
+
+    <!-- Bottom byte: result of x >> 2 = 0b00000101 -->
+    <!-- bits: 0 0 0 0 0 1 0 1 -->
+    <g stroke="#888" stroke-width="1">
+      <!-- new zeros on the left -->
+      <rect x="90"  y="160" width="40" height="36" fill="#fff3cd" stroke="#d97706"/>
+      <rect x="130" y="160" width="40" height="36" fill="#fff3cd" stroke="#d97706"/>
+      <rect x="170" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="210" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="250" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="290" y="160" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+      <rect x="330" y="160" width="40" height="36" fill="#f5f5f5"/>
+      <rect x="370" y="160" width="40" height="36" fill="#bbdefb" stroke="#1976d2"/>
+    </g>
+    <g font-family="ui-monospace, monospace" font-size="18" font-weight="600" text-anchor="middle">
+      <text x="110" y="185" fill="#7a3d00">0</text>
+      <text x="150" y="185" fill="#7a3d00">0</text>
+      <text x="190" y="185" fill="#888">0</text>
+      <text x="230" y="185" fill="#888">0</text>
+      <text x="270" y="185" fill="#888">0</text>
+      <text x="310" y="185" fill="#0d47a1">1</text>
+      <text x="350" y="185" fill="#888">0</text>
+      <text x="390" y="185" fill="#0d47a1">1</text>
+    </g>
+
+    <!-- Bits falling off the right -->
+    <g>
+      <line x1="410" y1="178" x2="440" y2="178" stroke="#c62828" stroke-width="1.5" stroke-dasharray="3,3"/>
+      <text x="440" y="173" font-family="ui-monospace, monospace" font-size="10" fill="#c62828">drop</text>
+    </g>
+
+    <text x="250" y="225" text-anchor="middle" font-family="ui-monospace, monospace" font-size="13" fill="#111">x &gt;&gt; 2 = 0b00000101 = 5</text>
+    <text x="250" y="258" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#2e7d32" font-weight="600">divided by 4 (= 2²), integer</text>
+  </g>
+
+  <text x="550" y="358" text-anchor="middle" font-size="13" fill="#555">Shifts use the CPU's barrel shifter — a single instruction, regardless of k.</text>
+</svg>

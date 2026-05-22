@@ -1,0 +1,273 @@
+---
+title: "Concepts"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+Companion to the day-13 slides. Day 13 looks at what is underneath the numbers you have been using all course: a number is a sequence of **bits** [single 0/1 digits in base 2], a computer is a machine for shuffling those bits, and a handful of cheap operations on bits — AND, OR, XOR, shift, popcount — turn out to be the building blocks of every fast string-matching, k-mer-counting, and barcode-matching algorithm in bioinformatics.
+
+The bridge to biology is 2-bit DNA encoding. The DNA alphabet has four letters, two bits can represent four values, so an `(A, C, G, T) → (00, 01, 10, 11)` mapping fits a whole 32-base sequence into a single 64-bit integer. Once your sequences look like ordinary integers, the same hardware that adds and multiplies floats can compare entire k-mers in a few CPU cycles.
+
+## Why bits matter in bioinformatics
+
+DNA has 4 letters, so each base fits in **2 bits** [a pair of binary digits, enough to encode 4 distinct values: 00, 01, 10, 11]. A 64-bit integer therefore holds 32 bases — a typical short k-mer or seed. The headline trick is computing Hamming distance [the number of positions at which two equal-length sequences differ] between two 32-base sequences in **four CPU instructions**: a single XOR (mismatch bit set, match bit clear), an OR to fold each 2-bit pair to a single "differs/same" bit, a mask, and a **popcount** [the count of 1-bits in an integer; hardware instruction on every modern x86 CPU].
+
+```rust
+let a: u64 = 0b00_01_10_11;     // AACGT...  (just 4 bases for illustration)
+let b: u64 = 0b00_01_10_10;     // AACG G
+let diff_bits = (a ^ b).count_ones();
+let hamming   = diff_bits / 2;  // 2 bits per base mismatch
+```
+
+That four-instruction kernel is the heart of fast aligners ([BWA](https://bio-bwa.sourceforge.net/), [minimap2](https://github.com/lh3/minimap2)), minimizer hashes, k-mer counters ([jellyfish](https://github.com/gmarcais/Jellyfish), [KMC](https://github.com/refresh-bio/KMC)), and single-cell barcode whitelist matchers ([Cell Ranger](https://www.10xgenomics.com/support/software/cell-ranger), [STARsolo](https://github.com/alexdobin/STAR), [salmon alevin](https://salmon.readthedocs.io/)).
+
+## Decimal, binary, hex in one paragraph
+
+The same number can be written in **base 10** (digits 0-9), **base 2** (digits 0-1, called **binary**), or **base 16** (digits 0-9 and a-f, called **hexadecimal** [or "hex"]). All three are different *displays* of the same underlying integer — the machine always stores it in binary; humans usually read it in decimal; programmers like hex because every hex digit corresponds neatly to 4 binary digits.
+
+```rust
+let n: u32 = 255;
+println!("{}",        n);           // 255           (decimal)
+println!("{:b}",      n);           // 11111111      (binary)
+println!("{:x}",      n);           // ff            (hex)
+```
+
+→ [Wikipedia: Binary number](https://en.wikipedia.org/wiki/Binary_number) · [Wikipedia: Hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal)
+
+## Positional notation
+
+Every base works the same way: each digit is multiplied by a power of the base, and the powers grow from right to left. In binary:
+
+```text
+1 0 1 1₂  =  1·2³ + 0·2² + 1·2¹ + 1·2⁰
+          =  8 + 0 + 2 + 1
+          =  11₁₀
+```
+
+It is exactly the same rule as decimal, where `1234 = 1·1000 + 2·100 + 3·10 + 4·1`, but with powers of 2 instead of powers of 10.
+
+## Quick conversion table
+
+| dec | binary | hex |
+|---:|:---|:---|
+| 0  | 0000 | 0 |
+| 1  | 0001 | 1 |
+| 2  | 0010 | 2 |
+| 3  | 0011 | 3 |
+| 4  | 0100 | 4 |
+| 5  | 0101 | 5 |
+| 6  | 0110 | 6 |
+| 7  | 0111 | 7 |
+| 8  | 1000 | 8 |
+| 9  | 1001 | 9 |
+| 10 | 1010 | a |
+| 11 | 1011 | b |
+| 12 | 1100 | c |
+| 13 | 1101 | d |
+| 14 | 1110 | e |
+| 15 | 1111 | f |
+
+The 0..15 range is special because it is exactly one hex digit and exactly four binary digits — internalising this table makes binary ↔ hex conversion mental rather than arithmetic.
+
+## Decimal → binary
+
+Divide repeatedly by 2 and write down each remainder. Read the remainders bottom-up.
+
+```text
+13 / 2 = 6 remainder 1   (least significant bit)
+ 6 / 2 = 3 remainder 0
+ 3 / 2 = 1 remainder 1
+ 1 / 2 = 0 remainder 1   (most significant bit)
+                         → 1101₂
+```
+
+```rust
+let n: u8 = 13;
+println!("{:04b}", n);  // "1101"
+```
+
+## Binary ↔ hex
+
+**Group binary digits in fours, from the right.** Each group is one hex digit.
+
+```text
+1101_0011₂  →  1101 | 0011  →  d  3   →  0xd3 = 211₁₀
+```
+
+Conversion the other way is identical: replace each hex digit with its 4-bit binary pattern. This is why programmers use hex — `0xff_ff_ff_ff` is far easier to read than `11111111_11111111_11111111_11111111`.
+
+## In Rust
+
+```rust
+let a = 0b1011;             // binary literal:  11
+let b = 0xff;               // hex literal:     255
+let c = 11;                 // decimal literal: 11
+
+assert_eq!(a, c);           // same number, two notations
+assert_eq!(b, 255);
+
+println!("{:08b}", b);      // "11111111"   (8-wide, zero-padded binary)
+println!("{:#06x}", b);     // "0x00ff"     (6-wide, zero-padded, with 0x)
+```
+
+The `_` in literals (`0b1101_0011`, `1_000_000`) is just visual grouping — Rust ignores it. See the [`format!` reference](https://doc.rust-lang.org/std/fmt/) for the full formatting mini-language, and the [`u64` primitive docs](https://doc.rust-lang.org/std/primitive.u64.html) for every method on a 64-bit unsigned integer.
+
+## The bitwise operators
+
+The four building blocks operate on one bit position at a time:
+
+| Operator | Rust | Meaning |
+|---|---|---|
+| AND | `a & b`  | bit set in result iff set in **both** inputs |
+| OR  | `a \| b` | bit set in result iff set in **either** input |
+| XOR | `a ^ b`  | bit set in result iff set in **exactly one** input |
+| NOT | `!a`     | flip every bit (the **bitwise complement** [each 0 becomes 1, each 1 becomes 0]) |
+
+In Rust, `!x` on an integer is the bitwise complement (it is logical "not" only on a `bool`). XOR is the one to remember for DNA work: `x ^ x == 0`, `x ^ 0 == x`, and crucially `(a ^ b)` has a 1-bit wherever `a` and `b` differ.
+
+```rust
+let a: u8 = 0b1100;
+let b: u8 = 0b1010;
+assert_eq!(a & b, 0b1000);   // AND
+assert_eq!(a | b, 0b1110);   // OR
+assert_eq!(a ^ b, 0b0110);   // XOR — the "differ" mask
+assert_eq!(!a,    0b1111_0011_u8); // NOT (flips all 8 bits of a u8)
+```
+
+## Truth tables for one bit
+
+| a | b | a & b | a \| b | a ^ b |
+|---|---|---|---|---|
+| 0 | 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 1 | 1 |
+| 1 | 0 | 0 | 1 | 1 |
+| 1 | 1 | 1 | 1 | 0 |
+
+On wider integers each bit-position is just an independent copy of this table.
+
+## Shifts
+
+`x << k` shifts every bit `k` places to the **left**, filling the new low bits with zeros. This **multiplies** the number by `2^k`. `x >> k` shifts to the right (**divides** by `2^k`, rounding down for unsigned types).
+
+```rust
+let x: u8 = 0b0000_1011;          // 11
+assert_eq!(x << 2, 0b0010_1100);  // 44
+assert_eq!(x >> 1, 0b0000_0101);  //  5
+```
+
+For *signed* integers, `>>` is an **arithmetic shift right** [the sign bit is copied into the new high bits so the sign is preserved]; for *unsigned* it is a **logical shift right** [zeros are shifted in from the top]. In bit-twiddling DNA code we always use unsigned types (`u8`, `u32`, `u64`) so the distinction does not bite.
+
+## Bits as flags
+
+A single byte holds 8 booleans. The [SAM/BAM](https://samtools.github.io/hts-specs/SAMv1.pdf) format encodes properties of a read alignment this way — the `FLAG` field of a SAM record packs about a dozen yes/no answers (read is paired, read is mapped, mate is unmapped, read is reverse-complement, etc.) into a single integer.
+
+```rust
+const FLAG_REVERSE:   u16 = 0b0000_0001_0000;   // bit 4: read is reverse-complement
+const FLAG_UNMAPPED:  u16 = 0b0000_0000_0100;   // bit 2: read is unmapped
+
+let flags: u16 = 0b0000_0001_0011;
+let is_reverse  = flags & FLAG_REVERSE  != 0;   // true
+let is_unmapped = flags & FLAG_UNMAPPED != 0;   // false
+```
+
+The pattern `flags & MASK != 0` is the universal "is this single bit on" idiom.
+
+## Popcount in one line
+
+The **population count** (or "Hamming weight") of an integer is the number of 1-bits it contains. Rust exposes it as a method on every integer type:
+
+```rust
+let x: u64 = 0b1101_0110_1010_0011;
+let n = x.count_ones();    // 9
+```
+
+On modern x86 CPUs (since 2008) this compiles to a single `popcnt` instruction — roughly one clock cycle. See [`u64::count_ones`](https://doc.rust-lang.org/std/primitive.u64.html#method.count_ones).
+
+→ [Wikipedia: Hamming weight](https://en.wikipedia.org/wiki/Hamming_weight)
+
+## 2-bit DNA encoding
+
+The standard mapping is:
+
+| base | bits |
+|:--|:--|
+| A | 00 |
+| C | 01 |
+| G | 10 |
+| T | 11 |
+
+Three reasons to like this particular assignment:
+
+1. **A/T differ only in the high bit** and **C/G differ only in the high bit** — the high bit alone is the "is purine" flag.
+2. **The low bit alone** distinguishes A/G from C/T (the other complementary pair) — useful in some k-mer hashes.
+3. **XOR with `0b11` complements the base**: `A (00) ^ 11 = 11 (T)`, `C (01) ^ 11 = 10 (G)`, and so on. Watson-Crick complement is one bitwise op.
+
+```rust
+fn encode(base: u8) -> u8 {
+    match base { b'A' => 0, b'C' => 1, b'G' => 2, b'T' => 3, _ => panic!() }
+}
+fn complement_bits(code: u8) -> u8 { code ^ 0b11 }
+```
+
+→ [Wikipedia: Nucleic acid notation](https://en.wikipedia.org/wiki/Nucleic_acid_notation)
+
+## Packing a sequence
+
+`n` bases need `n / 4` bytes, rounded up. A single `u64` holds 32 bases; a `[u64; 2]` holds 64; for arbitrary length we use a `Vec<u64>` of length `(n + 31) / 32`.
+
+```rust
+fn pack32(seq: &[u8]) -> u64 {
+    assert!(seq.len() <= 32);
+    let mut bits: u64 = 0;
+    for (i, &b) in seq.iter().enumerate() {
+        let code = match b { b'A' => 0, b'C' => 1, b'G' => 2, b'T' => 3, _ => 0 } as u64;
+        bits |= code << (2 * i);     // base i lives at bits 2i, 2i+1
+    }
+    bits
+}
+```
+
+The convention "base `i` in bits `2i`, `2i+1`" is one of several reasonable choices; the alternative (base `i` in bits `62 - 2i`, `63 - 2i`) makes reverse-complement code cleaner. Pick one and stick to it.
+
+## Hamming distance via XOR + popcount
+
+For two packed sequences of equal length:
+
+```rust
+fn hamming_packed(a: u64, b: u64, n_bases: usize) -> u32 {
+    let mask = if n_bases == 32 { u64::MAX } else { (1u64 << (2 * n_bases)) - 1 };
+    let diff_bits = (a ^ b) & mask;
+    // Each base mismatch contributes at least 1 and at most 2 set bits in diff_bits.
+    // For the standard A/C/G/T encoding, the popcount overcounts; we compress every
+    // pair of bits to a single "this base differs" bit before counting.
+    let any = (diff_bits | (diff_bits >> 1)) & 0x5555_5555_5555_5555;
+    any.count_ones()
+}
+```
+
+The literal `0x5555_5555_5555_5555` is the alternating mask `...0101_0101` that picks out one bit per base position. The whole function is six arithmetic ops — independent of sequence length up to 32. Day 13's exercise 3 walks through the simpler `count_ones() / 2` version first and then earns this correction.
+
+→ [Wikipedia: Hamming distance](https://en.wikipedia.org/wiki/Hamming_distance)
+
+## Single-cell barcodes
+
+**10x Chromium 3' v3** chemistry attaches a 16-base **cell barcode** [a short DNA tag identifying which droplet, and therefore which cell, a read came from] to every cDNA molecule. 16 bases → 32 bits → fits in a single `u32`. The [10x v3 whitelist](https://github.com/10XGenomics/cellranger/blob/master/lib/python/cellranger/barcodes/3M-february-2018.txt.gz) has ~6.7 million valid barcodes; the read-processing pipeline does, for every sequenced read:
+
+1. **Exact lookup** in a `HashSet<u32>` of valid 32-bit barcodes — `O(1)`.
+2. On miss, a **1-Hamming-neighbour lookup** — try every 1-base substitution and check whether *that* hits the whitelist. If exactly one neighbour is valid, the read is recovered.
+
+The 1-neighbour step is `16 bases × 3 substitutions = 48` candidate lookups per missing barcode — still very fast when each lookup is one hash and one XOR-popcount. Day 13's exercise 5 builds the data structure and runs it on a tiny synthetic whitelist.
+
+→ [10x Genomics: Cell barcode docs](https://kb.10xgenomics.com/hc/en-us/articles/115004696263)
+
+## Recap
+
+- A computer stores numbers as **bits**; humans read them in **decimal**; programmers often write them in **hex** (4 binary digits per hex digit).
+- The four bitwise operators **AND / OR / XOR / NOT** act on each bit-position independently.
+- **Shifts** multiply and divide by powers of 2; **popcount** (`u64::count_ones`) is one CPU instruction.
+- **2-bit DNA encoding** (A=00, C=01, G=10, T=11) packs 32 bases into a `u64` and makes Hamming distance an XOR plus a popcount.
+- Single-cell **barcode matching** is the canonical bioinformatics application: ~6.7 M valid 16-bp barcodes, looked up by hash on hit and by 1-Hamming-neighbour scan on miss.

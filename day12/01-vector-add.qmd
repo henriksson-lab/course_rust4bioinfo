@@ -1,0 +1,120 @@
+---
+title: "Exercise: vector add — your first wgpu kernel"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute `c[i] = a[i] + b[i]` on the GPU for a 1024-element pair of `f32` vectors. This is the "hello world" of GPU compute — the entire job is to introduce the **six-step wgpu pipeline** end to end. Every later exercise reuses this scaffolding.
+
+By the time `cargo test` passes you will have used [`wgpu::Instance`](https://docs.rs/wgpu/), [`Adapter`](https://docs.rs/wgpu/latest/wgpu/struct.Adapter.html), [`Device`](https://docs.rs/wgpu/latest/wgpu/struct.Device.html), [`Buffer`](https://docs.rs/wgpu/latest/wgpu/struct.Buffer.html), [`ShaderModule`](https://docs.rs/wgpu/latest/wgpu/struct.ShaderModule.html), [`ComputePipeline`](https://docs.rs/wgpu/latest/wgpu/struct.ComputePipeline.html), [`BindGroup`](https://docs.rs/wgpu/latest/wgpu/struct.BindGroup.html), and the `map_async` + `device.poll()` read-back dance.
+
+## Background
+
+The shader is trivially short:
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       a: array<f32>;
+@group(0) @binding(1) var<storage, read>       b: array<f32>;
+@group(0) @binding(2) var<storage, read_write> c: array<f32>;
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    if (i >= arrayLength(&c)) { return; }
+    c[i] = a[i] + b[i];
+}
+```
+
+Every later shader in this day is variations on this shape — different bindings, different work in the body, the rest is identical.
+
+The Rust side has to:
+
+1. Acquire an adapter, device, and queue.
+2. Upload `a` and `b` into storage buffers; allocate `c` as a storage buffer.
+3. Compile the shader into a pipeline; create the bind group.
+4. Dispatch enough workgroups to cover N elements.
+5. Copy `c` into a host-mappable staging buffer.
+6. `map_async` + `device.poll(Wait)` + read.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day12/ex-vector-add
+```
+
+You will see:
+
+- `src/main.rs` — the wgpu boilerplate is fully written; **one TODO**: fill in the `dispatch_workgroups(...)` call so the workgroup count covers `n` elements.
+- `src/shader.wgsl` — provided, complete (the shader above).
+- A `#[cfg(test)] mod tests` block with three unit tests: one for length, one for values, one for the empty-input edge case.
+
+Your job: write the correct ceiling-division for the workgroup count.
+
+You may **not** change anything else in `main.rs` or `shader.wgsl`.
+
+## How to run
+
+```bash
+cd day12/ex-vector-add
+cargo test                # three tests
+cargo run --release       # runs once and prints the first 8 results
+```
+
+When the dispatch math is right, `cargo test` will print:
+
+```
+test result: ok. 3 passed; 0 failed
+```
+
+The first build downloads `wgpu` and its backend — takes several minutes the first time, seconds afterwards.
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — ceiling division"}
+You have `n` elements and the shader is declared `@workgroup_size(64)`. Each workgroup processes 64 elements; you need enough workgroups so that `workgroups * 64 ≥ n`.
+
+The standard integer-only ceiling division:
+
+```rust
+let workgroups = ((n + 63) / 64) as u32;
+```
+
+Equivalent and slightly less error-prone:
+
+```rust
+let workgroups = n.div_ceil(64) as u32;     // requires Rust 1.73+
+```
+
+If `n == 0`, `workgroups` is 0 — `dispatch_workgroups(0, 1, 1)` is allowed and is a no-op.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — bounds check matters"}
+With workgroup size 64 and N = 1000, the last workgroup launches with 64 threads but only 8 of them have data. Without the `if (i >= arrayLength(&c)) { return; }` bounds check in the shader, the extra 56 threads would read and write past the end of the buffer — undefined behaviour.
+
+This is why every WGSL compute shader you write today starts with a bounds check.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+let workgroups = n.div_ceil(64) as u32;
+pass.dispatch_workgroups(workgroups, 1, 1);
+```
+
+The full reference is in `day12/ex-vector-add-solution/src/main.rs`. The shader and boilerplate are identical to the starter.
+:::
+
+## Where this leads
+
+- **Exercise 2** adds a *uniform* buffer for a scalar — same boilerplate, one more binding.
+- **Exercise 3** revisits **GC content** (day 1 / day 5) — same shape, but the shader counts bytes via an atomic.
+- The boilerplate you just walked through is *exactly* what Burn does internally for every tensor op on the `Wgpu` backend. The high-level `x + y` you wrote on day 11 compiled to a kernel like this one.

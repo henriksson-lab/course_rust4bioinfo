@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 500" font-family="system-ui, -apple-system, sans-serif">
+  <title>Single-cell barcode whitelist matching</title>
+
+  <defs>
+    <marker id="arrBC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <text x="550" y="32" text-anchor="middle" font-size="22" font-weight="600" fill="#111">Single-cell barcode whitelist matching</text>
+
+  <!-- Query barcode at top -->
+  <g transform="translate(330,60)">
+    <rect x="0" y="0" width="440" height="48" rx="8" ry="8" fill="#fff3cd" stroke="#d97706" stroke-width="1.5"/>
+    <text x="220" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#7a3d00" font-weight="600">query (observed read barcode)</text>
+    <text x="220" y="40" text-anchor="middle" font-family="ui-monospace, monospace" font-size="16" font-weight="600" fill="#111">ACGTACGTACGTACGG</text>
+  </g>
+
+  <!-- Whitelist table -->
+  <g transform="translate(150,140)">
+    <text x="400" y="0" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#555">whitelist (4 entries)</text>
+
+    <!-- Header bar -->
+    <rect x="0" y="14" width="800" height="32" fill="#1976d2"/>
+    <g font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#ffffff" text-anchor="start">
+      <text x="14" y="34">id</text>
+      <text x="180" y="34">sequence</text>
+      <text x="600" y="34">Hamming distance to query</text>
+    </g>
+
+    <!-- Row 0: whitelist[0] AAAAAAAAAAAAAAAA dist 12 -->
+    <rect x="0" y="46" width="800" height="36" fill="#f5f5f5" stroke="#888"/>
+    <g font-family="ui-monospace, monospace" font-size="14" fill="#111">
+      <text x="14" y="69">whitelist[0]</text>
+      <text x="180" y="69">AAAAAAAAAAAAAAAA</text>
+      <text x="600" y="69" fill="#888">12</text>
+    </g>
+
+    <!-- Row 1: whitelist[1] ACGTACGTACGTACGT dist 1 (HIGHLIGHTED green) -->
+    <rect x="0" y="82" width="800" height="36" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.8"/>
+    <g font-family="ui-monospace, monospace" font-size="14" fill="#1b5e20" font-weight="600">
+      <text x="14" y="105">whitelist[1]</text>
+      <text x="180" y="105">ACGTACGTACGTACGT</text>
+      <text x="600" y="105">1</text>
+    </g>
+
+    <!-- Row 2: whitelist[2] GGGGCCCCAAAATTTT dist 11 -->
+    <rect x="0" y="118" width="800" height="36" fill="#f5f5f5" stroke="#888"/>
+    <g font-family="ui-monospace, monospace" font-size="14" fill="#111">
+      <text x="14" y="141">whitelist[2]</text>
+      <text x="180" y="141">GGGGCCCCAAAATTTT</text>
+      <text x="600" y="141" fill="#888">11</text>
+    </g>
+
+    <!-- Row 3: whitelist[3] TTTTTTTTTTTTTTTT dist 16 -->
+    <rect x="0" y="154" width="800" height="36" fill="#ffffff" stroke="#888"/>
+    <g font-family="ui-monospace, monospace" font-size="14" fill="#111">
+      <text x="14" y="177">whitelist[3]</text>
+      <text x="180" y="177">TTTTTTTTTTTTTTTT</text>
+      <text x="600" y="177" fill="#888">16</text>
+    </g>
+  </g>
+
+  <!-- Arrow from query down to whitelist[1] -->
+  <g>
+    <line x1="550" y1="108" x2="550" y2="218" stroke="#2e7d32" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrBC)"/>
+    <rect x="595" y="148" width="220" height="36" rx="6" ry="6" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+    <text x="705" y="170" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="#1b5e20">closest match (Hamming 1)</text>
+  </g>
+
+  <!-- Bottom banner -->
+  <g transform="translate(80,400)">
+    <rect x="0" y="0" width="940" height="72" rx="8" ry="8" fill="#e3f2fd" stroke="#1976d2" stroke-width="1.5"/>
+    <text x="470" y="26" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#0d47a1">
+      10x Chromium whitelist: ~6.7M entries
+    </text>
+    <text x="470" y="48" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" fill="#0d47a1">
+      Use a precomputed Hamming-1 index in real pipelines.
+    </text>
+    <text x="470" y="64" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="#0d47a1">
+      Linear scan is fine for thousands of barcodes.
+    </text>
+  </g>
+</svg>

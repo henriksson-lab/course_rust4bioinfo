@@ -1,0 +1,191 @@
+---
+title: "Exercise: Packing DNA into a u64 with 2-bit encoding"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Encode a short DNA string (length 1..=32, characters in `ACGT`) into a single packed `u64` using the **2-bit encoding** `A=00, C=01, G=10, T=11`, decode it back, and extract an arbitrary base by position — all without touching a byte string.
+
+You will write five functions:
+
+1. `encode_base(b: u8) -> u64` — map one of `b'A'/b'C'/b'G'/b'T'` to `0/1/2/3`.
+2. `decode_base(v: u64) -> u8` — the inverse: `0/1/2/3` back to the ASCII byte.
+3. `pack(s: &[u8]) -> u64` — push the encoded bases into the right 2-bit slots of a `u64` accumulator.
+4. `unpack(packed: u64, len: usize) -> Vec<u8>` — pull the slots out again to recover the original ASCII string.
+5. `nth_base(packed: u64, i: usize) -> u8` — random access into a packed sequence without unpacking the whole thing.
+
+By the time `cargo test` passes you will have used the left-shift operator [`<<`](https://doc.rust-lang.org/std/ops/trait.Shl.html), the bitwise OR [`|`](https://doc.rust-lang.org/std/ops/trait.BitOr.html), the AND mask `& 0b11`, and Rust's [byte string literals](https://doc.rust-lang.org/reference/tokens.html#byte-string-literals) (`b"ACGT"`).
+
+## Background
+
+The DNA alphabet has **4 letters**, and `log2(4) = 2`, so each base fits in exactly **2 bits** [a pair of binary digits, enough to encode 4 values: 00, 01, 10, 11]. A 64-bit integer therefore holds `64 / 2 = 32` bases — long enough for a typical k-mer [a DNA substring of length k, the basic unit of every assembler, aligner, and counter in genomics].
+
+The packing convention used in this exercise puts the **first base in the lowest bits**:
+
+```text
+sequence:    A C G T
+index:       0 1 2 3
+bits:       00|01|10|11
+            ^^         <- index 0 lives in bits 0..2
+                 ^^^^  <- index 3 lives in bits 6..8
+
+packed u64 = 0b11_10_01_00 = 0xe4 = 228
+```
+
+There is a tradition in some libraries (e.g. [BWA](https://bio-bwa.sourceforge.net/)) of putting the *first* base in the *highest* bits instead — both are correct, you just have to pick one and stick to it. We pick "first base in lowest bits" because the slot index `i` then matches the obvious arithmetic: bits `(2*i)..(2*i+2)`.
+
+To put a 2-bit value `v` into slot `i`, **left-shift it into place** and OR it into the accumulator:
+
+```rust
+acc |= v << (2 * i);
+```
+
+To **extract** the value from slot `i`, right-shift it down and mask off the upper bits with `& 0b11`:
+
+```rust
+let v = (acc >> (2 * i)) & 0b11;
+```
+
+This shift-and-mask pattern is the universal trick for storing many small values inside one large integer. It shows up everywhere: pixel formats, network packet headers, opcode encoders in CPUs, and the inner loops of every fast bioinformatics tool.
+
+## The exercise
+
+Open the starter project:
+
+```bash
+cd day13/ex-pack-dna-2bit
+```
+
+You will see a single Rust source file at `src/main.rs`. It already contains:
+
+- Five functions with `// TODO` bodies: `encode_base`, `decode_base`, `pack`, `unpack`, `nth_base`
+- A `main` that packs `b"ACGTACGT"`, prints the packed `u64` in hex, unpacks it back, and extracts index 2
+- A `#[cfg(test)] mod tests` block with six unit tests covering the round-trip, the boundary case of 32 bases, and direct value checks
+
+Your job: replace the five `TODO` bodies so that all six tests pass.
+
+You may **not** change the function signatures, the tests, or `main`. You may add helper functions.
+
+## How to run
+
+From inside `day13/ex-pack-dna-2bit/`:
+
+```bash
+cargo build           # compile (no dependencies)
+cargo test            # run the tests - these should be failing at first
+cargo run             # pack b"ACGTACGT" and print the result
+```
+
+When all six tests pass, `cargo test` will print:
+
+```
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 - encode_base as a match"}
+Rust's [`match`](https://doc.rust-lang.org/book/ch06-02-match.html) (gloss: pattern-matching switch statement — like `switch` in C but every arm must return a value and the compiler checks coverage) is the cleanest way to do a 4-way lookup. The byte literal `b'A'` is just the `u8` value `65`, so this is a normal integer match:
+
+```rust
+fn encode_base(b: u8) -> u64 {
+    match b {
+        b'A' => 0,
+        b'C' => 1,
+        b'G' => 2,
+        b'T' => 3,
+        _    => panic!("non-ACGT base {}", b as char),
+    }
+}
+```
+
+The `_` arm is required because `u8` has 256 possible values and you only listed 4.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 - decode_base via byte-string indexing"}
+The byte string [`b"ACGT"`](https://doc.rust-lang.org/reference/tokens.html#byte-string-literals) is a `&[u8; 4]` — a fixed-size array of bytes. Indexing it with a `usize` returns the byte at that position:
+
+```rust
+fn decode_base(v: u64) -> u8 {
+    b"ACGT"[v as usize]
+}
+```
+
+This is exactly the inverse of `encode_base` because `b"ACGT"[0] == b'A'`, `b"ACGT"[1] == b'C'`, and so on.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 - pack and unpack with shift-and-mask"}
+For `pack`, walk the bases in order, encode each one, and OR it into the accumulator at the right offset. [`.iter().enumerate()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.enumerate) gives you both the index and the byte:
+
+```rust
+fn pack(s: &[u8]) -> u64 {
+    let mut acc = 0u64;
+    for (i, &b) in s.iter().enumerate() {
+        acc |= encode_base(b) << (2 * i);
+    }
+    acc
+}
+```
+
+For `unpack`, do the inverse: for each slot `i`, shift the accumulator right by `2*i`, mask the bottom 2 bits, and decode. [`.map()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.map) + [`.collect()`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.collect) into a `Vec<u8>` is the idiomatic Rust way:
+
+```rust
+fn unpack(packed: u64, len: usize) -> Vec<u8> {
+    (0..len).map(|i| decode_base((packed >> (2 * i)) & 0b11)).collect()
+}
+```
+
+`nth_base` is just the body of `unpack`'s closure for a single `i`.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+```rust
+fn encode_base(b: u8) -> u64 {
+    match b {
+        b'A' => 0,
+        b'C' => 1,
+        b'G' => 2,
+        b'T' => 3,
+        _ => panic!("non-ACGT base {}", b as char),
+    }
+}
+
+fn decode_base(v: u64) -> u8 {
+    b"ACGT"[v as usize]
+}
+
+fn pack(s: &[u8]) -> u64 {
+    let mut acc = 0u64;
+    for (i, &b) in s.iter().enumerate() {
+        acc |= encode_base(b) << (2 * i);
+    }
+    acc
+}
+
+fn unpack(packed: u64, len: usize) -> Vec<u8> {
+    (0..len)
+        .map(|i| decode_base((packed >> (2 * i)) & 0b11))
+        .collect()
+}
+
+fn nth_base(packed: u64, i: usize) -> u8 {
+    decode_base((packed >> (2 * i)) & 0b11)
+}
+```
+
+The full reference implementation lives in `day13/ex-pack-dna-2bit-solution/src/main.rs`. Try not to peek before your own version passes all six tests.
+:::
+
+## Where this leads
+
+- **Hamming distance in a handful of instructions.** Exercise 3 takes two packed sequences, XORs them, folds each 2-bit slot down to a single mismatch bit, and counts the 1-bits — total cost is a few bitwise ops plus one hardware popcount, regardless of sequence length up to 32. The byte-by-byte loop on the unpacked strings costs roughly 30x more for a 32-mer.
+- **Reverse complement by bit twiddling.** Once a sequence lives in a `u64`, **complementing** [swapping A↔T and C↔G] every base is a single XOR with `0xFFFF_FFFF_FFFF_FFFF` (because `00 ^ 11 = 11` flips A→T and `01 ^ 11 = 10` flips C→G). Reversing the order is a sequence of byte- and bit-swaps. See the sibling exercise `ex-revcomp-2bit`.
+- **K-mer counters.** Tools like [jellyfish](https://github.com/gmarcais/Jellyfish) and [KMC](https://github.com/refresh-bio/KMC) store hundreds of millions of k-mers in hash tables. Using packed `u64` keys instead of `String` saves 4x the memory and makes hashing 10x faster.

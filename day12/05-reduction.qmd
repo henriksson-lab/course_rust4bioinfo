@@ -1,0 +1,136 @@
+---
+title: "Exercise: parallel reduction (sum) with workgroup shared memory"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute the **sum of an `f32` array** on the GPU using the classic **parallel-reduction** pattern: each workgroup loads its slice into shared memory, performs a tree-shaped reduction within the workgroup, and writes one partial sum to global memory. The host then sums the (small) array of partials.
+
+This is the *right* way to do GC content, k-mer counts, mean expression — any "sum of N numbers" — on the GPU. The atomic version from exercise 3 was fine for getting the answer; this is the version you would actually ship.
+
+By the time `cargo test` passes you will have used `var<workgroup>` shared memory, `workgroupBarrier()`, the `@builtin(local_invocation_id)` and `@builtin(workgroup_id)` indices, and seen how a single kernel call shrinks a million floats to ~16 000 in one pass.
+
+## Background — why a tree reduction beats a single atomic
+
+A single atomic counter (`atomicAdd(&total, x[i])`) over `n = 10⁷` floats: every thread contends on one address. Throughput drops to roughly the atomic unit's rate (~10⁹ ops/s), so the kernel takes ~10 ms — most of which is *waiting* in the atomic queue.
+
+A tree reduction:
+
+- Each workgroup of 64 threads loads 64 floats into shared memory (~5 ns per load).
+- 6 rounds of intra-workgroup pairwise sums (each round halves the live threads). Total per workgroup: ~30 ns.
+- Each workgroup writes ONE partial sum to global memory.
+- The host sees `n / 64` partial sums to add up — for `n = 10⁷` that's ~156 000 floats, a millisecond on the CPU.
+
+Total: well under 1 ms. **~10× faster** than the atomic version, with almost zero contention.
+
+## The shader
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       input:  array<f32>;
+@group(0) @binding(1) var<uniform>             info:   Info;
+@group(0) @binding(2) var<storage, read_write> partials: array<f32>;
+
+struct Info { n: u32, _pad: vec3<u32> }
+
+var<workgroup> tile: array<f32, 64>;
+
+@compute @workgroup_size(64)
+fn main(
+    @builtin(global_invocation_id) gid: vec3<u32>,
+    @builtin(local_invocation_id)  lid: vec3<u32>,
+    @builtin(workgroup_id)         wid: vec3<u32>,
+) {
+    // Load one input element per thread into shared memory; pad with 0 if past end.
+    let i = gid.x;
+    tile[lid.x] = select(0.0, input[i], i < info.n);
+    workgroupBarrier();
+
+    // Tree reduction: 32, 16, 8, 4, 2, 1.
+    var stride: u32 = 32u;
+    loop {
+        if (stride == 0u) { break; }
+        if (lid.x < stride) { tile[lid.x] = tile[lid.x] + tile[lid.x + stride]; }
+        workgroupBarrier();
+        stride = stride / 2u;
+    }
+
+    // Thread 0 of each workgroup writes the per-workgroup sum.
+    if (lid.x == 0u) { partials[wid.x] = tile[0]; }
+}
+```
+
+The pieces:
+
+- `var<workgroup> tile: array<f32, 64>` — 256 bytes of shared memory per workgroup, fast.
+- `workgroupBarrier()` — waits until every thread in the workgroup has reached the call.
+- `select(0.0, input[i], i < info.n)` — branchless "x[i] if in bounds else 0.0". Cleaner than an `if`.
+- Tree reduction: 64 → 32 → 16 → 8 → 4 → 2 → 1, with a barrier between each step. After all rounds, `tile[0]` holds the sum of the 64 loaded values.
+
+## The exercise
+
+Open `day12/ex-reduction/`. The shader is provided. Your job:
+
+1. Allocate the **partials output buffer** of the right size — `n_workgroups` `f32`s.
+2. After dispatch and read-back, **sum the partials on the host** to get the final total.
+3. Make the unit tests pass — including the empty-input case (sum of 0 elements = 0.0).
+
+Tests check the sum against a CPU reference on several random arrays of varying length.
+
+## How to run
+
+```bash
+cd day12/ex-reduction
+cargo test
+cargo run --release        # sum of 1 M floats; prints CPU vs GPU result and timing
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — sizing the partials buffer"}
+The partials buffer holds one `f32` per workgroup. Workgroup count is `n.div_ceil(64)`:
+
+```rust
+let workgroups = n.div_ceil(64) as u32;
+let partials_size = (workgroups as u64) * std::mem::size_of::<f32>() as u64;
+let partials_buf = device.create_buffer(&wgpu::BufferDescriptor {
+    label: Some("partials"),
+    size: partials_size.max(4),                  // at least 4 bytes; wgpu doesn't allow 0-size buffers
+    usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_SRC,
+    mapped_at_creation: false,
+});
+```
+
+For `n = 0` you bypass dispatch entirely and return `0.0` — saves you from edge-cases in the shader.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — sum the partials on the host"}
+After read-back you have a small `Vec<f32>` of partials. Final sum is just:
+
+```rust
+let total: f32 = partials.iter().sum();
+```
+
+For very large inputs (millions of workgroups) you can run a *second pass* of the same kernel on the partials. For the sizes in this exercise the host sum is fine.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — floating-point caveat"}
+GPU reductions are not bit-identical to a sequential CPU sum, because the order of additions differs and `f32` addition is non-associative. The test allows a relative tolerance of ~1e-5. Don't be alarmed if the GPU result differs by a few ULPs from the naive Rust sum.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day12/ex-reduction-solution/src/main.rs`. The partials buffer is sized from the workgroup count; final sum is a one-line `.iter().sum::<f32>()` after read-back.
+:::
+
+## Where this leads
+
+- **Every "sum N things" GPU kernel uses this shape.** Mean expression per gene, GC content over a 100 MB buffer, total alignment score — all of them are this kernel with a different input.
+- **Burn's reductions** (`tensor.sum()`, `tensor.mean()`, `tensor.max()`) compile to exactly this pattern under the hood, often with a recursive second pass when the partials don't fit in one workgroup.
+- **You can compose tree reductions** with the per-element work of an earlier exercise — e.g. exercise 3 (GC content) can be rewritten as "score per byte → tree reduction over scores", removing the atomic and gaining ~10× throughput.

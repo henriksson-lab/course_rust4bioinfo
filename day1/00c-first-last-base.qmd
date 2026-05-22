@@ -1,5 +1,5 @@
 ---
-title: "Warm-up: first and last base"
+title: "Exercise: first and last base"
 format:
   html:
     toc: true

@@ -91,3 +91,4 @@ Full reference in `day2/ex-reverse-complement-solution/src/main.rs`.
 
 - **Next exercise (02)**: rewrite this so the caller passes in a buffer to fill, instead of allocating a fresh `Vec` on every call. That is how every fast bioinformatics tool actually does it in its inner loop.
 - **Day 3**: rewrite the body as one iterator chain — `seq.iter().rev().map(|&b| complement_base(b)).collect()`.
+- **Day 12 exercise 4**: rewrite this as a `wgpu` compute shader — same complement table, now applied by thousands of GPU threads in parallel. Side-by-side with this CPU version, the GPU wins on multi-megabyte inputs once the data is already on the device.

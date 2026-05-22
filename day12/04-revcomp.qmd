@@ -1,0 +1,135 @@
+---
+title: "Exercise: reverse complement on the GPU"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+Compute the [reverse complement](https://en.wikipedia.org/wiki/Complementarity_(molecular_biology)) of an ASCII DNA buffer on the GPU. Each output byte at position `i` is the complement of the input byte at position `n - 1 - i`. Same problem as [day 2 exercise 1](../day2/01-reverse-complement.qmd) — now on the GPU.
+
+By the time `cargo test` passes you will have written a WGSL `switch` on byte values, used a separate output buffer (no in-place reversal), and packed/unpacked bytes through `u32` storage.
+
+## Background
+
+The bio rule: `A↔T`, `C↔G`. Anything else (`N`, lowercase, gaps) should be passed through unchanged (or you can panic — we will pass through).
+
+The shader does one thread per output byte:
+
+```wgsl
+@group(0) @binding(0) var<storage, read>       input:  array<u32>;   // packed bytes
+@group(0) @binding(1) var<uniform>             info:   Info;         // n_bytes
+@group(0) @binding(2) var<storage, read_write> output: array<u32>;   // packed bytes
+
+struct Info { n_bytes: u32, _pad: vec3<u32> }
+
+fn get_byte(arr: ptr<storage, array<u32>, read>, i: u32) -> u32 {
+    let word = (*arr)[i / 4u];
+    return (word >> ((i & 3u) * 8u)) & 0xffu;
+}
+
+fn complement(b: u32) -> u32 {
+    switch (b) {
+        case 0x41u: { return 0x54u; }            // A -> T
+        case 0x43u: { return 0x47u; }            // C -> G
+        case 0x47u: { return 0x43u; }            // G -> C
+        case 0x54u: { return 0x41u; }            // T -> A
+        default:    { return b; }                 // pass-through
+    }
+}
+
+@compute @workgroup_size(64)
+fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
+    let i = gid.x;
+    if (i >= info.n_bytes) { return; }
+    let src_byte = get_byte(&input, info.n_bytes - 1u - i);
+    let comp     = complement(src_byte);
+    let word_idx = i / 4u;
+    let shift    = (i & 3u) * 8u;
+    atomicOr(&output_word(word_idx), comp << shift);
+    // NOTE: in the real solution we avoid atomicOr by writing
+    // u32 words at a time; see hint 3 for the simpler pattern.
+}
+```
+
+The interesting bits:
+
+- **Reading is straightforward** — `get_byte(&input, src_index)` unpacks any byte.
+- **Writing per-byte into a packed `u32` buffer is awkward** — two threads might want to write to the same `u32` word. The cleanest fix is to dispatch one thread per *word*, have each thread compute four output bytes from four read positions, and write the assembled `u32` directly. That's what the solution does.
+
+## The exercise
+
+Open `day12/ex-revcomp/`. The wgpu plumbing is provided. Your job:
+
+1. Decide whether to dispatch by byte (and handle the write collision) or by word (cleaner). The starter scaffolding is the word-dispatch variant.
+2. Implement the WGSL `complement` helper.
+3. Fill in the body of `main` so it computes four output bytes from four input positions and assembles them into one output `u32`.
+
+Tests check round-trip on random DNA: `revcomp(revcomp(x)) == x`, plus a few hand-crafted comparisons against a CPU reference.
+
+## How to run
+
+```bash
+cd day12/ex-revcomp
+cargo test
+cargo run --release       # reverse-complements a 1 MB random DNA buffer
+```
+
+## Hints
+
+::: {.callout-tip collapse="true" title="Hint 1 — the complement table in WGSL"}
+A `switch` on ASCII values is the most readable form. ASCII codes you need: `'A' = 0x41`, `'C' = 0x43`, `'G' = 0x47`, `'T' = 0x54`. The complement maps `A↔T` and `C↔G`; anything else is passed through.
+
+If you prefer a lookup table, you can use a `var<workgroup> table: array<u32, 256>;` initialised by the first thread of each workgroup with a barrier — but for four cases the `switch` is much clearer.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — one thread per output word"}
+Dispatch `n_words = (n_bytes + 3) / 4` workgroups' worth of threads. Inside the shader, each thread handles four output bytes:
+
+```wgsl
+let out_word = gid.x;
+if (out_word >= n_words) { return; }
+var assembled: u32 = 0u;
+for (var lane: u32 = 0u; lane < 4u; lane = lane + 1u) {
+    let out_byte = out_word * 4u + lane;
+    if (out_byte < info.n_bytes) {
+        let src = info.n_bytes - 1u - out_byte;
+        let b   = complement(get_byte(&input, src));
+        assembled = assembled | (b << (lane * 8u));
+    }
+}
+output[out_word] = assembled;
+```
+
+No atomics needed — each output word is touched by exactly one thread.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — read-back into Vec<u8>"}
+The output staging buffer holds `u32`s. To get back to a `Vec<u8>` of the right length you can `bytemuck::cast_slice` and then truncate:
+
+```rust
+let words: &[u32] = bytemuck::cast_slice(&mapped);
+let mut bytes: Vec<u8> = words.iter()
+    .flat_map(|w| w.to_le_bytes())
+    .collect();
+bytes.truncate(n_bytes);
+```
+
+The final truncate drops the padding bytes in the last word.
+:::
+
+## Solution
+
+::: {.callout-note collapse="true" title="Solution"}
+See `day12/ex-revcomp-solution/src/main.rs`. The shader uses the "one thread per output word" pattern from hint 2; the host packs / unpacks bytes via `bytemuck`.
+:::
+
+## Where this leads
+
+- **Side-by-side with the day-2 CPU version**: at small N (≤ 10 KB) the CPU wins by a wide margin (no transfers, no kernel launch). At large N (≥ 10 MB resident on the GPU) the GPU wins by 10× or more.
+- **The "one-thread-per-output-word" pattern** generalises: anywhere your output type is smaller than the shader's smallest writable unit (`u32`), dispatch by output-word and let each thread assemble.
+- **For a real bioinformatics tool** you'd combine this with the FASTA reader's mmap — keep the genome on the GPU once, then process many windows without transfers.

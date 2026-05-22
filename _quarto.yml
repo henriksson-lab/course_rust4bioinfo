@@ -176,6 +176,32 @@ website:
           - day11/05-pca.qmd
           - day11/06-motif-scanner.qmd
           - day11/07-promoter-classifier.qmd
+      - section: "Day 12 — GPU compute kernels with wgpu"
+        contents:
+          - text: "Concept summary"
+            href: day12/00-concepts.qmd
+          - day12/lec1-wgpu-compute.qmd
+          - text: "Quiz"
+            href: day12/00a-quiz.qmd
+          - day12/01-vector-add.qmd
+          - day12/02-saxpy.qmd
+          - day12/03-gc-content.qmd
+          - day12/04-revcomp.qmd
+          - day12/05-reduction.qmd
+          - day12/06-pairwise-distance.qmd
+      - section: "Day 13 — bits and 2-bit DNA"
+        contents:
+          - text: "Concept summary"
+            href: day13/00-concepts.qmd
+          - day13/lec1-numbers-and-bits.qmd
+          - day13/lec2-dna-2bit-and-barcodes.qmd
+          - text: "Quiz"
+            href: day13/00a-quiz.qmd
+          - day13/01-numbers-and-bits.qmd
+          - day13/02-pack-dna-2bit.qmd
+          - day13/03-hamming-popcount.qmd
+          - day13/04-revcomp-2bit.qmd
+          - day13/05-barcode-whitelist.qmd
 
 format:
   html:

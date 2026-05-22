@@ -1,0 +1,196 @@
+---
+title: "Quiz: wgpu compute kernels"
+format:
+  html:
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+---
+
+## Goal
+
+A short quiz on day-12 material: the wgpu compute pipeline, WGSL basics, workgroups, buffer types, and the cost model. Guess before peeking.
+
+10 questions, easy to trickier.
+
+---
+
+## 1. The standard
+
+True or false: WebGPU is a *web* standard, but the same `wgpu` Rust code also runs natively (Vulkan / Metal / DX12) and even on a CPU fallback.
+
+::: {.callout-tip collapse="true" title="Hint"}
+The name says "Web" — but the underlying spec was deliberately designed to be runnable outside browsers too.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**True.** WebGPU was published by the W3C as a browser API, but its data model and shading language (WGSL) are vendor-neutral and the `wgpu` crate ships native back-ends for Vulkan (Linux/Windows/Android), Metal (macOS/iOS), DX12 (Windows), plus a software fallback. The exact same Rust + WGSL code runs on all of them.
+:::
+
+---
+
+## 2. Dispatch arithmetic
+
+Your shader is declared `@compute @workgroup_size(64)`. You want to process exactly **1 000 elements**. How many workgroups do you dispatch, and what do you do inside the shader?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Workgroup count must be an integer; 1000/64 is not. Round up — and handle the extras.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Dispatch `ceil(1000 / 64) = 16` workgroups** (16 × 64 = 1024 threads). Inside the shader, every thread reads its `global_invocation_id.x` and **bounds-checks** before touching data:
+
+```wgsl
+let i = gid.x;
+if (i >= 1000u) { return; }
+// ... do work on element i ...
+```
+
+The 24 extra threads (1024 − 1000) just return immediately. This pattern shows up in *every* 1-D wgpu compute shader.
+:::
+
+---
+
+## 3. Storage vs uniform buffers
+
+You're writing SAXPY: `c[i] = a*x[i] + y[i]`. Which buffer types?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`x`, `y`, `c` are big arrays. `a` is one number.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- `x`, `y`, `c`: **storage buffers** (large arrays of `f32`).
+- `a`: **uniform buffer** (small constant broadcast to every thread).
+
+The split matters for two reasons. Uniform buffers are smaller (typically ≤ 64 KB), faster to broadcast, and read-only. Storage buffers can be much bigger and can be written. Picking the wrong type will work but is wasteful.
+:::
+
+---
+
+## 4. Reading results back
+
+After dispatch finishes, why can you not just read directly from the GPU storage buffer holding your result?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Storage buffers live in GPU memory (VRAM). The CPU can't directly read VRAM on most backends.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Storage buffers live in VRAM; the host CPU can't read VRAM directly on most backends.** The standard pattern: encode a `copy_buffer_to_buffer` from your storage buffer into a separate **staging buffer** with `BufferUsages::MAP_READ | COPY_DST`, then `map_async(MapMode::Read, ..)` the staging buffer and `device.poll(..)` to drive completion. Once the map resolves, the staging buffer's bytes are accessible from the host.
+
+(On unified-memory backends like Apple Silicon the copy is free in practice, but the API still requires the staging buffer.)
+:::
+
+---
+
+## 5. `map_async` and `device.poll`
+
+Why is `device.poll(..)` (with a "wait" variant) usually required right after `map_async`?
+
+::: {.callout-tip collapse="true" title="Hint"}
+`map_async` returns immediately and doesn't actually map anything. The mapping happens later, when the GPU finishes the relevant work — but only if something drives the device forward.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**`map_async` schedules a mapping; it does not perform it.** The mapping only completes once (a) the queued GPU work finishes and (b) the device is polled. Without an explicit `device.poll(Maintain::Wait)` (or browser-side `requestAnimationFrame` loop) the callback never fires and your code hangs. Calling poll with a wait variant blocks until the queue is drained and all callbacks have fired.
+:::
+
+---
+
+## 6. Workgroup shared memory
+
+What's the point of declaring `var<workgroup> partial: array<f32, 64>;` inside a WGSL shader?
+
+::: {.callout-tip collapse="true" title="Hint"}
+It's not for inputs from the host. It's for **communication between threads in the same workgroup**.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Fast on-chip memory shared between all threads in a workgroup.** Unlike global storage buffers (in VRAM, ~hundreds of cycles per access), workgroup shared memory lives in the compute unit itself (~few cycles per access) and is shared between the up-to-1024 threads of the workgroup. Combined with `workgroupBarrier()`, it's the basis of efficient parallel reductions and tile-based matrix multiplies.
+
+You used it implicitly via Burn on day 11 (Burn picks tile sizes for matmul, attention, etc.). Day 12 exercise 5 (parallel sum) makes the pattern explicit.
+:::
+
+---
+
+## 7. Atomics
+
+Why do you need `atomic<u32>` (and `atomicAdd`) for a GC counter, even though a plain `u32` would type-check?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Many threads might try to increment the same counter at the same time.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Races.** Without atomics, two threads can both read `count = 5`, both compute `6`, and both write `6` — losing one increment. `atomic<u32>` + `atomicAdd(&count, 1u)` uses a hardware atomic instruction that serialises updates, so every increment lands.
+
+The price: atomic ops are slow (the atomic unit becomes a bottleneck if every thread hits it). For large reductions, prefer the workgroup-shared-memory tree reduction (exercise 5) — orders of magnitude faster than a single atomic counter.
+:::
+
+---
+
+## 8. The PCIe wall, again
+
+You run a vector-add kernel on 1 000 elements and discover the GPU version is 10× *slower* than the CPU version. Why, and how do you fix it (in principle)?
+
+::: {.callout-tip collapse="true" title="Hint"}
+What dominates the wall time for a tiny problem on a discrete GPU?
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+**Host ↔ device transfers and kernel-launch overhead dominate at small N.** Uploading 4 KB of input and reading back 4 KB of output across PCIe + dispatching a shader + polling — that's well over what the CPU needs to just add 1000 floats.
+
+Fix in principle: **keep buffers on the device** across many ops, and grow N until the kernel work dominates the transfers. Day 11's Burn does this for you; day 12 makes it your responsibility.
+:::
+
+---
+
+## 9. 2-D dispatch
+
+For an `N × N` pairwise distance matrix you want each thread to compute one cell. What workgroup size and dispatch shape do you pick?
+
+::: {.callout-tip collapse="true" title="Hint"}
+Two-dimensional problem → two-dimensional workgroup → two-dimensional dispatch.
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+A common choice: `@workgroup_size(8, 8)` (64 threads per workgroup, arranged 8×8), dispatched as
+
+```rust
+encoder.dispatch_workgroups((N + 7) / 8, (N + 7) / 8, 1);
+```
+
+Inside the shader each thread reads `gid.x` and `gid.y` as `(row, col)` and bounds-checks both. Workgroup size 8×8 is a sensible default; 16×16 (256 threads) is also fine on most hardware.
+:::
+
+---
+
+## 10. wgpu vs Burn — when to reach for which?
+
+You need to (a) write a brand-new motif-scoring kernel with a custom score function not found in PyTorch / Burn, and (b) train a 100 M-parameter sequence classifier. Which tool for each?
+
+::: {.callout-tip collapse="true" title="Hint"}
+One is "I need a kernel that doesn't exist yet"; the other is "I need autodiff, optimisers, and a million-line training loop".
+:::
+
+::: {.callout-note collapse="true" title="Answer"}
+- **(a) Custom kernel** → **raw `wgpu`** (day 12). You're writing one specialised shader and don't need autodiff or the rest of Burn.
+- **(b) Train a 100 M-parameter model** → **Burn** (day 11). You want autodiff, optimisers, layer libraries (`Conv1d`, `Linear`, attention), training loops, checkpointing, mixed precision — all of which Burn provides.
+
+In production they often coexist: Burn for the bulk of the model, with `wgpu` shaders for any custom kernel you can't express in tensor ops.
+:::
+
+---
+
+## Where this leads
+
+The wgpu mental model to internalise:
+
+- **6 steps**: adapter → device → buffers → pipeline → bind group → dispatch.
+- **Shader in WGSL**: `@compute @workgroup_size(...)` + `@builtin(global_invocation_id)` + bounds check.
+- **Buffer types**: storage (big, read or read-write), uniform (small, read-only), staging (host-visible).
+- **Workgroup shared memory + barriers** for fast intra-group communication.
+- **Atomics** for counters and histograms; **tree reductions** when atomics become the bottleneck.
+- **Transfers cost real time** — keep working buffers on-device, copy only results back.

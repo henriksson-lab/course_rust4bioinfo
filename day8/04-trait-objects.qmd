@@ -64,36 +64,50 @@ read42 (8 bp)
 chr1 (100 bp)
 ```
 
-## Hint
+## Hints
 
-::: {.callout-tip collapse="true" title="Hint — bodies for the six TODOs"}
-Each method is a one-liner. For `FastaRecord` and `FastqRecord`:
+::: {.callout-tip collapse="true" title="Hint 1 — `name()`: return a `String` field as a `&str`"}
+All three `name()` methods are one-liners that return a borrowed view of a `String` field on `self`.
 
 ```rust
 fn name(&self) -> &str {
-    &self.name
-}
-
-fn length(&self) -> usize {
-    self.sequence.len()
+    &self.name      // for FastaRecord and FastqRecord
 }
 ```
 
-The `&self.name` reborrows the [`String`](https://doc.rust-lang.org/std/string/struct.String.html) field as a [`&str`](https://doc.rust-lang.org/std/primitive.str.html) (string slice) — Rust's [deref coercion](https://doc.rust-lang.org/book/ch15-02-deref.html#implicit-deref-coercions-with-functions-and-methods) does the `String` → `&str` conversion for you. `self.sequence.len()` calls [`String::len`](https://doc.rust-lang.org/std/string/struct.String.html#method.len), which returns a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html).
-
-For `BedRecord`:
+For `BedRecord` the field is called `chrom` instead:
 
 ```rust
 fn name(&self) -> &str {
     &self.chrom
 }
+```
 
+The `&self.<field>` reborrows the [`String`](https://doc.rust-lang.org/std/string/struct.String.html) field as a [`&str`](https://doc.rust-lang.org/std/primitive.str.html) (string slice) — Rust's [deref coercion](https://doc.rust-lang.org/book/ch15-02-deref.html#implicit-deref-coercions-with-functions-and-methods) does the `String` → `&str` conversion for you.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 2 — `length()` for `FastaRecord` and `FastqRecord`"}
+For the two sequence-based records, the length is just the length of the `sequence` field:
+
+```rust
+fn length(&self) -> usize {
+    self.sequence.len()
+}
+```
+
+[`String::len`](https://doc.rust-lang.org/std/string/struct.String.html#method.len) returns a [`usize`](https://doc.rust-lang.org/std/primitive.usize.html), which matches the trait's return type — no cast needed.
+:::
+
+::: {.callout-tip collapse="true" title="Hint 3 — `length()` for `BedRecord` (with a type cast)"}
+`BedRecord` doesn't carry a sequence — its length is `end - start`. The catch is that `start` and `end` are `u64`, but the trait says `length` returns `usize`. Convert with an [`as` cast](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions):
+
+```rust
 fn length(&self) -> usize {
     (self.end - self.start) as usize
 }
 ```
 
-Note the [`as` cast](https://doc.rust-lang.org/reference/expressions/operator-expr.html#type-cast-expressions): `start` and `end` are `u64`, but the trait says `length` returns `usize`, so we convert.
+On a 64-bit machine `usize` and `u64` are the same width, so the cast is a no-op at runtime; the compiler just needs it to satisfy the type signature.
 :::
 
 ## Solution

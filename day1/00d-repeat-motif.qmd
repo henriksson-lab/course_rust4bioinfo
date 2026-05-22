@@ -1,5 +1,5 @@
 ---
-title: "Warm-up: repeat a motif"
+title: "Exercise: repeat a motif"
 format:
   html:
     toc: true
