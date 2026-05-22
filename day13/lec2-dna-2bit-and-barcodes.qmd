@@ -182,7 +182,7 @@ You will implement this in **Exercise 4**.
 Reverse complement is the operation a lot of bioinformatics code does most often — every alignment tool runs it on every read. The naive String version is O(n) with a loop and a per-base swap. The packed version is O(1) for 32-mers: swap_bytes is one CPU instruction, the in-byte pair swap is a constant handful of shifts and ANDs, and the final complement is one XOR. For longer reads you do this per 64-bit word and then reverse the word order — still very fast.
 :::
 
-## Hamming distance — XOR then popcount
+## Hamming distance — XOR then popcount {.smaller}
 
 For two unpacked strings, **Hamming distance** [the number of positions at which two equal-length sequences differ] is a loop with a counter. For two packed sequences, **XOR finds the differing positions** and **popcount totals them** — almost.
 
@@ -279,7 +279,7 @@ if whitelist.contains(&query) {
 The whole whitelist is 27 MB. A HashSet adds maybe a 3-4x overhead for the hash table, so call it 100 MB. That's nothing on a modern server; you load it once and reuse it across millions of lookups. The 32-bit barcode key is what makes this tractable — a String-keyed HashSet would be many times larger and much slower to hash.
 :::
 
-## Hamming-1 lookup with bit tricks
+## Hamming-1 lookup with bit tricks {.smaller}
 
 When the exact lookup misses, generate all **48 possible 1-base substitutions** of the query and test each:
 

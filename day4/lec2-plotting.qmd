@@ -88,7 +88,7 @@ matplotlib, ggplot2 and `plotters` all use these names, with minor variations. `
 Once you know the parts, switching libraries is mostly translation, not re-learning.
 :::
 
-## A histogram in three languages
+## A histogram in three languages {.smaller}
 
 ![Same data, same shape — three different toolchains produce the same picture.](images/lec2-three-languages-histogram.svg){fig-alt="Three panels side by side, each showing the same read-length histogram with about six bars peaking near 100. The panels are labelled matplotlib (Python), ggplot2 (R), and plotters (Rust). Below each panel is a six-line code snippet in the corresponding language."}
 
@@ -194,7 +194,7 @@ This is the only `plotters`-specific bit of the histogram. Everything around it 
 Every `?` is a real failure point — disk full, invalid path, malformed dimensions. The function this lives in propagates them via the `Result` return type.
 :::
 
-## A scatter plot — adding marks
+## A scatter plot — adding marks {.smaller}
 
 ```rust
 use plotters::prelude::*;
@@ -224,7 +224,7 @@ In matplotlib this would be `plt.scatter(xs, ys)`. In ggplot it would be `geom_p
 The radius is in pixels, not data units, which is normally what you want for a scatter: zooming the axes does not blow the dots up.
 :::
 
-## A line plot — connecting points
+## A line plot — connecting points {.smaller}
 
 ```rust
 let series: Vec<(f64, f64)> = (0..100)
@@ -256,7 +256,7 @@ This is the rhythm you will find with `plotters`. The setup is the same — back
 LineSeries also accepts any iterator, not just a `Vec`, so you can stream through values without collecting them first when memory matters.
 :::
 
-## Multiple series on one chart
+## Multiple series on one chart {.smaller}
 
 ```rust
 let xs: Vec<f64> = (0..100).map(|i| i as f64 * 0.1).collect();
@@ -348,7 +348,7 @@ Circle::new((x, y), 4, teal.filled());
 For custom colours, construct an `RGBColor(r, g, b)` directly. The values are `u8`, 0-255. You can also use `HSLColor` if you prefer hue-saturation-lightness.
 :::
 
-## Multi-panel charts — one image, four conditions
+## Multi-panel charts — one image, four conditions {.smaller}
 
 Say you want to compare GC content across four sequencing samples — one chart per sample, side by side. You don't want four separate files; you want one image you can drop in a paper or report.
 
@@ -376,7 +376,7 @@ Four charts, one SVG, three lines of layout code. Same trick: `split_horizontall
 The pattern is identical whether you want a 2×2 grid, a long row of barcoded samples, or a main panel with a small inset. Drawing areas nest: a sub-area is itself an area you can split further.
 :::
 
-## A scatter for the exercise
+## A scatter for the exercise {.smaller}
 
 ```rust
 // Mean quality vs read length, one point per FASTQ record.

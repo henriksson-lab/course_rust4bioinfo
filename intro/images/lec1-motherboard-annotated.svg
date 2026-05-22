@@ -23,7 +23,7 @@
   <!-- Title -->
   <text x="640" y="32" text-anchor="middle"
         font-size="22" font-weight="bold" fill="#222">
-    ASRock K7VT4A Pro motherboard &#8212; major components
+    The three components you need to recognise &#8212; CPU, RAM, storage
   </text>
 
   <!-- Embedded motherboard photo (1280 x 816) -->
@@ -32,12 +32,7 @@
          preserveAspectRatio="xMidYMid meet"/>
 
   <!-- ============================================================ -->
-  <!--  Annotations                                                 -->
-  <!--  Photo coordinate system: x in [0,1280], y in [50, 866].     -->
-  <!--  Photo is roughly: rear I/O on left edge, CPU socket centre- -->
-  <!--  left, RAM DIMM slots vertical band right of CPU, 24-pin    -->
-  <!--  ATX along the right edge, expansion slots along the bottom -->
-  <!--  edge, chipset heatsink lower-middle, capacitors around CPU.-->
+  <!--  Annotations  (only CPU, RAM, Storage)                       -->
   <!-- ============================================================ -->
 
   <!-- Style: thin solid orange lines + small filled circles at target -->
@@ -47,75 +42,35 @@
     <line x1="170" y1="170" x2="500" y2="350"
           marker-end="url(#arrow)"/>
 
-    <!-- Capacitors: target around (650, 380) -->
-    <line x1="170" y1="260" x2="640" y2="395"
-          marker-end="url(#arrow)"/>
-
-    <!-- Rear I/O ports: target around (90, 260) on left edge -->
-    <line x1="170" y1="360" x2="105" y2="270"
-          marker-end="url(#arrow)"/>
-
     <!-- RAM DIMM slots: target around (820, 320) -->
     <line x1="1100" y1="170" x2="830" y2="330"
           marker-end="url(#arrow)"/>
 
-    <!-- 24-pin ATX power connector: target around (1180, 420) -->
-    <line x1="1100" y1="260" x2="1180" y2="420"
-          marker-end="url(#arrow)"/>
-
-    <!-- Chipset heatsink: target around (720, 560) -->
-    <line x1="1100" y1="360" x2="740" y2="560"
-          marker-end="url(#arrow)"/>
-
-    <!-- PCI / AGP expansion slots: target around (500, 740) -->
-    <line x1="170" y1="700" x2="500" y2="730"
-          marker-end="url(#arrow)"/>
-
-    <!-- IDE / SATA / BIOS area: target around (1080, 700) -->
+    <!-- Storage (IDE / SATA connectors): target around (1080, 700) -->
     <line x1="1100" y1="700" x2="1060" y2="700"
           marker-end="url(#arrow)"/>
 
   </g>
 
   <!-- Labels (filled boxes for legibility) -->
-  <g font-size="15" fill="#222">
+  <g font-size="20" font-weight="bold" fill="#222">
 
     <!-- Left side labels (right-aligned text, anchored at x=165) -->
     <g text-anchor="end">
-      <rect x="20" y="155" width="150" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="160" y="172">CPU socket (Socket A)</text>
-
-      <rect x="20" y="245" width="150" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="160" y="262">Capacitors (VRM)</text>
-
-      <rect x="20" y="345" width="150" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="160" y="362">Rear I/O ports</text>
-
-      <rect x="20" y="685" width="150" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="160" y="702">PCI / AGP slots</text>
+      <rect x="40" y="150" width="130" height="32" fill="white"
+            stroke="#ff9900" stroke-width="1.5" rx="4"/>
+      <text x="160" y="173">CPU</text>
     </g>
 
     <!-- Right side labels (left-aligned text, anchored at x=1105) -->
     <g text-anchor="start">
-      <rect x="1105" y="155" width="160" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="1110" y="172">RAM DIMM slots</text>
+      <rect x="1105" y="150" width="130" height="32" fill="white"
+            stroke="#ff9900" stroke-width="1.5" rx="4"/>
+      <text x="1115" y="173">RAM</text>
 
-      <rect x="1105" y="245" width="160" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="1110" y="262">24-pin ATX power</text>
-
-      <rect x="1105" y="345" width="160" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="1110" y="362">Chipset heatsink</text>
-
-      <rect x="1105" y="685" width="160" height="22" fill="white"
-            stroke="#ff9900" stroke-width="1.2" rx="3"/>
-      <text x="1110" y="702">IDE / SATA / BIOS</text>
+      <rect x="1105" y="680" width="160" height="32" fill="white"
+            stroke="#ff9900" stroke-width="1.5" rx="4"/>
+      <text x="1115" y="703">Storage</text>
     </g>
 
   </g>
@@ -124,7 +79,7 @@
   <rect x="0" y="890" width="1280" height="90" fill="#eeeeee"/>
   <text x="640" y="920" text-anchor="middle"
         font-size="13" fill="#555">
-    Annotation positions are approximate &#8212; the photo is an ASRock K7VT4A Pro (Socket A, Athlon XP era).
+    Same three boxes &#8212; CPU, RAM, storage &#8212; in every desktop, laptop, server, or phone.
   </text>
   <text x="640" y="950" text-anchor="middle"
         font-size="12" fill="#777" font-style="italic">

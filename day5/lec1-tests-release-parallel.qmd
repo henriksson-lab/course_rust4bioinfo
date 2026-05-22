@@ -61,7 +61,7 @@ Real bioinformatics code lives for years. The PhD student who wrote it has gradu
 Six months from now, when a new postdoc changes a helper to make a different caller happy, your tests are what tells them whether they also broke the original use case. The **test suite** [collection of automated checks that run on every build] is the only durable record of the function's intended contract.
 :::
 
-## The anatomy of a Rust test
+## The anatomy of a Rust test {.smaller}
 
 A **unit test** [a small test that exercises one function in isolation] is a function with a `#[test]` attribute and an **assertion** [a runtime check that aborts the test on false].
 
@@ -313,7 +313,7 @@ Same Rust source. Same machine. Different `--release` flag, different assembly.
 
 Try it yourself: paste any function into [godbolt.org](https://godbolt.org/), select `rustc`, toggle `-O` or `-C opt-level=3`, watch the right pane shrink.
 
-## What `--release` actually changes
+## What `--release` actually changes {.smaller}
 
 | Switch | Debug | Release |
 |---|---|---|
@@ -508,7 +508,7 @@ Rust refuses to compile code that would race (two threads writing the same data 
 Docs: [`Send`](https://doc.rust-lang.org/std/marker/trait.Send.html), [`Sync`](https://doc.rust-lang.org/std/marker/trait.Sync.html).
 :::
 
-## The compiler refuses the dangerous version
+## The compiler refuses the dangerous version {.smaller}
 
 ```rust
 let mut total = 0usize;                    // shared mutable counter
@@ -548,7 +548,7 @@ Handing an item to a worker isn't free. If the per-item work is smaller than tha
 **Per-task overhead** is the bookkeeping rayon does per item, typically a few microseconds. The actual numbers depend on your CPU and the rayon thread-pool warm-up state, but the order of magnitude holds. Per-read alignment and per-record GC on long reads are both comfortably in the win zone.
 :::
 
-## Three other rayon tools worth knowing
+## Three other rayon tools worth knowing {.smaller}
 
 **`par_bridge`** — wraps any iterator (not just `&[T]`) so you can `par_iter` over noodles `Records`, file lines, etc.
 

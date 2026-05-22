@@ -30,7 +30,7 @@ A trait is the rough Rust equivalent of a Python protocol or a Java interface �
 The hook: every `derive` on day 3 was a trait impl that the compiler wrote for you. Today you learn to write them yourself, and to write code that consumes them.
 :::
 
-## A trait you've already used — `#[derive(Debug)]`
+## A trait you've already used — `#[derive(Debug)]` {.smaller}
 
 ```rust
 #[derive(Debug)]
@@ -78,7 +78,7 @@ The trait itself is just a contract. It lists method signatures with no bodies. 
 This is the same idea as a Java interface or a C# interface — declare the shape, defer the bodies to the implementing classes. The key Rust difference: types opt in by writing a separate `impl` block, not by declaring "implements Score" at the type definition.
 :::
 
-## `Display` — the human-readable face
+## `Display` — the human-readable face {.smaller}
 
 Implementing [`Display`](https://doc.rust-lang.org/std/fmt/trait.Display.html) gives a type a meaningful `{}` formatter.
 

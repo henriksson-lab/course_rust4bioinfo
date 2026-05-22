@@ -102,7 +102,7 @@ The same struct, two views. On the left, what the programmer wrote — a named r
 This is the same Vec layout from yesterday, applied to a field rather than a top-level variable. The compiler computes the struct's size at build time by adding up the sizes of its fields. That fixed size is what lets you put a `GenomicInterval` directly into a `Vec<GenomicInterval>` with no per-element heap allocation.
 :::
 
-## `impl` — methods belong to the type
+## `impl` — methods belong to the type {.smaller}
 
 :::: {.columns}
 ::: {.column width="40%"}
@@ -163,7 +163,7 @@ The Python side shows the equivalent class. `self` in Python is the explicit fir
 The next slide adds a mutating method and a constructor.
 :::
 
-## More methods — mutation and construction
+## More methods — mutation and construction {.smaller}
 
 :::: {.columns}
 ::: {.column width="55%"}
@@ -248,7 +248,7 @@ Copy is more specialised. A type can only be Copy if everything inside it is als
 PartialEq enables `==` and `!=`. Add `Eq` too when equality is reflexive — which is almost always; the famous exception is `f64`, because `NaN != NaN`.
 :::
 
-## `enum` — one of a fixed set of named values
+## `enum` — one of a fixed set of named values {.smaller}
 
 *Sometimes a variable should only hold one of a fixed set of named values — like `Strand::Plus` and `Strand::Minus`.*
 
@@ -372,7 +372,7 @@ The `..` in a struct pattern means "any remaining fields I don't care about". Us
 Control flow: a value enters from the top; arms are tried top-to-bottom; the first matching arm's body runs; the result is the result of the match expression.
 :::
 
-## Exhaustiveness — the safety net
+## Exhaustiveness — the safety net {.smaller}
 
 ```rust
 enum Strand { Plus, Minus }
@@ -565,7 +565,7 @@ The question mark is Rust's shorthand for the four-line match you'd otherwise wr
 This minimal example uses the simplest case — a fallible call whose error type matches the function's declared error type. The next slide shows the two helpers (`ok_or`, `map_err`) that bridge between different option/result/error types in a real parser.
 :::
 
-## `?` in a real parser — `ok_or` and `map_err`
+## `?` in a real parser — `ok_or` and `map_err` {.smaller}
 
 :::: {.columns}
 ::: {.column width="60%"}
@@ -716,7 +716,7 @@ HashMap is Rust's standard hash table. The two type parameters are the key type 
 For DNA k-mer keys, `Vec<u8>` works but allocates per insertion. Smarter key types — fixed-size arrays, packed 2-bit encodings — exist; we'll mention them but the exercise uses `Vec<u8>` for clarity.
 :::
 
-## The entry API — read-modify-write in one call
+## The entry API — read-modify-write in one call {.smaller}
 
 ::: {.columns}
 ::: {.column width="55%"}

@@ -143,7 +143,7 @@ R stores matrices in **column-major** order — same data, opposite layout from 
 Array2 is the bread-and-butter 2-D matrix type. Most things you'd reach for in NumPy have a direct ndarray equivalent: zeros, eye, dot, transpose, slicing, broadcasting, element-wise arithmetic. The big practical difference is that ndarray is strictly typed — Array2<f64> and Array2<i32> are different types.
 :::
 
-## Most biology matrices are sparse
+## Most biology matrices are sparse {.smaller}
 
 :::: {.columns}
 ::: {.column width="55%"}

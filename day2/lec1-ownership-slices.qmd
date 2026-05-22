@@ -90,22 +90,17 @@ Everything else in this lecture &mdash; move semantics, borrowing, slices &mdash
 ## Another classic — buffer overrun
 
 ```c
-char input[8];                  // a buffer that holds 8 bytes
-strcpy(input, "ACGTACGTACGTACGT");  // writes 16 bytes!
-// the extra 8 bytes overwrite whatever happened to sit
-// just past `input` in memory — could be another variable,
-// could be the function's return address, could be anything.
+char input[8];
+strcpy(input, "ACGTACGTACGTACGT");  // writes 16 bytes into 8!
 ```
 
-C lets you write past the end of an array silently. The first bytes go where they should; the rest **corrupt adjacent memory**. The program either crashes (if you're lucky), prints garbage (if not), or — if the overwritten region is a function pointer — runs whatever code the attacker chose.
+The extra 8 bytes silently corrupt adjacent memory — often a function return address, which an attacker can hijack.
 
-![A 16-byte write into an 8-byte buffer spills into the next allocation; that adjacent allocation might be a function-return address.](images/lec1-buffer-overrun.svg){fig-alt="A small diagram: a buffer of 8 cells labelled 'input' with the bytes ACGTACGT, followed by 8 more cells labelled 'adjacent variable' or 'return address'. A red arrow shows the strcpy writing through the buffer boundary into the adjacent region, with the labels turning red."}
+![A 16-byte write into an 8-byte buffer spills into the next allocation; that adjacent allocation might be a function-return address.](images/lec1-buffer-overrun.svg){fig-alt="A small diagram: a buffer of 8 cells labelled 'input' with the bytes ACGTACGT, followed by 8 more cells. A red arrow shows the strcpy writing through the buffer boundary into the adjacent region, with the labels turning red." width="80%"}
 
-**Where this bites the web**: every browser, every JavaScript engine, every PDF reader has been hacked through this pattern. CVE catalogues are full of "out-of-bounds write" entries.
-
-**Where this bites bioinformatics**: visualisation tools (genome browsers, alignment viewers) parsing untrusted BAM/VCF/GFF data are exactly the kind of C code where one malformed input record can corrupt memory. The bug shows up as a viewer crash; the security implication is the same as anywhere else.
-
-Rust's slice indexing checks bounds on every access — out-of-range index panics cleanly with a clear message instead of silently corrupting memory.
+- **In the wild**: most browser / PDF / image-parser CVEs
+- **In bioinformatics**: genome browsers and viewers parsing untrusted BAM/VCF/GFF
+- **In Rust**: every slice access is bounds-checked — out-of-range panics cleanly instead of silently corrupting memory
 
 ::: notes
 Pair this with the use-after-free slide. The two together cover ~70% of the C/C++ vulnerability class. Buffer overruns are arguably more famous because they enable remote code execution, not just crashes.
@@ -160,16 +155,16 @@ If everything moved on assignment, primitives would be unusable — you couldn't
 
 ## What is `Copy`, and what isn't?
 
-Rule of thumb: **small and owns no heap memory** &rArr; `Copy`.
+**Rule of thumb:** if it fits in a CPU register and owns no resource, it's `Copy`. Otherwise, it's move-only.
 
-| Type | Copy? | Why |
-|---|---|---|
-| `u8`, `i32`, `f64`, `bool`, `char` | yes | one CPU register, no resource |
-| `[u8; 4]` (fixed-size array of `Copy` types) | yes | fixed bytes, no heap |
-| `&T` (a shared reference — just a pointer) | yes | duplicating a pointer is safe |
-| `Vec<u8>`, `String`, `File`, `HashMap<K, V>` | **no** | owns a heap allocation or OS resource |
+| Type | Copy? |
+|---|---|
+| `u8`, `i32`, `f64`, `bool`, `char` | yes |
+| `[u8; 4]` — fixed-size array of `Copy` items | yes |
+| `&T` — a shared reference (just a pointer) | yes |
+| `Vec<T>`, `String`, `File`, `HashMap<K, V>` | **no** — owns a heap allocation or OS resource |
 
-If in doubt: anything that owns a heap allocation is move-only.
+If a type owns a heap allocation, copying its header would create two owners and a double-free. So Rust moves it instead.
 
 ::: notes
 The line is drawn at "does this type own a heap allocation or other resource?" A Phred score `u8` is just 1 byte; there's no resource to free, no duplication hazard. Copy it. A Vec owns a heap allocation; copying its 24-byte header would create two owners and a double-free. Move it.
@@ -254,17 +249,25 @@ You will see this error often in week one. It is almost always the compiler prot
 
 Python doesn't have a borrow checker. The same shape of bug compiles, runs, and gives you wrong answers:
 
+:::: {.columns}
+::: {.column width="55%"}
 ```python
 v = [[1, 2], [3, 4]]
-first = v[0]         # `first` IS the same list object as v[0]
-v.append([5, 6])     # grows v — but [1, 2] is still the same object
-v[0].append(99)      # mutate through the original
-print(first)         # [1, 2, 99] — `first` silently changed
+first = v[0]         # SAME object as v[0]
+v.append([5, 6])     # grow outer list
+v[0].append(99)      # mutate inner list
+print(first)
+# [1, 2, 99] — `first` silently changed
 ```
 
-Because Python lists hold *references* to mutable objects, two variables can quietly point at the same underlying data. Changing one changes the other, with no warning. The bug is famous enough to have its own anti-pattern name — *aliasing*.
+Two Python variables can quietly point at the same heap object. Mutating through one changes what the other sees — no warning. The anti-pattern has a name: **aliasing**.
 
-The same thing happens with pandas DataFrames (the chained-assignment SettingWithCopyWarning), with NumPy views, with R reference semantics.
+Same trap: pandas chained-assignment (`SettingWithCopyWarning`), NumPy views, R reference semantics.
+:::
+::: {.column width="45%"}
+![Python list aliasing: `first` and `v[0]` are two names for the same heap object. After `v[0].append(99)`, both see the mutated list.](images/lec1-python-aliasing.svg){fig-alt="Two-panel before/after diagram. Left panel 'before v[0].append(99)': a stack region with two variables 'v' and 'first'; an arrow from 'v' to a heap object showing a 2-element list of pointers, the first of which goes to a heap object [1, 2], the second to [3, 4]; 'first' also points to the [1, 2] object. Right panel 'after v[0].append(99)': same layout, but the [1, 2] object is now [1, 2, 99]; both v[0] and first still point to it, so first now shows the mutated list." width="100%"}
+:::
+::::
 
 ::: notes
 Pandas users know this pain — `df_subset = df[df.col > 0]; df_subset.col = ...` then a cryptic warning saying "you've created a view, not a copy". Rust catches this entire category at compile time. Python and R don't catch it at all — you find it by reading the wrong answer in a downstream plot.
@@ -351,14 +354,21 @@ Returning a Vec from a function moves it to the caller. No copying — just the 
 
 When you know the rough size ahead of time, three more methods avoid reallocation:
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
-let mut v = Vec::with_capacity(100);   // pre-allocate room for 100 — no growth until full
-v.push(b'A');                          // ...
-v.clear();                             // len -> 0, allocation KEPT (capacity unchanged)
-v.reserve(50);                         // ensure room for 50 more without reallocating
+let mut v = Vec::with_capacity(100);   // pre-allocate room for 100
+v.push(b'A');                          // no growth until full
+v.clear();                             // len -> 0, allocation KEPT
+v.reserve(50);                         // grow only if needed
 ```
 
 `with_capacity` and `clear` are the trick behind the revcomp-buffer exercise: allocate once, reuse forever.
+:::
+::: {.column width="45%"}
+![A `Vec` keeps `len` (current items) and `cap` (room reserved); `clear()` sets `len = 0` but the heap buffer stays allocated for reuse.](images/lec1-vec-capacity.svg){fig-alt="Three side-by-side states of a Vec on the heap. State 1 'with_capacity(100)': stack struct shows len=0, cap=100; heap shows a 100-slot buffer all empty. State 2 'after 3 pushes': len=3, cap=100; first three heap slots filled. State 3 'after clear()': len=0, cap=100; heap buffer still allocated (slots empty but reserved)." width="100%"}
+:::
+::::
 
 ::: notes
 `with_capacity(n)` pre-allocates room for n elements up front. Useful when you know the rough size — it avoids the geometric "double the capacity" reallocations as the Vec fills.
@@ -491,7 +501,7 @@ If you scaled this up to a real genome with k=21, you'd produce roughly one slic
 
 ## Writing into a caller-owned buffer
 
-A function that allocates a fresh `Vec` on every call is wasteful in a hot loop:
+A function that allocates a fresh `Vec` on every call is wasteful in a hot loop. **Allocation has a real cost** — every `Vec::new()` or `String::from(...)` goes through the system allocator, takes ~100-500 ns, and competes with every other thread doing the same.
 
 ```rust
 fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
@@ -503,7 +513,7 @@ fn reverse_complement_into(seq: &[u8], out: &mut Vec<u8>) {
 }
 ```
 
-The same heap allocation is reused across millions of calls.
+The same heap allocation is reused across millions of calls. **One allocation instead of a million.**
 
 ::: notes
 A "hot loop" is the innermost loop that runs millions or billions of times — the part that dominates total runtime. Bioinformatics has many: every k-mer pass, every base comparison, every quality check.
@@ -529,6 +539,8 @@ Multiply this by a hundred million reads and you have the difference between a t
 
 ## Quality trim returns a slice, not a Vec
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
 fn quality_trim(qual: &[u8], min_score: u8) -> &[u8] {
     let threshold = min_score + 33;
@@ -548,21 +560,14 @@ fn quality_trim(qual: &[u8], min_score: u8) -> &[u8] {
 ```
 
 Zero allocation. The returned slice borrows from `qual`.
-
-::: notes
-Exercise 4 this afternoon. Two-pointer trim: walk start rightward until you find a base that passes, walk end leftward until you find one, return the slice in between.
-
-The signature returns `&[u8]` — a borrow of the input, not a fresh allocation. This is the right shape because trimming never needs to produce new bytes; it just narrows the range of existing ones. Returning a slice is a fixed tiny amount of work regardless of how long the input is.
-
-The returned slice's lifetime is tied to qual. The caller cannot use the trimmed slice after qual itself is gone. Again — no annotation needed; the compiler infers it from the single input reference.
 :::
-
-## Quality trim — picture
-
-![Both pointers walk inward; the slice between them is what we keep.](images/quality-trim.svg){fig-alt="A 10-cell strip of Phred+33 quality bytes with cells 0-2 and 8-9 shaded grey (trimmed) and cells 3-7 shaded green (kept); two green brackets mark final positions start=3 and end=8; faded dashed arrows arc inward from the initial positions 0 and 10 — the function returns &qual[start..end]."}
+::: {.column width="45%"}
+![Both pointers walk inward; the slice between them is what we keep.](images/quality-trim.svg){fig-alt="A 10-cell strip of Phred+33 quality bytes with cells 0-2 and 8-9 shaded grey (trimmed) and cells 3-7 shaded green (kept); two green brackets mark final positions start=3 and end=8; faded dashed arrows arc inward from the initial positions 0 and 10." width="100%"}
+:::
+::::
 
 ::: notes
-The 10-cell strip is one read's worth of quality bytes. The two arcs at the top show where the pointers started; the green brackets show where they ended up. The middle five bytes pass the threshold, so the function returns `&qual[3..8]` — a five-element slice borrowing from the input. Zero bytes were copied. Zero allocations were made. The work was 10 byte comparisons.
+Exercise 4 this afternoon. Two-pointer trim: walk `start` rightward until you find a base that passes, walk `end` leftward until you find one, return the slice in between. The signature returns `&[u8]` — a borrow of the input, not a fresh allocation. Returning a slice is fixed tiny work regardless of input length. The returned slice's lifetime is tied to `qual`; the caller cannot use the trimmed slice after `qual` itself is gone. The middle five bytes pass the threshold, so the function returns `&qual[3..8]`. Zero bytes copied, zero allocations.
 :::
 
 ## Lifetime elision

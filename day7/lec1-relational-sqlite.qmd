@@ -165,7 +165,7 @@ LIMIT 5;
 A SELECT statement is the bread and butter of SQL — you will write tens of these a day in real work. The four clauses on this slide cover most one-table queries: pick a table, filter rows, sort, cut to a limit. The next slide visualises the pipeline.
 :::
 
-## Aggregation — GROUP BY + COUNT / AVG
+## Aggregation — GROUP BY + COUNT / AVG {.smaller}
 
 **Aggregation** collapses many rows into one summary row per group.
 
@@ -499,7 +499,7 @@ Each column maps to one field. NOT NULL columns map to `T`; nullable columns map
 The struct is the Rust shape of one row. The closure on the next slide turns each query row into one of these structs by calling `row.get(i)` for each column in declaration order.
 :::
 
-## Read rows back — prepare and iterate
+## Read rows back — prepare and iterate {.smaller}
 
 ```rust
 let mut stmt = conn.prepare(                            // compile once

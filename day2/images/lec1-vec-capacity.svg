@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 660"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="arrow-cap" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="6" markerHeight="6" orient="auto"
+            markerUnits="userSpaceOnUse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <text x="270" y="22" text-anchor="middle" font-size="14" font-weight="700">
+    Vec — `len` vs `cap`, and what `clear()` keeps
+  </text>
+
+  <!-- ============== STATE 1 — with_capacity ============== -->
+  <text x="270" y="50" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#1976d2">1. let mut v = Vec::with_capacity(8);</text>
+
+  <!-- Stack struct -->
+  <rect x="40" y="68" width="160" height="78" fill="#e3f2fd" stroke="#1976d2"
+        stroke-width="1.5" rx="3"/>
+  <text x="120" y="84" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#0d47a1">stack — Vec struct</text>
+  <rect x="55" y="94" width="50" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="80" y="108" text-anchor="middle" font-size="10" font-family="ui-monospace, monospace">ptr</text>
+  <circle cx="80" cy="125" r="3" fill="#1976d2"/>
+  <rect x="115" y="94" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="134" y="105" text-anchor="middle" font-size="9" fill="#888">len</text>
+  <text x="134" y="115" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">0</text>
+  <rect x="163" y="94" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="182" y="105" text-anchor="middle" font-size="9" fill="#888">cap</text>
+  <text x="182" y="115" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">8</text>
+
+  <!-- Heap buffer (8 empty slots) -->
+  <rect x="240" y="68" width="260" height="78" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="3"/>
+  <text x="370" y="84" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#b45309">heap — buffer (8 slots, all empty)</text>
+  <g transform="translate(252, 96)">
+    <rect x="0" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="30" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="60" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="90" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="120" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="150" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="180" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="210" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+  </g>
+  <path d="M 80 130 C 80 160, 240 160, 252 116" stroke="#1976d2" stroke-width="1.5"
+        fill="none" marker-end="url(#arrow-cap)"/>
+
+  <!-- ============== STATE 2 — push 3 ============== -->
+  <text x="270" y="200" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#1976d2">2. after v.push() × 3</text>
+
+  <!-- Stack struct -->
+  <rect x="40" y="218" width="160" height="78" fill="#e3f2fd" stroke="#1976d2"
+        stroke-width="1.5" rx="3"/>
+  <text x="120" y="234" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#0d47a1">stack — Vec struct</text>
+  <rect x="55" y="244" width="50" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="80" y="258" text-anchor="middle" font-size="10" font-family="ui-monospace, monospace">ptr</text>
+  <circle cx="80" cy="275" r="3" fill="#1976d2"/>
+  <rect x="115" y="244" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="134" y="255" text-anchor="middle" font-size="9" fill="#888">len</text>
+  <text x="134" y="265" text-anchor="middle" font-size="11" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">3</text>
+  <rect x="163" y="244" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="182" y="255" text-anchor="middle" font-size="9" fill="#888">cap</text>
+  <text x="182" y="265" text-anchor="middle" font-size="11" font-weight="700"
+        font-family="ui-monospace, monospace">8</text>
+
+  <!-- Heap buffer (3 filled, 5 empty) -->
+  <rect x="240" y="218" width="260" height="78" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="3"/>
+  <text x="370" y="234" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#b45309">heap — buffer (3 filled, 5 reserved)</text>
+  <g transform="translate(252, 246)">
+    <rect x="0" y="0" width="28" height="32" fill="#c8e6c9" stroke="#2e7d32"/>
+    <text x="14" y="22" text-anchor="middle" font-size="13"
+          font-family="ui-monospace, monospace">A</text>
+    <rect x="30" y="0" width="28" height="32" fill="#c8e6c9" stroke="#2e7d32"/>
+    <text x="44" y="22" text-anchor="middle" font-size="13"
+          font-family="ui-monospace, monospace">C</text>
+    <rect x="60" y="0" width="28" height="32" fill="#c8e6c9" stroke="#2e7d32"/>
+    <text x="74" y="22" text-anchor="middle" font-size="13"
+          font-family="ui-monospace, monospace">G</text>
+    <rect x="90" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="120" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="150" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="180" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="210" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+  </g>
+  <path d="M 80 280 C 80 310, 240 310, 252 266" stroke="#1976d2" stroke-width="1.5"
+        fill="none" marker-end="url(#arrow-cap)"/>
+
+  <!-- ============== STATE 3 — clear ============== -->
+  <text x="270" y="360" text-anchor="middle" font-size="12" font-weight="700"
+        fill="#1976d2">3. after v.clear()</text>
+
+  <!-- Stack struct -->
+  <rect x="40" y="378" width="160" height="78" fill="#e3f2fd" stroke="#1976d2"
+        stroke-width="1.5" rx="3"/>
+  <text x="120" y="394" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#0d47a1">stack — Vec struct</text>
+  <rect x="55" y="404" width="50" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="80" y="418" text-anchor="middle" font-size="10" font-family="ui-monospace, monospace">ptr</text>
+  <circle cx="80" cy="435" r="3" fill="#1976d2"/>
+  <rect x="115" y="404" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="134" y="415" text-anchor="middle" font-size="9" fill="#888">len</text>
+  <text x="134" y="425" text-anchor="middle" font-size="11" font-weight="700"
+        fill="#c62828" font-family="ui-monospace, monospace">0</text>
+  <rect x="163" y="404" width="38" height="22" fill="#fff" stroke="#1976d2"/>
+  <text x="182" y="415" text-anchor="middle" font-size="9" fill="#888">cap</text>
+  <text x="182" y="425" text-anchor="middle" font-size="11" font-weight="700"
+        fill="#2e7d32" font-family="ui-monospace, monospace">8</text>
+
+  <!-- Heap buffer (all empty, but allocated) -->
+  <rect x="240" y="378" width="260" height="78" fill="#fff3cd" stroke="#d97706"
+        stroke-width="1.5" rx="3"/>
+  <text x="370" y="394" text-anchor="middle" font-size="10" font-weight="700"
+        fill="#b45309">heap — buffer (empty, still allocated)</text>
+  <g transform="translate(252, 406)">
+    <rect x="0" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="30" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="60" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="90" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="120" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="150" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="180" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+    <rect x="210" y="0" width="28" height="32" fill="#fff" stroke="#d97706"/>
+  </g>
+  <path d="M 80 440 C 80 470, 240 470, 252 426" stroke="#1976d2" stroke-width="1.5"
+        fill="none" marker-end="url(#arrow-cap)"/>
+
+  <!-- Caption -->
+  <text x="270" y="520" text-anchor="middle" font-size="12" fill="#2e7d32"
+        font-weight="700">
+    Same heap buffer reused: 1 allocation instead of millions.
+  </text>
+  <text x="270" y="540" text-anchor="middle" font-size="10" fill="#555">
+    `clear()` zeroes `len`; `cap` stays the same; the heap buffer stays allocated for the next batch.
+  </text>
+
+</svg>

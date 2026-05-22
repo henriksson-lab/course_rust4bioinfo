@@ -278,7 +278,7 @@ You saw stack vs heap in the intro. The one-line summary for Rust:
 Quick recap of stack vs heap, which the intro lecture covered in depth. In Rust, fixed-size scalars live on the stack — no heap allocation. Growable containers like Vec and String use a small stack header (24 bytes: a pointer, a length, and a capacity) that points at a heap allocation holding the actual data. That makes them cheap to pass around — only the header moves — and the heap allocation stays put. We'll see the consequences of this on Day 2 when we talk about ownership (the rule that says exactly one variable is responsible for cleaning up each piece of memory).
 :::
 
-## Recap — why Python is slower
+## Recap — why Python is slower {.smaller}
 
 Python boxes every value (wraps it in a heap object with type tag + refcount). Rust stores scalars directly. That's where most of the speed gap comes from.
 

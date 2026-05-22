@@ -51,10 +51,10 @@ Forget desktop computers for a moment. Phones, laptops, HPC nodes — they are a
 
 ## The same machine in the wild
 
-![The same components as the schematic, in the wild — arrows show where each part lives on a real motherboard. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-annotated.svg){width="80%" fig-alt="An ASRock K7VT4A Pro motherboard photo with overlaid annotation arrows labelling the CPU socket, RAM DIMM slots, PCI/AGP expansion slots, chipset heatsink, capacitors, and rear I/O ports."}
+![The three things you need to recognise: CPU, RAM, storage. *Photo: Darkone, [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:ASRock_K7VT4A_Pro_Mainboard.jpg), CC BY-SA 2.5.*](images/lec1-motherboard-annotated.svg){width="80%" fig-alt="An ASRock K7VT4A Pro motherboard photo with three overlaid annotation arrows labelling only the CPU socket on the left, the RAM DIMM slots on the upper right, and the storage (IDE/SATA) connectors on the lower right."}
 
 ::: notes
-The same components as the schematic, in the wild. CPU socket, RAM slots, chipset heatsink, PCI/AGP expansion slots, capacitors, rear I/O ports. Every machine you own — phone, laptop, server — is a variant of this layout.
+The same components as the schematic, in the wild. You only need to recognise three things: the CPU socket, the RAM slots, and the storage connectors. Everything else on the board — chipset, capacitors, expansion slots, I/O ports — is plumbing. Every machine you own (phone, laptop, server) is a variant of this same three-box layout.
 :::
 
 ## Registers — the CPU's hands
@@ -95,18 +95,6 @@ You cannot have memory that is *both* huge *and* fast. Real machines stack sever
 This pyramid is the single most important picture in this lecture. Higher up: less capacity, more cost per byte, lower latency. Lower down: more capacity, less cost per byte, more latency. Every performance trick at every level — from cache lines to memory-mapped files — is about moving the data you need next as far up this pyramid as you can. Keep this picture in your head.
 :::
 
-## How fast is each level, in nanoseconds
-
-The pyramid hides just how big the gaps between layers are. Here it is on a log scale.
-
-![Eight orders of magnitude separate register from network.](images/lec1-storage-latency.svg){#fig-latency fig-alt="A horizontal bar chart with bars from 0.3 nanoseconds to 100 milliseconds on a logarithmic x-axis. Bars top to bottom: overseas ping 100 ms, local LAN 0.5 ms, HDD seek 10 ms, SSD read 0.1 ms, RAM 100 ns, L3 cache 10 ns, L2 cache 3 ns, L1 cache 1 ns, CPU register 0.3 ns. Annotation: 8 orders of magnitude between top and bottom."}
-
-*A 10 GB FASTQ file from SSD = ~3 minutes to read sequentially; from a slow HDD = 30+ minutes. From cloud storage over a fast link = ~15 minutes.*
-
-::: notes
-The chart is on a log axis because no linear axis could fit it. A register access is about 0.3 nanoseconds; an overseas network round-trip is about 100 milliseconds. That is a factor of roughly 300 million. If a register access took one heartbeat, an overseas ping would take about ten years. When you write a loop that "just reads a file" or "just hits the database", you are reaching far down this list. Programs feel slow when they spend their time in the lower half of this chart.
-:::
-
 ## The memory wall — CPUs got fast, RAM didn't
 
 CPU clock speeds rose roughly a thousand-fold from 1980 to 2005. RAM latency improved by less than a factor of ten in the same period. So the *gap* between CPU and RAM has grown to hundreds of cycles.
@@ -130,7 +118,7 @@ A **cache** is a small block of fast memory inside the CPU that automatically ho
 Caches are completely invisible to your program. You never write code that says "put this in L1". The CPU decides what to keep based on what you have touched recently. The implication is huge: the order in which you visit memory determines whether you hit cache (1 ns) or miss and go to RAM (100 ns). Sequential access patterns win; jumping all over memory loses. We will use this fact on day 2.
 :::
 
-## The CPU — arithmetic + decisions
+## The CPU — arithmetic + decisions {.smaller}
 
 The central processing unit is the one component that actually *runs* code. Everything else just feeds it or stores its results.
 
@@ -150,16 +138,18 @@ A modern CPU core does on the order of a few billion simple operations per secon
 
 When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line.
 
-::: {.fragment}
 ![Step 1: CPU asks for byte at offset 5.](images/lec1-cache-line-step1.svg){width="70%" fig-alt="A horizontal strip of 64 small square cells representing a region of RAM. The byte at offset 5 is highlighted as the byte the CPU has requested."}
-:::
-
-::: {.fragment}
-![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){width="70%" fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
-:::
 
 ::: notes
-The CPU fetches whole cache lines, not single bytes. Each fetch costs about a hundred nanoseconds.
+The CPU never fetches a single byte from RAM. It always fetches a whole 64-byte aligned block — the cache line — even if you only asked for one byte. We are about to see what the next step looks like.
+:::
+
+## A cache line — what step 2 looks like {.smaller}
+
+![Step 2: the whole 64-byte line is fetched into the cache (one slow RAM trip).](images/lec1-cache-line-step2.svg){width="70%" fig-alt="The full 64-byte cache line is shown being copied from RAM into the CPU cache as a single block, in one slow RAM access."}
+
+::: notes
+The whole 64-byte line lands in the cache as one block. Each fetch costs about a hundred nanoseconds. That is the punch line: one slow RAM trip pays for 64 bytes' worth of subsequent access.
 :::
 
 ## Cache lines — and why sequential access wins
@@ -201,13 +191,11 @@ SSDs replaced HDDs in laptops because they are about a hundred times faster for 
 
 # Inside the running program
 
-## A running program in memory
+## A running program in memory {.smaller}
 
 The OS sets up the same shape for every process: **code** at the bottom, **heap** (grows up), **stack** (grows down), with a big empty gap in between.
 
-![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="55%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom '.text (machine code, read-only)', then a 'heap' band labelled 'big data lives here' with an upward arrow showing it grows toward higher addresses, then a big empty middle marked as unused virtual address space, then a 'stack' band labelled 'variables inside functions live here' with a downward arrow, and a 'kernel space' band at the top."}
-
-![Real RAM — this is where the running program lives. Each byte has an address; the OS gives each process its own private address space. *Photo: Alan Lorenzo, [Wikimedia](https://commons.wikimedia.org/wiki/File:Memoria_DDR3_Patriot_Viper_PVS34G1333LLK_-_2.JPG), CC BY-SA 3.0.*](images/lec1-ram-photo.jpg){width="50%" fig-alt="Photo of a DDR3 RAM module."}
+![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="50%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom '.text (machine code, read-only)', then a 'heap' band labelled 'big data lives here' with an upward arrow showing it grows toward higher addresses, then a big empty middle marked as unused virtual address space, then a 'stack' band labelled 'variables inside functions live here' with a downward arrow, and a 'kernel space' band at the top."}
 
 ::: notes
 Every running program sees this layout, regardless of language. The OS gives each process its own virtual address space — a private playground that looks the same shape every time. Code (the program's instructions, loaded from your binary) and static data (fixed values known before the program starts — constants, string literals) at the bottom, the heap (a flexible pool the program asks for as it runs) growing up, and the stack (a small fast region used for function calls and local variables) growing down. The next two slides zoom in on the two regions you, as a programmer, actually interact with: the stack and the heap.
@@ -235,20 +223,20 @@ The stack is small — typically one to eight megabytes total — but extremely 
 
 ## Stack frames — push on call, pop on return {.smaller}
 
-::: {.fragment}
 ![Step 1: main() running — one frame on the stack.](images/lec1-stack-frames-step1.svg){width="55%" fig-alt="A stack diagram with a single frame for main() containing the local variable seq."}
-:::
-
-::: {.fragment}
-![Step 2: main() calls gc_count(seq) — a new frame pushed on top.](images/lec1-stack-frames-step2.svg){width="55%" fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
-:::
-
-::: {.fragment}
-![Step 3: gc_count() returns — its frame is popped; main continues.](images/lec1-stack-frames-step3.svg){width="55%" fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
-:::
 
 ::: notes
-The stack grows and shrinks one frame per function call. A stack frame is the slice of stack belonging to one call — its arguments and local variables. The frame is pushed on call, popped on return; no allocator involved, just a pointer adjustment.
+The stack grows and shrinks one frame per function call. A stack frame is the slice of stack belonging to one call — its arguments and local variables. Right now only main() is on the stack, holding its local variable seq. Next slide: what happens when main calls gc_count(seq).
+:::
+
+## Stack frames — push on call, pop on return (step 2) {.smaller}
+
+![Step 2: main() calls gc_count(seq) — a new frame pushed on top.](images/lec1-stack-frames-step2.svg){width="55%" fig-alt="The stack now has two frames: main() at the bottom and gc_count() on top, holding its local variables."}
+
+![Step 3: gc_count() returns — its frame is popped; main continues.](images/lec1-stack-frames-step3.svg){width="55%" fig-alt="The stack has returned to a single main() frame; the gc_count() frame has been popped and the result is held in main's local n."}
+
+::: notes
+A new frame is pushed when main calls gc_count, and popped when gc_count returns — no allocator involved, just a pointer adjustment.
 
 Streaming a 10 GB BAM file with samtools uses only ~100 MB RAM — the records flow through the stack, processed and dropped. Slurping it into a Python list of dicts would need 10–30 GB of heap.
 :::
@@ -301,7 +289,10 @@ This is the model that every modern OS — Linux, macOS, Windows — implements.
 
 When your Python code does `f = open("data.fa")`, the runtime issues an `open` syscall — a controlled jump into the kernel, which checks permissions, locates the file, and returns a file descriptor.
 
-![](images/lec1-syscall-animated.svg){width="80%" fig-alt="An animated diagram (auto-plays) showing the steps from your program calling `open()` and `read()` down through the kernel to the disk controller and back: the request flows down, the bytes flow back up over ~5 seconds, with stage labels appearing one at a time."}
+::: {style="text-align:center;"}
+<object type="image/svg+xml" data="images/lec1-syscall-animated.svg" width="80%" aria-label="An animated diagram (auto-plays) showing the steps from your program calling open() and read() down through the kernel to the disk controller and back: the request flows down, the bytes flow back up over ~5 seconds, with stage labels appearing one at a time.">
+</object>
+:::
 
 ::: notes
 Every interesting thing a program does crosses this boundary. Opening a file. Allocating heap memory (eventually). Reading from the network. Even printing to the screen. The syscall is the only legal way down. Crossing the boundary costs about a microsecond — much more than a function call within your program, much less than a disk read. This is why "do one big syscall not a million small ones" is universally good advice. Buffer your reads.

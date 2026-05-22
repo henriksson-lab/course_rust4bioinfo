@@ -52,7 +52,7 @@ For the example, we have `CACGT` and `CAGT`. The shorter sequence is missing one
 There are many other possible alignments; the question we want to answer is which alignment is "best", under some scoring scheme that rewards matches and penalises mismatches and gaps.
 :::
 
-## The naive recursion — what we'd write first
+## The naive recursion — what we'd write first {.smaller}
 
 Follow the English: at each step, align the last two characters, drop one from `a`, or drop one from `b`. Take the best of the three.
 
@@ -150,7 +150,7 @@ The same skeleton — "define one subproblem per table cell, fill the table once
 We'll revisit this list at the end of the lecture once the alignment example is concrete.
 :::
 
-## The rule for filling one cell
+## The rule for filling one cell {.smaller}
 
 ![Fill once in dependency order; each subproblem solved exactly once.](images/dp-cell-recurrence.svg){width="70%" fig-alt="A 2x2 grid showing four cells [i-1][j-1], [i-1][j], [i][j-1] in grey as predecessors, with the cell [i][j] highlighted in orange as the target. Three arrows from the predecessors converge on the target."}
 

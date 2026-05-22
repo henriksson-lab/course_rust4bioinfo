@@ -274,7 +274,7 @@ This is the only part of day 6 that introduces a genuinely new language feature.
 The picture is: at the `.await`, your function yields control. The browser keeps doing other work — rendering, animations, other concurrent awaits. When the awaited thing is ready, the runtime picks your task back up where it left off. There are no threads involved; this is cooperative concurrency inside a single thread.
 :::
 
-## A REST server in 20 lines of axum
+## A REST server in 20 lines of axum {.smaller}
 
 **REST** [HTTP verbs + URL paths to access named resources]. `axum` [a Rust web framework for HTTP servers] is the backend library we use today. The smallest possible backend — accepts a DNA sequence, returns its GC content:
 
@@ -584,7 +584,7 @@ Event handlers in Yew are stored in the framework and called later — so the cl
 This single rule unblocks 90 percent of the borrow-checker confusion students hit in Yew. The closures are stored by Yew; they outlive the function that built them; therefore they need to own their captures. The clone-before-move dance in the next slides exists for exactly this reason.
 :::
 
-## `use_state` — a value that survives re-renders
+## `use_state` — a value that survives re-renders {.smaller}
 
 ![The handle is stable across renders; only its value changes.](images/lec1-use-state.svg){fig-alt="Diagram of use_state. A code panel inside #[function_component(App)] shows let length = use_state(|| 0_usize); (closure called once on first render), let n: usize = *length; (read) and length.set(sequence.len()); (write — triggers rerender). A click handler reads Callback::from(move |_| { length.set(sequence.len()); }). The handle is the same on every render; only the value behind it changes."}
 
@@ -605,7 +605,7 @@ let on_click = {
 `use_state(initial)` returns a handle. Dereference it to read the value, call `.set(new)` to write. The handle is cheap to clone — it is internally reference-counted — and you will clone it a lot, because closures that get moved into event handlers each need their own copy.
 :::
 
-## Controlled input — input bound to state
+## Controlled input — input bound to state {.smaller}
 
 A **controlled input** [displayed value reads from state; changes write back] makes the Rust value the single source of truth.
 

@@ -82,7 +82,7 @@ One Rust + WGSL codebase, all of the above.
 The portability story is the practical win. CUDA only runs on NVIDIA; OpenCL is fading; SYCL is niche. wgpu+WGSL is the only thing that runs everywhere from a phone to a workstation to a browser tab. The price is that wgpu is younger, slightly less polished, and not yet uniformly supported by every bioinformatics tool — but the trajectory is clearly upward.
 :::
 
-## The 6-step compute pipeline
+## The 6-step compute pipeline {.smaller}
 
 Every wgpu compute program has these six steps. Memorise the shape — every exercise today walks through them.
 
@@ -141,7 +141,7 @@ Things to read:
 WGSL is small. The whole language fits in a one-page cheatsheet. Static types, no pointers, no recursion, deterministic execution — designed to be safe enough to run inside a browser. If you can read Rust you can read WGSL; the surface syntax is C-like but the semantics are deliberately restricted.
 :::
 
-## Workgroups, threads, dispatch
+## Workgroups, threads, dispatch {.smaller}
 
 A **workgroup** [*a group of threads that run together on one GPU compute unit; can share memory and synchronise*] is the unit of dispatch.
 
@@ -235,7 +235,7 @@ For large reductions, prefer the **workgroup-tree reduction** pattern (exercise 
 Atomics are the right tool for histograms and sparse counters. Wrong tool for "sum 100 million floats" — at that scale the atomic unit is the bottleneck. The general lesson: always think about contention before reaching for atomics, and benchmark.
 :::
 
-## Workgroup shared memory + parallel reduction
+## Workgroup shared memory + parallel reduction {.smaller}
 
 ```wgsl
 var<workgroup> partial: array<f32, 64>;

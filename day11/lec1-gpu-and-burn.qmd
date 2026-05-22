@@ -396,7 +396,7 @@ def pairwise_l2(x):                              # x: [N, D]
 Adding a size-1 axis turns a 2-D thing into a virtual 3-D cube, lets broadcasting stretch it, and the subtraction-and-sum then produces all N*N pairs in one shot. The op is one kernel on the GPU. The same idea generalises to any "all pairs of X and Y" computation — and crucially, to attention layers in modern transformer models.
 :::
 
-## PCA — back to day 10, then forward
+## PCA — back to day 10, then forward {.smaller}
 
 Day 10 used `ndarray` for dense matrices but stopped before decompositions like SVD. For full linear algebra on the CPU we reach for [**`nalgebra`**](https://nalgebra.org/) — pure Rust, no LAPACK build dependency.
 
@@ -502,7 +502,7 @@ Autodiff is the magic ingredient that turned tensors into neural networks. The f
 The chain-rule slide is for students who haven't seen autodiff before — naming the mechanism prevents it from feeling like magic. The whole training loop later is "build a graph forward, walk it backward".
 :::
 
-## A neural network is a `Module`
+## A neural network is a `Module` {.smaller}
 
 ![PromoterNet is Conv1d → ReLU → global-max-pool → Linear; the learnable parameters live in Conv1d (one filter per motif, with bias) and Linear (per-channel weight and bias).](images/lec1-module-architecture.svg){fig-alt="A horizontal block diagram with six labelled boxes connected by arrows. From left to right: Input [N, 4, L] one-hot DNA; Conv1d 4→C channels, k=6, learnable PWMs + bias; ReLU; max over L: [N, C, ·] → [N, C] global max-pool; Linear C→1, W: [1, C] + bias; Output [N, 1] promoter logit per sequence. A footnote points out which boxes contain learnable parameters." width="95%"}
 
@@ -539,7 +539,7 @@ class PromoterNet(nn.Module):
 The `derive(Module)` is the analogue of inheriting from nn.Module. It tells Burn "these fields are parameters; collect them, give them to the optimiser, save and load them as a unit". The `forward` is yours to write.
 :::
 
-## Training loop — what it looks like
+## Training loop — what it looks like {.smaller}
 
 ![The training loop in one picture: data batch → forward → loss → backward → gradients → optim.step → updated model → repeat.](images/lec1-training-loop.svg){fig-alt="A flowchart with a central box representing the model (parameters θ). Numbered steps around it: 1. next batch (x, y); 2. forward (logits = model(x)); 3. loss L(logits, y); 4. backward grads = L.backward(); 5. optim.step updates θ; 6. updated model'; 7. loop. Dashed lines connect each step back to the central model to indicate that they share the parameters being updated. The footnote notes that optim.step returns the new model — bind it back to the same name." width="95%"}
 
