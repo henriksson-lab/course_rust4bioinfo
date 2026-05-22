@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 540"
      font-family="system-ui, -apple-system, sans-serif">
 
   <!-- ===== Title ===== -->
-  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
+  <text x="520" y="28" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
     Two kinds of enum, two memory layouts
   </text>
 
@@ -11,113 +11,112 @@
        Panel 1 (left): C-style Strand enum
        ============================================================ -->
   <text x="220" y="68" text-anchor="middle" font-size="15" font-weight="700"
-        font-family="ui-monospace, monospace" fill="#1565c0">
+        font-family="ui-monospace, monospace" fill="#1976d2">
     enum Strand { Plus, Minus }
   </text>
   <text x="220" y="88" text-anchor="middle" font-size="12" fill="#555">
     no data — just a tag
   </text>
 
-  <rect x="50" y="105" width="340" height="200" fill="#e3f2fd"
-        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+  <rect x="50" y="105" width="340" height="220" fill="#e3f2fd"
+        stroke="#1976d2" stroke-width="1.5" rx="4"/>
 
   <!-- A single tiny tag byte -->
   <rect x="180" y="170" width="80" height="70" fill="white"
-        stroke="#1565c0" stroke-width="1.5"/>
+        stroke="#1976d2" stroke-width="1.5"/>
   <text x="220" y="208" text-anchor="middle" font-size="22" font-weight="700"
         font-family="ui-monospace, monospace" fill="#333">tag</text>
-  <text x="220" y="230" text-anchor="middle" font-size="11" fill="#888"
+  <text x="220" y="228" text-anchor="middle" font-size="11" fill="#888"
         font-family="ui-monospace, monospace">0 = Plus, 1 = Minus</text>
 
-  <text x="220" y="270" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32">
+  <text x="220" y="278" text-anchor="middle" font-size="14" font-weight="700" fill="#2e7d32">
     1 byte total
   </text>
-  <text x="220" y="288" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="220" y="302" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     fits in a register; #[derive(Copy)] is free
   </text>
 
   <!-- ===========================================================
        Panel 2 (right): sum-type Variant enum
        ============================================================ -->
-  <text x="680" y="68" text-anchor="middle" font-size="13" font-weight="700"
-        font-family="ui-monospace, monospace" fill="#1565c0">
+  <text x="760" y="68" text-anchor="middle" font-size="13" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#1976d2">
     enum Variant { Snp{..}, Insertion{..}, Deletion{..} }
   </text>
-  <text x="680" y="88" text-anchor="middle" font-size="12" fill="#555">
+  <text x="760" y="88" text-anchor="middle" font-size="12" fill="#555">
     tag + a union of all variant payloads
   </text>
 
-  <rect x="430" y="105" width="440" height="320" fill="#fff3cd"
+  <rect x="440" y="105" width="560" height="340" fill="#fff3cd"
         stroke="#d97706" stroke-width="1.5" rx="4"/>
 
   <!-- Tag byte -->
-  <rect x="450" y="135" width="60" height="60" fill="white"
+  <rect x="460" y="140" width="60" height="60" fill="white"
         stroke="#d97706" stroke-width="1.5"/>
-  <text x="480" y="172" text-anchor="middle" font-size="16" font-weight="700"
+  <text x="490" y="172" text-anchor="middle" font-size="16" font-weight="700"
         font-family="ui-monospace, monospace" fill="#333">tag</text>
-  <text x="480" y="210" text-anchor="middle" font-size="10" fill="#888">
-    0/1/2
-  </text>
+  <text x="490" y="190" text-anchor="middle" font-size="10" fill="#888"
+        font-family="ui-monospace, monospace">0/1/2</text>
 
   <!-- Plus sign -->
-  <text x="525" y="172" font-size="24" font-weight="700" fill="#888">+</text>
+  <text x="540" y="178" text-anchor="middle" font-size="24" font-weight="700" fill="#888">+</text>
 
   <!-- Union payload block -->
-  <rect x="550" y="125" width="300" height="160" fill="white"
+  <rect x="560" y="125" width="360" height="180" fill="white"
         stroke="#d97706" stroke-width="1.5"/>
-  <text x="700" y="143" text-anchor="middle" font-size="12" font-weight="700"
+  <text x="740" y="148" text-anchor="middle" font-size="12" font-weight="700"
         fill="#b45309">payload (union of all variants)</text>
 
   <!-- Snp variant -->
-  <rect x="562" y="155" width="276" height="30" fill="#fafafa" stroke="#bbb"/>
-  <text x="570" y="174" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+  <rect x="572" y="160" width="336" height="32" fill="#fafafa" stroke="#bbb"/>
+  <text x="582" y="180" font-size="11" font-family="ui-monospace, monospace" fill="#555">
     Snp        { pos: u64, alt: u8 }
   </text>
-  <text x="830" y="174" text-anchor="end" font-size="11" fill="#888"
+  <text x="898" y="180" text-anchor="end" font-size="11" fill="#888"
         font-family="ui-monospace, monospace">~16 B</text>
 
   <!-- Insertion variant (largest) -->
-  <rect x="562" y="190" width="276" height="40" fill="#fff8dc"
+  <rect x="572" y="198" width="336" height="48" fill="#fff8dc"
         stroke="#d97706" stroke-width="1.5"/>
-  <text x="570" y="208" font-size="11" font-family="ui-monospace, monospace" fill="#333" font-weight="700">
+  <text x="582" y="216" font-size="11" font-family="ui-monospace, monospace" fill="#333" font-weight="700">
     Insertion  { pos: u64, bases: Vec&lt;u8&gt; }
   </text>
-  <text x="570" y="223" font-size="10" fill="#b45309" font-style="italic">
+  <text x="898" y="216" text-anchor="end" font-size="11" fill="#b45309"
+        font-family="ui-monospace, monospace" font-weight="700">~32 B</text>
+  <text x="582" y="236" font-size="10" fill="#b45309" font-style="italic">
     Vec header = 24 B → this is the largest variant
   </text>
-  <text x="830" y="208" text-anchor="end" font-size="11" fill="#b45309"
-        font-family="ui-monospace, monospace" font-weight="700">~32 B</text>
 
   <!-- Deletion variant -->
-  <rect x="562" y="235" width="276" height="30" fill="#fafafa" stroke="#bbb"/>
-  <text x="570" y="254" font-size="11" font-family="ui-monospace, monospace" fill="#555">
+  <rect x="572" y="252" width="336" height="32" fill="#fafafa" stroke="#bbb"/>
+  <text x="582" y="272" font-size="11" font-family="ui-monospace, monospace" fill="#555">
     Deletion   { pos: u64, len: u64 }
   </text>
-  <text x="830" y="254" text-anchor="end" font-size="11" fill="#888"
+  <text x="898" y="272" text-anchor="end" font-size="11" fill="#888"
         font-family="ui-monospace, monospace">16 B</text>
 
   <!-- Brace + annotation -->
-  <path d="M 850 155 L 858 155 L 858 265 L 850 265" fill="none"
+  <path d="M 932 160 L 942 160 L 942 284 L 932 284" fill="none"
         stroke="#d97706" stroke-width="1.5"/>
 
-  <text x="680" y="320" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">
+  <text x="760" y="340" text-anchor="middle" font-size="14" font-weight="700" fill="#d97706">
     Size = tag + size of the largest variant (+ padding)
   </text>
-  <text x="680" y="340" text-anchor="middle" font-size="13" fill="#555">
+  <text x="760" y="362" text-anchor="middle" font-size="13" fill="#555">
     Every Variant value reserves room for any payload — even an Snp.
   </text>
-  <text x="680" y="360" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
+  <text x="760" y="384" text-anchor="middle" font-size="12" fill="#888" font-style="italic">
     Pay for the union once; pick which arm at runtime via the tag.
   </text>
-  <text x="680" y="395" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32">
+  <text x="760" y="420" text-anchor="middle" font-size="13" font-weight="700" fill="#2e7d32">
     ~40 bytes per Variant value
   </text>
 
   <!-- Footer -->
-  <text x="450" y="460" text-anchor="middle" font-size="14" fill="#333">
+  <text x="520" y="482" text-anchor="middle" font-size="14" fill="#333">
     A C-style enum is a tagged integer. A sum-type enum is a tag plus a union of payloads.
   </text>
-  <text x="450" y="482" text-anchor="middle" font-size="13" fill="#555">
+  <text x="520" y="508" text-anchor="middle" font-size="13" fill="#555">
     The compiler reads the tag, knows which arm of <tspan font-family="ui-monospace, monospace">match</tspan> applies, and lets you access exactly those fields.
   </text>
 </svg>

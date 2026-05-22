@@ -21,6 +21,20 @@ format:
 
 A ground-up tour of what is inside the machine that runs your scripts.
 
+**To fully understand Rust, you need an idea of how a computer actually works.**
+
+What we'll cover:
+
+- The big picture: CPU, RAM, registers, cache, storage
+- The memory hierarchy and the memory wall
+- Cache lines and why sequential access wins
+- How a program lays out memory: code, static data, heap, stack
+- Stack frames and function calls
+- Boxed vs unboxed values
+- The OS, syscalls, and the kernel/user-space split
+- What happens when you run a program, end to end
+- Why this matters for bioinformatics performance
+
 ::: notes
 This is the very first lecture of the course. We have not started Rust yet. The goal of the next forty-five minutes is to give you a mental picture of what a computer actually does when you press run. Almost every design decision in Rust is a response to one of the facts in this lecture, so it pays to have the picture first. If you already know what a cache line is, you can sit back; if you do not, this is for you.
 :::
@@ -132,7 +146,7 @@ The central processing unit is the one component that actually *runs* code. Ever
 A modern CPU core does on the order of a few billion simple operations per second. Add two numbers, compare them, branch — that is what an operation is. The hardware tricks that make this possible (pipelining, out-of-order execution, branch prediction, superscalar issue) are fascinating but out of scope; for our purposes, the CPU is a very fast arithmetic-and-decisions box. Modern laptops have 4 to 16 of these cores running in parallel.
 :::
 
-## A cache line — 64 bytes at a time
+## A cache line — 64 bytes at a time {.smaller}
 
 When the CPU misses cache and fetches from RAM, it does not fetch one byte — it fetches a whole **64-byte block** called a cache line.
 
@@ -185,25 +199,13 @@ SSDs replaced HDDs in laptops because they are about a hundred times faster for 
 *A whole-genome BAM is ~60 GB. A single Illumina NovaSeq S4 run produces ~6 TB of FASTQ. A cohort like UK Biobank is ~1 PB. None of this fits in RAM — streaming matters.*
 :::
 
-## GPU — thousands of small workers (briefly)
-
-A GPU is **thousands of small, simple cores** versus a CPU's small number of large ones. It shines when the same operation runs on millions of independent values, and is poor at branching code with lots of decisions.
-
-![A modern GPU has thousands of small cores, all running the same instruction on different data — perfect for image rendering, deep learning, and bioinformatics basecalling.](images/lec1-gpu-many-cores.svg){fig-alt="Schematic of a modern NVIDIA-style GPU: a large grid of small core squares (e.g. 16 x 32 = 512+ shown), grouped into Streaming Multiprocessors, with shared L2 cache and HBM/GDDR memory at the edges."}
-
-![An NVIDIA RTX 3090 Founders Edition. *Photo: Adam Kapetanakis, [Wikimedia](https://commons.wikimedia.org/wiki/File:RTX_3090_Founders_Edition!.jpg), CC BY-SA 4.0.*](images/lec1-gpu-photo.jpg){width="40%" fig-alt="Photo of an NVIDIA RTX 3090 Founders Edition graphics card showing the integrated cooler."}
-
-::: notes
-GPUs entered general computing through deep learning, but they have been used in bioinformatics for sequence alignment and variant calling too. Nanopore basecalling (Dorado) runs roughly 100x faster on GPU than CPU; AlphaFold and ESMFold predict protein structure in hours instead of weeks; DeepVariant uses a CNN for variant calling. The programming model is very different from CPU code — you write a small kernel and the runtime fans it out across thousands of threads. For this course we stay on the CPU; just be aware that the GPU exists and that it is sometimes the right tool when you have a very regular, data-parallel inner loop.
-:::
-
 # Inside the running program
 
 ## A running program in memory
 
-The OS sets up four regions of memory for every process: **code**, **static data**, **heap** (grows up), **stack** (grows down).
+The OS sets up the same shape for every process: **code** at the bottom, **heap** (grows up), **stack** (grows down), with a big empty gap in between.
 
-![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="55%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom 'text (machine code)', then 'static data', then a 'heap' band with an upward arrow, then a big empty middle, then mapped libraries, then 'stack' at the top with a downward arrow."}
+![Every process gets the same private memory shape.](images/lec1-program-memory-layout.svg){#fig-layout width="55%" fig-alt="A tall rectangle representing one process's virtual address space, divided into horizontal bands: at the bottom '.text (machine code, read-only)', then a 'heap' band labelled 'big data lives here' with an upward arrow showing it grows toward higher addresses, then a big empty middle marked as unused virtual address space, then a 'stack' band labelled 'variables inside functions live here' with a downward arrow, and a 'kernel space' band at the top."}
 
 ![Real RAM — this is where the running program lives. Each byte has an address; the OS gives each process its own private address space. *Photo: Alan Lorenzo, [Wikimedia](https://commons.wikimedia.org/wiki/File:Memoria_DDR3_Patriot_Viper_PVS34G1333LLK_-_2.JPG), CC BY-SA 3.0.*](images/lec1-ram-photo.jpg){width="50%" fig-alt="Photo of a DDR3 RAM module."}
 
@@ -231,7 +233,7 @@ main()
 The stack is small — typically one to eight megabytes total — but extremely fast and managed for you. Local variables live on the stack. Function arguments live on the stack. When a function returns, all its locals are gone instantly. You never have to ask. The price: stack values must have a size the compiler knows up-front. A 5-element array, yes. A string of unknown length read from a file, no — that one has to live on the heap. Allocating on the stack is essentially free — the CPU just moves a pointer.
 :::
 
-## Stack frames — push on call, pop on return
+## Stack frames — push on call, pop on return {.smaller}
 
 ::: {.fragment}
 ![Step 1: main() running — one frame on the stack.](images/lec1-stack-frames-step1.svg){width="55%" fig-alt="A stack diagram with a single frame for main() containing the local variable seq."}
@@ -258,6 +260,8 @@ A large region for data whose size or lifetime isn't known at compile time.
 - Ask the allocator for `n` bytes, get a pointer back
 - **Slower** than stack pushes, but **flexible** — growing vectors, unknown-length strings, graphs
 - Someone must decide when to free it: you (C), a garbage collector (Python), or the compiler (Rust)
+
+![Tidy stack frames on the left; the heap on the right holds allocations of any size, with pointers from stack-frame variables reaching into them.](images/lec1-heap-allocation.svg){width="80%" fig-alt="Two-column diagram. Left column shows a blue 'Stack' region containing three small fixed-size frames labelled process_read, parse_fastq and main, each with local variables. Right column shows a wider orange 'Heap' region containing several different-sized white rectangles representing allocations of varying sizes (a small String, a Vec<u8> of 1 KB, a Box<i64>, a 12 MB Vec<Record>, a HashMap node, a Box<[u8; 64KB]>) interspersed with small dashed 'free' gaps. Two blue pointer arrows from variables inside the stack frames point into allocations inside the heap. A box at the bottom shows the C malloc/free and Rust Box::new allocator API. Annotations on the right read 'any size, any lifetime', 'you decide when to free', 'more bookkeeping than the stack'."}
 
 ::: notes
 The heap is asked for, not assumed. C asks you to call malloc and free by hand. Python and Java use a garbage collector that figures out when something is unreachable and frees it for you. Rust uses ownership — the compiler proves at build time when each value can be freed, with no runtime garbage collector. We will see all of this on day 2. For now, just know that "on the heap" means "your program asked for it" and "on the stack" means "the compiler decided". Heap allocations are slower because the allocator has to find a free chunk of the right size.
@@ -325,8 +329,6 @@ That whole sequence happens in a few milliseconds. It involves the disk, the OS,
 - **Clinical** (DeepVariant, GATK): hours not days per patient
 - **Environmental** (Kraken2): TB-scale metagenomes, streaming
 - **Public health** (Nextstrain): thousands of samples per week
-
-![Different pipeline stages stress different parts of the machine.](images/lec1-bio-pipeline.svg){fig-alt="A horizontal flow from sample to VCF. Each stage labeled with its resource bottleneck: alignment is CPU+RAM bound; basecalling can use GPU; sort/dedup is I/O bound; variant calling can use GPU."}
 
 ::: notes
 This is the pitch for the course in one slide. Our inputs are huge ($10^8$ to $10^{12}$ bytes per dataset). Our inner loops are tight: a few simple operations repeated billions of times. Memory layout decides whether a loop runs at cache speed (~1 ns) or RAM speed (~100 ns) — a 100x gap. The deployment story matters too: scripts that need a perfectly-configured Python environment do not survive contact with HPC and cluster reality.

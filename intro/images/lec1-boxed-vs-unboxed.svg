@@ -15,7 +15,7 @@
   </text>
 
   <!-- Vertical divider between columns -->
-  <line x1="450" y1="56" x2="450" y2="380" stroke="#ddd" stroke-width="1"/>
+  <line x1="450" y1="56" x2="450" y2="395" stroke="#ddd" stroke-width="1"/>
 
   <!-- ============================================================ -->
   <!-- LEFT COLUMN: Unboxed (Rust / C)                              -->
@@ -62,7 +62,7 @@
   </text>
 
   <!-- ============================================================ -->
-  <!-- RIGHT COLUMN: Boxed (Python)                                 -->
+  <!-- RIGHT COLUMN: Boxed (Python) - stack on TOP, heap on BOTTOM    -->
   <!-- ============================================================ -->
 
   <!-- Header -->
@@ -74,65 +74,60 @@
     x = 42
   </text>
 
-  <!-- Stack + Heap region labels -->
-  <text x="540" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
+  <!-- ===== Stack region label (top) ===== -->
+  <text x="675" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#1565c0">
     Stack
   </text>
-  <text x="760" y="124" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">
+
+  <!-- Stack region (top, pointer holder) -->
+  <rect x="500" y="134" width="350" height="64" fill="#e3f2fd"
+        stroke="#1565c0" stroke-width="1.5" rx="4"/>
+
+  <!-- x cell with pointer dot -->
+  <rect x="600" y="148" width="150" height="36" fill="white"
+        stroke="#1565c0" stroke-width="1.5"/>
+  <text x="612" y="171" font-size="14" font-family="ui-monospace, monospace" fill="#333">
+    x =
+  </text>
+  <circle cx="722" cy="166" r="5" fill="#1565c0"/>
+  <text x="675" y="218" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+    one 8-byte pointer
+  </text>
+
+  <!-- ===== Heap region label (bottom) ===== -->
+  <text x="675" y="244" text-anchor="middle" font-size="13" font-weight="700" fill="#d97706">
     Heap
   </text>
 
-  <!-- Stack region (pointer holder) -->
-  <rect x="475" y="134" width="130" height="86" fill="#e3f2fd"
-        stroke="#1565c0" stroke-width="1.5" rx="4"/>
-
-  <!-- x box with pointer -->
-  <rect x="490" y="154" width="100" height="44" fill="white"
-        stroke="#1565c0" stroke-width="1.5"/>
-  <text x="502" y="183" font-size="14" font-family="ui-monospace, monospace" fill="#333">
-    x
-  </text>
-  <circle cx="572" cy="176" r="5" fill="#1565c0"/>
-
   <!-- Heap region -->
-  <rect x="630" y="134" width="260" height="186" fill="#fff3cd"
+  <rect x="500" y="254" width="350" height="118" fill="#fff3cd"
         stroke="#d97706" stroke-width="1.5" rx="4"/>
 
   <!-- Python integer object box -->
-  <rect x="646" y="150" width="228" height="156" fill="white"
+  <rect x="518" y="268" width="314" height="90" fill="white"
         stroke="#d97706" stroke-width="1.5"/>
-  <text x="760" y="170" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">
-    Python integer object
+  <text x="675" y="286" text-anchor="middle" font-size="13" font-weight="700" fill="#b45309">
+    Python integer object (~28 bytes)
   </text>
-  <text x="760" y="186" text-anchor="middle" font-size="11" fill="#b45309" font-style="italic">
-    (~28 bytes)
-  </text>
-  <line x1="654" y1="194" x2="866" y2="194" stroke="#d97706" stroke-width="0.6" stroke-dasharray="3,2"/>
+  <line x1="526" y1="294" x2="824" y2="294" stroke="#d97706" stroke-width="0.6" stroke-dasharray="3,2"/>
 
-  <text x="660" y="218" font-size="13" font-family="ui-monospace, monospace" fill="#555">
+  <text x="532" y="314" font-size="12" font-family="ui-monospace, monospace" fill="#555">
     refcount: 1
   </text>
-  <text x="660" y="246" font-size="13" font-family="ui-monospace, monospace" fill="#555">
-    type: int
+  <text x="532" y="332" font-size="12" font-family="ui-monospace, monospace" fill="#555">
+    type ptr -&gt; int
   </text>
-  <text x="660" y="282" font-size="13" font-family="ui-monospace, monospace" fill="#333">
-    value:
-  </text>
-  <text x="862" y="288" text-anchor="end" font-size="22" font-weight="700"
-        font-family="ui-monospace, monospace" fill="#333">
-    42
+  <text x="532" y="350" font-size="12" font-family="ui-monospace, monospace" fill="#333">
+    value: 42
   </text>
 
-  <!-- Arrow from stack to heap object -->
-  <line x1="578" y1="176" x2="640" y2="220"
+  <!-- Arrow from stack cell DOWN into heap object (keep the pointer) -->
+  <line x1="722" y1="172" x2="722" y2="266"
         stroke="#1565c0" stroke-width="2" marker-end="url(#bu-arrow)"/>
 
   <!-- Annotation under boxed -->
-  <text x="675" y="346" text-anchor="middle" font-size="18" font-weight="700" fill="#d97706">
-    ~36 bytes
-  </text>
-  <text x="675" y="368" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
-    ~28 byte heap object + 8 byte stack pointer.
+  <text x="675" y="392" text-anchor="middle" font-size="16" font-weight="700" fill="#d97706">
+    ~36 bytes total
   </text>
 
   <!-- ============================================================ -->

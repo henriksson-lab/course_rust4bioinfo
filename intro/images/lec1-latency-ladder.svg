@@ -1,154 +1,163 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 320"
      font-family="system-ui, -apple-system, sans-serif">
 
   <defs>
     <marker id="ll-arrow" viewBox="0 0 10 10" refX="9" refY="5"
-            markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+            markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse"
+            orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
     </marker>
   </defs>
 
   <!-- ===== Title ===== -->
-  <text x="450" y="32" text-anchor="middle" font-size="22" font-weight="700" fill="#333">
-    The latency ladder: register to RAM
+  <text x="540" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#333">
+    The latency ladder: register to RAM (and what is missing beyond it)
   </text>
 
   <!-- ===== Top annotation ===== -->
-  <rect x="120" y="56" width="660" height="36" fill="#e8f5e9"
+  <rect x="200" y="44" width="680" height="28" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="1.2" rx="4"/>
-  <text x="450" y="80" text-anchor="middle" font-size="16" font-weight="700" fill="#1b5e20">
+  <text x="540" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e20">
     Every miss costs ~10x the previous level.
   </text>
 
   <!-- ============================================================ -->
-  <!-- 5 boxes in a horizontal row.                                  -->
-  <!-- Box width 130, height 90, gap 28.                             -->
-  <!-- Row y = 150 (top of boxes). Centre at y = 195.                -->
-  <!-- x positions: 30, 188, 346, 504, 662  -> next box at x+158     -->
-  <!-- Arrow between boxes from (x+130) to (x+158)                   -->
+  <!-- 5 ladder boxes + one "missing" box at the far right.          -->
+  <!-- Box width 130, height 80, gap 24.                             -->
+  <!-- y_top = 110, y_centre = 150                                   -->
+  <!-- x positions: 20, 174, 328, 482, 636, plus missing at 820      -->
   <!-- ============================================================ -->
 
   <!-- Box 1: Register (green) -->
-  <rect x="30" y="150" width="130" height="90" fill="#e8f5e9"
+  <rect x="20" y="110" width="130" height="80" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="2" rx="8"/>
-  <text x="95" y="180" text-anchor="middle" font-size="16" font-weight="700" fill="#1b5e20">
+  <text x="85" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#1b5e20">
     Register
   </text>
-  <text x="95" y="208" text-anchor="middle" font-size="20" font-weight="700"
+  <text x="85" y="164" text-anchor="middle" font-size="18" font-weight="700"
         font-family="ui-monospace, monospace" fill="#1b5e20">
     0.3 ns
   </text>
-  <text x="95" y="228" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="85" y="182" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     inside CPU
   </text>
 
   <!-- Arrow 1 -->
-  <line x1="162" y1="195" x2="186" y2="195" stroke="#555" stroke-width="2"
+  <line x1="152" y1="150" x2="172" y2="150" stroke="#555" stroke-width="2"
         marker-end="url(#ll-arrow)"/>
-  <text x="174" y="180" text-anchor="middle" font-size="11"
+  <text x="162" y="138" text-anchor="middle" font-size="10"
         font-family="ui-monospace, monospace" fill="#555">miss</text>
 
   <!-- Box 2: L1 cache (green) -->
-  <rect x="188" y="150" width="130" height="90" fill="#e8f5e9"
+  <rect x="174" y="110" width="130" height="80" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="2" rx="8"/>
-  <text x="253" y="180" text-anchor="middle" font-size="16" font-weight="700" fill="#1b5e20">
+  <text x="239" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#1b5e20">
     L1 cache
   </text>
-  <text x="253" y="208" text-anchor="middle" font-size="20" font-weight="700"
+  <text x="239" y="164" text-anchor="middle" font-size="18" font-weight="700"
         font-family="ui-monospace, monospace" fill="#1b5e20">
     1 ns
   </text>
-  <text x="253" y="228" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="239" y="182" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     on-die
   </text>
 
   <!-- Arrow 2 -->
-  <line x1="320" y1="195" x2="344" y2="195" stroke="#555" stroke-width="2"
+  <line x1="306" y1="150" x2="326" y2="150" stroke="#555" stroke-width="2"
         marker-end="url(#ll-arrow)"/>
-  <text x="332" y="180" text-anchor="middle" font-size="11"
+  <text x="316" y="138" text-anchor="middle" font-size="10"
         font-family="ui-monospace, monospace" fill="#555">miss</text>
 
   <!-- Box 3: L2 cache (light orange) -->
-  <rect x="346" y="150" width="130" height="90" fill="#fff3cd"
+  <rect x="328" y="110" width="130" height="80" fill="#fff3cd"
         stroke="#d97706" stroke-width="2" rx="8"/>
-  <text x="411" y="180" text-anchor="middle" font-size="16" font-weight="700" fill="#b45309">
+  <text x="393" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309">
     L2 cache
   </text>
-  <text x="411" y="208" text-anchor="middle" font-size="20" font-weight="700"
+  <text x="393" y="164" text-anchor="middle" font-size="18" font-weight="700"
         font-family="ui-monospace, monospace" fill="#b45309">
     3 ns
   </text>
-  <text x="411" y="228" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="393" y="182" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     per core
   </text>
 
   <!-- Arrow 3 -->
-  <line x1="478" y1="195" x2="502" y2="195" stroke="#555" stroke-width="2"
+  <line x1="460" y1="150" x2="480" y2="150" stroke="#555" stroke-width="2"
         marker-end="url(#ll-arrow)"/>
-  <text x="490" y="180" text-anchor="middle" font-size="11"
+  <text x="470" y="138" text-anchor="middle" font-size="10"
         font-family="ui-monospace, monospace" fill="#555">miss</text>
 
   <!-- Box 4: L3 cache (orange) -->
-  <rect x="504" y="150" width="130" height="90" fill="#ffe0b2"
+  <rect x="482" y="110" width="130" height="80" fill="#ffe0b2"
         stroke="#d97706" stroke-width="2" rx="8"/>
-  <text x="569" y="180" text-anchor="middle" font-size="16" font-weight="700" fill="#b45309">
+  <text x="547" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#b45309">
     L3 cache
   </text>
-  <text x="569" y="208" text-anchor="middle" font-size="20" font-weight="700"
+  <text x="547" y="164" text-anchor="middle" font-size="18" font-weight="700"
         font-family="ui-monospace, monospace" fill="#b45309">
     10 ns
   </text>
-  <text x="569" y="228" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="547" y="182" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     shared
   </text>
 
   <!-- Arrow 4 -->
-  <line x1="636" y1="195" x2="660" y2="195" stroke="#555" stroke-width="2"
+  <line x1="614" y1="150" x2="634" y2="150" stroke="#555" stroke-width="2"
         marker-end="url(#ll-arrow)"/>
-  <text x="648" y="180" text-anchor="middle" font-size="11"
+  <text x="624" y="138" text-anchor="middle" font-size="10"
         font-family="ui-monospace, monospace" fill="#555">miss</text>
 
   <!-- Box 5: RAM (red) -->
-  <rect x="662" y="150" width="130" height="90" fill="#ffcdd2"
+  <rect x="636" y="110" width="130" height="80" fill="#ffcdd2"
         stroke="#c62828" stroke-width="2" rx="8"/>
-  <text x="727" y="180" text-anchor="middle" font-size="16" font-weight="700" fill="#c62828">
+  <text x="701" y="138" text-anchor="middle" font-size="15" font-weight="700" fill="#c62828">
     RAM
   </text>
-  <text x="727" y="208" text-anchor="middle" font-size="20" font-weight="700"
+  <text x="701" y="164" text-anchor="middle" font-size="18" font-weight="700"
         font-family="ui-monospace, monospace" fill="#c62828">
     100 ns
   </text>
-  <text x="727" y="228" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
+  <text x="701" y="182" text-anchor="middle" font-size="11" fill="#555" font-style="italic">
     off-chip
   </text>
 
-  <!-- "next level" labels under arrows -->
-  <text x="174" y="258" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
-    next level
+  <!-- Big gap arrow into the missing box -->
+  <line x1="768" y1="150" x2="818" y2="150" stroke="#888" stroke-width="2"
+        stroke-dasharray="5,3"
+        marker-end="url(#ll-arrow)"/>
+  <text x="793" y="138" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#888">page fault</text>
+
+  <!-- Box 6: "missing" — disk / SSD off the on-die chart -->
+  <rect x="820" y="110" width="240" height="80" fill="#fafafa"
+        stroke="#888" stroke-width="2" stroke-dasharray="6,4" rx="8"/>
+  <text x="940" y="134" text-anchor="middle" font-size="14" font-weight="700" fill="#555">
+    SSD / disk
   </text>
-  <text x="332" y="258" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
-    next level
+  <text x="940" y="158" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
+    (missing — not on the CPU)
   </text>
-  <text x="490" y="258" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
-    next level
-  </text>
-  <text x="648" y="258" text-anchor="middle" font-size="11" fill="#888" font-style="italic">
-    next level
+  <text x="940" y="180" text-anchor="middle" font-size="14" font-weight="700"
+        font-family="ui-monospace, monospace" fill="#555">
+    100,000+ ns
   </text>
 
   <!-- ===== Span annotation: ~300x slower ===== -->
-  <line x1="95" y1="295" x2="727" y2="295" stroke="#333" stroke-width="1.5"/>
-  <line x1="95" y1="289" x2="95" y2="301" stroke="#333" stroke-width="1.5"/>
-  <line x1="727" y1="289" x2="727" y2="301" stroke="#333" stroke-width="1.5"/>
-  <text x="411" y="318" text-anchor="middle" font-size="16" font-weight="700" fill="#333">
-    From register to RAM: ~300x slower
+  <line x1="85" y1="220" x2="701" y2="220" stroke="#333" stroke-width="1.5"/>
+  <line x1="85" y1="214" x2="85" y2="226" stroke="#333" stroke-width="1.5"/>
+  <line x1="701" y1="214" x2="701" y2="226" stroke="#333" stroke-width="1.5"/>
+  <text x="393" y="244" text-anchor="middle" font-size="15" font-weight="700" fill="#333">
+    Register to RAM: ~300x slower
   </text>
-  <text x="411" y="340" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
-    A cache-friendly program stays at the green end of the ladder.
+
+  <!-- Footer caption -->
+  <text x="540" y="280" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    Cache-friendly programs stay at the green end. Cache-hostile programs pay the red price.
   </text>
-  <text x="411" y="360" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
-    A cache-hostile program pays the red price on every access.
+  <text x="540" y="302" text-anchor="middle" font-size="13" fill="#555" font-style="italic">
+    The dashed "missing" box is a reminder: a disk hit costs another 1000x on top of RAM.
   </text>
 
 </svg>

@@ -126,38 +126,32 @@
     ~100 ns
   </text>
 
-  <!-- CPU <-> Storage bus: medium thickness, through GPU lane area -->
-  <line x1="520" y1="200" x2="690" y2="140" stroke="#888" stroke-width="3"
+  <!-- CPU <-> Storage bus: routed below RAM to avoid overlap -->
+  <polyline points="520,205 530,290 680,290 680,182" fill="none" stroke="#888" stroke-width="3"
         marker-end="url(#bus-arrow)" marker-start="url(#bus-arrow)"/>
-  <text x="630" y="158" text-anchor="middle" font-size="10" fill="#555" font-weight="700">
-    PCIe
-  </text>
-  <text x="630" y="172" text-anchor="middle" font-size="10" fill="#666">
-    ~10 us
+  <text x="600" y="283" text-anchor="middle" font-size="10" fill="#555" font-weight="700">
+    PCIe ~10 us (to SSD)
   </text>
 
-  <!-- CPU <-> Network bus: thin -->
-  <line x1="520" y1="215" x2="690" y2="240" stroke="#aaa" stroke-width="1.5"
+  <!-- CPU <-> Network bus: thin, routed below storage bus -->
+  <polyline points="520,215 540,308 685,308 685,210" fill="none" stroke="#aaa" stroke-width="1.5"
         marker-end="url(#bus-arrow)" marker-start="url(#bus-arrow)"/>
-  <text x="535" y="208" text-anchor="start" font-size="10" fill="#666" font-weight="700">
-    PCIe
-  </text>
-  <text x="535" y="222" text-anchor="start" font-size="10" fill="#666">
-    NIC
+  <text x="600" y="320" text-anchor="middle" font-size="10" fill="#666" font-weight="700">
+    PCIe NIC
   </text>
 
   <!-- CPU <-> GPU bus -->
   <line x1="430" y1="220" x2="390" y2="320" stroke="#888" stroke-width="3"
         marker-end="url(#bus-arrow)" marker-start="url(#bus-arrow)"/>
-  <text x="350" y="275" text-anchor="middle" font-size="10" fill="#555" font-weight="700">
+  <text x="345" y="278" text-anchor="middle" font-size="10" fill="#555" font-weight="700">
     PCIe x16
   </text>
 
-  <!-- PSU power lines (thin grey) -->
-  <line x1="150" y1="140" x2="340" y2="140" stroke="#bbb" stroke-width="1" stroke-dasharray="2,3"/>
+  <!-- PSU power lines (thin grey, routed to avoid the data buses) -->
+  <line x1="150" y1="120" x2="340" y2="120" stroke="#bbb" stroke-width="1" stroke-dasharray="2,3"/>
   <line x1="150" y1="180" x2="200" y2="350" stroke="#bbb" stroke-width="1" stroke-dasharray="2,3"/>
-  <line x1="150" y1="200" x2="690" y2="245" stroke="#bbb" stroke-width="1" stroke-dasharray="2,3"/>
-  <text x="170" y="135" font-size="9" fill="#aaa" font-style="italic">power</text>
+  <polyline points="150,220 170,400 870,400 870,245 850,245" fill="none" stroke="#bbb" stroke-width="1" stroke-dasharray="2,3"/>
+  <text x="160" y="115" font-size="9" fill="#aaa" font-style="italic">power</text>
 
   <!-- ===== Footer caption ===== -->
   <text x="450" y="478" text-anchor="middle" font-size="13" fill="#333">

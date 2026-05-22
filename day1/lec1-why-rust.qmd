@@ -29,35 +29,37 @@ format:
 Welcome to day 1 of the course. This is the first of two short lectures today. Twelve lectures across the week, but most of the time you spend on the keyboard, not on me. Today I want to motivate the choice of language. If you finish the lecture not convinced Rust is interesting, the exercises will be harder.
 :::
 
-## Three numbers up front
+## What Rust looks like — same code, three languages {.smaller}
 
-::: {style="font-size: 1.2em;"}
-- **10×–100×** — typical Rust speedup over Python on bioinformatics inner loops
-- **1 file** — a Rust **binary** (the single executable file the compiler produces) has zero extra deployment dependencies
-- **0** — data races possible in safe Rust (enforced at **compile time** — checked when you build the program, before it ever runs)
-:::
+Count the G + C bases in a short DNA string.
 
-::: notes
-I want to give the punchline before I give the argument, so you know where we are going. Three numbers. Performance, deployability, safety. Each of these will get its own slide.
-:::
-
-## A representative workload — counting k-mers
+:::: {.columns}
+::: {.column width="33%"}
+**Python**
 
 ```python
-# Python (CPython 3.12), single-threaded
-from collections import Counter
-
-def count_kmers(seq: str, k: int) -> Counter:
-    return Counter(seq[i:i + k] for i in range(len(seq) - k + 1))
+count = 0
+for base in "ACGTACGT":
+    if base == 'G' or base == 'C':
+        count += 1
+print(count)
 ```
-
-::: notes
-Here is the kind of thing every bioinformatics tool does in its inner loop somewhere: count contiguous substrings of length k from a long DNA sequence. This is the Python version. Idiomatic, four lines, clear what it does. You could write it in 30 seconds.
 :::
+::: {.column width="33%"}
+**R**
 
-## What Rust looks like — a 3-line taste
-
-Before the dense version, here is the smallest possible Rust example: declare a counter, loop, print.
+```r
+count <- 0
+for (b in strsplit("ACGTACGT", "")[[1]]) {
+  if (b == "G" || b == "C") {
+    count <- count + 1
+  }
+}
+print(count)
+```
+:::
+::: {.column width="33%"}
+**Rust**
 
 ```rust
 let mut count = 0;
@@ -68,53 +70,70 @@ for base in "ACGTACGT".chars() {
 }
 println!("{}", count);
 ```
+:::
+::::
 
-- `let mut count = 0;` — declare a mutable variable (Rust variables are read-only by default)
-- `for base in ...` — same shape as Python's for loop
-- `println!` — print; the `!` marks it as a macro, not a function
+Same shape in all three. Rust adds `let mut` (variables are read-only by default) and `!` after `println` (it's a macro, not a function). Everything else reads the same.
 
 ::: notes
-This is what Rust looks like for a beginner. Three lines do the work. If you can read a Python for loop, you can read this. Notice mut: Rust makes you ask for mutability explicitly, which is one of the small habits the language pushes on you. The next slide jumps to a denser example using collections and slices; if any of it looks intimidating, remember we will spend day 1 and day 2 unpacking exactly these pieces.
+If you can read the Python and R versions, you can read the Rust version. The three languages have nearly the same syntax for an imperative for-loop. The only conceptual additions in Rust are `mut` to opt into mutability and the bang on `println!` to mark a macro. The next slide jumps to a denser k-mer example using collections — same story in all three languages, just with `dict`, `list`, or `HashMap` doing the bookkeeping.
 :::
 
-## Same algorithm in Rust
+## Counting k-mers in three languages {.smaller}
+
+:::: {.columns}
+::: {.column width="33%"}
+**Python**
+
+```python
+from collections import Counter
+
+def count_kmers(seq, k):
+    return Counter(
+        seq[i:i+k]
+        for i in range(len(seq)-k+1)
+    )
+```
+:::
+::: {.column width="33%"}
+**R**
+
+```r
+count_kmers <- function(seq, k) {
+  n <- nchar(seq) - k + 1
+  table(substring(seq, 1:n, k:nchar(seq)))
+}
+```
+:::
+::: {.column width="33%"}
+**Rust**
 
 ```rust
 use std::collections::HashMap;
 
-fn count_kmers(seq: &[u8], k: usize) -> HashMap<Vec<u8>, usize> {
-    let mut counts: HashMap<Vec<u8>, usize> = HashMap::new();
-    for window in seq.windows(k) {
-        *counts.entry(window.to_vec()).or_insert(0) += 1;
+fn count_kmers(seq: &[u8], k: usize)
+    -> HashMap<Vec<u8>, usize>
+{
+    let mut counts = HashMap::new();
+    for w in seq.windows(k) {
+        *counts.entry(w.to_vec())
+               .or_insert(0) += 1;
     }
     counts
 }
 ```
+:::
+::::
+
+Same algorithm. Rust adds type signatures (`&[u8]`, `usize`, `HashMap<...>`) — that information is *also* present in Python and R, just inferred at runtime instead of checked at compile time.
 
 ::: notes
-The Rust version. Same algorithm. Slightly more types. You will write code that looks essentially like this on day 3 — this is from the day-3 kmer-counts exercise. The bytes are u8 instead of characters; the dictionary is a HashMap. Otherwise: same structure, same length.
+The Rust version is slightly longer because the types are written out. They're not extra work — Python and R are doing the same type inference at run time. The win is that Rust catches the mistake of calling `count_kmers("ACGT", "21")` (string instead of int) at compile time; Python and R only catch it once that branch executes, sometimes hours into a pipeline.
 :::
 
-## The performance gap
+## Rust is faster, with almost the same code
 
-On a 10 megabase genome with k = 21, single-threaded:
-
-| Implementation | Wall-clock |
-|---|---|
-| Python (CPython 3.12) | ~ 44 s |
-| PyPy 3.10 | ~ 7 s |
-| **Rust `--release`** | **~ 0.8 s** |
-| Rust + `rayon`, 8 cores | ~ 0.1 s |
-
-::: notes
-When you actually run them, on a representative dataset, this is the typical gap. CPython is what you get with an idiomatic Python script. PyPy is faster but still nowhere close. Rust with the release flag is fifty times faster than CPython. Add rayon — which you will write on day 5, with a one-line change — and you get another factor of eight from your CPU cores.
-
-Numbers vary by hardware, by k, by how much of your hot loop is in NumPy versus pure Python. But the order of magnitude is reliable.
-:::
-
-## The performance gap — visualised
-
-![Rust --release is ~50x CPython; rayon adds another ~8x.](images/lec1-perf-bars.svg){#fig-perf-bars fig-alt="Horizontal bar chart with a log-scale wall-clock axis from 0.1 s to 100 s. Four bars from top to bottom: CPython 3.12 at 44 seconds (grey), PyPy 3.10 at 7 seconds (grey), Rust release at 0.8 seconds (highlighted yellow with orange border), Rust plus rayon on 8 cores at 0.1 seconds (green). Tick labels at 0.1, 1, 10, 100 seconds. Footer notes speedups versus CPython of roughly 1x, 6x, 55x, 440x. Wall-clock for k-mer counting at k=21 on a 10 Mb genome, across four implementations."}
+![Wall-clock for k-mer counting at k=21 on a 10 Mb genome, across four implementations.](images/lec1-perf-bars.svg){#fig-perf-bars fig-alt="Horizontal bar chart with a log-scale wall-clock axis from 0.1 s to 100 s. Four bars from top to bottom: CPython 3.12 at 44 seconds (grey), PyPy 3.10 at 7 seconds (grey), Rust release at 0.8 seconds (highlighted yellow with orange border), Rust plus rayon on 8 cores at 0.1 seconds (green)."}
 
 ## Why this matters in bioinformatics
 
@@ -153,51 +172,49 @@ Containers help. Conda environments help. They are also one more thing the user 
 
 ## `crates.io` replaces a whole stack of tools
 
-Python and R deal with the dependency mess by layering **container and environment managers** on top:
+:::: {.columns}
+::: {.column width="55%"}
+Python and R patch the dependency mess by layering **container and environment managers** on top:
 
 - **Docker**, **Podman** — container runtimes
 - **Apptainer** (formerly Singularity) — HPC-friendly containers
 - **Conda**, **mamba** — package + environment managers
 
-Each one exists because Python and R libraries pull in C, C++, Fortran, system libraries, the right libc...
+A container ships **your script + every library + a whole Linux** — often 1-2 GB to run a 50-line analysis.
 
-Rust binaries pull in **nothing** at run time. `cargo build --release` produces a single static executable. `cargo install some-tool` fetches the source and builds it. [`crates.io`](https://crates.io) is the index — one tool, one ecosystem.
+Rust binaries pull in **nothing** at run time. `cargo build --release` produces a single static executable; `cargo install some-tool` fetches the source and builds it. [`crates.io`](https://crates.io) is the index — one tool, one ecosystem.
 
-The tool *is* the artifact. No container needed.
+**The tool *is* the artifact.** No container needed.
+:::
+::: {.column width="45%"}
+![A container ships your code plus its libraries plus a whole Linux userspace — often 1-2 GB. A Rust binary is just the code, statically linked: a few megabytes.](images/lec1-container-vs-binary.svg){fig-alt="Left: a stylised shipping container, labelled 'Docker / Apptainer / Conda', stacked from bottom to top with: 'Linux base image (Ubuntu, Alpine, ...)', 'system libraries (libc, libssl, ...)', 'language runtime (Python, R)', 'pip / conda packages', 'your script'. Total size labelled '~1-2 GB'. Right: a single small box labelled 'my_rust_tool (4 MB static binary)' with a tick mark, no container around it." width="100%"}
+:::
+::::
 
 ::: notes
-Containers and Conda environments exist to paper over an ecosystem problem: Python and R packages have deep, fragile native dependencies. Rust skips the problem by linking everything statically into the binary by default. The same `cargo install` command works on a laptop, an HPC node, and a Docker image — without Docker. This single change makes it dramatically easier to ship a tool that other people can actually run.
+Containers and Conda environments exist to paper over an ecosystem problem: Python and R packages have deep, fragile native dependencies that the Python runtime alone cannot satisfy. The standard workaround is a container — but a container is a whole operating system image plus all the libraries plus the runtime plus your code. Rust skips the problem by linking everything statically into the binary by default. The same `cargo install` command works on a laptop, an HPC node, and a Docker image — without Docker.
 :::
 
 ## Type safety — what Python and R skip
 
-::: {.columns}
+:::: {.columns}
 ::: {.column width="50%"}
-**Python — explodes at runtime**
-
-```python
-def add(a, b):
-    return a + b
-
-add(3, "seven")
-# TypeError: unsupported operand
-#   type(s) for +: 'int' and 'str'
-```
-
-**R — boilerplate to defend the function**
+**R — defend the function by hand**
 
 ```r
 add <- function(a, b) {
-  stopifnot(is.numeric(a),
-            is.numeric(b))
-  a + b
-}
-add(3, "seven")  # still errors at runtime
+  stopifnot(is.numeric(a),   # ← Rust
+            is.numeric(b))   # ← doesn't
+  a + b                      #   need
+}                            #   these
+add(3, "seven")
+# Error: is.numeric(b) is not TRUE
+#   (at runtime, not at write time)
 ```
 :::
 
 ::: {.column width="50%"}
-**Rust — caught before the program runs**
+**Rust — the type signature is the check**
 
 ```rust
 fn add(a: i32, b: i32) -> i32 {
@@ -207,19 +224,20 @@ fn add(a: i32, b: i32) -> i32 {
 add(3, "seven");
 // error[E0308]: mismatched types
 //   expected `i32`, found `&str`
+//   (caught at compile, never ships)
 ```
+:::
+::::
 
-No `stopifnot`, no `assertthat::assert_that`, no defensive `if (!is.numeric(x))` blocks at the top of every function. **The type signature is the check.**
-:::
-:::
+The `stopifnot(...)` block on the left is the **same check** the Rust signature does on the right — except R does it at every call, at runtime, after the type information has already been written.
 
 ::: notes
 This is a subtle but huge productivity win. In R, defensive argument checking is so common that there are whole packages for it (assertthat, checkmate). Every function starts with a wall of stopifnot calls, and even then the errors only fire at runtime — usually deep inside a long-running pipeline. In Rust the type signature does the work. If a function takes an i32, the compiler refuses to even build a program that tries to pass a string. The "bug" never reaches a test, never reaches production, never wakes up the on-call data scientist at 2am.
 :::
 
-## Safety — what the word means here
+## Safety — and why it matters
 
-These are the bugs that make C programs crash unpredictably — Rust catches them before the program runs.
+A **segfault** (segmentation fault — what happens when a program touches memory it doesn't own) is the classic crash mode of C and C++: the operating system spots a bad memory access and kills the process. Python and Rust are designed so you almost never see one — Python checks at runtime, Rust at compile time.
 
 ```rust
 let mut seq = vec![0u8; 100];
@@ -242,37 +260,28 @@ error[E0502]: cannot borrow `seq` as mutable because it is also
 ```
 
 ::: notes
-When I say Rust is safe, I mean the compiler catches at compile time the class of bug that crashes C and C++ programs at runtime (while the program is executing on a user's machine): dangling pointers, use-after-free, data races, buffer overruns.
-
-This is not a runtime check. There is no garbage collector (the background process Python and Java run to free unused memory automatically). It is the compiler refusing to compile broken code. The error message you see here is the actual output for the snippet above — and notice the message tells you what is wrong, where, and why. We will have more to say about borrow checker (the part of the Rust compiler that tracks who owns each piece of memory) errors on day 2.
+When I say Rust is safe, I mean the compiler catches at compile time the class of bug that crashes C and C++ programs at runtime: dangling pointers, use-after-free, data races, buffer overruns. This is not a runtime check — there is no garbage collector (the background process Python and Java run to free unused memory automatically). It is the compiler refusing to compile broken code. The error message above is the actual output for the snippet — notice it tells you what is wrong, where, and why. We will have more to say about borrow checker errors on day 2.
 :::
 
-## What a segfault actually is
+## Parallelism is easy — and unavoidable
 
-When a program tries to read or write a memory address it doesn't own — say, by following a stale pointer or running off the end of an array — the operating system notices and kills the process.
+CPU clock speeds stopped climbing around 2005. The cores kept multiplying — every modern laptop, desktop, and HPC node has **at least 8** of them; a server typically has 64 to 256. To use any of that you have to write code that spreads work across cores.
 
-- **Segfault** (segmentation fault — what happens when a program touches memory it doesn't own) is the symptom you see in C and C++ when this goes wrong
-- Python and Rust are designed so you almost never see one: Python checks at runtime, Rust checks at compile time
-
-::: notes
-A segfault is the operating system slamming the door. The hardware (the memory management unit) compares every address your program touches against a map of what is allowed; an out-of-bounds access traps into the OS, and the OS sends your process a signal that, by default, terminates it. It is the single most common crash mode for C programs. One of the design goals of Rust is to make this class of bug impossible without a runtime cost — we will see how on day 2.
-:::
-
-## Safety in our context — parallel `count_kmers`
+In Rust this is usually a **one-line change**:
 
 ```rust
 use rayon::prelude::*;
 
 let total: HashMap<Vec<u8>, usize> = sequences
-    .par_iter()                       // .iter() -> .par_iter()
+    .par_iter()                       // .iter() → .par_iter()
     .map(|seq| count_kmers(seq, 21))
     .reduce(HashMap::new, merge);
 ```
 
-::: notes
-The practical payoff of safety in bioinformatics: you can parallelise your inner loop across CPU cores by changing one method call, with zero mutex acquisition and zero risk of data corruption.
+The compiler refuses to build any version that would race two threads against the same memory. No mutexes to acquire, no deadlocks to debug, no silently corrupted output. There is **no equivalent in Python or R** — Python's GIL serialises threads, and R has no built-in story at all.
 
-Day 5 has an exercise built around exactly this. .iter() becomes .par_iter(). The compiler refuses to compile any version that would race. There is no equivalent in Python or R.
+::: notes
+Modern CPUs gave up on making cores faster around 2005 and started making more of them. Code that uses one core leaves an order of magnitude of performance on the table. Day 5 has a full exercise on rayon: you turn .iter() into .par_iter() and the compiler guarantees the result is the same as the serial version. This is the practical payoff of the borrow checker — parallelism that can't accidentally corrupt your data.
 :::
 
 ## Rust in bioinformatics today
@@ -314,7 +323,7 @@ These are tools you have likely used or read papers about. The ecosystem is movi
 I should also say: a lot of well-known bioinformatics tools are still written in C++ — minimap2, samtools, bcftools — and those are not going anywhere. Rust is a complement, not a replacement.
 :::
 
-## You don't have to choose — PyO3
+## Can easily integrate Rust code in Python if not ready to switch completely
 
 ```rust
 use pyo3::prelude::*;
@@ -356,19 +365,6 @@ This is how polars works. It is how pydantic-core works. It is how tokenizers wo
 Six days. Each day has two short lectures and a stack of hands-on exercises. By Friday you will have written, tested, and benchmarked a small toolkit of real bioinformatics code: GC content, reverse complement, k-mer counting, phylogenetic-tree traversal, sequence alignment, FASTA and FASTQ parsing with noodles, a histogram plot, a parallel computation, and a web frontend.
 :::
 
-## What we **won't** cover
-
-- Async runtimes (one narrow exception on day 6)
-- Writing macros (using them is fine)
-- `unsafe` code
-- Explicit lifetime annotations beyond elision
-- Designing generic trait hierarchies
-- C FFI, embedded, GPU programming
-
-::: notes
-Deliberate omissions. Everything on this list is a real and useful part of Rust. None of them are needed to write effective bioinformatics tools. The Rust Book is there when you decide you want to go deeper, and it is excellent.
-:::
-
 ## Today specifically
 
 By end of day 1 you will be able to:
@@ -382,14 +378,3 @@ By end of day 1 you will be able to:
 Five exercises today, each fifteen to thirty minutes. Tests are provided; your job is to make them pass. By the end of today you have working Rust on disk and a feel for the toolchain. Tomorrow we go deeper into ownership.
 :::
 
-## Let's get coding
-
-- **Setup**: [`intro/install.qmd`](../intro/install.qmd)
-- **Reference**: [`day1/00-concepts.qmd`](00-concepts.qmd)
-- **First exercise**: [`day1/01-gc-content.qmd`](01-gc-content.qmd)
-
-::: notes
-Three links to start. Open the install page first if you have not yet installed Rust and VS Code. Skim the concepts page — it is a fifteen-minute reference companion to this lecture; you do not need to memorise it. Then go to exercise 1.
-
-I will see you in lecture 2 after lunch.
-:::

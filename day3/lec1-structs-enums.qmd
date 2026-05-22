@@ -20,8 +20,21 @@ format:
 
 ## What this lecture is
 
+- **The Rust types that you spend the most time with.**
 - Day 3 is where Rust starts to feel like Rust: types model the biology, the compiler keeps you honest
 - One concept per slide — *what it is*, *why it works this way*, a bioinformatics example
+
+**Concepts covered today:**
+
+- `struct` and `#[derive(...)]`
+- `impl` and methods
+- `enum` (with and without data)
+- `match` and exhaustiveness
+- `Option<T>`
+- `Result<T, E>` and the `?` operator
+- iterator chains
+- `HashMap`
+- closures
 
 ::: notes
 Yesterday you wrote functions over slices of bytes. Today the data gets shape. A genomic interval has a chromosome, a start, an end, and a strand — that wants to be one value, not four loose variables. A variant is either a SNP or an insertion or a deletion — that wants to be one type with three shapes, not a tagged tuple.
@@ -91,8 +104,8 @@ This is the same Vec layout from yesterday, applied to a field rather than a top
 
 ## `impl` — methods belong to the type
 
-::: {.columns}
-::: {.column width="55%"}
+:::: {.columns}
+::: {.column width="40%"}
 **Rust**
 
 ```rust
@@ -106,20 +119,41 @@ impl GenomicInterval {
 `&self` is a read-only borrow of the value — the same borrow you saw yesterday, now used as the receiver of a method.
 :::
 
-::: {.column width="45%"}
-**Python (for comparison)**
+::: {.column width="30%"}
+**Python**
 
 ```python
 class GenomicInterval:
     def length(self):
         return self.end - self.start
 ```
-
-Same idea — methods attached to a type — different syntax.
-:::
 :::
 
-Call site: `iv.length()`.
+::: {.column width="30%"}
+**R (R6)**
+
+```r
+GenomicInterval <- R6::R6Class(
+  "GenomicInterval",
+  public = list(
+    chrom = NULL,
+    start = NULL,
+    end   = NULL,
+    initialize = function(c, s, e) {
+      self$chrom <- c
+      self$start <- s
+      self$end   <- e
+    },
+    length = function() {
+      self$end - self$start
+    }
+  )
+)
+```
+:::
+::::
+
+Call site: `iv.length()` (Rust), `iv.length()` (Python), `iv$length()` (R).
 
 ::: notes
 Methods live in an `impl` block, separate from the data definition. The first parameter is the receiver: one of `&self`, `&mut self`, or `self` — borrow read-only, borrow mutably, or consume the value. Same ownership rules you saw yesterday, now applied to method receivers.
@@ -131,6 +165,10 @@ The next slide adds a mutating method and a constructor.
 
 ## More methods — mutation and construction
 
+:::: {.columns}
+::: {.column width="55%"}
+**Rust**
+
 ```rust
 impl GenomicInterval {
     fn shift(&mut self, by: u64) {
@@ -138,7 +176,9 @@ impl GenomicInterval {
         self.end   += by;
     }
 
-    fn new(chrom: String, start: u64, end: u64) -> Self {
+    fn new(chrom: String,
+           start: u64,
+           end: u64) -> Self {
         Self { chrom, start, end }
     }
 }
@@ -147,6 +187,26 @@ impl GenomicInterval {
 - `&mut self` — mutable borrow; lets the method change the fields.
 - `new` takes no `self` — it's an **associated function** [a function attached to the type itself, not to an instance], called as `GenomicInterval::new(...)`.
 - `Self` inside the block is shorthand for "the type we're implementing".
+:::
+
+::: {.column width="45%"}
+**Python**
+
+```python
+class GenomicInterval:
+    def __init__(self, chrom, start, end):
+        self.chrom = chrom
+        self.start = start
+        self.end   = end
+
+    def shift(self, by):
+        self.start += by
+        self.end   += by
+```
+
+Same idea — `__init__` is the constructor, ordinary methods mutate via `self`. The big difference: Python won't stop you mutating from anywhere; Rust's `&mut self` is checked at compile time.
+:::
+::::
 
 Call sites: `iv.shift(100)`, `GenomicInterval::new("chr1".to_string(), 1000, 2000)`.
 
@@ -229,6 +289,13 @@ A `Strand` value is one of exactly two named variants. The compiler tracks which
 
 → [Book: defining an enum](https://doc.rust-lang.org/book/ch06-01-defining-an-enum.html)
 
+**Memory cost of one strand value:**
+
+- **Python** `strand = "+"` — typically ~50 bytes (object header + interning + character storage)
+- **Rust** `let strand = Strand::Plus;` — **1 byte** (enum discriminant)
+
+A 10 million-row table of strands takes roughly ~500 MB in Python vs ~10 MB in Rust.
+
 ::: notes
 The simplest enum is a closed list of names. Strand is either Plus or Minus, full stop. The compiler stores this as a single byte: 0 for Plus, 1 for Minus.
 
@@ -237,7 +304,7 @@ You write `Strand::Plus` at the use site, with the type name as a prefix. This i
 The Python side shows what we're avoiding. In Python you either pick magic strings — which silently accept any typo — or magic constants like `STRAND_PLUS = 0`, which lose readability and still don't prevent mixing them up with unrelated integer constants. Rust's enum is a type: passing the wrong type is a compile error, and adding a third variant later forces every match expression to be updated.
 :::
 
-## Enums that carry data
+## Enums can carry data
 
 ```rust
 enum Variant {
@@ -273,8 +340,10 @@ The simple enum (`Strand`) compiles down to a single small integer tag. The rich
 This is the cost of the abstraction. In return, you get a value that is provably one of N shapes, you cannot read fields from the wrong variant, and the compiler can check that every match expression handles every case.
 :::
 
-## `match` — the way you read an enum
+## match lets you read enums
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
 fn ref_alt_delta(v: &Variant) -> i64 {
     match v {
@@ -286,6 +355,12 @@ fn ref_alt_delta(v: &Variant) -> i64 {
 ```
 
 `match` binds the variant's fields by name inside the arm. The `..` pattern means "ignore the rest".
+:::
+
+::: {.column width="45%"}
+![match on enum: try arms top-to-bottom; first match wins.](images/lec1-match-enum-flow.svg){fig-alt="A value of an enum type enters at the top; below, three arms — one per variant — each labelled with the pattern (e.g. Strand::Plus, Strand::Minus, _); arrows show the value flowing into the first matching arm and its result coming out."}
+:::
+::::
 
 ::: notes
 You can't just read `v.bases` — there is no such field on a SNP variant. To get at the contents you have to first establish which variant you have, and `match` is the canonical tool.
@@ -293,14 +368,8 @@ You can't just read `v.bases` — there is no such field on a SNP variant. To ge
 Each arm pattern names the variant and destructures its fields. Inside the Insertion arm, `bases` is bound to the actual Vec; inside the Deletion arm, `len` is bound to the actual u64. The compiler enforces that you only touch fields that actually exist on the matched variant.
 
 The `..` in a struct pattern means "any remaining fields I don't care about". Use it freely — it documents intent and keeps the pattern short.
-:::
 
-## `match` — control flow
-
-![match on enum: try arms top-to-bottom; first match wins.](images/lec1-match-enum-flow.svg){fig-alt="A value of an enum type enters at the top; below, three arms — one per variant — each labelled with the pattern (e.g. Strand::Plus, Strand::Minus, _); arrows show the value flowing into the first matching arm and its result coming out."}
-
-::: notes
-The flow: a value enters from the top; arms are tried top-to-bottom; the first matching arm's body runs; the result is the result of the match expression.
+Control flow: a value enters from the top; arms are tried top-to-bottom; the first matching arm's body runs; the result is the result of the match expression.
 :::
 
 ## Exhaustiveness — the safety net
@@ -310,13 +379,22 @@ enum Strand { Plus, Minus }
 
 match strand {
     Strand::Plus  =>  1,
-    Strand::Minus => -1,
-    // add Strand::Unknown to the enum later? this match becomes
-    // a compile error until we handle the new case
+    // forgot Strand::Minus
 }
 ```
 
-The compiler refuses any `match` that does not cover every variant.
+The compiler refuses any `match` that does not cover every variant:
+
+```text
+error[E0004]: non-exhaustive patterns: `Minus` not covered
+ --> src/main.rs:8:11
+  |
+8 |     match strand {
+  |           ^^^^^^ pattern `Minus` not covered
+  |
+  = note: ensure that all possible cases are being handled by adding
+    a match arm with a wildcard pattern, or an explicit pattern as shown
+```
 
 ::: notes
 This is one of the most practically valuable things in the language. When you add a new variant to an enum — a new strand type, a new variant call, a new file format — the compiler will tell you every single match expression in the entire codebase that needs to be updated to handle the new case.
@@ -324,49 +402,9 @@ This is one of the most practically valuable things in the language. When you ad
 You cannot ship "I updated the type but forgot one place" bugs of this shape in Rust. The wildcard `_` defeats the check, so reach for it only when you really mean "any other". The compile error is the feature.
 :::
 
-## Exhaustiveness in the clinic — why it matters
+## match ensures you do not forget to add needed logic
 
-Imagine a variant-calling pipeline that classifies each genomic position as `Het`, `HomAlt`, or `HomRef`.
-
-::: {.columns}
-::: {.column width="50%"}
-**Python — easy to forget a case**
-
-```python
-if zygosity == "het":
-    report_het(call)
-elif zygosity == "hom_alt":
-    report_hom_alt(call)
-# hom_ref silently dropped
-```
-
-No warning. No error. The patient gets the wrong report.
-:::
-
-::: {.column width="50%"}
-**Rust — refuses to compile**
-
-```rust
-match zygosity {
-    Zygosity::Het    => report_het(call),
-    Zygosity::HomAlt => report_hom_alt(call),
-    // HomRef missing -> compile error
-}
-```
-
-The build fails. You cannot ship the bug.
-:::
-:::
-
-::: notes
-In a clinical context — a cancer panel, a rare-disease report — a silently dropped case is a silently missed call. A homozygous-reference position that should have been flagged as a normal control instead never appears in the report. A trailing-space typo on a string tag silently routes every het into the "unknown" bucket.
-
-Rust's exhaustiveness check is not a stylistic nicety. It is the difference between "the test suite happened to cover it" and "the build won't even start if it isn't covered". When the types model the biology — zygosity, variant kind, strand — the compiler enforces the case analysis for free.
-:::
-
-## Exhaustiveness — picture
-
-![Python lets you forget a case; Rust refuses to compile.](images/lec1-clinical-exhaustiveness.svg){fig-alt="Side-by-side: left, Python if/elif chain missing one case, with a red arrow showing a silently dropped sample; right, Rust match with a compile-error diagnostic pointing at the missing variant."}
+![A missing case is a build error, not a runtime surprise.](images/lec1-clinical-exhaustiveness.svg){fig-alt="Side-by-side: left, Python if/elif chain missing one case, with a red arrow showing a silently dropped sample; right, Rust match with a compile-error diagnostic pointing at the missing variant."}
 
 ::: notes
 The same idea visualised: on the left, the Python pipeline silently drops the missing case at runtime — a sample never appears in the report. On the right, the Rust build fails before it ever runs.
@@ -384,7 +422,9 @@ enum Option<T> {
 /// or `None` if there isn't one.
 fn first_g(seq: &[u8]) -> Option<usize> {
     for (i, &b) in seq.iter().enumerate() {
-        if b == b'G' { return Some(i); }
+        if b == b'G' {
+            return Some(i);
+        }
     }
     None
 }
@@ -446,6 +486,8 @@ There's no plain `.unwrap()` on this slide on purpose; it's the same as `expect`
 
 ## `Result<T, E>` — operations that can fail
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
 enum Result<T, E> {
     Ok(T),
@@ -461,8 +503,12 @@ fn parse_start(s: &str) -> Result<u64, ParseError> {
 ```
 
 `Result` is `Option`'s richer sibling — failure carries a value of its own.
+:::
 
-![A fallible call branches into Ok and Err.](images/lec1-result-flow.svg){fig-alt="A function returning Result<T, E> shown with two output branches; the Ok(value) branch flows into the caller's next statement, the Err(e) branch routes to an error handler or short-circuits out."}
+::: {.column width="45%"}
+![Result has two output branches.](images/lec1-result-flow.svg){fig-alt="A function returning Result<T, E> shown with two output branches; the Ok(value) branch flows into the caller's next statement, the Err(e) branch routes to an error handler or short-circuits out."}
+:::
+::::
 
 ::: notes
 Result is Option's richer sibling: where Option says "value or nothing", Result says "value or this specific error". Both arms carry data; both arm types are generic.
@@ -472,18 +518,44 @@ Use Result when failure is meaningful and recoverable: parsing user input, openi
 The second type parameter, `E`, is the error type. It can be anything: a string, a custom enum like `ParseError` with a variant per failure mode, or a library error type. For the parse_region exercise today, you'll define your own.
 :::
 
-## The `?` operator — propagate errors
+## The ? operator is a nice shorthand
 
 A minimal example first — one fallible call, one `?`:
 
+:::: {.columns}
+::: {.column width="50%"}
+**With `?`**
+
 ```rust
-fn parse_count(s: &str) -> Result<u64, std::num::ParseIntError> {
-    let n: u64 = s.parse()?;   // if Err, return it; if Ok, bind n
+fn parse_count(s: &str)
+    -> Result<u64, std::num::ParseIntError>
+{
+    let n: u64 = s.parse()?;
     Ok(n * 2)
 }
 ```
 
 `?` means *if this is `Err`, return it; otherwise unwrap and continue*.
+:::
+
+::: {.column width="50%"}
+**Equivalent without `?`**
+
+```rust
+fn parse_count(s: &str)
+    -> Result<u64, std::num::ParseIntError>
+{
+    let n: u64 = match s.parse() {
+        Ok(n)  => n,
+        Err(e) => return Err(e),
+    };
+    Ok(n * 2)
+}
+```
+
+Four lines per fallible call, every time.
+:::
+::::
 
 For `?` to compile, the enclosing function must itself return `Result` (or `Option`).
 
@@ -495,6 +567,8 @@ This minimal example uses the simplest case — a fallible call whose error type
 
 ## `?` in a real parser — `ok_or` and `map_err`
 
+:::: {.columns}
+::: {.column width="60%"}
 ```rust
 fn parse_region(s: &str) -> Result<(String, u64, u64), ParseError> {
     let (chrom, rest)    = s.split_once(':').ok_or(ParseError::MissingColon)?;
@@ -507,6 +581,12 @@ fn parse_region(s: &str) -> Result<(String, u64, u64), ParseError> {
 
 - `ok_or(err)` turns `Option<T>` into `Result<T, E>` — `split_once` returns `Option`, but we want `?` to propagate a `ParseError`.
 - `map_err(|_| ...)` rewrites the error type — `s.parse()` returns the standard `ParseIntError`; we squeeze it into our own `ParseError`.
+:::
+
+::: {.column width="40%"}
+![Each `?` is an implicit early return on `Err`.](images/lec1-result-question-mark.svg){fig-alt="Diagram of the ? operator. A blue call box at the top reads parse_chrom(s) — returns Result<String, ParseError>. Two arrows diverge from the call: a green arrow labelled Ok(chrom) leads to a green box on the left titled unwrap and continue, showing let chrom: String = ... and the caption next line of the function runs; a red arrow labelled Err(e) leads to a red box on the right titled early return from this function, showing return Err(e); and the caption caller gets the same Err. A dashed grey caller-frame box below reads: enclosing function must itself return Result<_, E> (or Option) for ? to compile, and shows fn parse_region(s: &str) -> Result<Region, ParseError> { ... }."}
+:::
+::::
 
 ::: notes
 A real parser combines several fallible calls of different shapes. `split_once` returns `Option<(_, _)>` — Some if the separator is present, None if not. `parse()` returns `Result<u64, ParseIntError>` — the standard library's error type.
@@ -514,33 +594,34 @@ A real parser combines several fallible calls of different shapes. `split_once` 
 To make `?` work uniformly, we convert both into our function's declared error type. `ok_or` is the Option-to-Result bridge; `map_err` is the error-rewriter. Together they let every `?` in the function speak the same error language.
 
 This is exercise 2 in shape — define a `ParseError` enum, use `?` to short-circuit on the first failure, return a typed result.
-:::
 
-## `?` — control flow visualised
-
-![Each ? is an implicit early return on Err.](images/lec1-result-question-mark.svg){fig-alt="Diagram of the ? operator. A blue call box at the top reads parse_chrom(s) — returns Result<String, ParseError>. Two arrows diverge from the call: a green arrow labelled Ok(chrom) leads to a green box on the left titled unwrap and continue, showing let chrom: String = ... and the caption next line of the function runs; a red arrow labelled Err(e) leads to a red box on the right titled early return from this function, showing return Err(e); and the caption caller gets the same Err. A dashed grey caller-frame box below reads: enclosing function must itself return Result<_, E> (or Option) for ? to compile, and shows fn parse_region(s: &str) -> Result<Region, ParseError> { ... }."}
-
-::: notes
-This is what `?` desugars to. The call returns a Result. On `Ok(value)`, control falls through to the next line of the function and `value` is bound. On `Err(e)`, the same `e` is returned from the enclosing function — execution skips everything below the `?`.
-
-Each `?` in your code is a possible early-return path. That's the trade-off: error propagation is silent at the call site (one keystroke), but it's also local — you can see every place control might leave the function by scanning for `?`.
+On the right: this is what `?` desugars to. The call returns a Result. On `Ok(value)`, control falls through to the next line of the function and `value` is bound. On `Err(e)`, the same `e` is returned from the enclosing function — execution skips everything below the `?`. Each `?` in your code is a possible early-return path.
 :::
 
 ## Exhaustive matching keeps codon tables honest
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
 fn translate(codon: &[u8]) -> Option<u8> {
     match codon {
         b"ATG" => Some(b'M'),
         b"TAA" | b"TAG" | b"TGA" => Some(b'*'),
-        b"GCT" | b"GCC" | b"GCA" | b"GCG" => Some(b'A'),
+        b"GCT" | b"GCC" | b"GCA" | b"GCG"
+            => Some(b'A'),
         // ... 60 more arms ...
-        _ => None,                   // invalid / non-canonical input
+        _ => None,    // invalid / non-canonical
     }
 }
 ```
 
 64 codons. `match` checks you cover every byte string in your domain.
+:::
+
+::: {.column width="45%"}
+![The standard genetic code — 64 codons grouped by their first and second base.](images/codon-table.svg){fig-alt="A 4x4 grid showing the standard genetic code. Rows are first base T, C, A, G; columns are second base T, C, A, G; each cell holds four sub-rows for the third base. Each row gives the codon and its one-letter amino acid. Codons are coloured by amino-acid category: hydrophobic in cream, polar uncharged in light blue, basic in light green, acidic in pink, stop codons in dark grey. The standard genetic code — 64 codons grouped by their first and second base."}
+:::
+::::
 
 ::: notes
 Codon translation is a function from a 3-byte sequence to an amino acid. The natural Rust shape is a match on byte-string patterns: each arm is one codon, the body is the amino acid.
@@ -548,20 +629,16 @@ Codon translation is a function from a 3-byte sequence to an amino acid. The nat
 The pipe operator combines synonymous codons into one arm — alanine is GCT, GCC, GCA, GCG; the four arms collapse to one. The trailing `_ => None` covers anything that isn't a valid codon — an ambiguous base, a partial codon at the end of a sequence.
 
 The genetic code is a small finite table, so a match expression is faster, smaller, and easier to read than a HashMap lookup. This is exercise 3.
-:::
 
-## The standard genetic code
-
-![](images/codon-table.svg){fig-alt="A 4x4 grid showing the standard genetic code. Rows are first base T, C, A, G; columns are second base T, C, A, G; each cell holds four sub-rows for the third base. Each row gives the codon and its one-letter amino acid. Codons are coloured by amino-acid category: hydrophobic in cream, polar uncharged in light blue, basic in light green, acidic in pink, stop codons in dark grey. The standard genetic code — 64 codons grouped by their first and second base."}
-
-::: notes
-The standard genetic code as a 4x4 grid. Rows are first base; columns are second base; each cell holds four sub-rows for the third base. Notice how synonymous codons cluster — most third-base changes don't change the amino acid (wobble). This is why the match arm for alanine collapses four codons into one.
+The standard genetic code as a 4x4 grid: rows are first base; columns are second base; each cell holds four sub-rows for the third base. Notice how synonymous codons cluster — most third-base changes don't change the amino acid (wobble). This is why the match arm for alanine collapses four codons into one.
 :::
 
 ## Iterators — describe, don't loop
 
 Iterators are **lazy** [no work happens until something asks for an element — the chain just describes what to do]. Adaptors (`map`, `filter`, `take`) build a chain; **consumers** (`collect`, `count`, `sum`, `for`) drive it.
 
+:::: {.columns}
+::: {.column width="50%"}
 ```rust
 let gc_count = seq.iter()
     .filter(|&&b| matches!(b, b'G' | b'C'))
@@ -573,6 +650,12 @@ let upper: Vec<u8> = seq.iter()
 ```
 
 → [Book: iterators](https://doc.rust-lang.org/book/ch13-02-iterators.html)
+:::
+
+::: {.column width="50%"}
+![Elements flow on demand; nothing materialises in between.](images/lec1-iterator-chain.svg){fig-alt="Diagram titled Iterator chain: source to adaptors to consumer, with the code seq.iter().filter(|&&b| b == b'G' || b == b'C').count() across the top. On the left is a vertical column of six source cells labelled source: &[u8] containing A, C, G, T, C, A. In the middle is an orange filter stage labelled .filter(|&&b| ...) keeping only bytes that are G or C; six lines inside read A → drop, C → pass, G → pass, T → drop, C → pass, A → drop, with red drop arrows for the drops and green pass arrows for the passes connecting source to filter. On the right is a green .count() consumer pulling elements until exhausted and displaying the final value 3. Footer: Lazy: each element flows through the chain on demand; nothing happens until the consumer pulls. Compiles to the same loop you would write by hand — zero-cost abstraction."}
+:::
+::::
 
 ::: notes
 An iterator is a value that produces other values one at a time. The methods you call on it split into two families: adaptors that wrap one iterator into another (map, filter, take, enumerate) and consumers that actually pull elements through (count, sum, collect, for).
@@ -580,24 +663,21 @@ An iterator is a value that produces other values one at a time. The methods you
 Each adaptor returns a new iterator — no work happens. The whole chain only runs when the consumer asks for elements. This means you can compose long chains without worrying about intermediate allocations.
 
 For most "loop with an accumulator" patterns, an iterator chain is shorter, more declarative, and exactly as fast. The compiler is genuinely good at inlining the closures.
-:::
 
-## Iterator chains visualised
-
-![Elements flow on demand; nothing materialises in between.](images/lec1-iterator-chain.svg){fig-alt="Diagram titled Iterator chain: source to adaptors to consumer, with the code seq.iter().filter(|&&b| b == b'G' || b == b'C').count() across the top. On the left is a vertical column of six source cells labelled source: &[u8] containing A, C, G, T, C, A. In the middle is an orange filter stage labelled .filter(|&&b| ...) keeping only bytes that are G or C; six lines inside read A → drop, C → pass, G → pass, T → drop, C → pass, A → drop, with red drop arrows for the drops and green pass arrows for the passes connecting source to filter. On the right is a green .count() consumer pulling elements until exhausted and displaying the final value 3. Footer: Lazy: each element flows through the chain on demand; nothing happens until the consumer pulls. Compiles to the same loop you would write by hand — zero-cost abstraction."}
-
-::: notes
-This is the mental model. Elements flow left to right through the chain. The filter stage examines each one and either lets it pass or drops it. The `count` consumer is on the receiving end, pulling elements until the source is exhausted, incrementing a counter each time.
-
-The chain doesn't materialise any intermediate Vec. There's no "filtered copy of seq" anywhere in memory — each byte is checked and either counted or discarded in place. The compiled code is the same loop you'd write by hand.
+The picture on the right shows the mental model: elements flow left to right through the chain. The filter stage examines each one and either lets it pass or drops it. The `count` consumer is on the receiving end, pulling elements until the source is exhausted, incrementing a counter each time. The chain doesn't materialise any intermediate Vec — each byte is checked and either counted or discarded in place.
 :::
 
 ## `HashMap` — keys to values
 
+:::: {.columns}
+::: {.column width="55%"}
+**Rust**
+
 ```rust
 use std::collections::HashMap;
 
-let mut counts: HashMap<&[u8], usize> = HashMap::new();
+let mut counts: HashMap<&[u8], usize>
+    = HashMap::new();
 counts.insert(b"ATG", 1);
 counts.insert(b"TAA", 1);
 
@@ -609,6 +689,24 @@ if let Some(&n) = counts.get(b"ATG") {
 The standard hash table — generic over key type and value type. Lookup is constant-time on average.
 
 → [`HashMap` docs](https://doc.rust-lang.org/std/collections/struct.HashMap.html)
+:::
+
+::: {.column width="45%"}
+**Python (dict)**
+
+```python
+counts = {}
+counts["ATG"] = 1
+counts["TAA"] = 1
+
+if "ATG" in counts:
+    n = counts["ATG"]
+    print(f"seen ATG {n} times")
+```
+
+Same data structure. Rust forces you to spell out the key and value types up front; Python infers everything at runtime.
+:::
+::::
 
 ::: notes
 HashMap is Rust's standard hash table. The two type parameters are the key type and the value type — `HashMap<Vec<u8>, usize>` for "k-mer string to count", `HashMap<String, GenomicInterval>` for "gene name to interval", and so on.
@@ -660,6 +758,8 @@ The Rust entry API does the lookup, the maybe-insert, and the get-mut all in one
 
 Idiomatic one-liner: `*counts.entry(window.to_vec()).or_insert(0) += 1;`
 
+![One lookup-or-insert per window builds the histogram.](images/kmer-counts.svg){fig-alt="Diagram showing 3-mer counts in ATGATGCAT — 7 windows total; ATG appears twice. The DNA sequence ATGATGCAT is shown at the top with a bracket below noting 7 windows of length 3 slide left to right; the first window ATG is outlined in orange. Below is a bar chart of counts for the six distinct 3-mers in alphabetical order: ATG has count 2, while CAT, GAT, GCA, TGA, and TGC each have count 1." width="70%"}
+
 ::: notes
 This is the canonical histogram pattern in Rust. Without the entry API you'd write three lines per insert: look up, branch on Some/None, insert default or increment.
 
@@ -668,26 +768,41 @@ This is the canonical histogram pattern in Rust. Without the entry API you'd wri
 The deref-and-add-assign at the front (`*entry... += 1`) modifies the value in place. Net effect: one expression, one hash lookup, exactly one allocation if the key is new. This is exercise 4: count every k-mer in a sequence.
 
 The Python side shows the two equivalent idioms. `dict.get(k, 0) + 1` does the same job in a stricter way; `defaultdict(int)` is closer to the Rust pattern but requires an extra import and a different dict type.
+
+The figure shows 7 windows in ATGATGCAT; ATG appears twice. Each window does one entry-API lookup; new keys are inserted with value 0 then incremented; existing keys are incremented in place. Total: 7 hash lookups, 6 allocations for new keys.
 :::
 
-## k-mer counts — picture
+## Closures can replace small functions
 
-![One lookup-or-insert per window builds the histogram.](images/kmer-counts.svg){fig-alt="Diagram showing 3-mer counts in ATGATGCAT — 7 windows total; ATG appears twice. The DNA sequence ATGATGCAT is shown at the top with a bracket below noting 7 windows of length 3 slide left to right; the first window ATG is outlined in orange. Below is a bar chart of counts for the six distinct 3-mers in alphabetical order: ATG has count 2, while CAT, GAT, GCA, TGA, and TGC each have count 1."}
-
-::: notes
-7 windows in ATGATGCAT; ATG appears twice. Each window does one entry-API lookup; new keys are inserted with value 0 then incremented; existing keys are incremented in place. Total: 7 hash lookups, 6 allocations for new keys.
-:::
-
-## Closures — anonymous functions that capture
+:::: {.columns}
+::: {.column width="50%"}
+**With capture**
 
 ```rust
 let threshold = 30;
 let high_quality = quals.iter()
-    .filter(|q| *q >= threshold)          // captures `threshold` from outside
+    .filter(|q| *q >= threshold)
+    // captures `threshold` from outside
     .count();
 ```
 
 `|args| body`. Closures capture the variables they mention from the enclosing scope.
+:::
+
+::: {.column width="50%"}
+**Closure vs. named function**
+
+```rust
+// closure (anonymous, one-shot):
+let bump = |q: u8| q + 1;
+
+// equivalent named function:
+fn bump(q: u8) -> u8 { q + 1 }
+```
+
+The closure form is shorter when the function is one-line and only used here. The named-function form is what you reach for when the function needs a stable name and is called from elsewhere.
+:::
+::::
 
 ::: notes
 A closure is a function value you can pass around — like a Python `lambda`, but more capable. Pipes around the parameter list, then the body.
@@ -695,21 +810,7 @@ A closure is a function value you can pass around — like a Python `lambda`, bu
 What makes them "closures" rather than just "function literals" is capture: a closure can refer to variables in the surrounding scope, and the compiler arranges to keep those variables alive as long as the closure is. In the example, `threshold` is captured by the filter's closure.
 
 The `*q` dereferences once: `quals.iter()` yields `&u8`, and `filter` passes a reference to *that* — so `q` is `&&u8` and `*q` reads the byte. The shorter `|&&q| q >= threshold` form destructures both layers in the pattern.
-:::
 
-## Closures vs. named functions
-
-```rust
-// closure (anonymous, one-shot):
-let bump = |q: u8| q + 1;
-
-// equivalent named function — re-usable, no captures:
-fn bump(q: u8) -> u8 { q + 1 }
-```
-
-The closure form is shorter when the function is one-line and only used here. The named-function form is what you reach for when the function needs a stable name and is called from elsewhere.
-
-::: notes
 The named-function `bump` shows what the closure replaces when there are no captures: same body, more syntax, but a real top-level function you can call from anywhere. Pick the closure when the function is throwaway; pick the named function when it needs a stable name.
 :::
 

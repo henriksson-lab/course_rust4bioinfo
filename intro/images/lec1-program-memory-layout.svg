@@ -4,11 +4,13 @@
 
   <defs>
     <marker id="up-arrow" viewBox="0 0 10 10" refX="5" refY="0"
-            markerWidth="8" markerHeight="8" orient="auto">
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto">
       <path d="M 0 10 L 5 0 L 10 10 z" fill="#d97706"/>
     </marker>
     <marker id="down-arrow" viewBox="0 0 10 10" refX="5" refY="10"
-            markerWidth="8" markerHeight="8" orient="auto">
+            markerWidth="10" markerHeight="10" markerUnits="userSpaceOnUse"
+            orient="auto">
       <path d="M 0 0 L 5 10 L 10 0 z" fill="#2e7d32"/>
     </marker>
   </defs>
@@ -40,13 +42,14 @@
   <line x1="55" y1="468" x2="60" y2="475" stroke="#888" stroke-width="1.5"/>
   <line x1="65" y1="468" x2="60" y2="475" stroke="#888" stroke-width="1.5"/>
 
-  <!-- ===== Address-space column (tall rectangle composed of bands) ===== -->
-  <!-- Column: x=100, width=320, y from 60 (top) to 480 (bottom) -->
+  <!-- ===== Address-space column ===== -->
+  <!-- Column: x=100, width=320, y from 60 (top) to 480 (bottom)             -->
+  <!-- Bands top to bottom: Kernel, Stack, big empty middle, Heap, .text     -->
 
-  <!-- Band 7 (top): Kernel space -->
-  <rect x="100" y="60" width="320" height="35" fill="#cfcfcf"
+  <!-- Band 5 (top): Kernel space -->
+  <rect x="100" y="60" width="320" height="40" fill="#cfcfcf"
         stroke="#666" stroke-width="1.2"/>
-  <text x="113" y="82" font-size="13" font-weight="700" fill="#333">
+  <text x="113" y="84" font-size="13" font-weight="700" fill="#333">
     Kernel space
   </text>
   <text x="435" y="78" font-size="11" fill="#555" font-style="italic">
@@ -56,87 +59,70 @@
     (the OS lives here)
   </text>
 
-  <!-- Band 6: Stack -->
-  <rect x="100" y="95" width="320" height="75" fill="#e8f5e9"
+  <!-- Band 4: Stack -->
+  <rect x="100" y="100" width="320" height="100" fill="#e8f5e9"
         stroke="#2e7d32" stroke-width="1.2"/>
-  <text x="113" y="116" font-size="14" font-weight="700" fill="#1b5e20">
+  <text x="113" y="122" font-size="15" font-weight="700" fill="#1b5e20">
     Stack
   </text>
-  <text x="113" y="135" font-size="11" font-family="ui-monospace, monospace" fill="#333">
-    function frames push here,
+  <text x="113" y="142" font-size="12" font-family="ui-monospace, monospace" fill="#1b5e20" font-weight="700">
+    variables inside functions live here
   </text>
-  <text x="113" y="150" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+  <text x="113" y="164" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+    frames push on call,
+  </text>
+  <text x="113" y="180" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     pop on return
   </text>
 
   <!-- Stack down-arrow (inside band, on right side) -->
-  <line x1="380" y1="105" x2="380" y2="160" stroke="#2e7d32" stroke-width="2"
+  <line x1="380" y1="115" x2="380" y2="188" stroke="#2e7d32" stroke-width="2.5"
         marker-end="url(#down-arrow)"/>
-  <text x="435" y="125" font-size="11" fill="#2e7d32" font-weight="700">stack grows</text>
-  <text x="435" y="139" font-size="11" fill="#2e7d32">toward lower</text>
-  <text x="435" y="153" font-size="11" fill="#2e7d32">addresses</text>
+  <text x="435" y="135" font-size="11" fill="#2e7d32" font-weight="700">stack grows</text>
+  <text x="435" y="149" font-size="11" fill="#2e7d32">toward lower</text>
+  <text x="435" y="163" font-size="11" fill="#2e7d32">addresses</text>
 
-  <!-- Band 5: Big empty middle -->
-  <rect x="100" y="170" width="320" height="135" fill="white"
+  <!-- Band 3: Big empty middle -->
+  <rect x="100" y="200" width="320" height="160" fill="white"
         stroke="#888" stroke-dasharray="5,4" stroke-width="1"/>
-  <text x="260" y="225" text-anchor="middle" font-size="13" fill="#888" font-style="italic">
+  <text x="260" y="260" text-anchor="middle" font-size="13" fill="#888" font-style="italic">
     unused virtual address space
   </text>
-  <text x="260" y="252" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
+  <text x="260" y="290" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
     the empty gap is the safety margin
   </text>
-  <text x="260" y="268" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
+  <text x="260" y="306" text-anchor="middle" font-size="11" fill="#c62828" font-style="italic">
     if they ever meet, you've overflowed
   </text>
 
-  <!-- Band 4: Heap -->
-  <rect x="100" y="305" width="320" height="70" fill="#fff3cd"
+  <!-- Band 2: Heap -->
+  <rect x="100" y="360" width="320" height="100" fill="#fff3cd"
         stroke="#d97706" stroke-width="1.2"/>
-  <text x="113" y="326" font-size="14" font-weight="700" fill="#b45309">
+  <text x="113" y="382" font-size="15" font-weight="700" fill="#b45309">
     Heap
   </text>
-  <text x="113" y="346" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+  <text x="113" y="402" font-size="12" font-family="ui-monospace, monospace" fill="#b45309" font-weight="700">
+    big data lives here
+  </text>
+  <text x="113" y="424" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     malloc, Box::new, Vec::push
   </text>
-  <text x="113" y="361" font-size="11" font-family="ui-monospace, monospace" fill="#333">
+  <text x="113" y="440" font-size="11" font-family="ui-monospace, monospace" fill="#333">
     allocate here
   </text>
 
   <!-- Heap up-arrow (inside band, on right side) -->
-  <line x1="380" y1="365" x2="380" y2="315" stroke="#d97706" stroke-width="2"
+  <line x1="380" y1="450" x2="380" y2="372" stroke="#d97706" stroke-width="2.5"
         marker-end="url(#up-arrow)"/>
-  <text x="435" y="328" font-size="11" fill="#d97706" font-weight="700">heap grows</text>
-  <text x="435" y="342" font-size="11" fill="#d97706">toward higher</text>
-  <text x="435" y="356" font-size="11" fill="#d97706">addresses</text>
-
-  <!-- Band 3: Uninitialized data / .bss -->
-  <rect x="100" y="375" width="320" height="32" fill="#bbdefb"
-        stroke="#1565c0" stroke-width="1.2"/>
-  <text x="113" y="395" font-size="13" font-weight="700" fill="#0d47a1">
-    .bss
-  </text>
-  <text x="180" y="395" font-size="11" fill="#333">
-    globals that start at zero
-  </text>
-
-  <!-- Band 2: Initialized data / .data -->
-  <rect x="100" y="407" width="320" height="32" fill="#e3f2fd"
-        stroke="#1565c0" stroke-width="1.2"/>
-  <text x="113" y="427" font-size="13" font-weight="700" fill="#0d47a1">
-    .data
-  </text>
-  <text x="180" y="427" font-size="11" fill="#333">
-    globals with starting values
-  </text>
+  <text x="435" y="385" font-size="11" fill="#d97706" font-weight="700">heap grows</text>
+  <text x="435" y="399" font-size="11" fill="#d97706">toward higher</text>
+  <text x="435" y="413" font-size="11" fill="#d97706">addresses</text>
 
   <!-- Band 1 (bottom): Code / .text -->
-  <rect x="100" y="439" width="320" height="40" fill="#e0e0e0"
+  <rect x="100" y="460" width="320" height="20" fill="#e0e0e0"
         stroke="#555" stroke-width="1.2"/>
-  <text x="113" y="458" font-size="13" font-weight="700" fill="#333">
-    .text  (code)
-  </text>
-  <text x="113" y="473" font-size="11" fill="#333">
-    machine instructions (read-only, from the binary)
+  <text x="113" y="475" font-size="12" font-weight="700" fill="#333">
+    .text  (machine code, read-only)
   </text>
 
   <!-- ===== Footer caption ===== -->

@@ -68,73 +68,73 @@
 
   <!-- =============== Downward request arrows (green) — appear over time =============== -->
 
-  <!-- Arrow 1: program -> kernel (t=0.5s) -->
+  <!-- Arrow 1: program -> kernel (t=0.3s) -->
   <g opacity="0">
     <line x1="160" y1="150" x2="160" y2="178"
           stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
     <text x="170" y="170" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
       open("data.fa")
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="0.5s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="0.3s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- Arrow 2: kernel -> disk controller (t=1.0s) -->
+  <!-- Arrow 2: kernel -> disk controller (t=0.8s) -->
   <g opacity="0">
     <line x1="160" y1="270" x2="160" y2="298"
           stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
     <text x="170" y="290" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
       SCSI/NVMe command
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="1.0s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="0.8s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- Arrow 3: disk controller -> platters/chips (t=1.5s) -->
+  <!-- Arrow 3: disk controller -> platters/chips (t=1.3s) -->
   <g opacity="0">
     <line x1="160" y1="390" x2="160" y2="418"
           stroke="#2e7d32" stroke-width="2.5" marker-end="url(#arrDown)"/>
     <text x="170" y="410" font-size="12" font-family="ui-monospace, monospace" fill="#2e7d32">
       seek + read sector
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="1.5s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="1.3s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- =============== Upward response arrows (blue) — appear after pause =============== -->
+  <!-- =============== Upward response arrows (blue) — appear after a beat =============== -->
 
-  <!-- Arrow 4: chips -> controller (t=3.0s) -->
+  <!-- Arrow 4: chips -> controller (t=2.3s) -->
   <g opacity="0">
     <line x1="600" y1="418" x2="600" y2="390"
           stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
     <text x="510" y="410" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
       bytes
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="3.0s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="2.3s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- Arrow 5: controller -> kernel (t=3.5s) -->
+  <!-- Arrow 5: controller -> kernel (t=2.8s) -->
   <g opacity="0">
     <line x1="600" y1="298" x2="600" y2="270"
           stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
     <text x="470" y="290" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
       bytes received
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="3.5s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="2.8s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- Arrow 6: kernel -> program (t=4.0s) -->
+  <!-- Arrow 6: kernel -> program (t=3.3s) -->
   <g opacity="0">
     <line x1="600" y1="178" x2="600" y2="150"
           stroke="#1976d2" stroke-width="2.5" marker-end="url(#arrUp)"/>
     <text x="390" y="170" font-size="12" font-family="ui-monospace, monospace" fill="#1976d2">
       buf now contains 1024 bytes
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="4.0s" dur="0.3s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="3.3s" dur="0.3s" fill="freeze"/>
   </g>
 
-  <!-- Final caption at t=5.0s -->
+  <!-- Final caption at t=4.0s -->
   <g opacity="0">
     <text x="360" y="538" text-anchor="middle" font-size="13" font-style="italic" fill="#c62828">
       your program never touched the disk — the kernel did it for you, then handed back the bytes
     </text>
-    <animate attributeName="opacity" from="0" to="1" begin="5.0s" dur="0.4s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" begin="4.0s" dur="0.4s" fill="freeze"/>
   </g>
 </svg>
