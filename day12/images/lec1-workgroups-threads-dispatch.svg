@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 540"
+     font-family="system-ui, -apple-system, sans-serif">
+
+  <defs>
+    <marker id="wg-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+            markerWidth="10" markerHeight="10" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1976d2"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="550" y="28" text-anchor="middle" font-size="20" font-weight="700" fill="#222">
+    Dispatch, workgroups, threads: three nested levels
+  </text>
+  <text x="550" y="50" text-anchor="middle" font-size="13" fill="#555">
+    Each thread runs the same shader; its global_id tells it which piece of data to process.
+  </text>
+
+  <!-- ===========================================================
+       LEFT: Dispatch with 8x4 workgroup grid
+       =========================================================== -->
+  <rect x="30" y="80" width="500" height="380" rx="8"
+        fill="#e3f2fd" stroke="#1976d2" stroke-width="2"/>
+  <text x="280" y="106" text-anchor="middle" font-size="14" font-weight="700" fill="#1976d2">
+    Dispatch
+  </text>
+  <text x="280" y="126" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#1976d2">
+    dispatch_workgroups(8, 4, 1)
+  </text>
+  <text x="280" y="144" text-anchor="middle" font-size="12" fill="#444">
+    8 x 4 = 32 workgroups
+  </text>
+
+  <!-- 8x4 grid of workgroup boxes. Cell size 52x52, gap 6. Total = 8*52 + 7*6 = 458 wide, 4*52+3*6 = 226 tall -->
+  <!-- Start x = 30 + (500-458)/2 = 51, start y = 160 -->
+  <g>
+    <!-- Row 0 -->
+    <rect x="51"  y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="109" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="167" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="225" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="283" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="341" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="399" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="457" y="160" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <!-- Row 1 -->
+    <rect x="51"  y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="109" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="167" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="225" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="283" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="341" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="399" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="457" y="218" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <!-- Row 2 -->
+    <rect x="51"  y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="109" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="167" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <!-- Highlight workgroup at (3, 2) - row 2 col 3 -->
+    <rect x="225" y="276" width="52" height="52" fill="#ffd54f" stroke="#c62828" stroke-width="2.5" rx="3"/>
+    <rect x="283" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="341" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="399" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="457" y="276" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <!-- Row 3 -->
+    <rect x="51"  y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="109" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="167" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="225" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="283" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="341" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="399" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+    <rect x="457" y="334" width="52" height="52" fill="#fff3cd" stroke="#b45309" stroke-width="1.2" rx="3"/>
+  </g>
+
+  <text x="280" y="416" text-anchor="middle" font-size="12" fill="#555">
+    one cell = one workgroup
+  </text>
+  <text x="280" y="438" text-anchor="middle" font-size="12" fill="#c62828" font-weight="700">
+    highlighted: zoom in on the right
+  </text>
+
+  <!-- Arrow from highlighted workgroup to zoomed workgroup on the right -->
+  <path d="M 280 302 Q 460 240 600 240"
+        fill="none" stroke="#1976d2" stroke-width="2.2"
+        stroke-dasharray="6,4"
+        marker-end="url(#wg-arrow)"/>
+
+  <!-- ===========================================================
+       RIGHT: Zoomed workgroup with 4x4 thread grid
+       =========================================================== -->
+  <rect x="600" y="170" width="320" height="290" rx="8"
+        fill="#fff8e1" stroke="#c62828" stroke-width="2.5"/>
+  <text x="760" y="194" text-anchor="middle" font-size="14" font-weight="700" fill="#c62828">
+    One workgroup, zoomed in
+  </text>
+  <text x="760" y="214" text-anchor="middle" font-size="12"
+        font-family="ui-monospace, monospace" fill="#c62828">
+    @workgroup_size(4, 4)
+  </text>
+  <text x="760" y="232" text-anchor="middle" font-size="12" fill="#444">
+    4 x 4 = 16 threads
+  </text>
+
+  <!-- 4x4 thread grid. cell 48, gap 6. Total 4*48+3*6 = 210 wide. Start x = 600 + (320-210)/2 = 655, y = 250 -->
+  <g>
+    <!-- Row 0 -->
+    <rect x="655" y="250" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="709" y="250" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="763" y="250" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="817" y="250" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <!-- Row 1 -->
+    <rect x="655" y="296" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="709" y="296" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="763" y="296" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="817" y="296" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <!-- Row 2 -->
+    <rect x="655" y="342" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="709" y="342" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="763" y="342" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="817" y="342" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <!-- Row 3 -->
+    <rect x="655" y="388" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="709" y="388" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="763" y="388" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+    <rect x="817" y="388" width="48" height="40" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.2" rx="2"/>
+  </g>
+
+  <!-- Label one thread -->
+  <text x="679" y="275" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">thread</text>
+  <text x="733" y="275" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">thread</text>
+  <text x="787" y="275" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">thread</text>
+  <text x="841" y="275" text-anchor="middle" font-size="10"
+        font-family="ui-monospace, monospace" fill="#2e7d32">thread</text>
+
+  <text x="760" y="448" text-anchor="middle" font-size="12" fill="#2e7d32" font-weight="700">
+    each green cell = one thread (one shader invocation)
+  </text>
+
+  <!-- ===========================================================
+       BOTTOM: total summary
+       =========================================================== -->
+  <rect x="30" y="480" width="1040" height="44" rx="6"
+        fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="550" y="500" text-anchor="middle" font-size="14" font-weight="700" fill="#222">
+    Total invocations launched:
+    <tspan font-family="ui-monospace, monospace" fill="#1976d2">32 workgroups</tspan>
+    <tspan fill="#444"> x </tspan>
+    <tspan font-family="ui-monospace, monospace" fill="#2e7d32">16 threads/workgroup</tspan>
+    <tspan fill="#444"> = </tspan>
+    <tspan font-family="ui-monospace, monospace" fill="#c62828">512 threads</tspan>
+  </text>
+  <text x="550" y="518" text-anchor="middle" font-size="12" fill="#555">
+    Each thread uses its global_id (workgroup_id, local_id combined) to pick its data index.
+  </text>
+
+</svg>

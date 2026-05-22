@@ -83,17 +83,17 @@ Every one of these reduces to a handful of tensor operations done at scale.
 The pattern across modern bioinformatics: we used to write hand-coded inner loops; we now write tensor expressions and let the GPU do the work. Once you can read "expression matrix is a `[N, G]` tensor" the rest of single-cell tooling becomes a few lines.
 :::
 
-## What is a tensor
+## What is a tensor {.smaller}
 
-A **tensor** [*an N-dimensional array of numbers, with a known shape and a device it lives on*] is the GPU-aware generalisation of `ndarray::Array2`.
-
-Mathematically, a rank-2 tensor of shape $[R, C]$ is the matrix $X \in \mathbb{R}^{R \times C}$ with entries $X_{i,j}$ for $0 \le i < R$, $0 \le j < C$. Element-wise addition and the matrix-vector product are the workhorse operations:
+A **tensor** [*an N-dimensional array of numbers, with a known shape and a device it lives on*] is the GPU-aware generalisation of `ndarray::Array2`. Element-wise addition and the matrix-vector product are the workhorse operations:
 
 $$
 (X + Y)_{i,j} = X_{i,j} + Y_{i,j}, \qquad
 (X\mathbf{v})_i = \sum_{j=0}^{C-1} X_{i,j} \, v_j .
 $$
 
+:::: {.columns}
+::: {.column width="55%"}
 ```rust
 use burn::backend::NdArray;
 use burn::tensor::Tensor;
@@ -101,22 +101,24 @@ use burn::tensor::Tensor;
 type B = NdArray;
 let device = Default::default();
 
-let x: Tensor<B, 2> = Tensor::from_floats(           // 2-D, shape [2, 3]
+let x: Tensor<B, 2> = Tensor::from_floats(
     [[1.0, 2.0, 3.0],
-     [4.0, 5.0, 6.0]],
-    &device,
-);
-let y = x.clone() + x;                                // element-wise
-let s = y.sum();                                      // scalar tensor 42.0
+     [4.0, 5.0, 6.0]], &device);   // shape [2, 3]
+let y = x.clone() + x;             // element-wise
+let s = y.sum();                   // scalar 42.0
 ```
-
+:::
+::: {.column width="45%"}
 ```python
 # PyTorch
 import torch
-x = torch.tensor([[1., 2., 3.], [4., 5., 6.]])
+x = torch.tensor([[1., 2., 3.],
+                  [4., 5., 6.]])
 y = x + x
-s = y.sum()                                           # tensor(42.)
+s = y.sum()         # tensor(42.)
 ```
+:::
+::::
 
 ::: notes
 Two pieces of code doing the same thing. The Rust version carries the backend `B` and the rank `2` in the type system. Some classes of bug — shape mismatches, mixing GPU and CPU tensors — become impossible to write.
@@ -539,7 +541,7 @@ The `derive(Module)` is the analogue of inheriting from nn.Module. It tells Burn
 
 ## Training loop — what it looks like
 
-![The training loop in one picture: data batch → forward → loss → backward → gradients → optim.step → updated model → repeat.](images/lec1-training-loop.svg){fig-alt="A flowchart with a central box representing the model (parameters θ). Numbered steps around it: 1. next batch (x, y); 2. forward (logits = model(x)); 3. loss L(logits, y); 4. backward grads = L.backward(); 5. optim.step updates θ; 6. updated model'; 7. loop. Dashed lines connect each step back to the central model to indicate that they share the parameters being updated. The footnote notes that optim.step returns the new model — bind it back to the same name." width="92%"}
+![The training loop in one picture: data batch → forward → loss → backward → gradients → optim.step → updated model → repeat.](images/lec1-training-loop.svg){fig-alt="A flowchart with a central box representing the model (parameters θ). Numbered steps around it: 1. next batch (x, y); 2. forward (logits = model(x)); 3. loss L(logits, y); 4. backward grads = L.backward(); 5. optim.step updates θ; 6. updated model'; 7. loop. Dashed lines connect each step back to the central model to indicate that they share the parameters being updated. The footnote notes that optim.step returns the new model — bind it back to the same name." width="95%"}
 
 ```rust
 let mut model: PromoterNet<B> = PromoterNet::init(&device);

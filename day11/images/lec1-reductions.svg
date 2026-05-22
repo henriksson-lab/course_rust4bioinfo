@@ -1,4 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" font-family="sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 440" font-family="system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a6fb5"/>
+    </marker>
+  </defs>
+
   <text x="500" y="28" text-anchor="middle" font-size="18" font-weight="bold">Reductions: collapse one or more axes</text>
 
   <!-- Source matrix -->
@@ -12,55 +18,47 @@
     <text x="33" y="66" text-anchor="middle">4</text><text x="100" y="66" text-anchor="middle">5</text><text x="167" y="66" text-anchor="middle">6</text>
   </g>
 
-  <!-- 3 outputs -->
-  <!-- sum -->
-  <g transform="translate(360,55)">
+  <!-- sum (top right area) -->
+  <g transform="translate(370,70)">
     <text x="120" y="0" text-anchor="middle" font-weight="bold">.sum()</text>
-    <text x="120" y="20" text-anchor="middle" font-size="12">collapse every axis</text>
-    <path d="M -50 60 Q 60 50 110 80" fill="none" stroke="#3a6fb5" stroke-width="2"
-          marker-end="url(#arrr)"/>
-    <defs>
-      <marker id="arrr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a6fb5"/>
-      </marker>
-    </defs>
-    <rect x="100" y="80" width="40" height="40" fill="#dbe9fb" stroke="#3a6fb5"/>
-    <text x="120" y="107" text-anchor="middle" font-weight="bold">21</text>
-    <text x="120" y="145" text-anchor="middle" font-size="12">scalar tensor</text>
-    <text x="120" y="162" text-anchor="middle" font-size="11" fill="#666">dims = []</text>
+    <text x="120" y="18" text-anchor="middle" font-size="12">collapse every axis</text>
+    <rect x="100" y="35" width="40" height="40" fill="#dbe9fb" stroke="#3a6fb5"/>
+    <text x="120" y="62" text-anchor="middle" font-weight="bold">21</text>
+    <text x="120" y="100" text-anchor="middle" font-size="12">scalar tensor</text>
+    <text x="120" y="118" text-anchor="middle" font-size="11" fill="#666">dims = []</text>
   </g>
 
-  <!-- sum_dim(1) -->
-  <g transform="translate(360,210)">
-    <text x="120" y="0" text-anchor="middle" font-weight="bold">.sum_dim(1)</text>
-    <text x="120" y="20" text-anchor="middle" font-size="12">collapse axis 1 (columns)</text>
-    <rect x="80" y="40" width="80" height="40" fill="#fde0c4" stroke="#c97a13"/>
-    <line x1="120" y1="40" x2="120" y2="80" stroke="#c97a13"/>
-    <text x="100" y="66" text-anchor="middle" font-weight="bold">6</text>
-    <text x="140" y="66" text-anchor="middle" font-weight="bold">15</text>
-    <text x="120" y="105" text-anchor="middle" font-size="12">dims = [2, 1]</text>
-    <text x="120" y="122" text-anchor="middle" font-size="11" fill="#666">(after squeeze_dim(1): [2])</text>
-  </g>
-
-  <!-- mean_dim(0) -->
-  <g transform="translate(680,55)">
+  <!-- mean_dim(0) (top right) -->
+  <g transform="translate(680,70)">
     <text x="160" y="0" text-anchor="middle" font-weight="bold">.mean_dim(0)</text>
-    <text x="160" y="20" text-anchor="middle" font-size="12">collapse axis 0 (rows)</text>
-    <rect x="60" y="40" width="200" height="40" fill="#eaf7ee" stroke="#3a9b54"/>
-    <line x1="127" y1="40" x2="127" y2="80" stroke="#3a9b54"/>
-    <line x1="193" y1="40" x2="193" y2="80" stroke="#3a9b54"/>
-    <text x="93" y="66" text-anchor="middle" font-weight="bold">2.5</text>
-    <text x="160" y="66" text-anchor="middle" font-weight="bold">3.5</text>
-    <text x="227" y="66" text-anchor="middle" font-weight="bold">4.5</text>
-    <text x="160" y="105" text-anchor="middle" font-size="12">dims = [1, 3]</text>
-    <text x="160" y="122" text-anchor="middle" font-size="11" fill="#666">(after squeeze_dim(0): [3])</text>
+    <text x="160" y="18" text-anchor="middle" font-size="12">collapse axis 0 (rows)</text>
+    <rect x="60" y="35" width="200" height="40" fill="#eaf7ee" stroke="#3a9b54"/>
+    <line x1="127" y1="35" x2="127" y2="75" stroke="#3a9b54"/>
+    <line x1="193" y1="35" x2="193" y2="75" stroke="#3a9b54"/>
+    <text x="93" y="62" text-anchor="middle" font-weight="bold">2.5</text>
+    <text x="160" y="62" text-anchor="middle" font-weight="bold">3.5</text>
+    <text x="227" y="62" text-anchor="middle" font-weight="bold">4.5</text>
+    <text x="160" y="100" text-anchor="middle" font-size="12">dims = [1, 3]</text>
+    <text x="160" y="118" text-anchor="middle" font-size="11" fill="#666">(after squeeze_dim(0): [3])</text>
   </g>
 
-  <!-- Footer -->
-  <text x="500" y="290" text-anchor="middle" font-size="13" fill="#333">
+  <!-- sum_dim(1) (bottom row, centered below source) -->
+  <g transform="translate(370,235)">
+    <text x="120" y="0" text-anchor="middle" font-weight="bold">.sum_dim(1)</text>
+    <text x="120" y="18" text-anchor="middle" font-size="12">collapse axis 1 (columns)</text>
+    <rect x="80" y="35" width="80" height="40" fill="#fde0c4" stroke="#c97a13"/>
+    <line x1="120" y1="35" x2="120" y2="75" stroke="#c97a13"/>
+    <text x="100" y="62" text-anchor="middle" font-weight="bold">6</text>
+    <text x="140" y="62" text-anchor="middle" font-weight="bold">15</text>
+    <text x="120" y="100" text-anchor="middle" font-size="12">dims = [2, 1]</text>
+    <text x="120" y="118" text-anchor="middle" font-size="11" fill="#666">(after squeeze_dim(1): [2])</text>
+  </g>
+
+  <!-- Footer (moved well below) -->
+  <text x="500" y="380" text-anchor="middle" font-size="13" fill="#333">
     Burn keeps the rank by default (the collapsed axis becomes size 1) — use <tspan font-family="monospace">.squeeze_dim(k)</tspan> to drop it.
   </text>
-  <text x="500" y="312" text-anchor="middle" font-size="13" fill="#333">
+  <text x="500" y="410" text-anchor="middle" font-size="13" fill="#333">
     Mental anchor: GC content per sequence, mean expression per gene, motif scores per position — all of these are reductions.
   </text>
 </svg>

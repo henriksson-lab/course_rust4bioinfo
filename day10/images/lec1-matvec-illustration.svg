@@ -41,21 +41,21 @@
   <!-- Centered dot operator -->
   <text x="410" y="160" text-anchor="middle" font-size="32" fill="#333">·</text>
 
-  <!-- Vector x: 3 rows x 1 col, cell 60 x 50, at (450, 100) -->
+  <!-- Vector x: 3 rows x 1 col, cell 60 x 50, centered vertically with A (center y=150 -> cells y=75,125,175) -->
   <g font-family="ui-monospace, monospace" font-size="18" text-anchor="middle">
-    <text x="480" y="88" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#555">x</text>
+    <text x="480" y="63" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#555">x</text>
 
     <!-- Left bracket -->
-    <path d="M460,100 L450,100 L450,250 L460,250" stroke="#333" stroke-width="2" fill="none"/>
+    <path d="M460,75 L450,75 L450,225 L460,225" stroke="#333" stroke-width="2" fill="none"/>
     <!-- Right bracket -->
-    <path d="M520,100 L530,100 L530,250 L520,250" stroke="#333" stroke-width="2" fill="none"/>
+    <path d="M520,75 L530,75 L530,225 L520,225" stroke="#333" stroke-width="2" fill="none"/>
 
-    <rect x="450" y="100" width="60" height="50" fill="#f5f5f5" stroke="#888"/>
-    <text x="480" y="132" fill="#333">1</text>
-    <rect x="450" y="150" width="60" height="50" fill="#f5f5f5" stroke="#888"/>
-    <text x="480" y="182" fill="#333">0</text>
-    <rect x="450" y="200" width="60" height="50" fill="#f5f5f5" stroke="#888"/>
-    <text x="480" y="232" fill="#333">-1</text>
+    <rect x="450" y="75"  width="60" height="50" fill="#f5f5f5" stroke="#888"/>
+    <text x="480" y="107" fill="#333">1</text>
+    <rect x="450" y="125" width="60" height="50" fill="#f5f5f5" stroke="#888"/>
+    <text x="480" y="157" fill="#333">0</text>
+    <rect x="450" y="175" width="60" height="50" fill="#f5f5f5" stroke="#888"/>
+    <text x="480" y="207" fill="#333">-1</text>
   </g>
 
   <!-- Equals sign -->

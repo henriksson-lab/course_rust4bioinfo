@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" font-family="system-ui, -apple-system, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 500" font-family="system-ui, -apple-system, sans-serif">
   <title>Markov chain — three views</title>
 
   <defs>
@@ -14,7 +14,7 @@
     </marker>
   </defs>
 
-  <text x="450" y="28" text-anchor="middle" font-size="22" font-weight="600" fill="#111">A Markov chain — three views</text>
+  <text x="500" y="28" text-anchor="middle" font-size="22" font-weight="600" fill="#111">A Markov chain — three views</text>
 
   <!-- ============== Panel 1: State diagram ============== -->
   <g transform="translate(20,60)">
@@ -128,12 +128,12 @@
 
   <!-- Connector: panel 2 -> panel 3 -->
   <g>
-    <line x1="615" y1="200" x2="660" y2="200" stroke="#555" stroke-width="1.6" marker-end="url(#arrPanel)"/>
-    <text x="638" y="190" text-anchor="middle" font-size="11" fill="#555" font-style="italic">converges to</text>
+    <line x1="615" y1="200" x2="755" y2="200" stroke="#555" stroke-width="1.8" marker-end="url(#arrPanel)"/>
+    <text x="685" y="188" text-anchor="middle" font-size="14" font-weight="600" fill="#444" font-style="italic">converges to</text>
   </g>
 
   <!-- ============== Panel 3: Steady-state bar chart ============== -->
-  <g transform="translate(670,60)">
+  <g transform="translate(770,60)">
     <text x="100" y="14" text-anchor="middle" font-size="15" font-weight="600" fill="#d97706">steady-state π</text>
 
     <!-- Plot area: bars within (0..200, 60..300). y-axis 0..1, scale 240 pixels for height. -->
@@ -179,7 +179,7 @@
   </g>
 
   <!-- ============== Caption ============== -->
-  <text x="450" y="475" text-anchor="middle" font-size="13" fill="#333">
+  <text x="500" y="475" text-anchor="middle" font-size="13" fill="#333">
     Multiply P against any starting distribution enough times; you get the steady state. Or solve πP = π directly.
   </text>
 </svg>

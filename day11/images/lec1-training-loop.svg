@@ -1,86 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" font-family="sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 320" font-family="system-ui, -apple-system, sans-serif" font-size="14">
   <defs>
     <marker id="arrf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#444"/>
     </marker>
   </defs>
 
-  <text x="500" y="28" text-anchor="middle" font-size="18" font-weight="bold">The training loop — forward, loss, backward, step</text>
+  <text x="500" y="24" text-anchor="middle" font-size="18" font-weight="bold">The training loop — forward, loss, backward, step</text>
 
   <!-- Center: model -->
-  <g transform="translate(420,170)">
+  <g transform="translate(420,130)">
     <rect width="160" height="80" rx="8" fill="#eef5ff" stroke="#3a6fb5" stroke-width="2"/>
     <text x="80" y="32" text-anchor="middle" font-weight="bold">model: PromoterNet</text>
-    <text x="80" y="55" text-anchor="middle" font-size="11" fill="#666">parameters θ (Conv1d, Linear)</text>
-    <text x="80" y="72" text-anchor="middle" font-size="11" fill="#666">moved through the loop</text>
+    <text x="80" y="55" text-anchor="middle" font-size="12" fill="#666">parameters θ (Conv1d, Linear)</text>
+    <text x="80" y="72" text-anchor="middle" font-size="12" fill="#666">moved through the loop</text>
   </g>
 
   <!-- 1. batch -->
-  <g transform="translate(60,80)">
+  <g transform="translate(60,50)">
     <rect width="160" height="60" rx="6" fill="#eaf7ee" stroke="#3a9b54"/>
     <text x="80" y="26" text-anchor="middle" font-weight="bold">1. next batch</text>
-    <text x="80" y="46" text-anchor="middle" font-size="11" fill="#666">(x, y) : [N,4,L], [N,1]</text>
+    <text x="80" y="48" text-anchor="middle" font-size="12" fill="#666">(x, y) : [N,4,L], [N,1]</text>
   </g>
 
   <!-- 2. forward -->
-  <g transform="translate(280,80)">
+  <g transform="translate(280,50)">
     <rect width="160" height="60" rx="6" fill="#fde0c4" stroke="#c97a13"/>
     <text x="80" y="26" text-anchor="middle" font-weight="bold">2. forward</text>
-    <text x="80" y="46" text-anchor="middle" font-family="monospace" font-size="11">logits = model(x)</text>
+    <text x="80" y="48" text-anchor="middle" font-family="monospace" font-size="12">logits = model(x)</text>
   </g>
 
   <!-- 3. loss -->
-  <g transform="translate(560,80)">
+  <g transform="translate(560,50)">
     <rect width="160" height="60" rx="6" fill="#fff5d8" stroke="#b59000"/>
     <text x="80" y="26" text-anchor="middle" font-weight="bold">3. loss</text>
-    <text x="80" y="46" text-anchor="middle" font-family="monospace" font-size="11">L(logits, y)</text>
+    <text x="80" y="48" text-anchor="middle" font-family="monospace" font-size="12">L(logits, y)</text>
   </g>
 
   <!-- 4. backward -->
-  <g transform="translate(780,80)">
+  <g transform="translate(780,50)">
     <rect width="170" height="60" rx="6" fill="#fee2e2" stroke="#a52020"/>
     <text x="85" y="26" text-anchor="middle" font-weight="bold">4. backward</text>
-    <text x="85" y="46" text-anchor="middle" font-family="monospace" font-size="11">grads = L.backward()</text>
+    <text x="85" y="48" text-anchor="middle" font-family="monospace" font-size="12">grads = L.backward()</text>
   </g>
 
   <!-- 5. step -->
-  <g transform="translate(780,300)">
+  <g transform="translate(780,230)">
     <rect width="170" height="60" rx="6" fill="#eef5ff" stroke="#3a6fb5"/>
     <text x="85" y="26" text-anchor="middle" font-weight="bold">5. optim.step</text>
-    <text x="85" y="46" text-anchor="middle" font-family="monospace" font-size="11">θ ← θ − η ∂L/∂θ</text>
+    <text x="85" y="48" text-anchor="middle" font-family="monospace" font-size="12">θ ← θ − η ∂L/∂θ</text>
   </g>
 
   <!-- 6. updated model returned -->
-  <g transform="translate(560,300)">
+  <g transform="translate(560,230)">
     <rect width="160" height="60" rx="6" fill="#dcfae3" stroke="#1a5c2c"/>
     <text x="80" y="26" text-anchor="middle" font-weight="bold">6. model'</text>
-    <text x="80" y="46" text-anchor="middle" font-size="11" fill="#666">updated parameters</text>
+    <text x="80" y="48" text-anchor="middle" font-size="12" fill="#666">updated parameters</text>
   </g>
 
   <!-- back to start -->
-  <g transform="translate(60,300)">
+  <g transform="translate(60,230)">
     <rect width="240" height="60" rx="6" fill="#eaf7ee" stroke="#3a9b54" stroke-dasharray="6,3"/>
     <text x="120" y="26" text-anchor="middle" font-weight="bold">7. loop until convergence</text>
-    <text x="120" y="46" text-anchor="middle" font-size="11" fill="#666">model = model'; goto 1</text>
+    <text x="120" y="48" text-anchor="middle" font-size="12" fill="#666">model = model'; goto 1</text>
   </g>
 
   <!-- Arrows -->
-  <line x1="220" y1="110" x2="280" y2="110" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="440" y1="110" x2="560" y2="110" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="720" y1="110" x2="780" y2="110" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="865" y1="140" x2="865" y2="300" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="780" y1="330" x2="720" y2="330" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="560" y1="330" x2="300" y2="330" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
-  <line x1="180" y1="300" x2="180" y2="170" stroke="#444" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrf)"/>
+  <line x1="220" y1="80" x2="280" y2="80" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="440" y1="80" x2="560" y2="80" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="720" y1="80" x2="780" y2="80" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="865" y1="110" x2="865" y2="230" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="780" y1="260" x2="720" y2="260" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="560" y1="260" x2="300" y2="260" stroke="#444" stroke-width="2" marker-end="url(#arrf)"/>
+  <line x1="180" y1="230" x2="180" y2="130" stroke="#444" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrf)"/>
 
-  <!-- Annotations on the central model -->
-  <line x1="360" y1="110" x2="420" y2="200" stroke="#3a6fb5" stroke-width="1" stroke-dasharray="3,3"/>
-  <line x1="640" y1="110" x2="500" y2="200" stroke="#3a6fb5" stroke-width="1" stroke-dasharray="3,3"/>
-  <line x1="860" y1="140" x2="580" y2="200" stroke="#3a6fb5" stroke-width="1" stroke-dasharray="3,3"/>
-  <line x1="860" y1="300" x2="580" y2="240" stroke="#3a6fb5" stroke-width="1" stroke-dasharray="3,3"/>
-  <line x1="640" y1="320" x2="500" y2="240" stroke="#3a6fb5" stroke-width="1" stroke-dasharray="3,3"/>
-
-  <text x="500" y="385" text-anchor="middle" font-size="12" fill="#666">
+  <text x="500" y="310" text-anchor="middle" font-size="12" fill="#666">
     Burn returns the updated model from <tspan font-family="monospace">optim.step</tspan> (Rust ownership) — bind it back to the same name to feed the next iteration.
   </text>
 </svg>

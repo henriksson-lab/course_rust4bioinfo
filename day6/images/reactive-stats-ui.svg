@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 540"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 540"
      font-family="system-ui, -apple-system, sans-serif">
 
   <defs>
@@ -46,15 +46,15 @@
   <line x1="174" y1="106" x2="174" y2="124" stroke="#555" stroke-width="1.5"/>
 
   <!-- ===== Live-update arrow (curved, from textarea down to stats) ===== -->
-  <path d="M 460 154 C 530 154, 530 280, 460 280"
+  <path d="M 460 154 C 560 154, 560 280, 460 280"
         fill="none" stroke="#2e7d32" stroke-width="2.5"
         marker-end="url(#arrow-live)"/>
-  <text x="540" y="210" text-anchor="middle" font-size="14"
-        font-weight="600" fill="#2e7d32">
+  <text x="620" y="210" text-anchor="start" font-size="14"
+        font-weight="600" fill="#1b5e20">
     keystroke
   </text>
-  <text x="540" y="226" text-anchor="middle" font-size="14"
-        font-weight="600" fill="#2e7d32">
+  <text x="620" y="228" text-anchor="start" font-size="14"
+        font-weight="600" fill="#1b5e20">
     → re-render
   </text>
 

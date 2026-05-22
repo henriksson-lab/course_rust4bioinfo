@@ -30,13 +30,20 @@ The motivation for this whole day: shipping bioinformatics insights to non-progr
 
 ## Frontend, backend, full-stack — the words
 
-- **Frontend** [the code that runs in the user's browser — HTML + JS, or in our case Rust compiled to WASM (WebAssembly, a binary format browsers can execute)]
-- **Backend** [the code that runs on a server — receives requests, talks to databases, sends responses; ours is axum]
-- **Full-stack** [writing both ends]
-- Today we go full-stack, in Rust, end to end
+These three words come up constantly. They name the parts of every web app you've ever used. Today we go full-stack, in Rust, end to end.
 
 ::: notes
 The three words appear in the next few slides; pin them down now so nobody has to guess. "Frontend" and "backend" sometimes get used loosely; for us today the split is literal — two crates, two processes, two ports.
+:::
+
+## What each word actually means
+
+- **Frontend** [the code that runs in the user's browser — HTML + JS, or in our case Rust compiled to WASM (WebAssembly, a binary format browsers can execute)]
+- **Backend** [the code that runs on a server — receives requests, talks to databases, sends responses; ours is axum]
+- **Full-stack** [writing both ends]
+
+::: notes
+For us today the split is literal — two crates, two processes, two ports.
 :::
 
 ## What today is about
@@ -123,14 +130,29 @@ The audience has read HTML before but probably hasn't written it. Quick reorient
 
 ## The DOM — the in-memory tree the browser builds
 
-When the browser parses your HTML, it builds an in-memory tree of nodes called the **DOM** (Document Object Model). Every box in the rendered page is a node in this tree.
+When the browser parses your HTML, it builds an in-memory tree of nodes called the **DOM** (Document Object Model). Every box in the rendered page is a node in this tree. Everything that changes the page after load — JavaScript, jQuery, React, Yew — does so by **manipulating the DOM tree**.
 
-Everything that changes the page after load — JavaScript, jQuery, React, Yew — does so by **manipulating the DOM tree**: adding a node, removing one, changing the text inside one. The browser re-renders whatever changed.
-
+:::: {.columns}
+::: {.column width="58%"}
 ![The DOM tree mirrors the HTML structure.](images/lec1-dom-tree.svg){fig-alt="A tree diagram showing html as the root with body, h1, p, and div nodes as children, mirroring the HTML source."}
+:::
+::: {.column width="42%"}
+```html
+<html>
+  <body>
+    <h1>Sequence inspector</h1>
+    <div>
+      <textarea></textarea>
+      <p>GC content: 50%</p>
+    </div>
+  </body>
+</html>
+```
+:::
+::::
 
 ::: notes
-This is the foundation for understanding what Yew actually does (next part of the lecture). Yew = "build me a virtual DOM in Rust, then diff against the real one and patch the differences".
+This is the foundation for understanding what Yew actually does (next part of the lecture). Yew = "build me a virtual DOM in Rust, then diff against the real one and patch the differences". The HTML on the right is the same example the tree on the left depicts — each tag becomes a node.
 :::
 
 ## HTTP — how the browser talks to a server
@@ -322,22 +344,28 @@ The key sentence is "portable executable". The browser already knows how to load
 You do not learn a new language to use WebAssembly. The same Rust we have been writing all week now runs in a browser tab. Trunk and **wasm-bindgen** [a tool + crate that generates the JavaScript glue letting Rust call browser APIs and vice versa] handle the plumbing.
 :::
 
-## The build pipeline
+## The build pipeline — step 1: Rust source
 
-::: {.fragment}
 ![Step 1: your Rust source.](images/lec1-build-pipeline-step1.svg){fig-alt="Step 1 of the build pipeline: Rust source files (main.rs, lib.rs, Cargo.toml) shown as the starting point."}
-:::
-
-::: {.fragment}
-![Step 2: cargo compiles to a .wasm; wasm-bindgen generates JS glue.](images/lec1-build-pipeline-step2.svg){fig-alt="Step 2 of the build pipeline: cargo compiles Rust source to a .wasm binary and wasm-bindgen emits accompanying JavaScript glue."}
-:::
-
-::: {.fragment}
-![Step 3: trunk bundles everything into a /dist directory the browser loads.](images/lec1-build-pipeline-step3.svg){fig-alt="Step 3 of the build pipeline: trunk bundles the .wasm, JS glue, index.html and assets into a /dist directory served to the browser."}
-:::
 
 ::: notes
-Three stages: the Rust compiler emits a `.wasm` binary, `wasm-bindgen` writes a small JavaScript shim that knows how to call into the wasm exports, and the browser loads both. The wasm runs in its own virtual machine inside the same browser process as the JavaScript VM — they share memory only through carefully typed bridges.
+Stage one: the Rust crate as you write it. Plain `main.rs`, `lib.rs`, `Cargo.toml` — no wasm-specific code yet.
+:::
+
+## The build pipeline — step 2: cargo + wasm-bindgen
+
+![Step 2: cargo compiles to a .wasm; wasm-bindgen generates JS glue.](images/lec1-build-pipeline-step2.svg){fig-alt="Step 2 of the build pipeline: cargo compiles Rust source to a .wasm binary and wasm-bindgen emits accompanying JavaScript glue."}
+
+::: notes
+Stage two: the Rust compiler emits a `.wasm` binary, and `wasm-bindgen` writes a small JavaScript shim that knows how to call into the wasm exports.
+:::
+
+## The build pipeline — step 3: trunk bundles
+
+![Step 3: trunk bundles everything into a /dist directory the browser loads.](images/lec1-build-pipeline-step3.svg){fig-alt="Step 3 of the build pipeline: trunk bundles the .wasm, JS glue, index.html and assets into a /dist directory served to the browser."}
+
+::: notes
+Stage three: trunk pulls the `.wasm`, the JS glue, `index.html`, and any assets into a `dist/` directory and serves them over HTTP. The wasm runs in its own virtual machine inside the same browser process as the JavaScript VM — they share memory only through carefully typed bridges.
 :::
 
 ## `wasm32-unknown-unknown`

@@ -298,8 +298,10 @@ fn hamming1_neighbors(query: u32) -> impl Iterator<Item = u32> {
 
 For each of the 48 candidates, one [`HashSet::contains`](https://doc.rust-lang.org/std/collections/struct.HashSet.html#method.contains) call. If exactly one hits the whitelist, that is the corrected barcode. **Total: 48 hash lookups per read → microseconds.**
 
+This is **one** way to do Hamming-1 lookup — not necessarily the fastest. Production tools also use precomputed neighbour hash tables, locality-sensitive hashing, SIMD-vectorised distance scans, or trie / BK-tree indices. The 48-neighbour enumeration above wins on simplicity and is fast enough at single-cell-pipeline scale; profile before optimising further.
+
 ::: notes
-This is the standard correction step. Generate all single-substitution neighbors (only 48 for a 16-bp barcode), check each against the whitelist, accept if exactly one matches. If zero match, the read has too many errors; if more than one matches, the correction is ambiguous and we discard to avoid mis-assigning the cell. The whole thing runs in a few microseconds per read — fast enough to keep up with the sequencer.
+This is the standard correction step. Generate all single-substitution neighbors (only 48 for a 16-bp barcode), check each against the whitelist, accept if exactly one matches. If zero match, the read has too many errors; if more than one matches, the correction is ambiguous and we discard to avoid mis-assigning the cell. The whole thing runs in a few microseconds per read — fast enough to keep up with the sequencer. There are faster approaches (precomputed neighbour tables, BK-trees, SIMD scans) but they cost code complexity that this simple version doesn't.
 :::
 
 ## Other places this trick appears

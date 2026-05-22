@@ -108,11 +108,11 @@
     .set triggers a fresh render
   </text>
 
-  <!-- arrow from click handler down to set -->
-  <path d="M 735 392 C 735 420, 465 420, 465 392"
+  <!-- arrow from click handler back to storage (.set writes the new value) -->
+  <path d="M 700 392 C 700 425, 465 425, 465 395"
         fill="none" stroke="#d97706" stroke-width="2"
         marker-end="url(#arr-set)"/>
-  <text x="600" y="450" text-anchor="middle" font-size="13" fill="#b45309" font-weight="600">
+  <text x="582" y="445" text-anchor="middle" font-size="13" fill="#b45309" font-weight="600">
     .set writes new value → component fn re-runs → *count now reads the new number
   </text>
   <text x="450" y="478" text-anchor="middle" font-size="12" fill="#888" font-style="italic">

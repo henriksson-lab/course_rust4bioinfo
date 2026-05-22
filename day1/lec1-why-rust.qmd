@@ -62,7 +62,9 @@ Before the dense version, here is the smallest possible Rust example: declare a 
 ```rust
 let mut count = 0;
 for base in "ACGTACGT".chars() {
-    if base == 'G' || base == 'C' { count += 1; }
+    if base == 'G' || base == 'C' {
+        count += 1;
+    }
 }
 println!("{}", count);
 ```
@@ -149,25 +151,70 @@ Different angle. Suppose you give your colleague a Python tool. It depends on py
 Containers help. Conda environments help. They are also one more thing the user has to set up correctly, every time, before your tool runs at all.
 :::
 
-## The deployment story — Rust
+## `crates.io` replaces a whole stack of tools
 
-```bash
-$ ldd my_rust_tool
-        not a dynamic executable
+Python and R deal with the dependency mess by layering **container and environment managers** on top:
 
-$ ls -lah my_rust_tool
-        4.2M
+- **Docker**, **Podman** — container runtimes
+- **Apptainer** (formerly Singularity) — HPC-friendly containers
+- **Conda**, **mamba** — package + environment managers
 
-$ scp my_rust_tool server:~
+Each one exists because Python and R libraries pull in C, C++, Fortran, system libraries, the right libc...
 
-$ ssh server './my_rust_tool input.fa.gz'
-done.
-```
+Rust binaries pull in **nothing** at run time. `cargo build --release` produces a single static executable. `cargo install some-tool` fetches the source and builds it. [`crates.io`](https://crates.io) is the index — one tool, one ecosystem.
+
+The tool *is* the artifact. No container needed.
 
 ::: notes
-A Rust binary built with the default profile typically has zero dynamic dependencies. ldd shows nothing. You can scp it, you can mail it, you can put it inside a Singularity container or a bare-metal HPC node. It just runs.
+Containers and Conda environments exist to paper over an ecosystem problem: Python and R packages have deep, fragile native dependencies. Rust skips the problem by linking everything statically into the binary by default. The same `cargo install` command works on a laptop, an HPC node, and a Docker image — without Docker. This single change makes it dramatically easier to ship a tool that other people can actually run.
+:::
 
-This is one of the biggest practical advantages of Rust for our field. People you have never met can use your tool without first reproducing your environment.
+## Type safety — what Python and R skip
+
+::: {.columns}
+::: {.column width="50%"}
+**Python — explodes at runtime**
+
+```python
+def add(a, b):
+    return a + b
+
+add(3, "seven")
+# TypeError: unsupported operand
+#   type(s) for +: 'int' and 'str'
+```
+
+**R — boilerplate to defend the function**
+
+```r
+add <- function(a, b) {
+  stopifnot(is.numeric(a),
+            is.numeric(b))
+  a + b
+}
+add(3, "seven")  # still errors at runtime
+```
+:::
+
+::: {.column width="50%"}
+**Rust — caught before the program runs**
+
+```rust
+fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+add(3, "seven");
+// error[E0308]: mismatched types
+//   expected `i32`, found `&str`
+```
+
+No `stopifnot`, no `assertthat::assert_that`, no defensive `if (!is.numeric(x))` blocks at the top of every function. **The type signature is the check.**
+:::
+:::
+
+::: notes
+This is a subtle but huge productivity win. In R, defensive argument checking is so common that there are whole packages for it (assertthat, checkmate). Every function starts with a wall of stopifnot calls, and even then the errors only fire at runtime — usually deep inside a long-running pipeline. In Rust the type signature does the work. If a function takes an i32, the compiler refuses to even build a program that tries to pass a string. The "bug" never reaches a test, never reaches production, never wakes up the on-call data scientist at 2am.
 :::
 
 ## Safety — what the word means here
@@ -294,34 +341,6 @@ You don't have to. PyO3 lets you write a fast inner loop in Rust and expose it t
 This is how polars works. It is how pydantic-core works. It is how tokenizers works. PyO3 is out of scope for this course, but worth knowing it exists.
 :::
 
-## When **not** to use Rust
-
-- A one-off script you will throw away after this afternoon
-- Exploratory data analysis in a notebook
-- Wrapping a well-established Python or R pipeline
-- When your team does not know Rust and the performance does not matter
-- When the relevant library only exists in Python (yet)
-
-::: notes
-I am not selling snake oil. Rust is not the right tool for everything.
-
-If you are writing a one-off analysis script that will run once and never again, write it in Python. If you are doing exploratory ML or statistics, use Python or R. The honest rule: pick Rust when performance, deployability, or correctness actually matter for this project. Most projects do — but not all.
-:::
-
-## The cost
-
-- **Steeper learning curve**, especially ownership and borrowing (day 2)
-- **Slower compile times** than Python (which has none)
-- **Smaller bioinformatics ecosystem** than Python or R — but growing
-- **More verbose** than R or Python for some tasks
-- **Less interactive** than a notebook for exploration
-
-::: notes
-The costs are real. The borrow checker takes time to internalise — you will spend day 2 fighting it, and that is normal. cargo build takes seconds where python script.py takes none. Some libraries you want will not exist; you will write them or find a workaround.
-
-The trade is: a slower author, a faster program. For tools you will run thousands of times, or that other people will run, the trade is usually worth it.
-:::
-
 ## What this course teaches
 
 | Day | Theme |
@@ -361,18 +380,6 @@ By end of day 1 you will be able to:
 
 ::: notes
 Five exercises today, each fifteen to thirty minutes. Tests are provided; your job is to make them pass. By the end of today you have working Rust on disk and a feel for the toolchain. Tomorrow we go deeper into ownership.
-:::
-
-## One thing to remember
-
-::: {style="font-size: 1.8em; text-align: center; margin-top: 2em;"}
-*The compiler is on your side.*
-:::
-
-::: notes
-If you take only one thing from this lecture: trust the compiler. When it complains, it almost always has a reason, and it almost always tells you the fix in the suggestion at the end of the error message. The borrow checker has scary moments. The error messages are not one of them.
-
-Read the errors. Do not panic when you see a red wall. The wall is your friend.
 :::
 
 ## Let's get coding

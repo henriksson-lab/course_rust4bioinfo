@@ -29,6 +29,28 @@ format:
 The premise of day 12: Burn was the "what". Today is the "how". You're going to see exactly the machinery Burn uses to put a tensor on a GPU and run an op on it. After this day, "the GPU is faster" stops being a black box — you can read a compute shader, predict its cost, and write your own when no off-the-shelf op fits.
 :::
 
+## A GPU in one picture
+
+![A GPU is a grid of small cores grouped into compute units, each with a tiny fast scratchpad; everything shares a large but slow VRAM.](images/lec1-gpu-architecture.svg){fig-alt="Diagram of a GPU chip containing 8 streaming multiprocessors, each with 4 cores plus a small register file and shared memory; off to the side a large DRAM/VRAM block connected by a bus, labelled slow ~100 cycles."}
+
+- A **GPU** is essentially a chip of **thousands of small cores** [*ALUs that do one floating-point op per cycle*]
+- Cores are grouped into **SMs** [*streaming multiprocessors, also called "compute units"*] — each SM has its own **register file** [*per-thread fast storage*] and **shared memory** [*per-workgroup scratchpad, ~100x faster than VRAM*]
+- A separate, much larger **VRAM** [*video RAM*] is shared by all SMs but is far slower
+
+::: notes
+The single most useful mental model: small fast cores on the chip, big slow memory off the chip. Everything about GPU performance is "how do I keep the cores busy without waiting for VRAM". Workgroups, shared memory, coalesced reads — they all serve that one goal. Don't get bogged down in vendor terminology; NVIDIA calls them SMs, AMD calls them CUs, WebGPU calls them compute units; they're the same idea.
+:::
+
+## Why workgroups and queues exist
+
+- **Workgroups** = groups of threads that **share fast on-chip memory** and can synchronise with each other; they map to one SM
+- **Queues** [*serial streams of commands from CPU to GPU*] = the CPU posts uploads, dispatches and copies; the GPU pulls work off the queue when it's ready
+- **Why this shape?** GPUs are *massively parallel* — you can't tell each thread what to do one at a time, so you describe work in **batches** (one dispatch = one batch); and you can't easily synchronise between batches without going back to the CPU
+
+::: notes
+The conceptual point: a GPU is not a fast CPU with more threads. It's a different machine. You don't run code on it, you submit work to it. The CPU is the conductor; the GPU is the orchestra. Once that lands, the rest of the API stops looking arbitrary — write_buffer, dispatch, submit, poll are just steps in handing work to the orchestra and waiting for the result.
+:::
+
 ## Why bother — Burn already works
 
 Two reasons:
@@ -140,6 +162,10 @@ encoder.dispatch_workgroups((N + 7) / 8, (N + 7) / 8, 1);
 
 Each thread uses `(gid.x, gid.y)` as `(row, col)`.
 
+![Dispatch launches a grid of workgroups; each workgroup runs a grid of threads. Total threads = workgroups x workgroup_size.](images/lec1-workgroups-threads-dispatch.svg){fig-alt="Left: an 8 by 4 grid of small boxes labelled workgroups, sitting inside a big dispatch box labelled dispatch_workgroups(8, 4, 1). One workgroup is highlighted in red. Right: that workgroup zoomed in, showing a 4 by 4 grid of green thread cells labelled @workgroup_size(4, 4). Bottom strip summarises 32 workgroups x 16 threads = 512 invocations."}
+
+Each thread runs the same shader code; its `global_id` (workgroup_id combined with local_id) tells it which piece of data to process.
+
 ::: notes
 Workgroup size 64 (or a multiple of 64) is the most common pick. Underneath, NVIDIA hardware runs 32 threads per "warp" and AMD runs 64 per "wavefront"; aligning to those sizes keeps the GPU busy without wasted threads. 8×8 is the natural 2-D analogue. The exact best number is hardware-dependent — for production, profile.
 :::
@@ -152,6 +178,8 @@ Workgroup size 64 (or a multiple of 64) is the most common pick. Underneath, NVI
 | Storage (output) | `STORAGE \| COPY_SRC` | `var<storage, read_write>` | outputs written by threads, copied back to host |
 | Uniform | `UNIFORM \| COPY_DST` | `var<uniform>` | small constants (~64 KB), broadcast to every thread |
 | Staging | `MAP_READ \| COPY_DST` | (host-only) | host-readable buffer, target of the read-back copy |
+
+![Data flows CPU -> storage buffer -> compute pipeline -> results storage -> staging -> CPU; uniform and workgroup memories sit beside the pipeline.](images/lec1-gpu-memory-pipeline.svg){fig-alt="Pipeline diagram: CPU RAM with input data on the far left, an upload arrow to a Storage buffer (read-only) on the GPU, an arrow into a Compute pipeline with many thread dots, an arrow into a Storage buffer (read-write, results), a copy_buffer_to_buffer arrow down to a Staging buffer (MAP_READ), and a curved arrow back to CPU RAM with output data. On the right two side panels describe Uniform buffer (small, broadcast) and Workgroup memory (tiny, per-workgroup, fastest)."}
 
 ::: notes
 Storage for arrays, uniform for scalars and small structs. The "copy via staging buffer to read back" pattern is required because GPU-only storage buffers can't be mapped into host memory directly on most backends. Apple Silicon's unified memory makes the copy a no-op in practice, but the API still wants it.

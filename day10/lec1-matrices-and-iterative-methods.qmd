@@ -108,7 +108,7 @@ The slowdown is often 5-20×. Same code, same numbers, different access pattern.
 Cache locality is the single biggest reason performance-critical numerical code thinks hard about layout. The simple rule: iterate in the order memory is laid out. Row-major matrix? Outer loop on rows, inner loop on columns. Column-major matrix? The other way around. Get it wrong and you can easily lose an order of magnitude.
 :::
 
-## In Rust — `ndarray`
+## In Rust — `ndarray` {.smaller}
 
 [`ndarray`](https://docs.rs/ndarray/latest/ndarray/) is the standard crate for dense N-dimensional arrays.
 
@@ -121,11 +121,8 @@ let m = array![[1.0, 2.0, 3.0],
                [4.0, 5.0, 6.0]];                    // literal
 let x: Array1<f64> = array![1.0, 2.0, 3.0];
 
-let row0   = m.row(0);                              // 1-D view, no copy
-let col1   = m.column(1);                           // 1-D view, no copy
-let y      = m.dot(&x);                             // matrix-vector multiply
-let mt     = m.t();                                 // transpose, no copy
-let slice  = m.slice(ndarray::s![.., 1..3]);        // all rows, cols 1..3
+let y  = m.dot(&x);                                 // matrix-vector multiply
+let mt = m.t();                                     // transpose, no copy
 ```
 
 If you know NumPy, you know 90% of `ndarray`. See the [ndarray-for-NumPy-users guide](https://docs.rs/ndarray/latest/ndarray/doc/ndarray_for_numpy_users/index.html).
@@ -136,12 +133,8 @@ The equivalent in R:
 a  <- matrix(c(1, 2, 3, 4, 5, 6), nrow = 2, byrow = TRUE)  # 2x3 matrix
 b  <- diag(3)                                              # 3x3 identity
 x  <- c(1, 2, 3)
-
-row0  <- a[1, ]                                            # 1st row, length 3
-col1  <- a[, 2]                                            # 2nd column
-y     <- a %*% x                                           # matrix-vector multiply
-at    <- t(a)                                              # transpose
-sl    <- a[, 2:3]                                          # all rows, cols 2..3
+y  <- a %*% x                                              # matrix-vector multiply
+at <- t(a)                                                 # transpose
 ```
 
 R stores matrices in **column-major** order — same data, opposite layout from `ndarray`.
@@ -152,6 +145,9 @@ Array2 is the bread-and-butter 2-D matrix type. Most things you'd reach for in N
 
 ## Most biology matrices are sparse
 
+:::: {.columns}
+::: {.column width="55%"}
+
 A typical 10x Genomics single-cell experiment:
 
 | Dimension | Size |
@@ -161,9 +157,15 @@ A typical 10x Genomics single-cell experiment:
 | Total entries | 10⁹ |
 | Non-zero fraction | 1-5% |
 
-![A tiny single-cell count table — 7 genes (rows), 6 cells (columns), 42 cells in total, of which only 8 carry a non-zero count. Real datasets are 1-5% non-zero.](images/lec1-scrna-count-table.svg){fig-alt="A 7-row, 6-column table with gene names down the left side (GAPDH, ACTB, MALAT1, B2M, RPL13, SOX2, MT-CO1) and 10-bp cell-ID barcodes across the top. Most cells are empty or display a dot, a few are filled with small integer counts." width="85%"}
-
 As a dense `f64` matrix: `10⁹ × 8 bytes = 8 GB`. As a sparse matrix: **80-400 MB**, a 20-100× saving — and most matrix operations get faster too, because zero times anything is zero and we skip it.
+
+:::
+::: {.column width="45%"}
+
+![A tiny single-cell count table — 7 genes (rows), 6 cells (columns), 42 cells in total, of which only 8 carry a non-zero count. Real datasets are 1-5% non-zero.](images/lec1-scrna-count-table.svg){fig-alt="A 7-row, 6-column table with gene names down the left side (GAPDH, ACTB, MALAT1, B2M, RPL13, SOX2, MT-CO1) and 10-bp cell-ID barcodes across the top. Most cells are empty or display a dot, a few are filled with small integer counts." width="100%"}
+
+:::
+::::
 
 ::: notes
 This is why sparse storage exists. The dense version of a real single-cell dataset would not even fit in RAM on a laptop. Once you accept the more complicated bookkeeping, you get back both the memory and most of the compute time. The same argument applies to k-mer count tables, protein-interaction adjacency matrices, and most real network data.
@@ -207,7 +209,7 @@ col_idx  = [2, 1, 0, 3]
 row_ptr  = [0, 1, 2, 3, 4]    // row i lives at values[row_ptr[i] .. row_ptr[i+1]]
 ```
 
-![CSR format: a single flat array of values, a parallel array of column indices, and a row_pointers array giving the start index for each row.](images/lec1-sparse-csr.svg){fig-alt="A 4x4 matrix with four non-zero entries displayed above three arrays. The values and col_idx arrays each have length 4; the row_ptr array has length 5 (rows+1), with arrows indicating the start of each row's slice within values." width="70%"}
+![CSR format: a single flat array of values, a parallel array of column indices, and a row_pointers array giving the start index for each row.](images/lec1-sparse-csr.svg){fig-alt="A 4x4 matrix with four non-zero entries displayed above three arrays. The values and col_idx arrays each have length 4; the row_ptr array has length 5 (rows+1), with arrows indicating the start of each row's slice within values." width="95%"}
 
 Fast row access. **Fast matrix-vector multiplication** — for each row you walk a contiguous slice of `values` and `col_idx`. This is the workhorse format for numerical sparse code.
 
@@ -230,7 +232,7 @@ row_idx  = [2, 1, 0, 3]
 col_ptr  = [0, 1, 2, 3, 4]    // column j lives at values[col_ptr[j] .. col_ptr[j+1]]
 ```
 
-![CSC format: same idea as CSR but oriented around columns; values, row_indices, and col_pointers.](images/lec1-sparse-csc.svg){fig-alt="A 4x4 matrix with four non-zeros, displayed above three arrays for the CSC representation. The values and row_idx arrays each have length 4; the col_ptr array has length 5 (cols+1), with arrows indicating the start of each column's slice within values." width="70%"}
+![CSC format: same idea as CSR but oriented around columns; values, row_indices, and col_pointers.](images/lec1-sparse-csc.svg){fig-alt="A 4x4 matrix with four non-zeros, displayed above three arrays for the CSC representation. The values and row_idx arrays each have length 4; the col_ptr array has length 5 (cols+1), with arrows indicating the start of each column's slice within values." width="95%"}
 
 Fast column access; slow row access. Use CSC when you frequently pull out single columns — e.g., a single-cell pipeline processing one cell (column) at a time.
 
@@ -273,7 +275,7 @@ let y = &csr * &x;                                 // sparse mat-vec multiply
 
 Conversion COO → CSR is one method call. Matrix-vector multiply uses the standard `*` operator.
 
-![Sparse matrix-vector multiplication with sprs: a 4×4 matrix with 4 non-zero entries multiplied by a length-4 vector of ones produces a length-4 result vector whose entries are exactly the non-zero values, picked up one per row.](images/lec1-sprs-matvec.svg){fig-alt="A 4x4 sparse matrix A with 4 non-zero entries shown in tall brackets, followed by a dot operator, then a column vector x of four ones in brackets, then an equals sign, then a column vector y with the values 5, 8, 2, 7 in brackets. Below the equation a code snippet shows let y = &csr * &x." width="90%"}
+![Sparse matrix-vector multiplication with sprs: a 4×4 matrix with 4 non-zero entries multiplied by a length-4 vector of ones produces a length-4 result vector whose entries are exactly the non-zero values, picked up one per row.](images/lec1-sprs-matvec.svg){fig-alt="A 4x4 sparse matrix A with 4 non-zero entries shown in tall brackets, followed by a dot operator, then a column vector x of four ones in brackets, then an equals sign, then a column vector y with the values 5, 8, 2, 7 in brackets. Below the equation a code snippet shows let y = &csr * &x." width="100%"}
 
 ::: notes
 sprs follows the standard build-in-COO-then-convert pattern. TriMat is the COO type; CsMat is the compressed (CSR or CSC) type. The crate also provides addition, multiplication, transposition, and conversions to and from dense ndarray matrices. For most day-10 work, those four operations are enough.
